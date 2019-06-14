@@ -1,0 +1,12 @@
+[submodule "ThirdParty/XercesC"]
+	path = ThirdParty/XercesC
+	url = https://github.com/apache/xerces-c.git
+[submodule "ThirdParty/E57Format"]
+	path = ThirdParty/E57Format
+	url = https://github.com/asmaloney/libE57Format.git
+[submodule "ThirdParty/Json"]
+	path = ThirdParty/Json
+	url = https://github.com/nlohmann/json
+[submodule "ThirdParty/Half"]
+	path = ThirdParty/Half
+	url = https://github.com/melowntech/half
