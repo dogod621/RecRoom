@@ -42,7 +42,8 @@ namespace RecRoom
 		return (Mapping)((uvMode << CoodSys_NUM_BITS) | coodSys);
 	}
 
-	template<> Eigen::Vector3d Convert<Eigen::Vector3d, Axis>(Axis v)
+	template<> 
+	inline Eigen::Vector3d Convert<Eigen::Vector3d, Axis>(const Axis& v)
 	{
 		switch (v)
 		{
@@ -245,6 +246,275 @@ namespace RecRoom
 		case CoodMode::XYZ: return XYZ_To_UV<type>(coord); break;
 		case CoodMode::RAE: return RAE_To_UV<type>(coord); break;
 		default: THROW_EXCEPTION("CoodSys is not support"); break;
+		}
+	}
+
+	template<>
+	inline Axis Convert<Axis, std::string>(const std::string& v)
+	{
+		if (v == "PX") return Axis::PX;
+		else if (v == "PY") return Axis::PY;
+		else if (v == "PZ") return Axis::PZ;
+		else if (v == "NX") return Axis::NX;
+		else if (v == "NY") return Axis::NY;
+		else if (v == "NZ") return Axis::NZ;
+		else return Axis::Axis_UNKNOWN;
+	}
+
+	template<>
+	inline std::string Convert<std::string, Axis>(const Axis& v)
+	{
+		switch (v)
+		{
+		case Axis::PX: return std::string("PX"); break;
+		case Axis::PY: return std::string("PY"); break;
+		case Axis::PZ: return std::string("PZ"); break;
+		case Axis::NX: return std::string("NX"); break;
+		case Axis::NY: return std::string("NY"); break;
+		case Axis::NZ: return std::string("NZ"); break;
+		default: return std::string("UNKNOWN"); break;
+		}
+	}
+
+	template<>
+	inline UVMode Convert<UVMode, std::string>(const std::string& v)
+	{
+		if (v == "PANORAMA") return UVMode::PANORAMA;
+		else if (v == "PANORAMA_EQUIRECTANGULAR") return UVMode::PANORAMA_EQUIRECTANGULAR;
+		else return UVMode::UVMode_UNKNOWN;
+	}
+
+	template<>
+	inline std::string Convert<std::string, UVMode>(const UVMode& v)
+	{
+		switch (v)
+		{
+		case UVMode::PANORAMA: return std::string("PANORAMA"); break;
+		case UVMode::PANORAMA_EQUIRECTANGULAR: return std::string("PANORAMA_EQUIRECTANGULAR"); break;
+		default: return std::string("UNKNOWN"); break;
+		}
+	}
+
+	template<>
+	inline CoodMode Convert<CoodMode, std::string>(const std::string& v)
+	{
+		if (v == "XYZ") return CoodMode::XYZ;
+		else if (v == "RAE") return CoodMode::RAE;
+		else return CoodMode::CoodMode_UNKNOWN;
+	}
+
+	template<>
+	inline std::string Convert<std::string, CoodMode>(const CoodMode& v)
+	{
+		switch (v)
+		{
+		case CoodMode::XYZ: return std::string("XYZ"); break;
+		case CoodMode::RAE: return std::string("RAE"); break;
+		default: return std::string("UNKNOWN"); break;
+		}
+	}
+
+	template<>
+	inline ElevationMode Convert<ElevationMode, std::string>(const std::string& v)
+	{
+		if (v == "NP") return ElevationMode::NP;
+		else if (v == "SP") return ElevationMode::SP;
+		else if (v == "PE") return ElevationMode::PE;
+		else return ElevationMode::ElevationMode_UNKNOWN;
+	}
+
+	template<>
+	inline std::string Convert<std::string, ElevationMode>(const ElevationMode& v)
+	{
+		switch (v)
+		{
+		case ElevationMode::NP: return std::string("NP"); break;
+		case ElevationMode::SP: return std::string("SP"); break;
+		case ElevationMode::PE: return std::string("PE"); break;
+		default: return std::string("UNKNOWN"); break;
+		}
+	}
+
+	template<>
+	inline CoodSys Convert<CoodSys, std::string>(const std::string& v)
+	{
+		if (v == "XYZ_PX_PY_PZ") return CoodSys::XYZ_PX_PY_PZ;
+		else if (v == "XYZ_PX_PY_NZ") return CoodSys::XYZ_PX_PY_NZ;
+		else if (v == "XYZ_PX_NY_PZ") return CoodSys::XYZ_PX_NY_PZ;
+		else if (v == "XYZ_PX_NY_NZ") return CoodSys::XYZ_PX_NY_NZ;
+		else if (v == "XYZ_NX_PY_PZ") return CoodSys::XYZ_NX_PY_PZ;
+		else if (v == "XYZ_NX_PY_NZ") return CoodSys::XYZ_NX_PY_NZ;
+		else if (v == "XYZ_NX_NY_PZ") return CoodSys::XYZ_NX_NY_PZ;
+		else if (v == "XYZ_NX_NY_NZ") return CoodSys::XYZ_NX_NY_NZ;
+
+		else if (v == "RAE_NP_PX_PY") return CoodSys::RAE_NP_PX_PY;
+		else if (v == "RAE_NP_PX_PZ") return CoodSys::RAE_NP_PX_PZ;
+		else if (v == "RAE_NP_PX_NY") return CoodSys::RAE_NP_PX_NY;
+		else if (v == "RAE_NP_PX_NZ") return CoodSys::RAE_NP_PX_NZ;
+		else if (v == "RAE_NP_PY_PX") return CoodSys::RAE_NP_PY_PX;
+		else if (v == "RAE_NP_PY_PZ") return CoodSys::RAE_NP_PY_PZ;
+		else if (v == "RAE_NP_PY_NX") return CoodSys::RAE_NP_PY_NX;
+		else if (v == "RAE_NP_PY_NZ") return CoodSys::RAE_NP_PY_NZ;
+		else if (v == "RAE_NP_PZ_PX") return CoodSys::RAE_NP_PZ_PX;
+		else if (v == "RAE_NP_PZ_PY") return CoodSys::RAE_NP_PZ_PY;
+		else if (v == "RAE_NP_PZ_NX") return CoodSys::RAE_NP_PZ_NX;
+		else if (v == "RAE_NP_PZ_NY") return CoodSys::RAE_NP_PZ_NY;
+		else if (v == "RAE_NP_NX_PY") return CoodSys::RAE_NP_NX_PY;
+		else if (v == "RAE_NP_NX_PZ") return CoodSys::RAE_NP_NX_PZ;
+		else if (v == "RAE_NP_NX_NY") return CoodSys::RAE_NP_NX_NY;
+		else if (v == "RAE_NP_NX_NZ") return CoodSys::RAE_NP_NX_NZ;
+		else if (v == "RAE_NP_NY_PX") return CoodSys::RAE_NP_NY_PX;
+		else if (v == "RAE_NP_NY_PZ") return CoodSys::RAE_NP_NY_PZ;
+		else if (v == "RAE_NP_NY_NX") return CoodSys::RAE_NP_NY_NX;
+		else if (v == "RAE_NP_NY_NZ") return CoodSys::RAE_NP_NY_NZ;
+		else if (v == "RAE_NP_NZ_PX") return CoodSys::RAE_NP_NZ_PX;
+		else if (v == "RAE_NP_NZ_PY") return CoodSys::RAE_NP_NZ_PY;
+		else if (v == "RAE_NP_NZ_NX") return CoodSys::RAE_NP_NZ_NX;
+		else if (v == "RAE_NP_NZ_NY") return CoodSys::RAE_NP_NZ_NY;
+
+		else if (v == "RAE_SP_PX_PY") return CoodSys::RAE_SP_PX_PY;
+		else if (v == "RAE_SP_PX_PZ") return CoodSys::RAE_SP_PX_PZ;
+		else if (v == "RAE_SP_PX_NY") return CoodSys::RAE_SP_PX_NY;
+		else if (v == "RAE_SP_PX_NZ") return CoodSys::RAE_SP_PX_NZ;
+		else if (v == "RAE_SP_PY_PX") return CoodSys::RAE_SP_PY_PX;
+		else if (v == "RAE_SP_PY_PZ") return CoodSys::RAE_SP_PY_PZ;
+		else if (v == "RAE_SP_PY_NX") return CoodSys::RAE_SP_PY_NX;
+		else if (v == "RAE_SP_PY_NZ") return CoodSys::RAE_SP_PY_NZ;
+		else if (v == "RAE_SP_PZ_PX") return CoodSys::RAE_SP_PZ_PX;
+		else if (v == "RAE_SP_PZ_PY") return CoodSys::RAE_SP_PZ_PY;
+		else if (v == "RAE_SP_PZ_NX") return CoodSys::RAE_SP_PZ_NX;
+		else if (v == "RAE_SP_PZ_NY") return CoodSys::RAE_SP_PZ_NY;
+		else if (v == "RAE_SP_NX_PY") return CoodSys::RAE_SP_NX_PY;
+		else if (v == "RAE_SP_NX_PZ") return CoodSys::RAE_SP_NX_PZ;
+		else if (v == "RAE_SP_NX_NY") return CoodSys::RAE_SP_NX_NY;
+		else if (v == "RAE_SP_NX_NZ") return CoodSys::RAE_SP_NX_NZ;
+		else if (v == "RAE_SP_NY_PX") return CoodSys::RAE_SP_NY_PX;
+		else if (v == "RAE_SP_NY_PZ") return CoodSys::RAE_SP_NY_PZ;
+		else if (v == "RAE_SP_NY_NX") return CoodSys::RAE_SP_NY_NX;
+		else if (v == "RAE_SP_NY_NZ") return CoodSys::RAE_SP_NY_NZ;
+		else if (v == "RAE_SP_NZ_PX") return CoodSys::RAE_SP_NZ_PX;
+		else if (v == "RAE_SP_NZ_PY") return CoodSys::RAE_SP_NZ_PY;
+		else if (v == "RAE_SP_NZ_NX") return CoodSys::RAE_SP_NZ_NX;
+		else if (v == "RAE_SP_NZ_NY") return CoodSys::RAE_SP_NZ_NY;
+
+		else if (v == "RAE_PE_PX_PY") return CoodSys::RAE_PE_PX_PY;
+		else if (v == "RAE_PE_PX_PZ") return CoodSys::RAE_PE_PX_PZ;
+		else if (v == "RAE_PE_PX_NY") return CoodSys::RAE_PE_PX_NY;
+		else if (v == "RAE_PE_PX_NZ") return CoodSys::RAE_PE_PX_NZ;
+		else if (v == "RAE_PE_PY_PX") return CoodSys::RAE_PE_PY_PX;
+		else if (v == "RAE_PE_PY_PZ") return CoodSys::RAE_PE_PY_PZ;
+		else if (v == "RAE_PE_PY_NX") return CoodSys::RAE_PE_PY_NX;
+		else if (v == "RAE_PE_PY_NZ") return CoodSys::RAE_PE_PY_NZ;
+		else if (v == "RAE_PE_PZ_PX") return CoodSys::RAE_PE_PZ_PX;
+		else if (v == "RAE_PE_PZ_PY") return CoodSys::RAE_PE_PZ_PY;
+		else if (v == "RAE_PE_PZ_NX") return CoodSys::RAE_PE_PZ_NX;
+		else if (v == "RAE_PE_PZ_NY") return CoodSys::RAE_PE_PZ_NY;
+		else if (v == "RAE_PE_NX_PY") return CoodSys::RAE_PE_NX_PY;
+		else if (v == "RAE_PE_NX_PZ") return CoodSys::RAE_PE_NX_PZ;
+		else if (v == "RAE_PE_NX_NY") return CoodSys::RAE_PE_NX_NY;
+		else if (v == "RAE_PE_NX_NZ") return CoodSys::RAE_PE_NX_NZ;
+		else if (v == "RAE_PE_NY_PX") return CoodSys::RAE_PE_NY_PX;
+		else if (v == "RAE_PE_NY_PZ") return CoodSys::RAE_PE_NY_PZ;
+		else if (v == "RAE_PE_NY_NX") return CoodSys::RAE_PE_NY_NX;
+		else if (v == "RAE_PE_NY_NZ") return CoodSys::RAE_PE_NY_NZ;
+		else if (v == "RAE_PE_NZ_PX") return CoodSys::RAE_PE_NZ_PX;
+		else if (v == "RAE_PE_NZ_PY") return CoodSys::RAE_PE_NZ_PY;
+		else if (v == "RAE_PE_NZ_NX") return CoodSys::RAE_PE_NZ_NX;
+		else if (v == "RAE_PE_NZ_NY") return CoodSys::RAE_PE_NZ_NY;
+
+		else return CoodSys::CoodSys_UNKNOWN;
+	}
+
+	template<>
+	inline std::string Convert<std::string, CoodSys>(const CoodSys& v)
+	{
+		switch (v)
+		{
+		case CoodSys::XYZ_PX_PY_PZ: return std::string("XYZ_PX_PY_PZ"); break;
+		case CoodSys::XYZ_PX_PY_NZ: return std::string("XYZ_PX_PY_NZ"); break;
+		case CoodSys::XYZ_PX_NY_PZ: return std::string("XYZ_PX_NY_PZ"); break;
+		case CoodSys::XYZ_PX_NY_NZ: return std::string("XYZ_PX_NY_NZ"); break;
+		case CoodSys::XYZ_NX_PY_PZ: return std::string("XYZ_NX_PY_PZ"); break;
+		case CoodSys::XYZ_NX_PY_NZ: return std::string("XYZ_NX_PY_NZ"); break;
+		case CoodSys::XYZ_NX_NY_PZ: return std::string("XYZ_NX_NY_PZ"); break;
+		case CoodSys::XYZ_NX_NY_NZ: return std::string("XYZ_NX_NY_NZ"); break;
+
+		case CoodSys::RAE_NP_PX_PY: return std::string("RAE_NP_PX_PY"); break;
+		case CoodSys::RAE_NP_PX_PZ: return std::string("RAE_NP_PX_PZ"); break;
+		case CoodSys::RAE_NP_PX_NY: return std::string("RAE_NP_PX_NY"); break;
+		case CoodSys::RAE_NP_PX_NZ: return std::string("RAE_NP_PX_NZ"); break;
+		case CoodSys::RAE_NP_PY_PX: return std::string("RAE_NP_PY_PX"); break;
+		case CoodSys::RAE_NP_PY_PZ: return std::string("RAE_NP_PY_PZ"); break;
+		case CoodSys::RAE_NP_PY_NX: return std::string("RAE_NP_PY_NX"); break;
+		case CoodSys::RAE_NP_PY_NZ: return std::string("RAE_NP_PY_NZ"); break;
+		case CoodSys::RAE_NP_PZ_PX: return std::string("RAE_NP_PZ_PX"); break;
+		case CoodSys::RAE_NP_PZ_PY: return std::string("RAE_NP_PZ_PY"); break;
+		case CoodSys::RAE_NP_PZ_NX: return std::string("RAE_NP_PZ_NX"); break;
+		case CoodSys::RAE_NP_PZ_NY: return std::string("RAE_NP_PZ_NY"); break;
+		case CoodSys::RAE_NP_NX_PY: return std::string("RAE_NP_NX_PY"); break;
+		case CoodSys::RAE_NP_NX_PZ: return std::string("RAE_NP_NX_PZ"); break;
+		case CoodSys::RAE_NP_NX_NY: return std::string("RAE_NP_NX_NY"); break;
+		case CoodSys::RAE_NP_NX_NZ: return std::string("RAE_NP_NX_NZ"); break;
+		case CoodSys::RAE_NP_NY_PX: return std::string("RAE_NP_NY_PX"); break;
+		case CoodSys::RAE_NP_NY_PZ: return std::string("RAE_NP_NY_PZ"); break;
+		case CoodSys::RAE_NP_NY_NX: return std::string("RAE_NP_NY_NX"); break;
+		case CoodSys::RAE_NP_NY_NZ: return std::string("RAE_NP_NY_NZ"); break;
+		case CoodSys::RAE_NP_NZ_PX: return std::string("RAE_NP_NZ_PX"); break;
+		case CoodSys::RAE_NP_NZ_PY: return std::string("RAE_NP_NZ_PY"); break;
+		case CoodSys::RAE_NP_NZ_NX: return std::string("RAE_NP_NZ_NX"); break;
+		case CoodSys::RAE_NP_NZ_NY: return std::string("RAE_NP_NZ_NY"); break;
+
+		case CoodSys::RAE_SP_PX_PY: return std::string("RAE_SP_PX_PY"); break;
+		case CoodSys::RAE_SP_PX_PZ: return std::string("RAE_SP_PX_PZ"); break;
+		case CoodSys::RAE_SP_PX_NY: return std::string("RAE_SP_PX_NY"); break;
+		case CoodSys::RAE_SP_PX_NZ: return std::string("RAE_SP_PX_NZ"); break;
+		case CoodSys::RAE_SP_PY_PX: return std::string("RAE_SP_PY_PX"); break;
+		case CoodSys::RAE_SP_PY_PZ: return std::string("RAE_SP_PY_PZ"); break;
+		case CoodSys::RAE_SP_PY_NX: return std::string("RAE_SP_PY_NX"); break;
+		case CoodSys::RAE_SP_PY_NZ: return std::string("RAE_SP_PY_NZ"); break;
+		case CoodSys::RAE_SP_PZ_PX: return std::string("RAE_SP_PZ_PX"); break;
+		case CoodSys::RAE_SP_PZ_PY: return std::string("RAE_SP_PZ_PY"); break;
+		case CoodSys::RAE_SP_PZ_NX: return std::string("RAE_SP_PZ_NX"); break;
+		case CoodSys::RAE_SP_PZ_NY: return std::string("RAE_SP_PZ_NY"); break;
+		case CoodSys::RAE_SP_NX_PY: return std::string("RAE_SP_NX_PY"); break;
+		case CoodSys::RAE_SP_NX_PZ: return std::string("RAE_SP_NX_PZ"); break;
+		case CoodSys::RAE_SP_NX_NY: return std::string("RAE_SP_NX_NY"); break;
+		case CoodSys::RAE_SP_NX_NZ: return std::string("RAE_SP_NX_NZ"); break;
+		case CoodSys::RAE_SP_NY_PX: return std::string("RAE_SP_NY_PX"); break;
+		case CoodSys::RAE_SP_NY_PZ: return std::string("RAE_SP_NY_PZ"); break;
+		case CoodSys::RAE_SP_NY_NX: return std::string("RAE_SP_NY_NX"); break;
+		case CoodSys::RAE_SP_NY_NZ: return std::string("RAE_SP_NY_NZ"); break;
+		case CoodSys::RAE_SP_NZ_PX: return std::string("RAE_SP_NZ_PX"); break;
+		case CoodSys::RAE_SP_NZ_PY: return std::string("RAE_SP_NZ_PY"); break;
+		case CoodSys::RAE_SP_NZ_NX: return std::string("RAE_SP_NZ_NX"); break;
+		case CoodSys::RAE_SP_NZ_NY: return std::string("RAE_SP_NZ_NY"); break;
+
+		case CoodSys::RAE_PE_PX_PY: return std::string("RAE_PE_PX_PY"); break;
+		case CoodSys::RAE_PE_PX_PZ: return std::string("RAE_PE_PX_PZ"); break;
+		case CoodSys::RAE_PE_PX_NY: return std::string("RAE_PE_PX_NY"); break;
+		case CoodSys::RAE_PE_PX_NZ: return std::string("RAE_PE_PX_NZ"); break;
+		case CoodSys::RAE_PE_PY_PX: return std::string("RAE_PE_PY_PX"); break;
+		case CoodSys::RAE_PE_PY_PZ: return std::string("RAE_PE_PY_PZ"); break;
+		case CoodSys::RAE_PE_PY_NX: return std::string("RAE_PE_PY_NX"); break;
+		case CoodSys::RAE_PE_PY_NZ: return std::string("RAE_PE_PY_NZ"); break;
+		case CoodSys::RAE_PE_PZ_PX: return std::string("RAE_PE_PZ_PX"); break;
+		case CoodSys::RAE_PE_PZ_PY: return std::string("RAE_PE_PZ_PY"); break;
+		case CoodSys::RAE_PE_PZ_NX: return std::string("RAE_PE_PZ_NX"); break;
+		case CoodSys::RAE_PE_PZ_NY: return std::string("RAE_PE_PZ_NY"); break;
+		case CoodSys::RAE_PE_NX_PY: return std::string("RAE_PE_NX_PY"); break;
+		case CoodSys::RAE_PE_NX_PZ: return std::string("RAE_PE_NX_PZ"); break;
+		case CoodSys::RAE_PE_NX_NY: return std::string("RAE_PE_NX_NY"); break;
+		case CoodSys::RAE_PE_NX_NZ: return std::string("RAE_PE_NX_NZ"); break;
+		case CoodSys::RAE_PE_NY_PX: return std::string("RAE_PE_NY_PX"); break;
+		case CoodSys::RAE_PE_NY_PZ: return std::string("RAE_PE_NY_PZ"); break;
+		case CoodSys::RAE_PE_NY_NX: return std::string("RAE_PE_NY_NX"); break;
+		case CoodSys::RAE_PE_NY_NZ: return std::string("RAE_PE_NY_NZ"); break;
+		case CoodSys::RAE_PE_NZ_PX: return std::string("RAE_PE_NZ_PX"); break;
+		case CoodSys::RAE_PE_NZ_PY: return std::string("RAE_PE_NZ_PY"); break;
+		case CoodSys::RAE_PE_NZ_NX: return std::string("RAE_PE_NZ_NX"); break;
+		case CoodSys::RAE_PE_NZ_NY: return std::string("RAE_PE_NZ_NY"); break;
+
+		default: return std::string("UNKNOWN"); break;
 		}
 	}
 }

@@ -173,11 +173,11 @@ namespace RecRoom
 
 #define Mapping_NUM_BITS 32
 	using Mapping = Flag;
-	
+
 	//
 	inline Mapping ToMapping(UVMode uvMode, CoodSys coodSys);
 
-	template<CoodSys outType, CoodSys inType >
+	template<CoodSys outType, CoodSys inType>
 	inline Eigen::Vector3d CoodConvert(const Eigen::Vector3d& coord);
 
 	template<Mapping type>

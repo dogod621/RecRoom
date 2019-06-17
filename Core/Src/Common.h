@@ -12,7 +12,7 @@ namespace RecRoom
 	class exception : public std::exception
 	{
 	public:
-		exception(const std::string &msg, const char *file, int line) 
+		exception(const std::string &msg, const char *file, int line)
 			: std::exception()
 		{
 			std::ostringstream o;
@@ -49,8 +49,8 @@ namespace RecRoom
 	};
 
 	//
-	template<class outType, class inType >
-	inline outType Convert(inType v);
+	template<class outType, class inType>
+	inline outType Convert(const inType& v);
 }
 
 #include "Common.hpp"
