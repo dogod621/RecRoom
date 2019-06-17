@@ -2,10 +2,12 @@
 
 #define _USE_MATH_DEFINES
 
+#include <iostream>
 #include <cmath>
 #include <string>
 #include <exception>
 #include <Eigen/Core>
+#include <boost/filesystem.hpp>
 
 namespace RecRoom
 {
@@ -15,9 +17,7 @@ namespace RecRoom
 		exception(const std::string &msg, const char *file, int line)
 			: std::exception()
 		{
-			std::ostringstream o;
-			o << file << ":" << line << "-" << msg;
-			message = o.str();
+			message = std::string(file) + ":" + std::to_string(line) + "-" + msg;
 		}
 		~exception() {}
 		const char *what() const { return message.c_str(); }
