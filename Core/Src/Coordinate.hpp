@@ -60,7 +60,7 @@ namespace RecRoom
 	template<CoodSys type>
 	inline Eigen::Vector3d XYZ_To_Cartesian(const Eigen::Vector3d& coord)
 	{
-		if (type = (Flag)CoodSys::XYZ_PX_PY_PZ)
+		if (type == CoodSys::XYZ_PX_PY_PZ)
 			return coord;
 		else
 		{
@@ -74,7 +74,7 @@ namespace RecRoom
 	template<CoodSys type>
 	inline Eigen::Vector3d Cartesian_To_XYZ(const Eigen::Vector3d& coord)
 	{
-		if (type = (Flag)CoodSys::XYZ_PX_PY_PZ)
+		if (type == CoodSys::XYZ_PX_PY_PZ)
 			return coord;
 		else
 		{

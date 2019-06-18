@@ -27,7 +27,7 @@ namespace RecRoom
 		E57_INIT_LABEL;
 	}
 
-	inline PointE57::PointE57(const PointExchange& p)
+	inline PointE57::PointE57(const PointE57xPCD& p)
 	{
 		x = p.x; y = p.y; z = p.z; data[3] = 1.0f;
 		E57_COPY_NORMAL;
@@ -61,7 +61,7 @@ namespace RecRoom
 		PCD_INIT_LABEL;
 	}
 	
-	inline PointPCD::PointPCD(const PointExchange& p)
+	inline PointPCD::PointPCD(const PointE57xPCD& p)
 	{
 		x = p.x; y = p.y; z = p.z; data[3] = 1.0f;
 
@@ -71,29 +71,29 @@ namespace RecRoom
 		PCD_COPY_SEGLABEL;
 	}
 	
-	inline PointExchange::PointExchange(const PointE57& p)
+	inline PointE57xPCD::PointE57xPCD(const PointE57& p)
 	{
 		x = p.x; y = p.y; z = p.z; data[3] = 1.0f;
 
-		EXCHANGE_COPY_NORMAL;
-		EXCHANGE_COPY_RGB;
-		EXCHANGE_COPY_INTENSITY;
-		EXCHANGE_COPY_LABEL;
-		EXCHANGE_INIT_SEGLABEL;
+		E57xPCD_COPY_NORMAL;
+		E57xPCD_COPY_RGB;
+		E57xPCD_COPY_INTENSITY;
+		E57xPCD_COPY_LABEL;
+		E57xPCD_INIT_SEGLABEL;
 	}
 	
-	inline PointExchange::PointExchange(const PointPCD& p)
+	inline PointE57xPCD::PointE57xPCD(const PointPCD& p)
 	{
 		x = p.x; y = p.y; z = p.z; data[3] = 1.0f;
 
-		EXCHANGE_COPY_NORMAL;
-		EXCHANGE_COPY_RGB;
-		EXCHANGE_COPY_INTENSITY;
-		EXCHANGE_INIT_LABEL;
+		E57xPCD_COPY_NORMAL;
+		E57xPCD_COPY_RGB;
+		E57xPCD_COPY_INTENSITY;
+		E57xPCD_INIT_LABEL;
 #ifdef POINT_PCD_WITH_INTENSITY
 		segLabel = p.label;
 #else
-		EXCHANGE_INIT_SEGLABEL;
+		E57xPCD_INIT_SEGLABEL;
 #endif
 	}
 }

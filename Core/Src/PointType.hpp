@@ -24,13 +24,13 @@ template <> inline bool pcl::isFinite<RecRoom::PointPCD>(const RecRoom::PointPCD
 		PCD_ISFINITE_LABEL;
 }
 
-template <> inline bool pcl::isFinite<RecRoom::PointExchange>(const RecRoom::PointExchange &p)
+template <> inline bool pcl::isFinite<RecRoom::PointE57xPCD>(const RecRoom::PointE57xPCD &p)
 {
 	return pcl_isfinite(p.x) && pcl_isfinite(p.y) && pcl_isfinite(p.z) \
-		EXCHANGE_ISFINITE_NORMAL \
-		EXCHANGE_ISFINITE_RGB \
-		EXCHANGE_ISFINITE_INTENSITY \
-		EXCHANGE_ISFINITE_LABEL \
-		EXCHANGE_ISFINITE_SEGLABEL;
+		E57xPCD_ISFINITE_NORMAL \
+		E57xPCD_ISFINITE_RGB \
+		E57xPCD_ISFINITE_INTENSITY \
+		E57xPCD_ISFINITE_LABEL \
+		E57xPCD_ISFINITE_SEGLABEL;
 }
 

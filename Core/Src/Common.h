@@ -12,7 +12,7 @@
 
 namespace RecRoom
 {
-#define INFO_MESSAGE(file, line, func, message) "File:" + std::string(file) + ", Line:" + std::to_string(line) + ", Func:" + std::string(func)  + ", What:" + std::string(message) + "."
+#define INFO_MESSAGE(file, line, func, message) ("File:" + std::string(file) + ", Line:" + std::to_string(line) + ", Func:" + std::string(func)  + ", What:" + std::string(message) + ".").c_str()
 
 	class exception : public std::exception
 	{
@@ -30,9 +30,9 @@ namespace RecRoom
 	};
 
 #define THROW_EXCEPTION(message) throw RecRoom::exception(__FILE__, __LINE__, __func__, message);
-#define ERROR(message) PCL_ERROR(INFO_MESSAGE(__FILE__, __LINE__, __func__, message));
-#define WARNING(message) PCL_WARN(INFO_MESSAGE(__FILE__, __LINE__, __func__, message));
-#define INFO(message) PCL_INFO(INFO_MESSAGE(__FILE__, __LINE__, __func__, message));
+#define PRINT_ERROR(message) PCL_ERROR(INFO_MESSAGE(__FILE__, __LINE__, __func__, message));
+#define PRINT_WARNING(message) PCL_WARN(INFO_MESSAGE(__FILE__, __LINE__, __func__, message));
+#define PRINT_INFO(message) PCL_INFO(INFO_MESSAGE(__FILE__, __LINE__, __func__, message));
 
 	//
 	using Flag = unsigned int;
