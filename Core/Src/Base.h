@@ -69,3 +69,5 @@ namespace RecRoom
 		int serialNumber;
 	};
 }
+
+#include "Base.hpp"

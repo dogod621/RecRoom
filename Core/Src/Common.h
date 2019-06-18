@@ -12,15 +12,15 @@
 
 namespace RecRoom
 {
-#define INFO_MESSAGE(file, line, funcSig, message) "File:" + std::string(file) + ", Line:" + std::to_string(line) + ", Func:" + std::string(funcSig)  + ", What:" + std::string(message) + "."
+#define INFO_MESSAGE(file, line, func, message) "File:" + std::string(file) + ", Line:" + std::to_string(line) + ", Func:" + std::string(func)  + ", What:" + std::string(message) + "."
 
 	class exception : public std::exception
 	{
 	public:
-		exception(const char *file, int line, const char *prettyFunc, const std::string &message_)
+		exception(const char *file, int line, const char *func, const std::string &message_)
 			: std::exception()
 		{
-			message = INFO_MESSAGE(file, line, prettyFunc, message_);
+			message = INFO_MESSAGE(file, line, func, message_);
 		}
 		~exception() {}
 		const char *what() const { return message.c_str(); }
@@ -29,10 +29,10 @@ namespace RecRoom
 		std::string message;
 	};
 
-#define THROW_EXCEPTION(message) throw RecRoom::exception(__FILE__, __LINE__, __FUNCSIG__, message);
-#define ERROR(message) PCL_ERROR(INFO_MESSAGE(__FILE__, __LINE__, __FUNCSIG__, message));
-#define WARNING(message) PCL_WARN(INFO_MESSAGE(__FILE__, __LINE__, __FUNCSIG__, message));
-#define INFO(message) PCL_INFO(INFO_MESSAGE(__FILE__, __LINE__, __FUNCSIG__, message));
+#define THROW_EXCEPTION(message) throw RecRoom::exception(__FILE__, __LINE__, __func__, message);
+#define ERROR(message) PCL_ERROR(INFO_MESSAGE(__FILE__, __LINE__, __func__, message));
+#define WARNING(message) PCL_WARN(INFO_MESSAGE(__FILE__, __LINE__, __func__, message));
+#define INFO(message) PCL_INFO(INFO_MESSAGE(__FILE__, __LINE__, __func__, message));
 
 	//
 	using Flag = unsigned int;

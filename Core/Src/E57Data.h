@@ -61,3 +61,5 @@ namespace RecRoom
 		std::shared_ptr<uint8_t> b;
 	};
 }
+
+#include "E57Data.h"
