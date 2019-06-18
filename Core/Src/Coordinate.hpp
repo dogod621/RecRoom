@@ -153,7 +153,7 @@ namespace RecRoom
 		return rae;
 	}
 
-	template<CoodSys inType, CoodSys outType>
+	template<CoodSys outType, CoodSys inType>
 	inline Eigen::Vector3d CoodConvert(const Eigen::Vector3d& coord)
 	{
 		switch (CoodSys_CoodMode(inType))

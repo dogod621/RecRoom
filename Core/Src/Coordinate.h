@@ -173,7 +173,7 @@ namespace RecRoom
 
 #define Mapping_NUM_BITS 32
 	using Mapping = Flag;
-
+	
 	//
 	inline Mapping ToMapping(UVMode uvMode, CoodSys coodSys);
 

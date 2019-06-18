@@ -8,16 +8,19 @@
 #include <exception>
 #include <Eigen/Core>
 #include <boost/filesystem.hpp>
+#include <pcl/console/print.h>
 
 namespace RecRoom
 {
+#define INFO_MESSAGE(file, line, funcSig, message) "File:" + std::string(file) + ", Line:" + std::to_string(line) + ", Func:" + std::string(funcSig)  + ", What:" + std::string(message) + "."
+
 	class exception : public std::exception
 	{
 	public:
-		exception(const std::string &msg, const char *file, int line)
+		exception(const char *file, int line, const char *prettyFunc, const std::string &message_)
 			: std::exception()
 		{
-			message = std::string(file) + ":" + std::to_string(line) + "-" + msg;
+			message = INFO_MESSAGE(file, line, prettyFunc, message_);
 		}
 		~exception() {}
 		const char *what() const { return message.c_str(); }
@@ -26,7 +29,10 @@ namespace RecRoom
 		std::string message;
 	};
 
-#define THROW_EXCEPTION(message) throw RecRoom::exception(message, __FILE__, __LINE__);
+#define THROW_EXCEPTION(message) throw RecRoom::exception(__FILE__, __LINE__, __FUNCSIG__, message);
+#define ERROR(message) PCL_ERROR(INFO_MESSAGE(__FILE__, __LINE__, __FUNCSIG__, message));
+#define WARNING(message) PCL_WARN(INFO_MESSAGE(__FILE__, __LINE__, __FUNCSIG__, message));
+#define INFO(message) PCL_INFO(INFO_MESSAGE(__FILE__, __LINE__, __FUNCSIG__, message));
 
 	//
 	using Flag = unsigned int;

@@ -1,18 +1,120 @@
-#include <cmath>
+#pragma once
 
-#include "E57File.h"
+#include <iomanip>
+
+#include "E57Data.h"
 
 namespace RecRoom
 {
+	template<class T>
+	void OStreamE57NodeFormat(std::ostream& os, std::size_t pDepth, const T& pNode);
+
+#define TYPE_SPACE std::left << std::setw(6) 
+#define NAME_SPACE std::left << std::setw(12) 
+#define NUMBER_SPACE std::left << std::setprecision(6) << std::setw(9) 
+
+	// Parse Node
+	template<> void OStreamE57NodeFormat<e57::StructureNode>(std::ostream& os, std::size_t pDepth, const e57::StructureNode& pNode)
+	{
+		os << std::string(pDepth, '\t') << TYPE_SPACE << "STRUCT" << "*" << NAME_SPACE << pNode.elementName() << " : " << NUMBER_SPACE << pNode.childCount() << std::endl;
+		os << std::string(pDepth, '\t') << "{" << std::endl;
+		pDepth++;
+
+		//
+		for (int64_t i = 0; i < pNode.childCount(); ++i)
+			OStreamE57NodeFormat(os, pDepth, pNode.get(i));
+
+		//
+		os << std::string(pDepth - 1, '\t') << "}" << std::endl;
+	}
+
+	template<> void OStreamE57NodeFormat<e57::VectorNode>(std::ostream& os, std::size_t pDepth, const e57::VectorNode& pNode)
+	{
+		os << std::string(pDepth, '\t') << TYPE_SPACE << "VEC" << "*" << NAME_SPACE << pNode.elementName() << " : " << NUMBER_SPACE << pNode.childCount() << std::endl;
+		os << std::string(pDepth, '\t') << "{" << std::endl;
+		pDepth++;
+
+		//
+		for (int64_t i = 0; i < pNode.childCount(); ++i)
+			OStreamE57NodeFormat(os, pDepth, pNode.get(i));
+
+		//
+		os << std::string(pDepth - 1, '\t') << "}" << std::endl;
+	}
+
+	template<> void OStreamE57NodeFormat<e57::CompressedVectorNode>(std::ostream& os, std::size_t pDepth, const e57::CompressedVectorNode& pNode)
+	{
+		os << std::string(pDepth, '\t') << TYPE_SPACE << "CP_VEV" << "*" << NAME_SPACE << pNode.elementName() << " : " << NUMBER_SPACE << pNode.childCount() << std::endl;
+		os << std::string(pDepth, '\t') << "{" << std::endl;
+		pDepth++;
+
+		//
+		OStreamE57NodeFormat(os, pDepth, pNode.prototype());
+		OStreamE57NodeFormat(os, pDepth, pNode.codecs());
+
+		//
+		os << std::string(pDepth - 1, '\t') << "}" << std::endl;
+	}
+
+	template<> void OStreamE57NodeFormat<e57::IntegerNode>(std::ostream& os, std::size_t pDepth, const e57::IntegerNode& pNode)
+	{
+		os << std::string(pDepth, '\t') << TYPE_SPACE << "INT" << "*" << NAME_SPACE << pNode.elementName() << " : " << NUMBER_SPACE << pNode.value() << std::endl;
+	}
+
+	template<> void OStreamE57NodeFormat<e57::ScaledIntegerNode>(std::ostream& os, std::size_t pDepth, const e57::ScaledIntegerNode& pNode)
+	{
+		os << std::string(pDepth, '\t') << TYPE_SPACE << "SC_INT" << "*" << NAME_SPACE << pNode.elementName() << " : " << NUMBER_SPACE << pNode.scaledValue() << ", " << pNode.rawValue() << ", " << pNode.scale() << ", " << pNode.offset() << std::endl;
+	}
+
+	template<> void OStreamE57NodeFormat<const e57::FloatNode>(std::ostream& os, std::size_t pDepth, const e57::FloatNode& pNode)
+	{
+		os << std::string(pDepth, '\t') << TYPE_SPACE << "FLOAT" << "*" << NAME_SPACE << pNode.elementName() << " : " << NUMBER_SPACE << pNode.value() << std::endl;
+	}
+
+	template<> void OStreamE57NodeFormat<e57::StringNode>(std::ostream& os, std::size_t pDepth, const e57::StringNode& pNode)
+	{
+		os << std::string(pDepth, '\t') << TYPE_SPACE << "STR" << "*" << NAME_SPACE << pNode.elementName() << " : " << NUMBER_SPACE << pNode.value() << std::endl;
+	}
+
+	template<> void OStreamE57NodeFormat<e57::BlobNode>(std::ostream& os, std::size_t pDepth, const e57::BlobNode& pNode)
+	{
+		os << std::string(pDepth, '\t') << TYPE_SPACE << "BLOB" << "*" << NAME_SPACE << pNode.elementName() << " : " << NUMBER_SPACE << pNode.byteCount() << std::endl;
+		os << std::string(pDepth, '\t') << "{" << std::endl;
+		pDepth++;
+
+		//
+		os << std::string(pDepth - 1, '\t') << "}" << std::endl;
+	}
+
+	template<> void OStreamE57NodeFormat<e57::Node>(std::ostream& os, std::size_t pDepth, const e57::Node& pNode)
+	{
+		switch (pNode.type())
+		{
+		case e57::NodeType::E57_STRUCTURE: return OStreamE57NodeFormat(os, pDepth, e57::StructureNode(pNode));
+		case e57::NodeType::E57_VECTOR: return OStreamE57NodeFormat(os, pDepth, e57::VectorNode(pNode));
+		case e57::NodeType::E57_COMPRESSED_VECTOR: return OStreamE57NodeFormat(os, pDepth, e57::CompressedVectorNode(pNode));
+		case e57::NodeType::E57_INTEGER: return OStreamE57NodeFormat(os, pDepth, e57::IntegerNode(pNode));
+		case e57::NodeType::E57_SCALED_INTEGER: return OStreamE57NodeFormat(os, pDepth, e57::ScaledIntegerNode(pNode));
+		case e57::NodeType::E57_FLOAT: return OStreamE57NodeFormat(os, pDepth, e57::FloatNode(pNode));
+		case e57::NodeType::E57_STRING: return OStreamE57NodeFormat(os, pDepth, e57::StringNode(pNode));
+		case e57::NodeType::E57_BLOB: return OStreamE57NodeFormat(os, pDepth, e57::BlobNode(pNode));
+		default: return;
+		}
+	}
+
+	std::ostream& operator << (std::ostream& os, const e57::ImageFile& v)
+	{
+		RecRoom::OStreamE57NodeFormat(os, 0, v.root());
+	}
+
 	//
-	/*nlohmann::json ScanInfo::DumpToJson()
+	template<Scanner scanner>
+	nlohmann::json E57ScanMeta<scanner>::DumpToJson()
 	{
 		nlohmann::json j;
 
 		// Save scan info
-		j["scanner"] = ScannerToStr(scanner);
-		j["coodSys"] = CoodSysToStr(coodSys);
-		j["raeMode"] = RAEModeToStr(raeMode);
+		j["scanner"] = Convert<std::string, Scanner>(scanner);
 
 		for (int r = 0; r < 4; ++r)
 			for (int c = 0; c < 4; ++c)
@@ -26,7 +128,7 @@ namespace RecRoom
 		j["orientation"].push_back(orientation.y());
 		j["orientation"].push_back(orientation.z());
 		j["orientation"].push_back(orientation.w());
-		
+
 		j["hasPointXYZ"] = hasPointXYZ;
 		j["hasPointRGB"] = hasPointRGB;
 		j["hasPointI"] = hasPointI;
@@ -34,66 +136,60 @@ namespace RecRoom
 		j["numPoints"] = numPoints;
 		j["numValidPoints"] = numValidPoints;
 
-		j["ID"] = ID;
+		j["serialNumber"] = serialNumber;
 
 		return j;
 	}
 
-	ScanInfo ScanInfo::LoadFromJson(const nlohmann::json& j)
+	template<Scanner scanner>
+	void E57ScanMeta<scanner>::LoadFromJson(const nlohmann::json& j)
 	{
-		ScanInfo scanInfo;
-
-		scanInfo.scanner = StrToScanner(j["scanner"].get<std::string>());
-		scanInfo.coodSys = StrToCoodSys(j["coodSys"].get<std::string>());
-		scanInfo.raeMode = StrToRAEMode(j["raeMode"].get<std::string>());
-
+		scanner = Convert<Scanner, std::string>(j["scanner"].get<std::string>());
+			
 		nlohmann::json::const_iterator it = j["transform"].begin();
 		for (int r = 0; r < 4; ++r)
 		{
 			for (int c = 0; c < 4; ++c)
 			{
-				scanInfo.transform(r, c) = *it;
+				transform(r, c) = *it;
 				++it;
 			}
 		}
 
 		it = j["position"].begin();
-		scanInfo.position.x() = *it;
+		position.x() = *it;
 		++it;
-		scanInfo.position.y() = *it;
+		position.y() = *it;
 		++it;
-		scanInfo.position.z() = *it;
+		position.z() = *it;
 		++it;
 
 		it = j["orientation"].begin();
-		scanInfo.orientation.x() = *it;
+		orientation.x() = *it;
 		++it;
-		scanInfo.orientation.y() = *it;
+		orientation.y() = *it;
 		++it;
-		scanInfo.orientation.z() = *it;
+		orientation.z() = *it;
 		++it;
-		scanInfo.orientation.w() = *it;
+		orientation.w() = *it;
 		++it;
 
-		scanInfo.position_float = Eigen::Vector3f(scanInfo.position.x(), scanInfo.position.y(), scanInfo.position.z());
-		scanInfo.orientation_float = Eigen::Quaternionf(scanInfo.orientation.w(), scanInfo.orientation.x(), scanInfo.orientation.y(), scanInfo.orientation.z());
+		hasPointXYZ = j["hasPointXYZ"];
+		hasPointRGB = j["hasPointRGB"];
+		hasPointI = j["hasPointI"];
 
-		scanInfo.hasPointXYZ = j["hasPointXYZ"];
-		scanInfo.hasPointRGB = j["hasPointRGB"];
-		scanInfo.hasPointI = j["hasPointI"];
+		numPoints = j["numPoints"];
+		numValidPoints = j["numValidPoints"];
 
-		scanInfo.numPoints = j["numPoints"];
-		scanInfo.numValidPoints = j["numValidPoints"];
-
-		scanInfo.ID = j["ID"];
-
-		return scanInfo;
+		serialNumber = j["serialNumber"];
 	}
 
-	void Scan::Load(const e57::ImageFile& imf, const e57::VectorNode& data3D, int64_t scanID)
+	//
+	template<Scanner scanner>
+	void E57ScanData<scanner>::Load(const e57::ImageFile& imf, const e57::VectorNode& data3D, int64_t serialNumber_)
 	{
-		ID = scanID;
-		e57::StructureNode scan(data3D.get(scanID));
+		serialNumber = serialNumber_;
+		e57::StructureNode scan(data3D.get(serialNumber));
 		std::vector<e57::SourceDestBuffer> sdBuffers;
 
 		// Parse pose
@@ -114,7 +210,7 @@ namespace RecRoom
 				transform.block(0, 3, 3, 1) = position;
 			}
 			else
-				PCL_WARN("[e57::%s::Load] Scan didnot define pose translation.\n", "Scan");
+				WARNING("Scan didnot define pose translation, use default value");
 
 			if (scanPose.isDefined("rotation"))
 			{
@@ -131,10 +227,10 @@ namespace RecRoom
 				transform.block(0, 0, 3, 3) = orientation.toRotationMatrix();
 			}
 			else
-				PCL_WARN("[e57::%s::Load] Scan didnot define pose rotation.\n", "Scan");
+				WARNING("Scan didnot define pose rotation, use default value");
 		}
 		else
-			PCL_WARN("[e57::%s::Load] Scan didnot define pose.\n", "Scan");
+			WARNING(" Scan didnot define pose, use default value");
 
 		// Parse scale & offset
 		if (scan.isDefined("points"))
@@ -156,7 +252,7 @@ namespace RecRoom
 
 				if (proto.isDefined("cartesianX") && proto.isDefined("cartesianY") && proto.isDefined("cartesianZ"))
 				{
-					coodSys = CoodSys::XYZ;
+					coodSys = CoodSys::XYZ_PX_PY_PZ;// E57 use this
 					hasPointXYZ = true;
 					protoXNode = std::shared_ptr<e57::Node>(new e57::Node(proto.get("cartesianX")));
 					protoYNode = std::shared_ptr<e57::Node>(new e57::Node(proto.get("cartesianY")));
@@ -170,8 +266,7 @@ namespace RecRoom
 				}
 				else if (proto.isDefined("sphericalRange") && proto.isDefined("sphericalAzimuth") && proto.isDefined("sphericalElevation"))
 				{
-					coodSys = CoodSys::RAE;
-					raeMode = RAEMode::E_X_Y; // E57 use this
+					coodSys = CoodSys::RAE_E_PX_PY;// E57 use this
 					hasPointXYZ = true;
 					protoXNode = std::shared_ptr<e57::Node>(new e57::Node(proto.get("sphericalRange")));
 					protoYNode = std::shared_ptr<e57::Node>(new e57::Node(proto.get("sphericalAzimuth")));
@@ -212,7 +307,7 @@ namespace RecRoom
 					e57::CompressedVectorReader reader = scanPoints.reader(sdBuffers);
 					if (reader.read() <= 0)
 					{
-						PCL_WARN("[e57::%s::Load] Failed to read E57 points, ignore the scan.\n", "Scan");
+						WARNING("Failed to read E57 points, ignore the scan");
 						hasPointXYZ = false;
 						hasPointRGB = false;
 						hasPointI = false;
@@ -221,13 +316,14 @@ namespace RecRoom
 				}
 			}
 			else
-				PCL_WARN("[e57::%s::Load] Not supported scan points type.\n", "Scan");
+				WARNING("Not supported scan points type, igore the scan");
 		}
 		else
-			PCL_WARN("[e57::%s::Load] Scan didnot define points.\n", "Scan");
+			WARNING("Scan didnot define points, igore the scan");
 	}
 
-	void Scan::ExtractValidPointCloud(pcl::PointCloud<PointE57>& scanCloud, const uint8_t minRGB)
+	template<Scanner scanner>
+	void E57ScanData<scanner>::ToPointCloud(pcl::PointCloud<PointE57>& scanCloud)
 	{
 		if ((hasPointXYZ || hasPointRGB || hasPointI))
 		{
@@ -245,28 +341,10 @@ namespace RecRoom
 				PointE57 sp;
 				if (hasPointXYZ)
 				{
-					switch (coodSys)
-					{
-					case CoodSys::XYZ:
-						sp.x = _x[pi];
-						sp.y = _y[pi];
-						sp.z = _z[pi];
-						break;
-
-					case CoodSys::RAE:
-					{
-						Eigen::Vector3d xyz = RAEToXYZ(raeMode, Eigen::Vector3d(_x[pi], _y[pi], _z[pi]));
-
-						sp.x = xyz.x();
-						sp.y = xyz.y();
-						sp.z = xyz.z();
-					}
-					break;
-
-					default:
-						throw std::exception("Coordinate system invalid!!?");
-						break;
-					}
+					Eigen::Vector3d xyz = CoodConvert<CoodSys::XYZ_PX_PY_PZ, coodSys>(Eigen::Vector3d(_x[pi], _y[pi], _z[pi]));
+					sp.x = xyz.x();
+					sp.y = xyz.y();
+					sp.z = xyz.z();
 				}
 
 #ifdef POINT_E57_WITH_RGB
@@ -294,11 +372,11 @@ namespace RecRoom
 #ifdef POINT_E57_WITH_LABEL
 				sp.label = (uint32_t)ID;
 #endif
-				if (sp.Valid() && (sp.r >= minRGB || sp.g >= minRGB || sp.b >= minRGB))
+				if (pcl::isFinite(sp))
 					scanCloud.push_back(sp);
 			}
 			pcl::transformPointCloud(scanCloud, scanCloud, transform);
 			numValidPoints = scanCloud.size();
 		}
-	}*/
+	}
 }
