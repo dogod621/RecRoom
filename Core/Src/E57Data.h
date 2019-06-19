@@ -14,11 +14,13 @@ namespace RecRoom
 	class E57ScanData : public ScanData<PointE57>
 	{
 	public:
-		using Ptr = boost::shared_ptr<E57ScanData>;
-		using ConstPtr = boost::shared_ptr<const E57ScanData>;
-
+		using Base = ScanData<PointE57>;
+		using Self = E57ScanData;
+		using Ptr = boost::shared_ptr<Self>;
+		using ConstPtr = boost::shared_ptr<const Self>;
+		
 	public:
-		E57ScanData() : ScanData(), coodSys(CoodSys::CoodSys_UNKNOWN), hasPointXYZ(false), hasPointRGB(false), hasPointI(false) {}
+		E57ScanData() : Base(), coodSys(CoodSys::CoodSys_UNKNOWN), hasPointXYZ(false), hasPointRGB(false), hasPointI(false) {}
 		void ClearBuffers();
 
 	public:

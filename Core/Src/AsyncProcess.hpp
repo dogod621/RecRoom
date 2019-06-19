@@ -10,7 +10,6 @@ namespace RecRoom
 		if (!globalData) return -2;
 		if (!query) return -3;
 		if (!bufferData) return -4;
-		if ((*bufferData)) return -5;
 
 		//
 		(*bufferData) = std::shared_ptr<DataT>(new DataT);
@@ -27,7 +26,6 @@ namespace RecRoom
 
 		//
 		int status = b_Callback(*globalData, *query, *(*bufferData));
-		(*bufferData) = nullptr;
 		return status;
 	}
 

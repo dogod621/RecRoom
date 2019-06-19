@@ -10,8 +10,11 @@ namespace RecRoom
 	class Segmenter : public pcl::PCLBase<PointType>
 	{
 	public:
-		using Ptr = boost::shared_ptr<Segmenter<PointType>>;
-		using ConstPtr = boost::shared_ptr<const Segmenter<PointType>>;
+		using Base = pcl::PCLBase<PointType>; 
+		using Self = Segmenter;
+		using Ptr = boost::shared_ptr<Self>;
+		using ConstPtr = boost::shared_ptr<const Self>;
+		
 	};
 }
 

@@ -18,7 +18,7 @@ namespace RecRoom
 
 	void E57ScanData::FromJson(const nlohmann::json& j)
 	{
-		ScanData<PointE57>::FromJson(j);
+		Base::FromJson(j);
 		hasPointXYZ = j["hasPointXYZ"];
 		hasPointRGB = j["hasPointRGB"];
 		hasPointI = j["hasPointI"];
@@ -54,7 +54,7 @@ namespace RecRoom
 
 	void E57ScanData::ToJson(nlohmann::json& j) const
 	{
-		ScanData<PointE57>::ToJson(j);
+		Base::ToJson(j);
 		j["hasPointXYZ"] = hasPointXYZ;
 		j["hasPointRGB"] = hasPointRGB;
 		j["hasPointI"] = hasPointI;

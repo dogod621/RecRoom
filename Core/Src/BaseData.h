@@ -15,8 +15,9 @@ namespace RecRoom
 	class Data
 	{
 	public:
-		using Ptr = boost::shared_ptr<Data>;
-		using ConstPtr = boost::shared_ptr<const Data>;
+		using Self = Data;
+		using Ptr = boost::shared_ptr<Self>;
+		using ConstPtr = boost::shared_ptr<const Self>;
 
 	public:
 		Data() {}
@@ -31,11 +32,13 @@ namespace RecRoom
 	class Data3D : public Data
 	{
 	public:
-		using Ptr = boost::shared_ptr<Data3D>;
-		using ConstPtr = boost::shared_ptr<const Data3D>;
-
+		using Base = Data;
+		using Self = Data3D;
+		using Ptr = boost::shared_ptr<Self>;
+		using ConstPtr = boost::shared_ptr<const Self>;
+		
 	public:
-		Data3D() : transform(Eigen::Matrix4d::Identity()), orientation(Eigen::Quaterniond(0.0, 0.0, 0.0, 0.0)), position(Eigen::Vector3d(0.0, 0.0, 0.0)) {}
+		Data3D() : Base(), transform(Eigen::Matrix4d::Identity()), orientation(Eigen::Quaterniond(0.0, 0.0, 0.0, 0.0)), position(Eigen::Vector3d(0.0, 0.0, 0.0)) {}
 	
 	public:
 		virtual void FromJson(const nlohmann::json& j);
@@ -56,11 +59,13 @@ namespace RecRoom
 	class PointCloudData : public Data3D
 	{
 	public:
-		using Ptr = boost::shared_ptr<PointCloudData<PointType>>;
-		using ConstPtr = boost::shared_ptr<const PointCloudData<PointType>>;
-
+		using Base = Data3D;
+		using Self = PointCloudData<PointType>;
+		using Ptr = boost::shared_ptr<Self>;
+		using ConstPtr = boost::shared_ptr<const Self>;
+		
 	public:
-		PointCloudData() : Data3D(), numPoints(0) {}
+		PointCloudData() : Base(), numPoints(0) {}
 
 	public:
 		virtual void FromJson(const nlohmann::json& j);
@@ -80,11 +85,13 @@ namespace RecRoom
 	class ScanData : public PointCloudData<PointType>
 	{
 	public:
-		using Ptr = boost::shared_ptr<ScanData<PointType>>;
-		using ConstPtr = boost::shared_ptr<const ScanData<PointType>>;
-
+		using Base = PointCloudData<PointType>;
+		using Self = ScanData;
+		using Ptr = boost::shared_ptr<Self>;
+		using ConstPtr = boost::shared_ptr<const Self>;
+		
 	public:
-		ScanData() : PointCloudData(), scanner(Scanner::Scaner_UNKNOWN), serialNumber(-1) {}
+		ScanData() : Base(), scanner(Scanner::Scaner_UNKNOWN), serialNumber(-1) {}
 
 	public:
 		virtual void FromJson(const nlohmann::json& j);

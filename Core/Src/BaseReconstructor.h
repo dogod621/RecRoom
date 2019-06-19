@@ -1,63 +1,83 @@
 #pragma once
 
+#include <pcl/outofcore/outofcore.h>
+#include <pcl/outofcore/outofcore_impl.h>
+#include <pcl/filters/filter.h>
+#include <pcl/filters/filter_indices.h>
+#include <pcl/surface/processing.h>
+#include <pcl/features/feature.h>
+
 #include "Common.h"
 #include "Coordinate.h"
 #include "BaseData.h"
+#include "BaseSegmenter.h"
 
 namespace RecRoom
 {
-	template<
-		class RAWContainer_, class NDFContainer_,
-		class DownSampler_, class OutlierRemover_,
-		class SurfaceProcesser_, class NormalEstimater_, class AlbedoEstimater_, class Segmenter_,
-		class RawPointCloud_, class PointCloud_>
-		class Reconstructor : public Data
+	template<class RawPointType_, class MedPointType_, class RecPointType_>
+	class Reconstructor : public Data
 	{
 	public:
-		using Ptr = boost::shared_ptr<Reconstructor< RAWContainer_, NDFContainer_, DownSampler_, OutlierRemover_, SurfaceProcesser_, NormalEstimater_, AlbedoEstimater_, Segmenter_, RawPointCloud_, PointCloud_>>;
-		using ConstPtr = boost::shared_ptr<const Reconstructor< RAWContainer_, NDFContainer_, DownSampler_, OutlierRemover_, SurfaceProcesser_, NormalEstimater_, AlbedoEstimater_, Segmenter_, RawPointCloud_, PointCloud_>>;
+		using Base = Data;
+		using Self = Reconstructor<RawPointType_, MedPointType_, RecPointType_>;
+		using Ptr = boost::shared_ptr<Self>;
+		using ConstPtr = boost::shared_ptr<Self>;
+		
+		using RawPointType = RawPointType_;
+		using MedPointType = MedPointType_;
+		using RecPointType = RecPointType_;
 
-		using RAWContainer = RAWContainer_;
-		using NDFContainer = NDFContainer_;
-		using DownSampler = DownSampler_;
-		using OutlierRemover = OutlierRemover_;
-		using SurfaceProcesser = SurfaceProcesser_;
-		using NormalEstimater = NormalEstimater_;
-		using AlbedoEstimater = AlbedoEstimater_;
-		using Segmenter = Segmenter_;
-		using RawPointCloud = RawPointCloud_;
-		using PointCloud = PointCloud_;
+		using RAWContainer = pcl::outofcore::OutofcoreOctreeBase<pcl::outofcore::OutofcoreOctreeDiskContainer<RawPointType>, RawPointType>;
+		using NDFContainer = pcl::outofcore::OutofcoreOctreeBase<pcl::outofcore::OutofcoreOctreeDiskContainer<PointNDF>, PointNDF>;
+		using DownSampler = pcl::Filter<RawPointType>;
+		using OutlierRemover = pcl::FilterIndices<MedPointType>;
+		using SurfaceProcesser = pcl::CloudSurfaceProcessing<MedPointType, MedPointType>;
+		using NormalEstimater = pcl::Feature<MedPointType, MedPointType>;
+		using AlbedoEstimater = pcl::Feature<MedPointType, MedPointType>;
+		using Segmenter = Segmenter<MedPointType>;
+		using RawPointCloud = pcl::PointCloud<RawPointType>;
+		using MedPointCloud = pcl::PointCloud<MedPointType>;
+		using RecPointCloud = pcl::PointCloud<RecPointType>;
 
-		using RAWContainerPtr = boost::shared_ptr < RAWContainer_>;
-		using NDFContainerPtr = boost::shared_ptr < NDFContainer_>;
-		using DownSamplerPtr = boost::shared_ptr < DownSampler_>;
-		using OutlierRemoverPtr = boost::shared_ptr < OutlierRemover_>;
-		using SurfaceProcesserPtr = boost::shared_ptr < SurfaceProcesser_>;
-		using NormalEstimaterPtr = boost::shared_ptr < NormalEstimater_>;
-		using AlbedoEstimaterPtr = boost::shared_ptr < AlbedoEstimater_>;
-		using SegmenterPtr = boost::shared_ptr < Segmenter_>;
-		using RawPointCloudPtr = boost::shared_ptr < RawPointCloud_>;
-		using PointCloudPtr = boost::shared_ptr < PointCloud_>;
+		using RAWContainerPtr = boost::shared_ptr<RAWContainer>;
+		using NDFContainerPtr = boost::shared_ptr<NDFContainer>;
+		using DownSamplerPtr = boost::shared_ptr<DownSampler>;
+		using OutlierRemoverPtr = boost::shared_ptr<OutlierRemover>;
+		using SurfaceProcesserPtr = boost::shared_ptr<SurfaceProcesser>;
+		using NormalEstimaterPtr = boost::shared_ptr<NormalEstimater>;
+		using AlbedoEstimaterPtr = boost::shared_ptr<AlbedoEstimater>;
+		using SegmenterPtr = boost::shared_ptr<Segmenter>;
+		using RawPointCloudPtr = boost::shared_ptr<RawPointCloud>;
+		using MedPointCloudPtr = boost::shared_ptr<MedPointCloud>;
+		using RecPointCloudPtr = boost::shared_ptr<RecPointCloud>;
 
-		using RAWContainerConstPtr = boost::shared_ptr <const RAWContainer_>;
-		using NDFContainerConstPtr = boost::shared_ptr <const NDFContainer_>;
-		using DownSamplerConstPtr = boost::shared_ptr <const DownSampler_>;
-		using OutlierRemoverConstPtr = boost::shared_ptr <const OutlierRemover_>;
-		using SurfaceProcesserConstPtr = boost::shared_ptr <const SurfaceProcesser_>;
-		using NormalEstimaterConstPtr = boost::shared_ptr <const NormalEstimater_>;
-		using AlbedoEstimaterConstPtr = boost::shared_ptr <const AlbedoEstimater_>;
-		using SegmenterConstPtr = boost::shared_ptr <const Segmenter_>;
-		using RawPointCloudConstPtr = boost::shared_ptr <const RawPointCloud_>;
-		using PointCloudConstPtr = boost::shared_ptr <const PointCloud_>;
+		using RAWContainerConstPtr = boost::shared_ptr<const RAWContainer>;
+		using NDFContainerConstPtr = boost::shared_ptr<const NDFContainer>;
+		using DownSamplerConstPtr = boost::shared_ptr<const DownSampler>;
+		using OutlierRemoverConstPtr = boost::shared_ptr<const OutlierRemover>;
+		using SurfaceProcesserConstPtr = boost::shared_ptr<const SurfaceProcesser>;
+		using NormalEstimaterConstPtr = boost::shared_ptr<const NormalEstimater>;
+		using AlbedoEstimaterConstPtr = boost::shared_ptr<const AlbedoEstimater>;
+		using SegmenterConstPtr = boost::shared_ptr<const Segmenter>;
+		using RawPointCloudConstPtr = boost::shared_ptr<const RawPointCloud>;
+		using MedPointCloudConstPtr = boost::shared_ptr<const MedPointCloud>;
+		using RecPointCloudConstPtr = boost::shared_ptr<const RecPointCloud>;
 
 	public:
-		Reconstructor() : Data() {}
+		// This constructor will create a new container
+		Reconstructor(const boost::filesystem::path& filePath, const Eigen::Vector3d& min, const Eigen::Vector3d& max, const double resolution, const double outofCoreLeafOverlap = -1);
+
+		// This constructor will load exist container
+		Reconstructor(const boost::filesystem::path& filePath, const double outofCoreLeafOverlap = -1);
+
+		void ReconstructLOD(const double samplePercent = 0.125);
 
 	public:
 		virtual void ReconstructPointCloud() { THROW_EXCEPTION("Interface is not implemented"); }
 		virtual void ReconstructAlbedo() { THROW_EXCEPTION("Interface is not implemented"); }
 		virtual void ReconstructSegment() { THROW_EXCEPTION("Interface is not implemented"); }
 		virtual void ReconstructNDF() { THROW_EXCEPTION("Interface is not implemented"); }
+		virtual void ReconstructSurcafe() { THROW_EXCEPTION("Interface is not implemented"); }
 		virtual void SynthScanImages(const boost::filesystem::path& scanImagePath, const Mapping mapping, unsigned int width, const unsigned int height) { THROW_EXCEPTION("Interface is not implemented"); }
 
 	public:
@@ -69,7 +89,7 @@ namespace RecRoom
 		inline NormalEstimaterPtr getNormalEstimater() const { return normalEstimater; }
 		inline AlbedoEstimaterPtr getAlbedoEstimater() const { return albedoEstimater; }
 		inline SegmenterPtr getSegmenter() const { return segmenter; }
-		inline PointCloudPtr getPointCloud() const { return pointCloud; }
+		inline RecPointCloudPtr getPointCloud() const { return recPointCloud; }
 
 		inline void setDownSampler(DownSamplerPtr v) { downSampler = v; }
 		inline void setOutlierRemover(OutlierRemoverPtr v) { outlierRemover = v; }
@@ -77,7 +97,7 @@ namespace RecRoom
 		inline void setNormalEstimater(NormalEstimaterPtr v) { normalEstimater = v; }
 		inline void setAlbedoEstimater(AlbedoEstimaterPtr v) { albedoEstimater = v; }
 		inline void setSegmenter(SegmenterPtr v) { segmenter = v; }
-		inline void setPointCloud(PointCloudPtr v) { pointCloud = v; }
+		inline void setRecPointCloud(RecPointCloudPtr v) { recPointCloud = v; }
 
 	protected:
 		RAWContainerPtr rawContainer;
@@ -88,7 +108,10 @@ namespace RecRoom
 		NormalEstimaterPtr normalEstimater;
 		AlbedoEstimaterPtr albedoEstimater;
 		SegmenterPtr segmenter;
-		PointCloudPtr pointCloud;
+		RecPointCloudPtr recPointCloud;
+
+		boost::filesystem::path filePath;
+		double outofCoreLeafOverlap;
 	};
 }
 
