@@ -1,6 +1,6 @@
 #pragma once
 
-#include <memory>
+#include <vector>
 
 #include "E57Format.h"
 
@@ -14,7 +14,12 @@ namespace RecRoom
 	class E57ScanData : public ScanData<PointE57>
 	{
 	public:
+		using Ptr = boost::shared_ptr<E57ScanData>;
+		using ConstPtr = boost::shared_ptr<const E57ScanData>;
+
+	public:
 		E57ScanData() : ScanData(), coodSys(CoodSys::CoodSys_UNKNOWN), hasPointXYZ(false), hasPointRGB(false), hasPointI(false) {}
+		void ClearBuffers();
 
 	public:
 		virtual void FromJson(const nlohmann::json& j);
@@ -31,13 +36,13 @@ namespace RecRoom
 		bool hasPointXYZ;
 		bool hasPointRGB;
 		bool hasPointI;
-		std::shared_ptr<float> x;
-		std::shared_ptr<float> y;
-		std::shared_ptr<float> z;
-		std::shared_ptr<float> i;
-		std::shared_ptr<uint8_t> r;
-		std::shared_ptr<uint8_t> g;
-		std::shared_ptr<uint8_t> b;
+		std::vector<float> xBuffer;
+		std::vector<float> yBuffer;
+		std::vector<float> zBuffer;
+		std::vector<float> iBuffer;
+		std::vector<uint8_t> rBuffer;
+		std::vector<uint8_t> gBuffer;
+		std::vector<uint8_t> bBuffer;
 	};
 
 	//

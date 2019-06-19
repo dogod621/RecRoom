@@ -5,12 +5,51 @@
 namespace RecRoom
 {
 	//
+	void E57ScanData::ClearBuffers()
+	{
+		xBuffer.clear();
+		yBuffer.clear();
+		zBuffer.clear();
+		iBuffer.clear();
+		rBuffer.clear();
+		gBuffer.clear();
+		bBuffer.clear();
+	}
+
 	void E57ScanData::FromJson(const nlohmann::json& j)
 	{
 		ScanData<PointE57>::FromJson(j);
 		hasPointXYZ = j["hasPointXYZ"];
 		hasPointRGB = j["hasPointRGB"];
 		hasPointI = j["hasPointI"];
+		/*xBuffer.resize(j["xBuffer"].size());
+		yBuffer.resize(j["yBuffer"].size());
+		zBuffer.resize(j["zBuffer"].size());
+		iBuffer.resize(j["iBuffer"].size());
+		rBuffer.resize(j["rBuffer"].size());
+		gBuffer.resize(j["gBuffer"].size());
+		bBuffer.resize(j["bBuffer"].size());
+		for (std::size_t px = 0; px < xBuffer.size(); ++px)
+			xBuffer[px] = j["xBuffer"][px];
+		for (std::size_t px = 0; px < yBuffer.size(); ++px)
+			yBuffer[px] = j["yBuffer"][px];
+		for (std::size_t px = 0; px < zBuffer.size(); ++px)
+			zBuffer[px] = j["zBuffer"][px];
+		for (std::size_t px = 0; px < iBuffer.size(); ++px)
+			iBuffer[px] = j["iBuffer"][px];
+		for (std::size_t px = 0; px < rBuffer.size(); ++px)
+			rBuffer[px] = j["rBuffer"][px];
+		for (std::size_t px = 0; px < gBuffer.size(); ++px)
+			gBuffer[px] = j["gBuffer"][px];
+		for (std::size_t px = 0; px < bBuffer.size(); ++px)
+			bBuffer[px] = j["bBuffer"][px];*/
+		xBuffer = j["xBuffer"].get<std::vector<float>>();
+		yBuffer = j["yBuffer"].get<std::vector<float>>();
+		zBuffer = j["zBuffer"].get<std::vector<float>>();
+		iBuffer = j["iBuffer"].get<std::vector<float>>();
+		rBuffer = j["rBuffer"].get<std::vector<uint8_t>>();
+		gBuffer = j["gBuffer"].get<std::vector<uint8_t>>();
+		bBuffer = j["bBuffer"].get<std::vector<uint8_t>>();
 	}
 
 	void E57ScanData::ToJson(nlohmann::json& j) const
@@ -19,6 +58,13 @@ namespace RecRoom
 		j["hasPointXYZ"] = hasPointXYZ;
 		j["hasPointRGB"] = hasPointRGB;
 		j["hasPointI"] = hasPointI;
+		j["xBuffer"] = xBuffer;
+		j["yBuffer"] = yBuffer;
+		j["zBuffer"] = zBuffer;
+		j["iBuffer"] = iBuffer;
+		j["rBuffer"] = rBuffer;
+		j["gBuffer"] = gBuffer;
+		j["bBuffer"] = bBuffer;
 	}
 
 	//
@@ -90,12 +136,12 @@ namespace RecRoom
 					protoXNode = std::shared_ptr<e57::Node>(new e57::Node(proto.get("cartesianX")));
 					protoYNode = std::shared_ptr<e57::Node>(new e57::Node(proto.get("cartesianY")));
 					protoZNode = std::shared_ptr<e57::Node>(new e57::Node(proto.get("cartesianZ")));
-					x = std::shared_ptr<float>(new float[numPoints]);
-					y = std::shared_ptr<float>(new float[numPoints]);
-					z = std::shared_ptr<float>(new float[numPoints]);
-					sdBuffers.push_back(e57::SourceDestBuffer(imf, "cartesianX", x.get(), numPoints, true, true));
-					sdBuffers.push_back(e57::SourceDestBuffer(imf, "cartesianY", y.get(), numPoints, true, true));
-					sdBuffers.push_back(e57::SourceDestBuffer(imf, "cartesianZ", z.get(), numPoints, true, true));
+					xBuffer.resize(numPoints);
+					yBuffer.resize(numPoints);
+					zBuffer.resize(numPoints);
+					sdBuffers.push_back(e57::SourceDestBuffer(imf, "cartesianX", &xBuffer[0], numPoints, true, true));
+					sdBuffers.push_back(e57::SourceDestBuffer(imf, "cartesianY", &yBuffer[0], numPoints, true, true));
+					sdBuffers.push_back(e57::SourceDestBuffer(imf, "cartesianZ", &zBuffer[0], numPoints, true, true));
 				}
 				else if (proto.isDefined("sphericalRange") && proto.isDefined("sphericalAzimuth") && proto.isDefined("sphericalElevation"))
 				{
@@ -104,12 +150,12 @@ namespace RecRoom
 					protoXNode = std::shared_ptr<e57::Node>(new e57::Node(proto.get("sphericalRange")));
 					protoYNode = std::shared_ptr<e57::Node>(new e57::Node(proto.get("sphericalAzimuth")));
 					protoZNode = std::shared_ptr<e57::Node>(new e57::Node(proto.get("sphericalElevation")));
-					x = std::shared_ptr<float>(new float[numPoints]);
-					y = std::shared_ptr<float>(new float[numPoints]);
-					z = std::shared_ptr<float>(new float[numPoints]);
-					sdBuffers.push_back(e57::SourceDestBuffer(imf, "sphericalRange", x.get(), numPoints, true, true));
-					sdBuffers.push_back(e57::SourceDestBuffer(imf, "sphericalAzimuth", y.get(), numPoints, true, true));
-					sdBuffers.push_back(e57::SourceDestBuffer(imf, "sphericalElevation", z.get(), numPoints, true, true));
+					xBuffer.resize(numPoints);
+					yBuffer.resize(numPoints);
+					zBuffer.resize(numPoints);
+					sdBuffers.push_back(e57::SourceDestBuffer(imf, "sphericalRange", &xBuffer[0], numPoints, true, true));
+					sdBuffers.push_back(e57::SourceDestBuffer(imf, "sphericalAzimuth", &yBuffer[0], numPoints, true, true));
+					sdBuffers.push_back(e57::SourceDestBuffer(imf, "sphericalElevation", &zBuffer[0], numPoints, true, true));
 				}
 
 				if (proto.isDefined("colorRed") && proto.isDefined("colorGreen") && proto.isDefined("colorBlue") && E57_CAN_CONTAIN_RGB)
@@ -118,20 +164,20 @@ namespace RecRoom
 					protoRNode = std::shared_ptr<e57::Node>(new e57::Node(proto.get("colorRed")));
 					protoGNode = std::shared_ptr<e57::Node>(new e57::Node(proto.get("colorGreen")));
 					protoBNode = std::shared_ptr<e57::Node>(new e57::Node(proto.get("colorBlue")));
-					r = std::shared_ptr<uint8_t>(new uint8_t[numPoints]);
-					g = std::shared_ptr<uint8_t>(new uint8_t[numPoints]);
-					b = std::shared_ptr<uint8_t>(new uint8_t[numPoints]);
-					sdBuffers.push_back(e57::SourceDestBuffer(imf, "colorRed", r.get(), numPoints, true, true));
-					sdBuffers.push_back(e57::SourceDestBuffer(imf, "colorGreen", g.get(), numPoints, true, true));
-					sdBuffers.push_back(e57::SourceDestBuffer(imf, "colorBlue", b.get(), numPoints, true, true));
+					rBuffer.resize(numPoints);
+					gBuffer.resize(numPoints);
+					bBuffer.resize(numPoints);
+					sdBuffers.push_back(e57::SourceDestBuffer(imf, "colorRed", &rBuffer[0], numPoints, true, true));
+					sdBuffers.push_back(e57::SourceDestBuffer(imf, "colorGreen", &gBuffer[0], numPoints, true, true));
+					sdBuffers.push_back(e57::SourceDestBuffer(imf, "colorBlue", &bBuffer[0], numPoints, true, true));
 				}
 
 				if (proto.isDefined("intensity") && E57_CAN_CONTAIN_INTENSITY)
 				{
 					hasPointI = true;
 					protoINode = std::shared_ptr<e57::Node>(new e57::Node(proto.get("intensity")));
-					i = std::shared_ptr<float>(new float[numPoints]);
-					sdBuffers.push_back(e57::SourceDestBuffer(imf, "intensity", i.get(), numPoints, true, true));
+					iBuffer.resize(numPoints);
+					sdBuffers.push_back(e57::SourceDestBuffer(imf, "intensity", &iBuffer[0], numPoints, true, true));
 				}
 
 				//
@@ -160,14 +206,6 @@ namespace RecRoom
 		if ((hasPointXYZ || hasPointRGB || hasPointI))
 		{
 			scanCloud.reserve(numPoints);
-			float* _x = x.get();
-			float* _y = y.get();
-			float* _z = z.get();
-			float* _i = i.get();
-			uint8_t * _r = r.get();
-			uint8_t * _g = g.get();
-			uint8_t * _b = b.get();
-
 			for (int64_t pi = 0; pi < numPoints; ++pi)
 			{
 				PointE57 sp;
@@ -176,8 +214,8 @@ namespace RecRoom
 					Eigen::Vector3d xyz;
 					switch (coodSys)
 					{
-					case CoodSys::XYZ_PX_PY_PZ: xyz = Eigen::Vector3d(_x[pi], _y[pi], _z[pi]); break;
-					case CoodSys::RAE_PE_PX_PY: xyz = CoodConvert<CoodSys::XYZ_PX_PY_PZ, CoodSys::RAE_PE_PX_PY>(Eigen::Vector3d(_x[pi], _y[pi], _z[pi])); break;
+					case CoodSys::XYZ_PX_PY_PZ: xyz = Eigen::Vector3d(xBuffer[pi], yBuffer[pi], zBuffer[pi]); break;
+					case CoodSys::RAE_PE_PX_PY: xyz = CoodConvert<CoodSys::XYZ_PX_PY_PZ, CoodSys::RAE_PE_PX_PY>(Eigen::Vector3d(xBuffer[pi], yBuffer[pi], zBuffer[pi])); break;
 					default: THROW_EXCEPTION("coodSys is invalid"); break;
 					}
 					sp.x = xyz.x();
@@ -188,9 +226,9 @@ namespace RecRoom
 #ifdef POINT_E57_WITH_RGB
 				if (hasPointRGB)
 				{
-					sp.r = _r[pi];
-					sp.g = _g[pi];
-					sp.b = _b[pi];
+					sp.r = rBuffer[pi];
+					sp.g = gBuffer[pi];
+					sp.b = bBuffer[pi];
 				}
 				else
 				{
@@ -203,7 +241,7 @@ namespace RecRoom
 #ifdef POINT_E57_WITH_INTENSITY
 				if (hasPointI)
 				{
-					sp.intensity = _i[pi];
+					sp.intensity = iBuffer[pi];
 				}
 #endif
 

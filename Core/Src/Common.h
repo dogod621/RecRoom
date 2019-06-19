@@ -8,6 +8,7 @@
 #include <exception>
 #include <Eigen/Core>
 #include <boost/filesystem.hpp>
+#include <boost/shared_ptr.hpp>
 #include <pcl/console/print.h>
 
 namespace RecRoom

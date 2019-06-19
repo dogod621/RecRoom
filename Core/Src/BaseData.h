@@ -15,6 +15,10 @@ namespace RecRoom
 	class Data
 	{
 	public:
+		using Ptr = boost::shared_ptr<Data>;
+		using ConstPtr = boost::shared_ptr<const Data>;
+
+	public:
 		Data() {}
 
 	public:
@@ -26,6 +30,10 @@ namespace RecRoom
 
 	class Data3D : public Data
 	{
+	public:
+		using Ptr = boost::shared_ptr<Data3D>;
+		using ConstPtr = boost::shared_ptr<const Data3D>;
+
 	public:
 		Data3D() : transform(Eigen::Matrix4d::Identity()), orientation(Eigen::Quaterniond(0.0, 0.0, 0.0, 0.0)), position(Eigen::Vector3d(0.0, 0.0, 0.0)) {}
 	
@@ -48,6 +56,10 @@ namespace RecRoom
 	class PointCloudData : public Data3D
 	{
 	public:
+		using Ptr = boost::shared_ptr<PointCloudData<PointType>>;
+		using ConstPtr = boost::shared_ptr<const PointCloudData<PointType>>;
+
+	public:
 		PointCloudData() : Data3D(), numPoints(0) {}
 
 	public:
@@ -67,6 +79,10 @@ namespace RecRoom
 	template<class PointType>
 	class ScanData : public PointCloudData<PointType>
 	{
+	public:
+		using Ptr = boost::shared_ptr<ScanData<PointType>>;
+		using ConstPtr = boost::shared_ptr<const ScanData<PointType>>;
+
 	public:
 		ScanData() : PointCloudData(), scanner(Scanner::Scaner_UNKNOWN), serialNumber(-1) {}
 
