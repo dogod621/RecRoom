@@ -60,6 +60,12 @@ namespace RecRoom
 
 		void ReconstructLOD(const double samplePercent = 0.125);
 
+		void WarpReconstructPointCloud();
+		void WarpReconstructAlbedo();
+		void WarpReconstructSegment();
+		void WarpReconstructNDF();
+		void WarpReconstructSurcafe();
+
 	public:
 		virtual double SearchRadius() const;
 

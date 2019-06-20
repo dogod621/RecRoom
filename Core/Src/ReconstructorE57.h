@@ -10,6 +10,7 @@ namespace RecRoom
 {
 #define MAX_NUM_SEGMENT 65534 // Althogh origin lable range is [0, 2^32-1) (2^32-1 is used for encode UNKNOWN). Due to the out of core mechanism, it will become [0, 2^16-1)
 
+	//
 	class ReconstructorE57 : public Reconstructor<PointE57, PointE57xPCD, PointPCD, DataScanE57>
 	{
 	public:

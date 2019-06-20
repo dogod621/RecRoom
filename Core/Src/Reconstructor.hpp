@@ -130,6 +130,81 @@ namespace RecRoom
 	}
 
 	template<class PointRaw, class PointMed, class PointRec, class MetaScan>
+	void Reconstructor<PointRaw, PointMed, PointRec, MetaScan>::WarpReconstructPointCloud()
+	{
+		//
+		if (status != ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("Already exist reconstructed data, clear them.");
+		}
+		status = ReconstructStatus::ReconstructStatus_UNKNOWN;
+
+		//
+		pointCloudRec->clear();
+
+		//
+		ReconstructPointCloud();
+
+		//
+		status = (ReconstructStatus)(status | ReconstructStatus::POINT_CLOUD);
+	}
+
+	template<class PointRaw, class PointMed, class PointRec, class MetaScan>
+	void Reconstructor<PointRaw, PointMed, PointRec, MetaScan>::WarpReconstructAlbedo()
+	{
+		if((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+			THROW_EXCEPTION("pointCloud is reconstructed yet.");
+		if (pointCloudRec->empty())
+			THROW_EXCEPTION("pointCloud is empty.");
+
+		//
+		ReconstructAlbedo();
+
+		//
+		status = (ReconstructStatus)(status | ReconstructStatus::ALBEDO);
+	}
+
+	template<class PointRaw, class PointMed, class PointRec, class MetaScan>
+	void Reconstructor<PointRaw, PointMed, PointRec, MetaScan>::WarpReconstructSegment()
+	{
+		if (pointCloudRec->empty())
+			THROW_EXCEPTION("pointCloud is empty.");
+
+		//
+		ReconstructAlbedo();
+
+		//
+		status = (ReconstructStatus)(status | ReconstructStatus::SEGMENT);
+	}
+
+	template<class PointRaw, class PointMed, class PointRec, class MetaScan>
+	void Reconstructor<PointRaw, PointMed, PointRec, MetaScan>::WarpReconstructNDF()
+	{
+		if (pointCloudRec->empty())
+			THROW_EXCEPTION("pointCloud is empty.");
+
+		//
+		ReconstructAlbedo();
+
+		//
+		status = (ReconstructStatus)(status | ReconstructStatus::NDF);
+	}
+
+	template<class PointRaw, class PointMed, class PointRec, class MetaScan>
+	void Reconstructor<PointRaw, PointMed, PointRec, MetaScan>::WarpReconstructSurcafe()
+	{
+		if (pointCloudRec->empty())
+			THROW_EXCEPTION("pointCloud is empty.");
+
+		//
+		ReconstructAlbedo();
+
+		//
+		status = (ReconstructStatus)(status | ReconstructStatus::SURFACE);
+	}
+
+
+	template<class PointRaw, class PointMed, class PointRec, class MetaScan>
 	void Reconstructor<PointRaw, PointMed, PointRec, MetaScan>::FromJson(const nlohmann::json& j)
 	{
 		status = Convert<ReconstructStatus, nlohmann::json>(j["status"]);

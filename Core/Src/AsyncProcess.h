@@ -6,6 +6,20 @@
 
 namespace RecRoom
 {
+	class AsyncGlobal
+	{
+	public:
+		virtual int Check() const = 0;
+	};
+
+	template<class GlobalT>
+	class AsyncQuery
+	{
+	public:
+		virtual int Check(const GlobalT&) const = 0;
+		virtual std::string Info(const GlobalT&) const = 0;
+	};
+
 	template<class GlobalT, class QueryT, class DataT, std::size_t size = 1>
 	class AsyncProcess
 	{
@@ -14,18 +28,20 @@ namespace RecRoom
 		using Ptr = PTR(Self);
 		using ConstPtr = CONST_PTR(Self);
 
-		typedef int(*A_Callback)(GlobalT&, QueryT&, DataT&);
-		typedef int(*B_Callback)(GlobalT&, QueryT&, DataT&);
-		typedef int(*C_Callback)(GlobalT&, DataT&);
+		typedef int(*AStep)(GlobalT&, QueryT&, DataT&);
+		typedef int(*BStep)(GlobalT&, QueryT&, DataT&);
+		typedef int(*CStep)(GlobalT&, QueryT&, DataT&);
 
 	public:
-		static int Default_A(GlobalT&, QueryT&, DataT&) { return 0; }
-		static int Default_B(GlobalT&, QueryT&, DataT&) { return 0; }
-		static int Default_C(GlobalT&, DataT&) { return 0; }
+		static int Default_AStep(GlobalT&, QueryT&, DataT&) { return 0; }
+		static int Default_BStep(GlobalT&, QueryT&, DataT&) { return 0; }
+		static int Default_CStep(GlobalT&, QueryT&, DataT&) { return 0; }
 
-		static int A(A_Callback a_Callback, GlobalT* globalData, QueryT* query, PTR(DataT)* bufferData);
+		static int WarpAStep(AStep a_Callback, GlobalT* globalData, QueryT* query, PTR(DataT)* bufferData);
 
-		static int B(B_Callback b_Callback, GlobalT* globalData, QueryT* query, PTR(DataT)* bufferData);
+		static int WarpBStep(BStep b_Callback, GlobalT* globalData, QueryT* query, PTR(DataT)* bufferData);
+
+		static int WarpCStep(CStep c_Callback, GlobalT* globalData, QueryT* query, PTR(DataT)* bufferData);
 
 		struct BufferT
 		{
@@ -38,7 +54,10 @@ namespace RecRoom
 		};
 
 	public:
-		AsyncProcess(GlobalT& globalData, std::vector<QueryT>& queries, A_Callback a_Callback = AsyncProcess::Default_A, B_Callback b_Callback = AsyncProcess::Default_B, C_Callback c_Callback = AsyncProcess::Default_C);
+		AsyncProcess(GlobalT& globalData, std::vector<QueryT>& queries, 
+			AStep a = AsyncProcess::Default_AStep, 
+			BStep b = AsyncProcess::Default_BStep,
+			CStep c = AsyncProcess::Default_CStep);
 
 	protected:
 		std::vector<std::vector<BufferT>> doubleBuffer;
