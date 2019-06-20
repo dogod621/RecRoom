@@ -12,8 +12,8 @@
 
 namespace RecRoom
 {
-	ReconstructorE57::ReconstructorE57(const boost::filesystem::path& filePath, const Eigen::Vector3d& min, const Eigen::Vector3d& max, const double resolution, const double outofCoreLeafOverlap_)
-		: Reconstructor<PointE57, PointE57xPCD, PointPCD, DataScanE57>(filePath, min, max, resolution, outofCoreLeafOverlap_)
+	ReconstructorE57::ReconstructorE57(const boost::filesystem::path& filePath, const Eigen::Vector3d& min, const Eigen::Vector3d& max, const double resolution)
+		: Reconstructor<PointE57, PointE57xPCD, PointPCD, DataScanE57>(filePath, min, max, resolution)
 	{}
 
 	ReconstructorE57::ReconstructorE57(const boost::filesystem::path& filePath)
@@ -381,6 +381,7 @@ namespace RecRoom
 		//
 		std::vector<Query_Reconstruct> queries;
 		ContainerRawT::Iterator it(*containerRaw);
+		double outofCoreLeafOverlap = SearchRadius();
 		while (*it != nullptr)
 		{
 			if ((*it)->getNodeType() == pcl::octree::LEAF_NODE)

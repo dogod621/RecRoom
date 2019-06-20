@@ -8,6 +8,19 @@
 
 namespace RecRoom
 {
+	template<class PointRaw, class PointMed, class PointRec, class MetaScan>
+	double Reconstructor<PointRaw, PointMed, PointRec, MetaScan>::SearchRadius() const
+	{
+		double r = 0;
+		if (downSampler)r = std::max(r, downSampler->SearchRadius());
+		if (outlierRemover)r = std::max(r, outlierRemover->SearchRadius());
+		if (surfaceProcesser)r = std::max(r, surfaceProcesser->SearchRadius());
+		if (normalEstimater)r = std::max(r, normalEstimater->SearchRadius());
+		if (albedoEstimater)r = std::max(r, albedoEstimater->SearchRadius());
+		if (segmenter)r = std::max(r, segmenter->SearchRadius());
+		return r;
+	}
+
 	template<>
 	inline ReconstructStatus Convert<ReconstructStatus, std::string>(const std::string& v)
 	{
@@ -55,8 +68,8 @@ namespace RecRoom
 	}
 
 	template<class PointRaw, class PointMed, class PointRec, class MetaScan>
-	Reconstructor<PointRaw, PointMed, PointRec, MetaScan>::Reconstructor(const boost::filesystem::path& filePath, const Eigen::Vector3d& min, const Eigen::Vector3d& max, const double resolution, const double outofCoreLeafOverlap_)
-		: Data(), filePath(filePath), metaScans(new MetaScansT), status(ReconstructStatus::ReconstructStatus_UNKNOWN), outofCoreLeafOverlap(-1),
+	Reconstructor<PointRaw, PointMed, PointRec, MetaScan>::Reconstructor(const boost::filesystem::path& filePath, const Eigen::Vector3d& min, const Eigen::Vector3d& max, const double resolution)
+		: Data(), filePath(filePath), metaScans(new MetaScansT), status(ReconstructStatus::ReconstructStatus_UNKNOWN),
 		containerRaw(nullptr), containerNDF(nullptr), 
 		downSampler(nullptr), outlierRemover(nullptr), surfaceProcesser(nullptr), normalEstimater(nullptr), albedoEstimater(nullptr), segmenter(nullptr),
 		pointCloudRec(pointCloudRec)
@@ -74,9 +87,6 @@ namespace RecRoom
 		pointCloudRec = PointCloudRecT::Ptr(new PointCloudRecT);
 		pcl::io::savePCDFile((filePath / boost::filesystem::path("pointCloudRec.pcd")).string(), *pointCloudRec, true);
 
-		if (outofCoreLeafOverlap_ < 0)
-			outofCoreLeafOverlap = containerRaw->getVoxelSideLength() / 16;
-
 		std::string metaPath = (filePath / boost::filesystem::path("meta.txt")).string();
 		std::ofstream file(metaPath, std::ios_base::out);
 		if (!file)
@@ -89,7 +99,7 @@ namespace RecRoom
 
 	template<class PointRaw, class PointMed, class PointRec, class MetaScan>
 	Reconstructor<PointRaw, PointMed, PointRec, MetaScan>::Reconstructor(const boost::filesystem::path& filePath)
-		: Data(), filePath(filePath), metaScans(new MetaScansT), status(ReconstructStatus::ReconstructStatus_UNKNOWN), outofCoreLeafOverlap(-1),
+		: Data(), filePath(filePath), metaScans(new MetaScansT), status(ReconstructStatus::ReconstructStatus_UNKNOWN),
 		containerRaw(nullptr), containerNDF(nullptr),
 		downSampler(nullptr), outlierRemover(nullptr), surfaceProcesser(nullptr), normalEstimater(nullptr), albedoEstimater(nullptr), segmenter(nullptr),
 		pointCloudRec(pointCloudRec)
@@ -162,7 +172,6 @@ namespace RecRoom
 			}
 		}
 
-		outofCoreLeafOverlap = j["outofCoreLeafOverlap"];
 		if (j.find("downSampler") != j.end()) downSampler->FromJson(j["downSampler"]);
 		if (j.find("outlierRemover") != j.end()) outlierRemover->FromJson(j["outlierRemover"]);
 		if (j.find("surfaceProcesser") != j.end()) surfaceProcesser->FromJson(j["surfaceProcesser"]);
@@ -183,7 +192,7 @@ namespace RecRoom
 				(*metaScans)[i]->ToJson(j["metaScans"]);
 			}
 		}
-		j["outofCoreLeafOverlap"] = outofCoreLeafOverlap;
+
 		if(downSampler) downSampler->ToJson(j["downSampler"]);
 		if (outlierRemover) outlierRemover->ToJson(j["outlierRemover"]);
 		if (surfaceProcesser) surfaceProcesser->ToJson(j["surfaceProcesser"]);

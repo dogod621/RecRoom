@@ -17,6 +17,7 @@ namespace RecRoom
 
 	public:
 		virtual Ptr Clone() const { THROW_EXCEPTION("Interface is not implemented"); }
+		virtual double SearchRadius() const { return 0.0; }
 	};
 }
 

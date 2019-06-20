@@ -53,7 +53,7 @@ namespace RecRoom
 
 	public:
 		// This constructor will create a new container
-		Reconstructor(const boost::filesystem::path& filePath, const Eigen::Vector3d& min, const Eigen::Vector3d& max, const double resolution, const double outofCoreLeafOverlap = -1);
+		Reconstructor(const boost::filesystem::path& filePath, const Eigen::Vector3d& min, const Eigen::Vector3d& max, const double resolution);
 
 		// This constructor will load exist container
 		Reconstructor(const boost::filesystem::path& filePath);
@@ -61,6 +61,8 @@ namespace RecRoom
 		void ReconstructLOD(const double samplePercent = 0.125);
 
 	public:
+		virtual double SearchRadius() const;
+
 		virtual void FromJson(const nlohmann::json& j);
 		virtual void ToJson(nlohmann::json& j) const;
 
@@ -107,7 +109,6 @@ namespace RecRoom
 		boost::filesystem::path filePath;
 		PTR(MetaScansT) metaScans;
 		ReconstructStatus status;
-		double outofCoreLeafOverlap;
 
 		PTR(ContainerRawT) containerRaw;
 		PTR(ContainerNDFT) containerNDF;

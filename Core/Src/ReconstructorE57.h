@@ -19,7 +19,7 @@ namespace RecRoom
 
 	public:
 		// This constructor will create a new container
-		ReconstructorE57(const boost::filesystem::path& filePath, const Eigen::Vector3d& min, const Eigen::Vector3d& max, const double resolution, const double outofCoreLeafOverlap = -1);
+		ReconstructorE57(const boost::filesystem::path& filePath, const Eigen::Vector3d& min, const Eigen::Vector3d& max, const double resolution);
 
 		// This constructor will load exist container
 		ReconstructorE57(const boost::filesystem::path& filePath);
