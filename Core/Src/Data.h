@@ -16,13 +16,15 @@ namespace RecRoom
 	{
 	public:
 		using Self = Data;
-		using Ptr = boost::shared_ptr<Self>;
-		using ConstPtr = boost::shared_ptr<const Self>;
+		using Ptr = PTR(Self);
+		using ConstPtr = CONST_PTR(Self);
 
 	public:
 		Data() {}
 
 	public:
+		virtual Ptr Clone() const { THROW_EXCEPTION("Interface is not implemented"); }
+		virtual void ClearBuffers() { THROW_EXCEPTION("Interface is not implemented"); }
 		virtual void FromFile(const boost::filesystem::path& filePath) { THROW_EXCEPTION("Interface is not implemented"); }
 		virtual void ToFile(const boost::filesystem::path& filePath) const { THROW_EXCEPTION("Interface is not implemented"); }
 		virtual void FromJson(const nlohmann::json& j) { THROW_EXCEPTION("Interface is not implemented"); }
@@ -32,13 +34,12 @@ namespace RecRoom
 	class Data3D : public Data
 	{
 	public:
-		using Base = Data;
 		using Self = Data3D;
-		using Ptr = boost::shared_ptr<Self>;
-		using ConstPtr = boost::shared_ptr<const Self>;
+		using Ptr = PTR(Self);
+		using ConstPtr = CONST_PTR(Self);
 		
 	public:
-		Data3D() : Base(), transform(Eigen::Matrix4d::Identity()), orientation(Eigen::Quaterniond(0.0, 0.0, 0.0, 0.0)), position(Eigen::Vector3d(0.0, 0.0, 0.0)) {}
+		Data3D() : Data(), transform(Eigen::Matrix4d::Identity()), orientation(Eigen::Quaterniond(0.0, 0.0, 0.0, 0.0)), position(Eigen::Vector3d(0.0, 0.0, 0.0)) {}
 	
 	public:
 		virtual void FromJson(const nlohmann::json& j);
@@ -56,16 +57,15 @@ namespace RecRoom
 	};
 
 	template<class PointType>
-	class PointCloudData : public Data3D
+	class DataPointCloud : public Data3D
 	{
 	public:
-		using Base = Data3D;
-		using Self = PointCloudData<PointType>;
-		using Ptr = boost::shared_ptr<Self>;
-		using ConstPtr = boost::shared_ptr<const Self>;
+		using Self = DataPointCloud<PointType>;
+		using Ptr = PTR(Self);
+		using ConstPtr = CONST_PTR(Self);
 		
 	public:
-		PointCloudData() : Base(), numPoints(0) {}
+		DataPointCloud() : Data3D(), numPoints(0) {}
 
 	public:
 		virtual void FromJson(const nlohmann::json& j);
@@ -82,16 +82,17 @@ namespace RecRoom
 	};
 
 	template<class PointType>
-	class ScanData : public PointCloudData<PointType>
+	class DataScan : public DataPointCloud<PointType>
 	{
 	public:
-		using Base = PointCloudData<PointType>;
-		using Self = ScanData;
-		using Ptr = boost::shared_ptr<Self>;
-		using ConstPtr = boost::shared_ptr<const Self>;
+		using Self = DataScan<PointType>;
+		using Ptr = PTR(Self);
+		using ConstPtr = CONST_PTR(Self);
 		
 	public:
-		ScanData() : Base(), scanner(Scanner::Scaner_UNKNOWN), serialNumber(-1) {}
+		DataScan() : DataPointCloud<PointType>(), scanner(Scanner::Scaner_UNKNOWN), serialNumber(-1) {}
+
+		static bool Compare(const Self::Ptr& i, const Self::Ptr& j) { return (i->getSerialNumber() < j->getSerialNumber()); }
 
 	public:
 		virtual void FromJson(const nlohmann::json& j);
@@ -107,4 +108,4 @@ namespace RecRoom
 	};
 }
 
-#include "BaseData.hpp"
+#include "Data.hpp"

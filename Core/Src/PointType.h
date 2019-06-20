@@ -297,7 +297,6 @@ namespace RecRoom
 		PCL_ADD_POINT4D;
 		PCL_ADD_NORMAL4D; 
 		PCL_ADD_INTENSITY;
-		union { uint32_t label; int32_t hasLabel; };
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	};
 
@@ -395,7 +394,6 @@ namespace RecRoom
 			x = y = z = 0.0f; data[3] = 1.f;
 			normal_x = normal_y = normal_z = data_n[3];
 			intensity = 0.f;
-			hasLabel = -1;
 		}
 
 		inline PointNDF(const PointNDF& p)
@@ -403,7 +401,6 @@ namespace RecRoom
 			x = p.x; y = p.y; z = p.z; data[3] = 1.0f;
 			normal_x = p.normal_x; normal_y = p.normal_y; normal_z = p.normal_z; data_n[3] = 0.f;
 			intensity = p.intensity;
-			label = p.label;
 		}
 
 		inline PointNDF(float normalX, float normalY, float normalZ, uint32_t label_, float intensity_)
@@ -411,10 +408,7 @@ namespace RecRoom
 			x = (float)label_; y = 0.0; z = 0.0; data[3] = 1.0f;
 			normal_x = normalX; normal_y = normalY; normal_z = normalZ; data_n[3] = 0.f;
 			intensity = intensity_;
-			label = label_;
 		}
-
-		inline bool HasLabel() { return (hasLabel != -1); }
 	};
 }
 
@@ -451,7 +445,6 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(RecRoom::PointNDF,
 (float, x, x) (float, y, y) (float, z, z)
 (float, normal_x, normal_x) (float, normal_y, normal_y) (float, normal_z, normal_z)
 (float, intensity, intensity)
-(uint32_t, label, label)
 )
 POINT_CLOUD_REGISTER_POINT_WRAPPER(RecRoom::PointNDF, RecRoom::PointNDF)
 

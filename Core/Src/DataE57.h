@@ -7,23 +7,23 @@
 #include "Common.h"
 #include "Coordinate.h"
 #include "PointType.h"
-#include "BaseData.h"
+#include "Data.h"
 
 namespace RecRoom
 {
-	class E57ScanData : public ScanData<PointE57>
+	class DataScanE57 : public DataScan<PointE57>
 	{
 	public:
-		using Base = ScanData<PointE57>;
-		using Self = E57ScanData;
-		using Ptr = boost::shared_ptr<Self>;
-		using ConstPtr = boost::shared_ptr<const Self>;
+		using Self = DataScanE57;
+		using Ptr = PTR(Self);
+		using ConstPtr = CONST_PTR(Self);
 		
 	public:
-		E57ScanData() : Base(), coodSys(CoodSys::CoodSys_UNKNOWN), hasPointXYZ(false), hasPointRGB(false), hasPointI(false) {}
-		void ClearBuffers();
-
+		DataScanE57() : DataScan<PointE57>(), coodSys(CoodSys::CoodSys_UNKNOWN), hasPointXYZ(false), hasPointRGB(false), hasPointI(false) {}
+		
 	public:
+		virtual void ClearBuffers();
+
 		virtual void FromJson(const nlohmann::json& j);
 		virtual void ToJson(nlohmann::json& j) const;
 
@@ -61,4 +61,4 @@ namespace RecRoom
 	std::ostream& operator << (std::ostream& os, const e57::ImageFile& v);
 }
 
-#include "E57Data.hpp"
+#include "DataE57.hpp"

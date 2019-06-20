@@ -5,24 +5,22 @@
 namespace RecRoom
 {
 	template<class GlobalT, class QueryT, class DataT, std::size_t size>
-	int AsyncProcess<GlobalT, QueryT, DataT, size>::A(A_Callback a_Callback, GlobalT* globalData, QueryT* query, std::shared_ptr<DataT>* bufferData)
+	int AsyncProcess<GlobalT, QueryT, DataT, size>::A(A_Callback a_Callback, GlobalT* globalData, QueryT* query, PTR(DataT)* bufferData)
 	{
 		if (!globalData) return -2;
 		if (!query) return -3;
 		if (!bufferData) return -4;
 
 		//
-		(*bufferData) = std::shared_ptr<DataT>(new DataT);
 		return a_Callback(*globalData, *query, *(*bufferData));
 	}
 
 	template<class GlobalT, class QueryT, class DataT, std::size_t size>
-	int AsyncProcess<GlobalT, QueryT, DataT, size>::B(B_Callback b_Callback, GlobalT* globalData, QueryT* query, std::shared_ptr<DataT>* bufferData)
+	int AsyncProcess<GlobalT, QueryT, DataT, size>::B(B_Callback b_Callback, GlobalT* globalData, QueryT* query, PTR(DataT)* bufferData)
 	{
 		if (!globalData) return -2;
 		if (!query) return -3;
 		if (!bufferData) return -4;
-		if (!(*bufferData)) return -5;
 
 		//
 		int status = b_Callback(*globalData, *query, *(*bufferData));

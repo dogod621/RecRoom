@@ -58,6 +58,9 @@ namespace RecRoom
 	//
 	template<class outType, class inType>
 	inline outType Convert(const inType& v);
+
+#define PTR(T) boost::shared_ptr<T> // std::shared_ptr<T>
+#define CONST_PTR(T) boost::shared_ptr<const T> // std::shared_ptr<const T>
 }
 
 #include "Common.hpp"

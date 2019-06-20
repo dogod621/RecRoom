@@ -72,7 +72,7 @@ namespace RecRoom
 			return true;
 	}
 
-	bool IsFileE57Rec(boost::filesystem::path filePath, bool checkExist)
+	bool IsFileRec(boost::filesystem::path filePath, bool checkExist)
 	{
 		if (!IsDir(filePath, checkExist))
 			return false;
@@ -84,8 +84,19 @@ namespace RecRoom
 				return false;
 			return boost::filesystem::exists(filePath / boost::filesystem::path("RAW") / boost::filesystem::path("root.oct_idx")) &&
 				boost::filesystem::exists(filePath / boost::filesystem::path("NDF") / boost::filesystem::path("root.oct_idx")) &&
-				boost::filesystem::exists(filePath / boost::filesystem::path("scanMeta.txt"));
+				boost::filesystem::exists(filePath / boost::filesystem::path("meta.txt")) &&
+				boost::filesystem::exists(filePath / boost::filesystem::path("pointCloudRec.pcd"));
 		}
+		else
+			return true;
+	}
+
+	bool IsFileE57Rec(boost::filesystem::path filePath, bool checkExist)
+	{
+		if (!IsFileRec(filePath, checkExist))
+			return false;
+		if (checkExist)
+			return true;
 		else
 			return true;
 	}

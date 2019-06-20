@@ -1,11 +1,11 @@
 #include <pcl/common/transforms.h>
 
-#include "E57Data.h"
+#include "DataE57.h"
 
 namespace RecRoom
 {
 	//
-	void E57ScanData::ClearBuffers()
+	void DataScanE57::ClearBuffers()
 	{
 		xBuffer.clear();
 		yBuffer.clear();
@@ -16,9 +16,9 @@ namespace RecRoom
 		bBuffer.clear();
 	}
 
-	void E57ScanData::FromJson(const nlohmann::json& j)
+	void DataScanE57::FromJson(const nlohmann::json& j)
 	{
-		Base::FromJson(j);
+		DataScan<PointE57>::FromJson(j);
 		hasPointXYZ = j["hasPointXYZ"];
 		hasPointRGB = j["hasPointRGB"];
 		hasPointI = j["hasPointI"];
@@ -52,9 +52,9 @@ namespace RecRoom
 		bBuffer = j["bBuffer"].get<std::vector<uint8_t>>();
 	}
 
-	void E57ScanData::ToJson(nlohmann::json& j) const
+	void DataScanE57::ToJson(nlohmann::json& j) const
 	{
-		Base::ToJson(j);
+		DataScan<PointE57>::ToJson(j);
 		j["hasPointXYZ"] = hasPointXYZ;
 		j["hasPointRGB"] = hasPointRGB;
 		j["hasPointI"] = hasPointI;
@@ -68,7 +68,7 @@ namespace RecRoom
 	}
 
 	//
-	void E57ScanData::FromE57Format(const e57::ImageFile& imf, const e57::VectorNode& data3D, int64_t serialNumber_)
+	void DataScanE57::FromE57Format(const e57::ImageFile& imf, const e57::VectorNode& data3D, int64_t serialNumber_)
 	{
 		//
 		serialNumber = serialNumber_;
@@ -120,22 +120,22 @@ namespace RecRoom
 			{
 				e57::CompressedVectorNode scanPoints(scanPointsNode);
 				e57::StructureNode proto(scanPoints.prototype());
-				std::shared_ptr<e57::Node> protoXNode;
-				std::shared_ptr<e57::Node> protoYNode;
-				std::shared_ptr<e57::Node> protoZNode;
-				std::shared_ptr<e57::Node> protoRNode;
-				std::shared_ptr<e57::Node> protoGNode;
-				std::shared_ptr<e57::Node> protoBNode;
-				std::shared_ptr<e57::Node> protoINode;
+				PTR(e57::Node) protoXNode;
+				PTR(e57::Node) protoYNode;
+				PTR(e57::Node) protoZNode;
+				PTR(e57::Node) protoRNode;
+				PTR(e57::Node) protoGNode;
+				PTR(e57::Node) protoBNode;
+				PTR(e57::Node) protoINode;
 				numPoints = scanPoints.childCount();
 
 				if (proto.isDefined("cartesianX") && proto.isDefined("cartesianY") && proto.isDefined("cartesianZ"))
 				{
 					coodSys = CoodSys::XYZ_PX_PY_PZ;// E57 use this
 					hasPointXYZ = true;
-					protoXNode = std::shared_ptr<e57::Node>(new e57::Node(proto.get("cartesianX")));
-					protoYNode = std::shared_ptr<e57::Node>(new e57::Node(proto.get("cartesianY")));
-					protoZNode = std::shared_ptr<e57::Node>(new e57::Node(proto.get("cartesianZ")));
+					protoXNode = PTR(e57::Node)(new e57::Node(proto.get("cartesianX")));
+					protoYNode = PTR(e57::Node)(new e57::Node(proto.get("cartesianY")));
+					protoZNode = PTR(e57::Node)(new e57::Node(proto.get("cartesianZ")));
 					xBuffer.resize(numPoints);
 					yBuffer.resize(numPoints);
 					zBuffer.resize(numPoints);
@@ -147,9 +147,9 @@ namespace RecRoom
 				{
 					coodSys = CoodSys::RAE_PE_PX_PY;// E57 use this
 					hasPointXYZ = true;
-					protoXNode = std::shared_ptr<e57::Node>(new e57::Node(proto.get("sphericalRange")));
-					protoYNode = std::shared_ptr<e57::Node>(new e57::Node(proto.get("sphericalAzimuth")));
-					protoZNode = std::shared_ptr<e57::Node>(new e57::Node(proto.get("sphericalElevation")));
+					protoXNode = PTR(e57::Node)(new e57::Node(proto.get("sphericalRange")));
+					protoYNode = PTR(e57::Node)(new e57::Node(proto.get("sphericalAzimuth")));
+					protoZNode = PTR(e57::Node)(new e57::Node(proto.get("sphericalElevation")));
 					xBuffer.resize(numPoints);
 					yBuffer.resize(numPoints);
 					zBuffer.resize(numPoints);
@@ -161,9 +161,9 @@ namespace RecRoom
 				if (proto.isDefined("colorRed") && proto.isDefined("colorGreen") && proto.isDefined("colorBlue") && E57_CAN_CONTAIN_RGB)
 				{
 					hasPointRGB = true;
-					protoRNode = std::shared_ptr<e57::Node>(new e57::Node(proto.get("colorRed")));
-					protoGNode = std::shared_ptr<e57::Node>(new e57::Node(proto.get("colorGreen")));
-					protoBNode = std::shared_ptr<e57::Node>(new e57::Node(proto.get("colorBlue")));
+					protoRNode = PTR(e57::Node)(new e57::Node(proto.get("colorRed")));
+					protoGNode = PTR(e57::Node)(new e57::Node(proto.get("colorGreen")));
+					protoBNode = PTR(e57::Node)(new e57::Node(proto.get("colorBlue")));
 					rBuffer.resize(numPoints);
 					gBuffer.resize(numPoints);
 					bBuffer.resize(numPoints);
@@ -175,7 +175,7 @@ namespace RecRoom
 				if (proto.isDefined("intensity") && E57_CAN_CONTAIN_INTENSITY)
 				{
 					hasPointI = true;
-					protoINode = std::shared_ptr<e57::Node>(new e57::Node(proto.get("intensity")));
+					protoINode = PTR(e57::Node)(new e57::Node(proto.get("intensity")));
 					iBuffer.resize(numPoints);
 					sdBuffers.push_back(e57::SourceDestBuffer(imf, "intensity", &iBuffer[0], numPoints, true, true));
 				}
@@ -201,7 +201,7 @@ namespace RecRoom
 			PRINT_WARNING("Scan didnot define points, igore the scan");
 	}
 
-	void E57ScanData::ToPointCloud(pcl::PointCloud<PointE57>& scanCloud) const
+	void DataScanE57::ToPointCloud(pcl::PointCloud<PointE57>& scanCloud) const
 	{
 		if ((hasPointXYZ || hasPointRGB || hasPointI))
 		{

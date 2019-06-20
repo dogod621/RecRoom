@@ -10,8 +10,9 @@ namespace RecRoom
 	class AsyncProcess
 	{
 	public:
-		using Ptr = boost::shared_ptr<AsyncProcess>;
-		using ConstPtr = boost::shared_ptr<const AsyncProcess>;
+		using Self = AsyncProcess<GlobalT, QueryT, DataT, size>;
+		using Ptr = PTR(Self);
+		using ConstPtr = CONST_PTR(Self);
 
 		typedef int(*A_Callback)(GlobalT&, QueryT&, DataT&);
 		typedef int(*B_Callback)(GlobalT&, QueryT&, DataT&);
@@ -22,18 +23,18 @@ namespace RecRoom
 		static int Default_B(GlobalT&, QueryT&, DataT&) { return 0; }
 		static int Default_C(GlobalT&, DataT&) { return 0; }
 
-		static int A(A_Callback a_Callback, GlobalT* globalData, QueryT* query, std::shared_ptr<DataT>* bufferData);
+		static int A(A_Callback a_Callback, GlobalT* globalData, QueryT* query, PTR(DataT)* bufferData);
 
-		static int B(B_Callback b_Callback, GlobalT* globalData, QueryT* query, std::shared_ptr<DataT>* bufferData);
+		static int B(B_Callback b_Callback, GlobalT* globalData, QueryT* query, PTR(DataT)* bufferData);
 
 		struct BufferT
 		{
-			std::shared_ptr<DataT> data;
+			PTR(DataT) data;
 			std::future<int>* a_future;
 			std::future<int>* b_future;
 			int a_status;
 			int b_status;
-			BufferT() : data(nullptr), a_future(nullptr), b_future(nullptr), a_status(-1), b_status(-1) {}
+			BufferT() : data(PTR(DataT)(new DataT)), a_future(nullptr), b_future(nullptr), a_status(-1), b_status(-1) {}
 		};
 
 	public:
