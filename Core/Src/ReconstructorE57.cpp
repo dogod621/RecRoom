@@ -143,25 +143,25 @@ namespace RecRoom
 		ReconstructorE57::AlbedoEstimaterT::Ptr albedoEstimater;
 		ReconstructorE57::SegmenterT::Ptr segmenter;
 
-		ReconstructorE57::PointCloudRawT::Ptr pointCloudRaw;
+		ReconstructorE57::PointCloudMedT::Ptr pointCloudRaw;
 		ReconstructorE57::PointCloudMedT::Ptr pointCloudMed;
 		ReconstructorE57::PointCloudRecT::Ptr pointCloudRec;
 		pcl::IndicesPtr indicesRaw;
 		pcl::IndicesPtr indicesMed;
 		pcl::IndicesPtr indicesRec;
-		pcl::search::KdTree<ReconstructorE57::PointRawT>::Ptr treeRaw;
+		pcl::search::KdTree<ReconstructorE57::PointMedT>::Ptr treeRaw;
 		pcl::search::KdTree<ReconstructorE57::PointMedT>::Ptr treeMed;
 		pcl::search::KdTree<ReconstructorE57::PointRecT>::Ptr treeRec;
 
 		AsyncData_Reconstruct() :
 			downSampler(nullptr), outlierRemover(nullptr), surfaceProcesser(nullptr), normalEstimater(nullptr), albedoEstimater(nullptr), segmenter(nullptr),
-			pointCloudRaw(ReconstructorE57::PointCloudRawT::Ptr(new ReconstructorE57::PointCloudRawT)),
+			pointCloudRaw(ReconstructorE57::PointCloudMedT::Ptr(new ReconstructorE57::PointCloudMedT)),
 			pointCloudMed(ReconstructorE57::PointCloudMedT::Ptr(new ReconstructorE57::PointCloudMedT)),
 			pointCloudRec(ReconstructorE57::PointCloudRecT::Ptr(new  ReconstructorE57::PointCloudRecT)),
 			indicesMed(pcl::IndicesPtr(new std::vector<int>)),
 			indicesRaw(pcl::IndicesPtr(new std::vector<int>)),
 			indicesRec(pcl::IndicesPtr(new std::vector<int>)),
-			treeRaw(pcl::search::KdTree<ReconstructorE57::PointRawT>::Ptr(new pcl::search::KdTree<ReconstructorE57::PointRawT>())),
+			treeRaw(pcl::search::KdTree<ReconstructorE57::PointMedT>::Ptr(new pcl::search::KdTree<ReconstructorE57::PointMedT>())),
 			treeMed(pcl::search::KdTree<ReconstructorE57::PointMedT>::Ptr(new pcl::search::KdTree<ReconstructorE57::PointMedT>())),
 			treeRec(pcl::search::KdTree<ReconstructorE57::PointRecT>::Ptr(new pcl::search::KdTree<ReconstructorE57::PointRecT>()))
 		{
@@ -196,24 +196,19 @@ namespace RecRoom
 		// Med
 		if (data.downSampler)
 		{
-			PRINT_INFO("DownSampling pointCloudMed");
-			ReconstructorE57::PointCloudRawT::Ptr temp(new ReconstructorE57::PointCloudRawT);
+			PRINT_INFO("DownSampling pointCloudRaw");
 			data.downSampler->setInputCloud(data.pointCloudRaw);
-			data.downSampler->filter(*temp);
-
-			data.pointCloudMed->resize(temp->size());
-			for (std::size_t px = 0; px < temp->size(); ++px)
-				(*data.pointCloudMed)[px] = (*temp)[px];
+			data.downSampler->filter(*data.pointCloudMed);
 
 			std::stringstream ss;
-			ss << "DownSampling pointCloudMed - inSize, outSize: " << data.pointCloudRaw->size() << ", " << data.pointCloudMed->size();
+			ss << "DownSampling pointCloudRaw - inSize, outSize: " << data.pointCloudRaw->size() << ", " << data.pointCloudMed->size();
 			PRINT_INFO(ss.str());
 		}
 		else
 		{
-			data.pointCloudMed->resize(data.pointCloudRaw->size());
-			for (std::size_t px = 0; px < data.pointCloudRaw->size(); ++px)
-				(*data.pointCloudMed)[px] = (*data.pointCloudRaw)[px];
+			data.pointCloudMed = data.pointCloudRaw;
+			data.treeMed = data.treeRaw;
+			data.indicesMed = data.indicesRaw;
 		}
 
 		// Med Indices
@@ -264,6 +259,12 @@ namespace RecRoom
 			}
 		}
 
+
+		// Rec
+		data.pointCloudRec->resize(data.indicesMed->size());
+		for (std::size_t px = 0; px < data.indicesMed->size(); ++px)
+			(*data.pointCloudRec)[px] = (*data.pointCloudMed)[(*data.indicesMed)[px]];
+
 		return 0;
 	}
 
@@ -274,22 +275,15 @@ namespace RecRoom
 		{
 			if (E57xPCD_CAN_CONTAIN_NORMAL)
 			{
-				PRINT_INFO("Estimat Normal pointCloudMed");
+				PRINT_INFO("Estimat Normal");
 
 				data.normalEstimater->setSearchMethod(data.treeMed);
 				data.normalEstimater->setSearchSurface(data.pointCloudMed);
 				data.normalEstimater->setInputCloud(data.pointCloudMed);
 				data.normalEstimater->setIndices(data.indicesMed);
-				data.normalEstimater->compute(*data.pointCloudMed);
+				data.normalEstimater->compute(*data.pointCloudRec);
 			}
 		}
-
-		// Extract
-		// Not using ExtractIndices for not  copy again
-		data.pointCloudRec->resize(data.indicesMed->size());
-		for (std::size_t px = 0; px < data.indicesMed->size(); ++px)
-			(*data.pointCloudRec)[px] = (*data.pointCloudMed)[(*data.indicesMed)[px]];
-
 		return 0;
 	}
 
@@ -302,18 +296,138 @@ namespace RecRoom
 	// Async Reconstruct Attribute
 	int AStep_ReconstructAttribute(AsyncGlobal_Reconstruct& global, AsyncQuery_Reconstruct& query, AsyncData_Reconstruct& data)
 	{
+		// Raw
+		PRINT_INFO("Load pointCloudRaw");
+		pcl::PCLPointCloud2::Ptr blob(new pcl::PCLPointCloud2);
+		global.reconstructorE57->getContainerRaw()->queryBoundingBox(query.extMinBB, query.extMaxBB, query.depth, blob);
+		pcl::fromPCLPointCloud2(*blob, *data.pointCloudRaw);
+
+		// Rec Indices
+		{
+			PRINT_INFO("Extract pointCloudRec indices - Crop");
+
+			pcl::CropBox<ReconstructorE57::PointRecT> cb;
+			cb.setMin(Eigen::Vector4f(query.minBB.x(), query.minBB.y(), query.minBB.z(), 1.0));
+			cb.setMax(Eigen::Vector4f(query.maxBB.x(), query.maxBB.y(), query.maxBB.z(), 1.0));
+			cb.setInputCloud(global.reconstructorE57->getPointCloudRec());
+			cb.filter(*data.indicesRec);
+			std::stringstream ss;
+			ss << "Extract pointCloudRec indices - Crop - inSize, outSize: " << global.reconstructorE57->getPointCloudRec()->size() << ", " << data.indicesRec->size();
+			PRINT_INFO(ss.str());
+		}
+
+		// Med
+		// Crop Ext
+		{
+			PRINT_INFO("Extract pointCloudMed - Crop Ext");
+
+			pcl::CropBox<ReconstructorE57::PointRecT> cb;
+			cb.setMin(Eigen::Vector4f(query.extMinBB.x(), query.extMinBB.y(), query.extMinBB.z(), 1.0));
+			cb.setMax(Eigen::Vector4f(query.extMaxBB.x(), query.extMaxBB.y(), query.extMaxBB.z(), 1.0));
+			cb.setInputCloud(global.reconstructorE57->getPointCloudRec());
+			cb.filter(*data.pointCloudRec);
+			
+			//
+			data.pointCloudMed->resize(data.pointCloudRec->size());
+			for (std::size_t px = 0; px < data.pointCloudRec->size(); ++px)
+				(*data.pointCloudMed)[px] = (*data.pointCloudRec)[px];
+
+			//
+			data.pointCloudRec->clear();
+
+			std::stringstream ss;
+			ss << "Extract pointCloudMed - Crop Ext - inSize, outSize: " << global.reconstructorE57->getPointCloudRec()->size() << ", " << data.pointCloudMed->size();
+			PRINT_INFO(ss.str());
+
+		}
+
+		// Med
+		{
+			PRINT_INFO("Extract pointCloudMed indices - Crop");
+
+			pcl::CropBox<ReconstructorE57::PointMedT> cb;
+			cb.setMin(Eigen::Vector4f(query.minBB.x(), query.minBB.y(), query.minBB.z(), 1.0));
+			cb.setMax(Eigen::Vector4f(query.maxBB.x(), query.maxBB.y(), query.maxBB.z(), 1.0));
+			cb.setInputCloud(data.pointCloudMed);
+			cb.filter(*data.indicesMed);
+			std::stringstream ss;
+			ss << "Extract pointCloudMed indices - Crop - inSize, outSize: " << data.pointCloudMed->size() << ", " << data.indicesMed->size();
+			PRINT_INFO(ss.str());
+
+			// Check
+			if (data.indicesMed->size() != data.indicesRec->size())
+				return 1;
+		}
+
+
+		// Extract
+		// Not using ExtractIndices for not  copy again
+		data.pointCloudRec->resize(data.indicesMed->size());
+		for (std::size_t px = 0; px < data.indicesMed->size(); ++px)
+			(*data.pointCloudRec)[px] = (*data.pointCloudMed)[(*data.indicesMed)[px]];
+
+		// Upsampling
+		{
+			PRINT_INFO("Upsampling Attribute");
+
+#ifdef _OPENMP
+#pragma omp parallel for num_threads(omp_get_num_procs())
+#endif
+			// Iterating over the entire index vector
+			for (int px = 0; px < static_cast<int> (data.pointCloudRaw->size()); ++px)
+			{
+				ReconstructorE57::PointMedT& point = (*data.pointCloudRaw)[px];
+				std::vector<int> ki;
+				std::vector<float> kd;
+				if (data.treeMed->nearestKSearch(point, 1, ki, kd) > 0)
+				{
+					ReconstructorE57::PointMedT& kPoint = (*data.pointCloudMed)[ki[0]];
+					point.normal_x = kPoint.normal_x;
+					point.normal_y = kPoint.normal_y;
+					point.normal_z = kPoint.normal_z;
+					point.curvature = kPoint.curvature;
+					point.segLabel = kPoint.segLabel;
+				}
+				else
+				{
+					point.normal_x = 0.0f;
+					point.normal_y = 0.0f;
+					point.normal_z = 0.0f;
+					point.curvature = 0.0f;
+					point.hasSegLabel = -1;
+				}
+			}
+		}
+
 		return 0;
 	}
 
-	
 	int CStep_ReconstructAttribute(AsyncGlobal_Reconstruct& global, AsyncQuery_Reconstruct& query, AsyncData_Reconstruct& data)
 	{
+		for (std::size_t px = 0; px < data.indicesRec->size(); ++px)
+			(*global.reconstructorE57->getPointCloudRec())[(*data.indicesRec)[px]] = (*data.pointCloudRec)[px];
+
 		return 0;
 	}
 
 	// Async Reconstruct Attribute - Albedo
 	int BStep_ReconstructAlbedo(AsyncGlobal_Reconstruct& global, AsyncQuery_Reconstruct& query, AsyncData_Reconstruct& data)
 	{
+		// Estimat Albedo
+		if (data.albedoEstimater)
+		{
+			if (E57xPCD_CAN_CONTAIN_INTENSITY)
+			{
+				PRINT_INFO("Estimat Albedo");
+
+				data.normalEstimater->setSearchMethod(data.treeRaw);
+				data.normalEstimater->setSearchSurface(data.pointCloudRaw);
+				data.normalEstimater->setInputCloud(data.pointCloudMed);
+				data.normalEstimater->setIndices(data.indicesMed);
+				data.normalEstimater->compute(*data.pointCloudRec);
+			}
+		}
+
 		return 0;
 	}
 
@@ -355,7 +469,7 @@ namespace RecRoom
 					queries[i].scanSerialNumber = i;
 
 				AsyncProcess<AsyncGlobal_FromFile, AsyncQuery_FromFile, DataScanE57, 1>(
-					global, queries, 
+					global, queries,
 					AStep_FromFile, BStep_FromFile, CStep_FromFile);
 			}
 			else
@@ -402,12 +516,19 @@ namespace RecRoom
 		}
 		AsyncGlobal_Reconstruct global(this);
 		AsyncProcess<AsyncGlobal_Reconstruct, AsyncQuery_Reconstruct, AsyncData_Reconstruct, 1>(
-			global, queries, 
+			global, queries,
 			AStep_ReconstructPointCloud, BStep_ReconstructPointCloud, CStep_ReconstructPointCloud);
 	}
 
 	void ReconstructorE57::ReconstructAlbedo()
 	{
+		if (!E57_CAN_CONTAIN_INTENSITY)
+			THROW_EXCEPTION("You must compile the program with POINT_E57_WITH_INTENSITY definition to enable this function");
+		if (!PCD_CAN_CONTAIN_INTENSITY)
+			THROW_EXCEPTION("You must compile the program with POINT_PCD_WITH_INTENSITY definition to enable this function");
+		if (!PCD_CAN_CONTAIN_NORMAL)
+			THROW_EXCEPTION("You must compile the program with POINT_PCD_WITH_NORMAL definition to enable this function");
+
 		std::vector<AsyncQuery_Reconstruct> queries;
 		ContainerRawT::Iterator it(*containerRaw);
 		double outofCoreLeafOverlap = SearchRadius();
@@ -425,7 +546,7 @@ namespace RecRoom
 		}
 		AsyncGlobal_Reconstruct global(this);
 		AsyncProcess<AsyncGlobal_Reconstruct, AsyncQuery_Reconstruct, AsyncData_Reconstruct, 1>(
-			global, queries, 
+			global, queries,
 			AStep_ReconstructAttribute, BStep_ReconstructAlbedo, CStep_ReconstructAttribute);
 	}
 }

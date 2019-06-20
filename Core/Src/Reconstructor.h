@@ -44,12 +44,12 @@ namespace RecRoom
 		using PointCloudRecT = pcl::PointCloud<PointRec>;
 		using MetaScansT = std::vector<PTR(MetaScan)>;
 
-		using DownSamplerT = DownSampler<PointRaw>;
+		using DownSamplerT = DownSampler<PointMed>;
 		using OutlierRemoverT = OutlierRemover<PointMed>;
-		using SurfaceProcesserT = SurfaceProcesser<PointMed, PointMed>;
-		using NormalEstimaterT = NormalEstimater<PointMed, PointMed>;
-		using AlbedoEstimaterT = AlbedoEstimater<PointMed, PointMed>;
-		using SegmenterT = Segmenter<PointRec>;
+		using SurfaceProcesserT = SurfaceProcesser<PointMed, PointRec>;
+		using NormalEstimaterT = NormalEstimater<PointMed, PointRec>;
+		using AlbedoEstimaterT = AlbedoEstimater<PointMed, PointRec>;
+		using SegmenterT = Segmenter<PointMed>;
 
 	public:
 		// This constructor will create a new container
