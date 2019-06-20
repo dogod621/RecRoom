@@ -382,19 +382,29 @@ namespace RecRoom
 				if (data.treeMed->nearestKSearch(point, 1, ki, kd) > 0)
 				{
 					ReconstructorE57::PointMedT& kPoint = (*data.pointCloudMed)[ki[0]];
+#ifdef POINT_E57xPCD_WITH_NORMAL
 					point.normal_x = kPoint.normal_x;
 					point.normal_y = kPoint.normal_y;
 					point.normal_z = kPoint.normal_z;
 					point.curvature = kPoint.curvature;
+#endif
+
+#ifdef POINT_E57xPCD_WITH_INTENSITY
 					point.segLabel = kPoint.segLabel;
+#endif
 				}
 				else
 				{
+#ifdef POINT_E57xPCD_WITH_NORMAL
 					point.normal_x = 0.0f;
 					point.normal_y = 0.0f;
 					point.normal_z = 0.0f;
 					point.curvature = 0.0f;
+#endif
+
+#ifdef POINT_E57xPCD_WITH_INTENSITY
 					point.hasSegLabel = -1;
+#endif
 				}
 			}
 		}
@@ -427,10 +437,13 @@ namespace RecRoom
 				data.normalEstimater->compute(*data.pointCloudRec);
 			}
 		}
+		else
+		{
+			PRINT_WARNING("albedoEstimater is not set, ignore it");
+		}
 
 		return 0;
 	}
-
 }
 
 namespace RecRoom
@@ -548,5 +561,23 @@ namespace RecRoom
 		AsyncProcess<AsyncGlobal_Reconstruct, AsyncQuery_Reconstruct, AsyncData_Reconstruct, 1>(
 			global, queries,
 			AStep_ReconstructAttribute, BStep_ReconstructAlbedo, CStep_ReconstructAttribute);
+	}
+
+	void ReconstructorE57::ReconstructSegment()
+	{
+		if (!PCD_CAN_CONTAIN_LABEL)
+			THROW_EXCEPTION("You must compile the program with POINT_PCD_WITH_LABEL definition to enable this function");
+
+		//
+		// Segment
+		if (segmenter)
+		{
+			segmenter->setInputCloud(pointCloudRec);
+			segmenter->Extract(*pointCloudRec);
+		}
+		else
+		{
+			PRINT_WARNING("segmenter is not set, ignore it");
+		}
 	}
 }

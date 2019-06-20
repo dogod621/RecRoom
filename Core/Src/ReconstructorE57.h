@@ -31,9 +31,9 @@ namespace RecRoom
 
 		virtual void ReconstructPointCloud();
 		virtual void ReconstructAlbedo();
+		virtual void ReconstructSegment();
 
-		/*virtual void ReconstructSegment() { THROW_EXCEPTION("Interface is not implemented"); }
-		virtual void ReconstructNDF() { THROW_EXCEPTION("Interface is not implemented"); }
+		/*virtual void ReconstructNDF() { THROW_EXCEPTION("Interface is not implemented"); }
 		virtual void ReconstructSurcafe() { THROW_EXCEPTION("Interface is not implemented"); }
 		virtual void SynthScanImages(const boost::filesystem::path& scanImagePath, const Mapping mapping, unsigned int width, const unsigned int height) { THROW_EXCEPTION("Interface is not implemented"); }*/
 	};

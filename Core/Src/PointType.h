@@ -10,251 +10,261 @@ namespace RecRoom
 
 	// Normal
 #ifdef POINT_E57_WITH_NORMAL
-#define E57_CAN_CONTAIN_NORMAL			true
-#define E57_ADD_NORMAL					PCL_ADD_NORMAL4D; float curvature;
-#define E57_REGISTER_NORMAL				(float, normal_x, normal_x) (float, normal_y, normal_y) (float, normal_z, normal_z) (float, curvature, curvature)
-#define E57_ISFINITE_NORMAL				&& pcl_isfinite(p.normal_x) && pcl_isfinite(p.normal_y) && pcl_isfinite(p.normal_z)
-#define E57_INIT_NORMAL					normal_x = normal_y = normal_z = data_n[3] = curvature = 0.f;
-#define E57_COPY_NORMAL					normal_x = p.normal_x; normal_y = p.normal_y; normal_z = p.normal_z; data_n[3] = 0.f; curvature = p.curvature;							
+#	define E57_CAN_CONTAIN_NORMAL			true
+#	define E57_ADD_NORMAL					PCL_ADD_NORMAL4D; float curvature;
+#	define E57_REGISTER_NORMAL				(float, normal_x, normal_x) (float, normal_y, normal_y) (float, normal_z, normal_z) (float, curvature, curvature)
+#	define E57_ISFINITE_NORMAL				&& pcl_isfinite(p.normal_x) && pcl_isfinite(p.normal_y) && pcl_isfinite(p.normal_z)
+#	define E57_INIT_NORMAL					normal_x = normal_y = normal_z = data_n[3] = curvature = 0.f;
+#	define E57_COPY_NORMAL					normal_x = p.normal_x; normal_y = p.normal_y; normal_z = p.normal_z; data_n[3] = 0.f; curvature = p.curvature;							
 #else
-#define E57_CAN_CONTAIN_NORMAL			false
-#define E57_ADD_NORMAL
-#define E57_REGISTER_NORMAL
-#define E57_ISFINITE_NORMAL
-#define E57_INIT_NORMAL
-#define E57_COPY_NORMAL
+#	define E57_CAN_CONTAIN_NORMAL			false
+#	define E57_ADD_NORMAL
+#	define E57_REGISTER_NORMAL
+#	define E57_ISFINITE_NORMAL
+#	define E57_INIT_NORMAL
+#	define E57_COPY_NORMAL
 #endif
 
 #ifdef POINT_PCD_WITH_NORMAL
-#define PCD_CAN_CONTAIN_NORMAL			true
-#define PCD_ADD_NORMAL					PCL_ADD_NORMAL4D; float curvature;
-#define PCD_REGISTER_NORMAL				(float, normal_x, normal_x) (float, normal_y, normal_y) (float, normal_z, normal_z) (float, curvature, curvature)
-#define PCD_ISFINITE_NORMAL				&& pcl_isfinite(p.normal_x) && pcl_isfinite(p.normal_y) && pcl_isfinite(p.normal_z)
-#define PCD_INIT_NORMAL					normal_x = normal_y = normal_z = data_n[3] = curvature = 0.f;
-#define PCD_COPY_NORMAL					normal_x = p.normal_x; normal_y = p.normal_y; normal_z = p.normal_z; data_n[3] = 0.f; curvature = p.curvature;
+#	define PCD_CAN_CONTAIN_NORMAL			true
+#	define PCD_ADD_NORMAL					PCL_ADD_NORMAL4D; float curvature;
+#	define PCD_REGISTER_NORMAL				(float, normal_x, normal_x) (float, normal_y, normal_y) (float, normal_z, normal_z) (float, curvature, curvature)
+#	define PCD_ISFINITE_NORMAL				&& pcl_isfinite(p.normal_x) && pcl_isfinite(p.normal_y) && pcl_isfinite(p.normal_z)
+#	define PCD_INIT_NORMAL					normal_x = normal_y = normal_z = data_n[3] = curvature = 0.f;
+#	define PCD_COPY_NORMAL					normal_x = p.normal_x; normal_y = p.normal_y; normal_z = p.normal_z; data_n[3] = 0.f; curvature = p.curvature;
 #else
-#define PCD_CAN_CONTAIN_NORMAL			false
-#define PCD_ADD_NORMAL
-#define PCD_REGISTER_NORMAL
-#define PCD_ISFINITE_NORMAL
-#define PCD_INIT_NORMAL
-#define PCD_COPY_NORMAL
+#	define PCD_CAN_CONTAIN_NORMAL			false
+#	define PCD_ADD_NORMAL
+#	define PCD_REGISTER_NORMAL
+#	define PCD_ISFINITE_NORMAL
+#	define PCD_INIT_NORMAL
+#	define PCD_COPY_NORMAL
 #endif
 
 #ifdef POINT_E57_WITH_NORMAL
-#define E57xPCD_CAN_CONTAIN_NORMAL		true
-#define E57xPCD_ADD_NORMAL				PCL_ADD_NORMAL4D; float curvature;
-#define E57xPCD_REGISTER_NORMAL			(float, normal_x, normal_x) (float, normal_y, normal_y) (float, normal_z, normal_z) (float, curvature, curvature)
-#define E57xPCD_ISFINITE_NORMAL			&& pcl_isfinite(p.normal_x) && pcl_isfinite(p.normal_y) && pcl_isfinite(p.normal_z)
-#define E57xPCD_INIT_NORMAL				normal_x = normal_y = normal_z = data_n[3] = curvature = 0.f;
-#define E57xPCD_COPY_NORMAL				normal_x = p.normal_x; normal_y = p.normal_y; normal_z = p.normal_z; data_n[3] = 0.f; curvature = p.curvature;
+#	define POINT_E57xPCD_WITH_NORMAL
+#	define E57xPCD_CAN_CONTAIN_NORMAL		true
+#	define E57xPCD_ADD_NORMAL				PCL_ADD_NORMAL4D; float curvature;
+#	define E57xPCD_REGISTER_NORMAL			(float, normal_x, normal_x) (float, normal_y, normal_y) (float, normal_z, normal_z) (float, curvature, curvature)
+#	define E57xPCD_ISFINITE_NORMAL			&& pcl_isfinite(p.normal_x) && pcl_isfinite(p.normal_y) && pcl_isfinite(p.normal_z)
+#	define E57xPCD_INIT_NORMAL				normal_x = normal_y = normal_z = data_n[3] = curvature = 0.f;
+#	define E57xPCD_COPY_NORMAL				normal_x = p.normal_x; normal_y = p.normal_y; normal_z = p.normal_z; data_n[3] = 0.f; curvature = p.curvature;
 #elif defined POINT_PCD_WITH_NORMAL
-#define E57xPCD_CAN_CONTAIN_NORMAL		true
-#define E57xPCD_ADD_NORMAL				PCL_ADD_NORMAL4D; float curvature;
-#define E57xPCD_REGISTER_NORMAL			(float, normal_x, normal_x) (float, normal_y, normal_y) (float, normal_z, normal_z) (float, curvature, curvature)
-#define E57xPCD_ISFINITE_NORMAL			&& pcl_isfinite(p.normal_x) && pcl_isfinite(p.normal_y) && pcl_isfinite(p.normal_z)
-#define E57xPCD_INIT_NORMAL				normal_x = normal_y = normal_z = data_n[3] = curvature = 0.f;
-#define E57xPCD_COPY_NORMAL				normal_x = p.normal_x; normal_y = p.normal_y; normal_z = p.normal_z; data_n[3] = 0.f; curvature = p.curvature;
+#	define POINT_E57xPCD_WITH_NORMAL
+#	define E57xPCD_CAN_CONTAIN_NORMAL		true
+#	define E57xPCD_ADD_NORMAL				PCL_ADD_NORMAL4D; float curvature;
+#	define E57xPCD_REGISTER_NORMAL			(float, normal_x, normal_x) (float, normal_y, normal_y) (float, normal_z, normal_z) (float, curvature, curvature)
+#	define E57xPCD_ISFINITE_NORMAL			&& pcl_isfinite(p.normal_x) && pcl_isfinite(p.normal_y) && pcl_isfinite(p.normal_z)
+#	define E57xPCD_INIT_NORMAL				normal_x = normal_y = normal_z = data_n[3] = curvature = 0.f;
+#	define E57xPCD_COPY_NORMAL				normal_x = p.normal_x; normal_y = p.normal_y; normal_z = p.normal_z; data_n[3] = 0.f; curvature = p.curvature;
 #else
-#define E57xPCD_CAN_CONTAIN_NORMAL		false
-#define E57xPCD_ADD_NORMAL
-#define E57xPCD_REGISTER_NORMAL
-#define E57xPCD_ISFINITE_NORMAL
-#define E57xPCD_INIT_NORMAL
-#define E57xPCD_COPY_NORMAL
+#	define E57xPCD_CAN_CONTAIN_NORMAL		false
+#	define E57xPCD_ADD_NORMAL
+#	define E57xPCD_REGISTER_NORMAL
+#	define E57xPCD_ISFINITE_NORMAL
+#	define E57xPCD_INIT_NORMAL
+#	define E57xPCD_COPY_NORMAL
 #endif
 
 // RGB
 #ifdef POINT_E57_WITH_RGB
-#define E57_CAN_CONTAIN_RGB				true
-#define E57_ADD_RGB						PCL_ADD_RGB;
-#define E57_REGISTER_RGB				(uint32_t, rgba, rgba)
-#define E57_ISFINITE_RGB
-#define E57_INIT_RGB					r = g = b = 0; a = 1;
-#define E57_COPY_RGB					rgba = p.rgba;
+#	define E57_CAN_CONTAIN_RGB				true
+#	define E57_ADD_RGB						PCL_ADD_RGB;
+#	define E57_REGISTER_RGB					(uint32_t, rgba, rgba)
+#	define E57_ISFINITE_RGB
+#	define E57_INIT_RGB						r = g = b = 0; a = 1;
+#	define E57_COPY_RGB						rgba = p.rgba;
 #else
-#define E57_CAN_CONTAIN_RGB				false
-#define E57_ADD_RGB
-#define E57_REGISTER_RGB
-#define E57_ISFINITE_RGB
-#define E57_INIT_RGB
-#define E57_COPY_RGB
+#	define E57_CAN_CONTAIN_RGB				false
+#	define E57_ADD_RGB
+#	define E57_REGISTER_RGB
+#	define E57_ISFINITE_RGB
+#	define E57_INIT_RGB
+#	define E57_COPY_RGB
 #endif
 
 #ifdef POINT_PCD_WITH_RGB
-#define PCD_CAN_CONTAIN_RGB				true
-#define PCD_ADD_RGB						PCL_ADD_RGB;
-#define PCD_REGISTER_RGB				(uint32_t, rgba, rgba)
-#define PCD_ISFINITE_RGB
-#define PCD_INIT_RGB					r = g = b = 0; a = 1;
-#define PCD_COPY_RGB					rgba = p.rgba;
+#	define PCD_CAN_CONTAIN_RGB				true
+#	define PCD_ADD_RGB						PCL_ADD_RGB;
+#	define PCD_REGISTER_RGB					(uint32_t, rgba, rgba)
+#	define PCD_ISFINITE_RGB
+#	define PCD_INIT_RGB						r = g = b = 0; a = 1;
+#	define PCD_COPY_RGB						rgba = p.rgba;
 #else
-#define PCD_CAN_CONTAIN_RGB				false
-#define PCD_ADD_RGB
-#define PCD_REGISTER_RGB
-#define PCD_ISFINITE_RGB
-#define PCD_INIT_RGB
-#define PCD_COPY_RGB
+#	define PCD_CAN_CONTAIN_RGB				false
+#	define PCD_ADD_RGB
+#	define PCD_REGISTER_RGB
+#	define PCD_ISFINITE_RGB
+#	define PCD_INIT_RGB
+#	define PCD_COPY_RGB
 #endif
 
 #ifdef POINT_E57_WITH_RGB
-#define E57xPCD_CAN_CONTAIN_RGB			true
-#define E57xPCD_ADD_RGB					PCL_ADD_RGB;
-#define E57xPCD_REGISTER_RGB			(uint32_t, rgba, rgba)
-#define E57xPCD_ISFINITE_RGB
-#define E57xPCD_INIT_RGB				r = g = b = 0; a = 1;
-#define E57xPCD_COPY_RGB				rgba = p.rgba;
+#	define POINT_E57xPCD_WITH_RGB
+#	define E57xPCD_CAN_CONTAIN_RGB			true
+#	define E57xPCD_ADD_RGB					PCL_ADD_RGB;
+#	define E57xPCD_REGISTER_RGB				(uint32_t, rgba, rgba)
+#	define E57xPCD_ISFINITE_RGB
+#	define E57xPCD_INIT_RGB					r = g = b = 0; a = 1;
+#	define E57xPCD_COPY_RGB					rgba = p.rgba;
 #elif defined POINT_PCD_WITH_RGB
-#define E57xPCD_CAN_CONTAIN_RGB			true
-#define E57xPCD_ADD_RGB					PCL_ADD_RGB;
-#define E57xPCD_REGISTER_RGB			(uint32_t, rgba, rgba)
-#define E57xPCD_ISFINITE_RGB
-#define E57xPCD_INIT_RGB				r = g = b = 0; a = 1;
-#define E57xPCD_COPY_RGB				rgba = p.rgba;
+#	define POINT_E57xPCD_WITH_RGB
+#	define E57xPCD_CAN_CONTAIN_RGB			true
+#	define E57xPCD_ADD_RGB					PCL_ADD_RGB;
+#	define E57xPCD_REGISTER_RGB				(uint32_t, rgba, rgba)
+#	define E57xPCD_ISFINITE_RGB
+#	define E57xPCD_INIT_RGB					r = g = b = 0; a = 1;
+#	define E57xPCD_COPY_RGB					rgba = p.rgba;
 #else
-#define E57xPCD_CAN_CONTAIN_RGB			false
-#define E57xPCD_ADD_RGB
-#define E57xPCD_REGISTER_RGB
-#define E57xPCD_ISFINITE_RGB
-#define E57xPCD_INIT_RGB
-#define E57xPCD_COPY_RGB
+#	define E57xPCD_CAN_CONTAIN_RGB			false
+#	define E57xPCD_ADD_RGB
+#	define E57xPCD_REGISTER_RGB
+#	define E57xPCD_ISFINITE_RGB
+#	define E57xPCD_INIT_RGB
+#	define E57xPCD_COPY_RGB
 #endif
 
 // Intensity
 #ifdef POINT_E57_WITH_INTENSITY
-#define E57_CAN_CONTAIN_INTENSITY		true
-#define E57_ADD_INTENSITY				PCL_ADD_INTENSITY;
-#define E57_REGISTER_INTENSITY			(float, intensity, intensity)
-#define E57_ISFINITE_INTENSITY			&& pcl_isfinite(p.intensity)
-#define E57_INIT_INTENSITY				intensity = 0.f;
-#define E57_COPY_INTENSITY				intensity = p.intensity;
+#	define E57_CAN_CONTAIN_INTENSITY		true
+#	define E57_ADD_INTENSITY				PCL_ADD_INTENSITY;
+#	define E57_REGISTER_INTENSITY			(float, intensity, intensity)
+#	define E57_ISFINITE_INTENSITY			&& pcl_isfinite(p.intensity)
+#	define E57_INIT_INTENSITY				intensity = 0.f;
+#	define E57_COPY_INTENSITY				intensity = p.intensity;
 #else
-#define E57_CAN_CONTAIN_INTENSITY		false
-#define E57_ADD_INTENSITY
-#define E57_REGISTER_INTENSITY
-#define E57_ISFINITE_INTENSITY
-#define E57_INIT_INTENSITY
-#define E57_COPY_INTENSITY
+#	define E57_CAN_CONTAIN_INTENSITY		false
+#	define E57_ADD_INTENSITY
+#	define E57_REGISTER_INTENSITY
+#	define E57_ISFINITE_INTENSITY
+#	define E57_INIT_INTENSITY
+#	define E57_COPY_INTENSITY
 #endif
 
 #ifdef POINT_PCD_WITH_INTENSITY
-#define PCD_CAN_CONTAIN_INTENSITY		true
-#define PCD_ADD_INTENSITY				PCL_ADD_INTENSITY;
-#define PCD_REGISTER_INTENSITY			(float, intensity, intensity)
-#define PCD_ISFINITE_INTENSITY			&& pcl_isfinite(p.intensity)
-#define PCD_INIT_INTENSITY				intensity = 0.f;
-#define PCD_COPY_INTENSITY				intensity = p.intensity;
+#	define PCD_CAN_CONTAIN_INTENSITY		true
+#	define PCD_ADD_INTENSITY				PCL_ADD_INTENSITY;
+#	define PCD_REGISTER_INTENSITY			(float, intensity, intensity)
+#	define PCD_ISFINITE_INTENSITY			&& pcl_isfinite(p.intensity)
+#	define PCD_INIT_INTENSITY				intensity = 0.f;
+#	define PCD_COPY_INTENSITY				intensity = p.intensity;
 #else
-#define PCD_CAN_CONTAIN_INTENSITY		false
-#define PCD_ADD_INTENSITY
-#define PCD_REGISTER_INTENSITY
-#define PCD_ISFINITE_INTENSITY
-#define PCD_INIT_INTENSITY
-#define PCD_COPY_INTENSITY
+#	define PCD_CAN_CONTAIN_INTENSITY		false
+#	define PCD_ADD_INTENSITY
+#	define PCD_REGISTER_INTENSITY
+#	define PCD_ISFINITE_INTENSITY
+#	define PCD_INIT_INTENSITY
+#	define PCD_COPY_INTENSITY
 #endif
 
 #ifdef POINT_E57_WITH_INTENSITY
-#define E57xPCD_CAN_CONTAIN_INTENSITY	true
-#define E57xPCD_ADD_INTENSITY			PCL_ADD_INTENSITY;
-#define E57xPCD_REGISTER_INTENSITY		(float, intensity, intensity)
-#define E57xPCD_ISFINITE_INTENSITY		&& pcl_isfinite(p.intensity)
-#define E57xPCD_INIT_INTENSITY			intensity = 0.f;
-#define E57xPCD_COPY_INTENSITY			intensity = p.intensity;
+#	define POINT_E57xPCD_WITH_INTENSITY
+#	define E57xPCD_CAN_CONTAIN_INTENSITY	true
+#	define E57xPCD_ADD_INTENSITY			PCL_ADD_INTENSITY;
+#	define E57xPCD_REGISTER_INTENSITY		(float, intensity, intensity)
+#	define E57xPCD_ISFINITE_INTENSITY		&& pcl_isfinite(p.intensity)
+#	define E57xPCD_INIT_INTENSITY			intensity = 0.f;
+#	define E57xPCD_COPY_INTENSITY			intensity = p.intensity;
 #elif defined POINT_PCD_WITH_INTENSITY
-#define E57xPCD_CAN_CONTAIN_INTENSITY	true
-#define E57xPCD_ADD_INTENSITY			PCL_ADD_INTENSITY;
-#define E57xPCD_REGISTER_INTENSITY		(float, intensity, intensity)
-#define E57xPCD_ISFINITE_INTENSITY		&& pcl_isfinite(p.intensity)
-#define E57xPCD_INIT_INTENSITY			intensity = 0.f;
-#define E57xPCD_COPY_INTENSITY			intensity = p.intensity;
+#	define POINT_E57xPCD_WITH_INTENSITY
+#	define E57xPCD_CAN_CONTAIN_INTENSITY	true
+#	define E57xPCD_ADD_INTENSITY			PCL_ADD_INTENSITY;
+#	define E57xPCD_REGISTER_INTENSITY		(float, intensity, intensity)
+#	define E57xPCD_ISFINITE_INTENSITY		&& pcl_isfinite(p.intensity)
+#	define E57xPCD_INIT_INTENSITY			intensity = 0.f;
+#	define E57xPCD_COPY_INTENSITY			intensity = p.intensity;
 #else
-#define E57xPCD_CAN_CONTAIN_INTENSITY	false
-#define E57xPCD_ADD_INTENSITY
-#define E57xPCD_REGISTER_INTENSITY
-#define E57xPCD_ISFINITE_INTENSITY
-#define E57xPCD_INIT_INTENSITY
-#define E57xPCD_COPY_INTENSITY
+#	define E57xPCD_CAN_CONTAIN_INTENSITY	false
+#	define E57xPCD_ADD_INTENSITY
+#	define E57xPCD_REGISTER_INTENSITY
+#	define E57xPCD_ISFINITE_INTENSITY
+#	define E57xPCD_INIT_INTENSITY
+#	define E57xPCD_COPY_INTENSITY
 #endif
 
 // Label
 #ifdef POINT_E57_WITH_LABEL
-#define E57_CAN_CONTAIN_LABEL			true
-#define E57_ADD_LABEL					union { uint32_t label; int32_t hasLabel; };
-#define E57_REGISTER_LABEL				(uint32_t, label, label)
-#define E57_ISFINITE_LABEL
-#define E57_INIT_LABEL					hasLabel = -1;
-#define E57_COPY_LABEL					label = p.label;
-#define E57_HASLABEL					inline bool HasLabel() { return (hasLabel != -1); }
+#	define E57_CAN_CONTAIN_LABEL			true
+#	define E57_ADD_LABEL					union { uint32_t label; int32_t hasLabel; };
+#	define E57_REGISTER_LABEL				(uint32_t, label, label)
+#	define E57_ISFINITE_LABEL
+#	define E57_INIT_LABEL					hasLabel = -1;
+#	define E57_COPY_LABEL					label = p.label;
+#	define E57_HASLABEL						inline bool HasLabel() { return (hasLabel != -1); }
 #else
-#define E57_CAN_CONTAIN_LABEL			false
-#define E57_ADD_LABEL
-#define E57_REGISTER_LABEL
-#define E57_ISFINITE_LABEL
-#define E57_INIT_LABEL
-#define E57_COPY_LABEL
-#define E57_HASLABEL
+#	define E57_CAN_CONTAIN_LABEL			false
+#	define E57_ADD_LABEL
+#	define E57_REGISTER_LABEL
+#	define E57_ISFINITE_LABEL
+#	define E57_INIT_LABEL
+#	define E57_COPY_LABEL
+#	define E57_HASLABEL
 #endif
 
 #ifdef POINT_PCD_WITH_LABEL
-#define PCD_CAN_CONTAIN_LABEL			true
-#define PCD_ADD_LABEL					union { uint32_t label; int32_t hasLabel; };
-#define PCD_REGISTER_LABEL				(uint32_t, label, label)
-#define PCD_ISFINITE_LABEL
-#define PCD_INIT_LABEL					hasLabel = -1;
-#define PCD_COPY_LABEL					label = p.label;
-#define PCD_COPY_SEGLABEL				label = p.segLabel;
-#define PCD_HASLABEL					inline bool HasLabel() { return (hasLabel != -1); }
+#	define PCD_CAN_CONTAIN_LABEL			true
+#	define PCD_ADD_LABEL					union { uint32_t label; int32_t hasLabel; };
+#	define PCD_REGISTER_LABEL				(uint32_t, label, label)
+#	define PCD_ISFINITE_LABEL
+#	define PCD_INIT_LABEL					hasLabel = -1;
+#	define PCD_COPY_LABEL					label = p.label;
+#	define PCD_COPY_SEGLABEL				label = p.segLabel;
+#	define PCD_HASLABEL						inline bool HasLabel() { return (hasLabel != -1); }
 #else
-#define PCD_CAN_CONTAIN_LABEL			false
-#define PCD_ADD_LABEL
-#define PCD_REGISTER_LABEL
-#define PCD_ISFINITE_LABEL
-#define PCD_INIT_LABEL
-#define PCD_COPY_LABEL
-#define PCD_COPY_SEGLABEL
-#define PCD_HASLABEL
+#	define PCD_CAN_CONTAIN_LABEL			false
+#	define PCD_ADD_LABEL
+#	define PCD_REGISTER_LABEL
+#	define PCD_ISFINITE_LABEL
+#	define PCD_INIT_LABEL
+#	define PCD_COPY_LABEL
+#	define PCD_COPY_SEGLABEL
+#	define PCD_HASLABEL
 #endif
 
 #ifdef POINT_E57_WITH_LABEL
-#define E57xPCD_CAN_CONTAIN_LABEL		true
-#define E57xPCD_ADD_LABEL				union { uint32_t label; int32_t hasLabel; };
-#define E57xPCD_REGISTER_LABEL			(uint32_t, label, label)
-#define E57xPCD_ISFINITE_LABEL
-#define E57xPCD_INIT_LABEL				hasLabel = -1;
-#define E57xPCD_COPY_LABEL				label = p.label;
-#define E57xPCD_HASLABEL				inline bool HasLabel() { return (hasLabel != -1); }
+#	define POINT_E57xPCD_WITH_LABEL
+#	define E57xPCD_CAN_CONTAIN_LABEL		true
+#	define E57xPCD_ADD_LABEL				union { uint32_t label; int32_t hasLabel; };
+#	define E57xPCD_REGISTER_LABEL			(uint32_t, label, label)
+#	define E57xPCD_ISFINITE_LABEL
+#	define E57xPCD_INIT_LABEL				hasLabel = -1;
+#	define E57xPCD_COPY_LABEL				label = p.label;
+#	define E57xPCD_HASLABEL					inline bool HasLabel() { return (hasLabel != -1); }
 #elif defined POINT_PCD_WITH_LABEL
-#define E57xPCD_CAN_CONTAIN_LABEL		true
-#define E57xPCD_ADD_LABEL				union { uint32_t label; int32_t hasLabel; };
-#define E57xPCD_REGISTER_LABEL			(uint32_t, label, label)
-#define E57xPCD_ISFINITE_LABEL
-#define E57xPCD_INIT_LABEL
-#define E57xPCD_COPY_LABEL
-#define E57xPCD_HASLABEL
+#	define POINT_E57xPCD_WITH_LABEL
+#	define E57xPCD_CAN_CONTAIN_LABEL		true
+#	define E57xPCD_ADD_LABEL				union { uint32_t label; int32_t hasLabel; };
+#	define E57xPCD_REGISTER_LABEL			(uint32_t, label, label)
+#	define E57xPCD_ISFINITE_LABEL
+#	define E57xPCD_INIT_LABEL
+#	define E57xPCD_COPY_LABEL
+#	define E57xPCD_HASLABEL
 #else
-#define E57xPCD_CAN_CONTAIN_LABEL		false
-#define E57xPCD_ADD_LABEL
-#define E57xPCD_REGISTER_LABEL
-#define E57xPCD_ISFINITE_LABEL
-#define E57xPCD_INIT_LABEL
-#define E57xPCD_COPY_LABEL
-#define E57xPCD_HASLABEL
+#	define E57xPCD_CAN_CONTAIN_LABEL		false
+#	define E57xPCD_ADD_LABEL
+#	define E57xPCD_REGISTER_LABEL
+#	define E57xPCD_ISFINITE_LABEL
+#	define E57xPCD_INIT_LABEL
+#	define E57xPCD_COPY_LABEL
+#	define E57xPCD_HASLABEL
 #endif
 
 #ifdef POINT_PCD_WITH_LABEL
-#define E57xPCD_ADD_SEGLABEL			union { uint32_t segLabel; int32_t hasSegLabel; };
-#define E57xPCD_REGISTER_SEGLABEL		(uint32_t, segLabel, segLabel)
-#define E57xPCD_ISFINITE_SEGLABEL
-#define E57xPCD_INIT_SEGLABEL			hasSegLabel = -1;
-#define E57xPCD_COPY_SEGLABEL			segLabel = p.segLabel;
-#define E57xPCD_HASSEGLABEL				inline bool HasSegLabel() { return (hasSegLabel != -1); }
+#	define POINT_E57xPCD_WITH_SEGLABEL
+#	define E57xPCD_ADD_SEGLABEL			union { uint32_t segLabel; int32_t hasSegLabel; };
+#	define E57xPCD_REGISTER_SEGLABEL		(uint32_t, segLabel, segLabel)
+#	define E57xPCD_ISFINITE_SEGLABEL
+#	define E57xPCD_INIT_SEGLABEL			hasSegLabel = -1;
+#	define E57xPCD_COPY_SEGLABEL			segLabel = p.segLabel;
+#	define E57xPCD_HASSEGLABEL				inline bool HasSegLabel() { return (hasSegLabel != -1); }
 #else
-#define E57xPCD_ADD_SEGLABEL
-#define E57xPCD_REGISTER_SEGLABEL
-#define E57xPCD_ISFINITE_SEGLABEL
-#define E57xPCD_INIT_SEGLABEL
-#define E57xPCD_COPY_SEGLABEL
-#define E57xPCD_HASSEGLABEL
+#	define POINT_E57xPCD_WITH_SEGLABEL
+#	define E57xPCD_ADD_SEGLABEL
+#	define E57xPCD_REGISTER_SEGLABEL
+#	define E57xPCD_ISFINITE_SEGLABEL
+#	define E57xPCD_INIT_SEGLABEL
+#	define E57xPCD_COPY_SEGLABEL
+#	define E57xPCD_HASSEGLABEL
 #endif
 
 	//

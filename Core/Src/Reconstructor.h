@@ -49,7 +49,7 @@ namespace RecRoom
 		using SurfaceProcesserT = SurfaceProcesser<PointMed, PointRec>;
 		using NormalEstimaterT = NormalEstimater<PointMed, PointRec>;
 		using AlbedoEstimaterT = AlbedoEstimater<PointMed, PointRec>;
-		using SegmenterT = Segmenter<PointMed>;
+		using SegmenterT = Segmenter<PointRec, PointRec>;
 
 	public:
 		// This constructor will create a new container

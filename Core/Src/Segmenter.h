@@ -7,17 +7,19 @@
 
 namespace RecRoom
 {
-	template<class PointType>
-	class Segmenter : public Data, public pcl::PCLBase<PointType>
+	template<class PointTypeIn, class PointTypeOut>
+	class Segmenter : public Data, public pcl::PCLBase<PointTypeIn>
 	{
 	public:
-		using Self = Segmenter<PointType>;
+		using Self = Segmenter<PointTypeIn, PointTypeOut>;
 		using Ptr = PTR(Self);
 		using ConstPtr = CONST_PTR(Self);
 
 	public:
 		virtual Ptr Clone() const { THROW_EXCEPTION("Interface is not implemented"); }
 		virtual double SearchRadius() const { return 0.0; }
+
+		virtual void Extract(pcl::PointCloud<PointTypeOut>& out) { THROW_EXCEPTION("Interface is not implemented"); }
 	};
 }
 
