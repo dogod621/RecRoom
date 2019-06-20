@@ -14,7 +14,9 @@ namespace RecRoom
 		using Self = Segmenter<PointType>;
 		using Ptr = PTR(Self);
 		using ConstPtr = CONST_PTR(Self);
-		
+
+	public:
+		virtual Ptr Clone() const { THROW_EXCEPTION("Interface is not implemented"); }
 	};
 }
 

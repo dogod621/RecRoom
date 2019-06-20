@@ -23,7 +23,6 @@ namespace RecRoom
 		Data() {}
 
 	public:
-		virtual Ptr Clone() const { THROW_EXCEPTION("Interface is not implemented"); }
 		virtual void ClearBuffers() { THROW_EXCEPTION("Interface is not implemented"); }
 		virtual void FromFile(const boost::filesystem::path& filePath) { THROW_EXCEPTION("Interface is not implemented"); }
 		virtual void ToFile(const boost::filesystem::path& filePath) const { THROW_EXCEPTION("Interface is not implemented"); }

@@ -366,7 +366,7 @@ namespace RecRoom
 		{
 			PRINT_INFO("Start");
 
-			(*global.reconstructorE57->getPointCloudRec) += (*data.pointCloudRec);
+			(*global.reconstructorE57->getPointCloudRec()) += (*data.pointCloudRec);
 
 			PRINT_INFO("End");
 		}
