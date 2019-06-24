@@ -1,7 +1,5 @@
 #pragma once
 
-#include <pcl/PolygonMesh.h>
-
 #include "Common/Common.h"
 #include "Container/ContainerPcRAW.h"
 #include "Container/ContainerPcNDF.h"
@@ -18,10 +16,11 @@ namespace RecRoom
 	class ReconstructorPc
 	{
 	public:
-		ReconstructorPc(const CONST_PTR(ScannerPc)& scanner, 
-			const CONST_PTR(ContainerPcRAW)& containerPcRAW, 
-			const PTR(ContainerPcNDF)& containerPcNDF)
-			: scanner(scanner), containerPcRAW(containerPcRAW), containerPcNDF(containerPcNDF){}
+		ReconstructorPc(
+			boost::filesystem::path filePath,
+			const CONST_PTR(ScannerPc)& scanner,
+			const CONST_PTR(ContainerPcRAW)& containerPcRAW,
+			const PTR(ContainerPcNDF)& containerPcNDF);
 
 	public:
 		virtual void Process(pcl::PolygonMesh& out) const = 0;
@@ -40,6 +39,9 @@ namespace RecRoom
 		void setMesher(CONST_PTR(MesherPc) mesher_) { mesher = mesher_;}
 
 	protected:
+		boost::filesystem::path filePath;
+		PTR(PcMED) pcMED;
+
 		CONST_PTR(ScannerPc) scanner; 
 		CONST_PTR(ContainerPcRAW) containerPcRAW;
 		PTR(ContainerPcNDF) containerPcNDF;

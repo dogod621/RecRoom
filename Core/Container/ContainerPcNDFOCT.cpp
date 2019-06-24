@@ -4,9 +4,30 @@
 
 namespace RecRoom
 {
-	ContainerPcNDFOCT::ContainerPcNDFOCT(const boost::filesystem::path& filePath_, bool createNew)
+	ContainerPcNDFOCT::ContainerPcNDFOCT(const boost::filesystem::path& filePath_)
 		: filePath(filePath_), ContainerPcNDF(), oct(nullptr)
 	{
+		bool createNew = false;
+		if (!boost::filesystem::is_directory(filePath))
+		{
+			createNew = true;
+		}
+		else if (!boost::filesystem::is_directory(filePath / boost::filesystem::path("NDF")))
+		{
+			createNew = true;
+			PRINT_WARNING("filePath is not valid: missing ./NDF/, create new");
+		}
+		else if (!boost::filesystem::exists(filePath / boost::filesystem::path("NDF") / boost::filesystem::path("root.oct_idx")))
+		{
+			createNew = true;
+			PRINT_WARNING("filePath is not valid: missing ./NDF/root.oct_idx, create new");
+		}
+		else if(!boost::filesystem::exists(filePath / boost::filesystem::path("metaNDF.txt")))
+		{
+			createNew = true;
+			PRINT_WARNING("filePath is not valid: missing ./metaNDF.txt, create new");
+		}
+
 		if (createNew)
 		{
 			if (!boost::filesystem::exists(filePath))
@@ -24,33 +45,27 @@ namespace RecRoom
 			std::string metaPath = (filePath / boost::filesystem::path("metaNDF.txt")).string();
 			std::ofstream file(metaPath, std::ios_base::out);
 			if (!file)
-				throw pcl::PCLException("Create file " + metaPath + " failed.");
+				THROW_EXCEPTION("Create file " + metaPath + " failed.");
 			nlohmann::json j;
 			file << j;
 			file.close();
 		}
-
 		else
 		{
-			if (!boost::filesystem::is_directory(filePath))
-				THROW_EXCEPTION("filePath is not valid.");
-			if (!boost::filesystem::is_directory(filePath / boost::filesystem::path("NDF")))
-				THROW_EXCEPTION("filePath is not valid: missing ./NDF/");
-			if (!boost::filesystem::exists(filePath / boost::filesystem::path("NDF") / boost::filesystem::path("root.oct_idx")))
-				THROW_EXCEPTION("filePath is not valid: missing ./NDF/root.oct_idx.");
-			if (!boost::filesystem::exists(filePath / boost::filesystem::path("metaNDF.txt")))
-				THROW_EXCEPTION("filePath is not valid: missing ./metaNDF.txt.");
-
 			oct = OCT::Ptr(new OCT(filePath / boost::filesystem::path("NDF") / boost::filesystem::path("root.oct_idx"), true));
 
 			std::string metaPath = (filePath / boost::filesystem::path("metaNDF.txt")).string();
 			std::ifstream file(metaPath, std::ios_base::in);
 			if (!file)
-				throw pcl::PCLException("Load file " + metaPath + " failed.");
+				THROW_EXCEPTION("Load file " + metaPath + " failed.");
 			nlohmann::json j;
 			file >> j;
 			file.close();
 		}
+
+		//
+		if(!oct)
+			THROW_EXCEPTION("oct is not created?")
 	}
 
 	PTR(PcNDF) ContainerPcNDFOCT::Quary(std::size_t i) const

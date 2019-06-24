@@ -32,9 +32,8 @@ namespace RecRoom
 	{
 	public:
 		ScannerPc(
-			const PTR(ContainerPcRAW)& containerPcRAW,
-			const CONST_PTR(PreprocessorPc)& preprocessor)
-			: scanMeta(), containerPcRAW(containerPcRAW), preprocessor(preprocessor)
+			const PTR(ContainerPcRAW)& containerPcRAW)
+			: scanMeta(), containerPcRAW(containerPcRAW), preprocessor(nullptr)
 		{
 			if (!containerPcRAW)
 				THROW_EXCEPTION("containerPcRAW is not set");
@@ -48,6 +47,8 @@ namespace RecRoom
 		ScanMeta getScanMeta(std::size_t i) const { return scanMeta[i]; }
 		PTR(ContainerPcRAW) getContainerPcRAW () const { return containerPcRAW; }
 		CONST_PTR(PreprocessorPc) getPreprocessor () const { return preprocessor; }
+
+		void setPreprocessor(CONST_PTR(PreprocessorPc) preprocessor_) { preprocessor = preprocessor_; }
 
 	protected:
 		std::vector<ScanMeta> scanMeta;

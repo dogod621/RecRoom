@@ -25,7 +25,7 @@ namespace RecRoom
 		std::string metaPath = (filePath / boost::filesystem::path("metaRAW.txt")).string();
 		std::ifstream file(metaPath, std::ios_base::in);
 		if (!file)
-			throw pcl::PCLException("Load file " + metaPath + " failed.");
+			THROW_EXCEPTION("Load file " + metaPath + " failed.");
 		nlohmann::json j;
 		file >> j;
 
@@ -80,6 +80,10 @@ namespace RecRoom
 		outOfCoreOverlapSize = j["outOfCoreOverlapSize"];
 
 		file.close();
+
+		//
+		if (!oct)
+			THROW_EXCEPTION("oct is not created?")
 	}
 
 	ContainerPcRAWOCT::ContainerPcRAWOCT(const boost::filesystem::path& filePath_, const Eigen::Vector3d& min, const Eigen::Vector3d& max, const double res, double outOfCoreOverlapSize)
@@ -96,11 +100,15 @@ namespace RecRoom
 		std::string metaPath = (filePath / boost::filesystem::path("metaRAW.txt")).string();
 		std::ofstream file(metaPath, std::ios_base::out);
 		if (!file)
-			throw pcl::PCLException("Create file " + metaPath + " failed.");
+			THROW_EXCEPTION("Create file " + metaPath + " failed.");
 		nlohmann::json j;
 		j["outOfCoreOverlapSize"] = outOfCoreOverlapSize;
 		file << j;
 		file.close();
+
+		//
+		if (!oct)
+			THROW_EXCEPTION("oct is not created?")
 	}
 
 	void ContainerPcRAWOCT::Merge(const PTR(PcRAW)& v)
@@ -128,7 +136,7 @@ namespace RecRoom
 		std::string metaPath = (filePath / boost::filesystem::path("metaRAW.txt")).string();
 		std::ofstream file(metaPath, std::ios_base::out);
 		if (!file)
-			throw pcl::PCLException("Create file " + metaPath + " failed.");
+			THROW_EXCEPTION("Create file " + metaPath + " failed.");
 		nlohmann::json j;
 		j["outOfCoreOverlapSize"] = outOfCoreOverlapSize;
 

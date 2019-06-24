@@ -14,7 +14,7 @@ namespace RecRoom
 		using OCT = pcl::outofcore::OutofcoreOctreeBase<OCTDC, PointNDF>;
 
 	public:
-		ContainerPcNDFOCT(const boost::filesystem::path& filePath, bool createNew = true);
+		ContainerPcNDFOCT(const boost::filesystem::path& filePath);
 
 	public:
 		virtual void Merge(const PTR(PcNDF)& v) { oct->addPointCloud(v); }

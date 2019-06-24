@@ -103,9 +103,8 @@ namespace RecRoom
 
 	ScannerPcE57::ScannerPcE57(
 		const boost::filesystem::path& filePath,
-		const PTR(ContainerPcRAW)& containerPcRAW,
-		const CONST_PTR(PreprocessorPc)& preprocessor)
-		: ScannerPc(containerPcRAW, preprocessor), imageFileE57(nullptr), data3DE57(nullptr), images2DE57(nullptr)
+		const PTR(ContainerPcRAW)& containerPcRAW)
+		: ScannerPc(containerPcRAW), imageFileE57(nullptr), data3DE57(nullptr), images2DE57(nullptr)
 	{
 		if (!IsFileE57(filePath, true))
 			THROW_EXCEPTION("filePath is not valid.");

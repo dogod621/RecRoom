@@ -12,8 +12,7 @@ namespace RecRoom
 	public:
 		ScannerPcE57(
 			const boost::filesystem::path& filePath,
-			const PTR(ContainerPcRAW)& containerPcRAW,
-			const CONST_PTR(PreprocessorPc)& preprocessor);
+			const PTR(ContainerPcRAW)& containerPcRAW);
 
 		~ScannerPcE57()
 		{
