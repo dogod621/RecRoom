@@ -8,7 +8,7 @@ namespace RecRoom
 		const PTR(PcMED) & inV,
 		PcMED & outV) const
 	{
-		pcl::VoxelGrid<PointType> vf;
+		pcl::VoxelGrid<PointMED> vf;
 		vf.setLeafSize(voxelSize, voxelSize, voxelSize);
 		vf.setInputCloud(inV);
 		vf.filter(outV);

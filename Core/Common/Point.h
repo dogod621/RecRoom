@@ -423,7 +423,7 @@ namespace RecRoom
 
 		inline PointNDF(float normalX, float normalY, float normalZ, uint32_t label_, float intensity_)
 		{
-			x = (float)label_; y = 0.0; z = 0.0; data[3] = 1.0f;
+			x = ((float)label_) + 0.5f; y = 0.5f; z = 0.5f; data[3] = 1.0f;
 			normal_x = normalX; normal_y = normalY; normal_z = normalZ; data_n[3] = 0.f;
 			intensity = intensity_;
 		}
