@@ -17,6 +17,9 @@ namespace RecRoom
 			searchMethod->setInputCloud(searchSurface);
 		}
 
+#ifdef POINT_MED_WITH_NORMAL
+#ifdef POINT_MED_WITH_LABEL
+#ifdef POINT_MED_WITH_INTENSITY
 		AlbedoEstimationOMP ae(scanMeta, linearSolver, distInterParm, angleInterParm, cutFalloff, cutGrazing);
 		if (searchMethod)
 			ae.setSearchMethod(searchMethod);
@@ -27,5 +30,8 @@ namespace RecRoom
 		if (inIdx)
 			ae.setIndices(inIdx);
 		ae.compute(outV);
+#endif
+#endif
+#endif
 	}
 }

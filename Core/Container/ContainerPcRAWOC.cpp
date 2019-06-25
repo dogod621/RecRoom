@@ -63,7 +63,7 @@ namespace RecRoom
 				Eigen::Vector3d maxAABB;
 				std::size_t depth;
 				(*it)->getBoundingBox(minAABB, maxAABB);
-				quaries.push_back(QuaryPcRAWOCT(minAABB, maxAABB, minAABB - ext, maxAABB + ext, (*it)->getDepth()));
+				quaries.push_back(QuaryMeta(minAABB, maxAABB, minAABB - ext, maxAABB + ext, (*it)->getDepth()));
 			}
 			it++;
 		}
@@ -77,12 +77,7 @@ namespace RecRoom
 		if (i >= quaries.size())
 			THROW_EXCEPTION("i is too large, max: " + std::to_string(quaries.size()));
 
-
-		ContainerPcRAW::QuaryData q;
-
-		//
-		q.minAABB = quaries[i].minAABB;
-		q.maxAABB = quaries[i].maxAABB;
+		ContainerPcRAW::QuaryData q (quaries[i]);
 
 		//
 		pcl::PCLPointCloud2::Ptr blob(new pcl::PCLPointCloud2);
@@ -104,14 +99,7 @@ namespace RecRoom
 		if (i >= quaries.size())
 			THROW_EXCEPTION("i is too large, max: " + std::to_string(quaries.size()));
 
-
-		ContainerPcRAW::QuaryMeta q;
-
-		//
-		q.minAABB = quaries[i].minAABB;
-		q.maxAABB = quaries[i].maxAABB;
-
-		return q;
+		return quaries[i];
 	}
 
 	void ContainerPcRAWOC::LoadMeta()
@@ -130,7 +118,7 @@ namespace RecRoom
 
 		for (nlohmann::json::const_iterator qit = j["quaries"].begin(); qit != j["quaries"].end(); ++qit)
 		{
-			QuaryPcRAWOCT q;
+			QuaryMeta q;
 			{
 				if (qit->find("minAABB") == qit->end())
 					THROW_EXCEPTION("metaRAW is not valid: missing \"minAABB\"");

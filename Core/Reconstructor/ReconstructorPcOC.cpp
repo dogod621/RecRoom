@@ -61,6 +61,7 @@ namespace RecRoom
 		PTR(PcIndex) pcRecIdx;
 		PTR(KdTreeMED) pcRawAcc;
 		PTR(KdTreeMED) pcRecAcc;
+		PTR(PcIndex) pcReturnIdx;
 
 		AsyncData_Rec() :
 			pcRaw(new PcMED),
@@ -68,7 +69,8 @@ namespace RecRoom
 			pcRawIdx(new PcIndex),
 			pcRecIdx(new PcIndex),
 			pcRawAcc(new KdTreeMED),
-			pcRecAcc(new KdTreeMED)
+			pcRecAcc(new KdTreeMED),
+			pcReturnIdx(new PcIndex)
 		{
 			pcRawAcc->setInputCloud(pcRaw);
 			pcRecAcc->setInputCloud(pcRec);
@@ -122,6 +124,7 @@ namespace RecRoom
 		}
 		else
 		{
+			PRINT_WARNING("downSampler is not set, ignore it");
 			data.pcRec = data.pcRaw;
 			data.pcRecIdx = data.pcRawIdx;
 			data.pcRecAcc = data.pcRawAcc;
@@ -152,6 +155,10 @@ namespace RecRoom
 			ss << "Outlier Removal - End - pcSize: " << data.pcRec->size() << ", idxSize: " << data.pcRecIdx->size();
 			PRINT_INFO(ss.str());
 		}
+		else
+		{
+			PRINT_WARNING("outlierRemover is not set, ignore it");
+		}
 
 		return 0;
 	}
@@ -159,17 +166,22 @@ namespace RecRoom
 	int BStep_RecPointCloud(AsyncGlobal_Rec& global, AsyncQuery_Rec& query, AsyncData_Rec& data)
 	{
 #ifdef POINT_MED_WITH_NORMAL
-		// Estimat Normal
+		// 
 		if (global.reconstructorPcOC->getNormalEstimator())
 		{
 			PRINT_INFO("Estimat Normal - Start");
 
 			global.reconstructorPcOC->getNormalEstimator()->Process(
-				data.pcRecAcc, data.pcRec, 
+				//data.pcRecAcc, data.pcRec,
+				data.pcRawAcc, data.pcRaw,
 				data.pcRec, data.pcRecIdx,
 				*data.pcRec);
 
 			PRINT_INFO("Estimat Normal - End");
+		}
+		else
+		{
+			PRINT_WARNING("normalEstimator is not set, ignore it");
 		}
 #endif
 		return 0;
@@ -194,11 +206,203 @@ namespace RecRoom
 
 	void ReconstructorPcOC::RecPointCloud()
 	{
+		AsyncGlobal_Rec global(this);
 
+		std::vector<AsyncQuery_Rec> queries(containerPcRAW->Size());
+		for (std::size_t i = 0; i < queries.size(); ++i)
+			queries[i].qi = i;
+
+		AsyncProcess<AsyncGlobal_Rec, AsyncQuery_Rec, AsyncData_Rec, 1>(
+			global, queries,
+			AStep_RecPointCloud, BStep_RecPointCloud, CStep_RecPointCloud);
+	}
+
+	// Async Reconstruct Attribute
+	int AStep_RecPcAtt(AsyncGlobal_Rec& global, AsyncQuery_Rec& query, AsyncData_Rec& data)
+	{
+		// 
+		ContainerPcRAW::QuaryData quaryData;
+		{
+			PRINT_INFO("Quary pointCloud from container - Start");
+
+			quaryData = global.reconstructorPcOC->getContainerPcRAW()->Quary(query.qi);
+			data.pcRaw = quaryData.data;
+			data.pcRawIdx = quaryData.index;
+
+			std::stringstream ss;
+			ss << "Quary pointCloud from container - End - pcSize: " << data.pcRaw->size() << ", idxSize: " << data.pcRawIdx->size();
+			PRINT_INFO(ss.str());
+		}
+
+		// 
+		{
+			PRINT_INFO("Extract return indices - Start");
+
+			pcl::CropBox<PointMED> cb;
+			cb.setMin(Eigen::Vector4f(quaryData.minAABB.x(), quaryData.minAABB.y(), quaryData.minAABB.z(), 1.0));
+			cb.setMax(Eigen::Vector4f(quaryData.maxAABB.x(), quaryData.maxAABB.y(), quaryData.maxAABB.z(), 1.0));
+			cb.setInputCloud(global.reconstructorPcOC->getPcMED());
+			cb.filter(*data.pcReturnIdx);
+
+			std::stringstream ss;
+			ss << "Extract return indices - End - pcSize: " << global.reconstructorPcOC->getPcMED()->size() << ", idxSize: " << data.pcReturnIdx->size();
+			PRINT_INFO(ss.str());
+		}
+
+		// 
+		{
+			PRINT_INFO("Extract pointCloud from pcMED - Start");
+
+			pcl::CropBox<PointMED> cb;
+			cb.setMin(Eigen::Vector4f(quaryData.extMinAABB.x(), quaryData.extMinAABB.y(), quaryData.extMinAABB.z(), 1.0));
+			cb.setMax(Eigen::Vector4f(quaryData.extMaxAABB.x(), quaryData.extMaxAABB.y(), quaryData.extMaxAABB.z(), 1.0));
+			cb.setInputCloud(global.reconstructorPcOC->getPcMED());
+			cb.filter(*data.pcRecIdx);
+
+			pcl::ExtractIndices<PointMED> extract;
+			extract.setInputCloud(global.reconstructorPcOC->getPcMED());
+			extract.setIndices(data.pcRecIdx);
+			extract.setNegative(false);
+			extract.filter(*data.pcRec);
+
+			//
+			data.pcRecIdx->clear();
+
+			std::stringstream ss;
+			ss << "Extract pointCloud from pcMED - End - inSize: " << global.reconstructorPcOC->getPcMED()->size() << ", outSize:" << data.pcRec->size();
+			PRINT_INFO(ss.str());
+
+		}
+
+		{
+			PRINT_INFO("Extract indices - Start");
+
+			pcl::CropBox<PointMED> cb;
+			cb.setMin(Eigen::Vector4f(quaryData.minAABB.x(), quaryData.minAABB.y(), quaryData.minAABB.z(), 1.0));
+			cb.setMax(Eigen::Vector4f(quaryData.maxAABB.x(), quaryData.maxAABB.y(), quaryData.maxAABB.z(), 1.0));
+			cb.setInputCloud(data.pcRec);
+			cb.filter(*data.pcRecIdx);
+
+
+			std::stringstream ss;
+			ss << "Extract indices - End - inSize: " << data.pcRec->size() << ", outSize:" << data.pcRecIdx->size();
+			PRINT_INFO(ss.str());
+
+			// Check
+			if (data.pcRecIdx->size() != data.pcReturnIdx->size())
+				return 1;
+		}
+
+		if (global.reconstructorPcOC->getUpSampler())
+		{
+			PRINT_INFO("Upsampling Attribute - Start");
+
+			PcIndex upIdx;
+			global.reconstructorPcOC->getUpSampler()->Process(data.pcRecAcc, data.pcRec, data.pcRaw, upIdx);
+
+			for (std::size_t px = 0; px < upIdx.size(); ++px)
+			{
+				PointMED& tarP = (*data.pcRaw)[px];
+
+				if (upIdx[px] > 0)
+				{
+					PointMED& srcP = (*data.pcRec)[upIdx[px]];
+
+#ifdef POINT_MED_WITH_NORMAL
+					tarP.normal_x = srcP.normal_x;
+					tarP.normal_y = srcP.normal_y;
+					tarP.normal_z = srcP.normal_z;
+					tarP.curvature = srcP.curvature;
+#endif
+
+#ifdef POINT_MED_WITH_SEGLABEL
+					tarP.segLabel = srcP.segLabel;
+#endif
+				}
+				else
+				{
+#ifdef POINT_MED_WITH_NORMAL
+					tarP.normal_x = 0.0f;
+					tarP.normal_y = 0.0f;
+					tarP.normal_z = 0.0f;
+					tarP.curvature = 0.0f;
+#endif
+
+#ifdef POINT_MED_WITH_SEGLABEL
+					tarP.hasSegLabel = -1;
+#endif
+				}
+			}
+
+			PRINT_INFO("Upsampling Attribute - End");
+		}
+		else
+		{
+			THROW_EXCEPTION("upSampler is not set");
+		}
+
+		return 0;
+	}
+
+	int CStep_RecPcAtt(AsyncGlobal_Rec& global, AsyncQuery_Rec& query, AsyncData_Rec& data)
+	{
+		// Check
+		if (data.pcRecIdx->size() != data.pcReturnIdx->size())
+			return 1;
+
+		PRINT_INFO("Update Attribute - Start");
+
+		PcMED& srcPC = *data.pcRec;
+		PcMED& tarPC = *global.reconstructorPcOC->getPcMED();
+		PcIndex& srcIdx = *data.pcRecIdx;
+		PcIndex& tarIdx = *data.pcReturnIdx;
+		for (std::size_t px = 0; px < srcIdx.size(); ++px)
+			tarPC[tarIdx[px]] = srcPC[srcIdx[px]];
+
+		PRINT_INFO("Update Attribute - End");
+
+		return 0;
+	}
+
+	// Async Reconstruct Attribute - Albedo
+	int BStep_RecPcAlbedo(AsyncGlobal_Rec& global, AsyncQuery_Rec& query, AsyncData_Rec& data)
+	{
+#ifdef POINT_MED_WITH_NORMAL
+#ifdef POINT_MED_WITH_LABEL
+#ifdef POINT_MED_WITH_INTENSITY
+		// 
+		if (global.reconstructorPcOC->getAlbedoEstimator())
+		{
+			PRINT_INFO("Estimat Albedo - Start");
+
+			global.reconstructorPcOC->getAlbedoEstimator()->Process(
+				data.pcRawAcc, data.pcRaw,
+				data.pcRec, data.pcRecIdx,
+				*data.pcRec);
+
+			PRINT_INFO("Estimat Albedo - End");
+		}
+		else
+		{
+			PRINT_WARNING("albedoEstimater is not set, ignore it");
+		}
+#endif
+#endif
+#endif
+		return 0;
 	}
 
 	void ReconstructorPcOC::RecPcAlbedo()
 	{
+		AsyncGlobal_Rec global(this);
+
+		std::vector<AsyncQuery_Rec> queries(containerPcRAW->Size());
+		for (std::size_t i = 0; i < queries.size(); ++i)
+			queries[i].qi = i;
+
+		AsyncProcess<AsyncGlobal_Rec, AsyncQuery_Rec, AsyncData_Rec, 1>(
+			global, queries,
+			AStep_RecPcAtt, BStep_RecPcAlbedo, CStep_RecPcAtt);
 	}
 
 	void ReconstructorPcOC::RecPcSegment()
