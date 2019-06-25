@@ -72,35 +72,6 @@ namespace RecRoom
 			return true;
 	}
 
-	/*bool IsFileRec(boost::filesystem::path filePath, bool checkExist)
-	{
-		if (!IsDir(filePath, checkExist))
-			return false;
-		if (checkExist)
-		{
-			if (!IsDir(filePath / boost::filesystem::path("RAW"), checkExist))
-				return false;
-			if (!IsDir(filePath / boost::filesystem::path("NDF"), checkExist))
-				return false;
-			return boost::filesystem::exists(filePath / boost::filesystem::path("RAW") / boost::filesystem::path("root.oct_idx")) &&
-				boost::filesystem::exists(filePath / boost::filesystem::path("NDF") / boost::filesystem::path("root.oct_idx")) &&
-				boost::filesystem::exists(filePath / boost::filesystem::path("meta.txt")) &&
-				boost::filesystem::exists(filePath / boost::filesystem::path("pcRec.pcd"));
-		}
-		else
-			return true;
-	}
-
-	bool IsFileE57Rec(boost::filesystem::path filePath, bool checkExist)
-	{
-		if (!IsFileRec(filePath, checkExist))
-			return false;
-		if (checkExist)
-			return true;
-		else
-			return true;
-	}*/
-
 	bool IsFilePLY(boost::filesystem::path filePath, bool checkExist)
 	{
 		if (ToUpper(filePath.extension().string()) != ".PLY")

@@ -40,11 +40,19 @@ namespace RecRoom
 		virtual std::size_t Size() const { return quaries.size(); };
 		virtual QuaryPcRAW Quary(std::size_t i) const;
 
+	public:
+		boost::filesystem::path getFilePath() const { return filePath; }
+		PTR(OCT) getOCT() const { return oct; }
+		double getOutOfCoreOverlapSize() const { return outOfCoreOverlapSize; }
+
 	protected:
 		boost::filesystem::path filePath;
 		PTR(OCT) oct;
 		double outOfCoreOverlapSize;
 		std::vector<QuaryPcRAWOCT> quaries;
+
+		void LoadMeta();
+		void DumpMeta() const;
 	};
 }
 

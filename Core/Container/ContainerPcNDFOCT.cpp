@@ -42,25 +42,13 @@ namespace RecRoom
 				Eigen::Vector3d((double)std::numeric_limits<unsigned short>::max(), 1.0, 1.0),
 				filePath / boost::filesystem::path("NDF") / boost::filesystem::path("root.oct_idx"), "ECEF"));
 
-			std::string metaPath = (filePath / boost::filesystem::path("metaNDF.txt")).string();
-			std::ofstream file(metaPath, std::ios_base::out);
-			if (!file)
-				THROW_EXCEPTION("Create file " + metaPath + " failed.");
-			nlohmann::json j;
-			file << j;
-			file.close();
+			DumpMeta();
 		}
 		else
 		{
 			oct = OCT::Ptr(new OCT(filePath / boost::filesystem::path("NDF") / boost::filesystem::path("root.oct_idx"), true));
 
-			std::string metaPath = (filePath / boost::filesystem::path("metaNDF.txt")).string();
-			std::ifstream file(metaPath, std::ios_base::in);
-			if (!file)
-				THROW_EXCEPTION("Load file " + metaPath + " failed.");
-			nlohmann::json j;
-			file >> j;
-			file.close();
+			LoadMeta();
 		}
 
 		//
@@ -85,5 +73,35 @@ namespace RecRoom
 		pcl::fromPCLPointCloud2(*blob, *q);
 
 		return q;
+	}
+
+	void ContainerPcNDFOCT::LoadMeta()
+	{
+		std::string metaPath = (filePath / boost::filesystem::path("metaNDF.txt")).string();
+		std::ifstream file(metaPath, std::ios_base::in);
+		if (!file)
+			THROW_EXCEPTION("Load file " + metaPath + " failed.");
+		nlohmann::json j;
+		file >> j;
+
+		//
+
+		//
+		file.close();
+	}
+
+	void ContainerPcNDFOCT::DumpMeta() const
+	{
+		std::string metaPath = (filePath / boost::filesystem::path("metaNDF.txt")).string();
+		std::ofstream file(metaPath, std::ios_base::out);
+		if (!file)
+			THROW_EXCEPTION("Create file " + metaPath + " failed.");
+		nlohmann::json j;
+
+		//
+
+		//
+		file << j;
+		file.close();
 	}
 }

@@ -10,8 +10,6 @@ namespace RecRoom
 	bool IsFileE57(boost::filesystem::path filePath, bool checkExist = false);
 	bool IsFilePCD(boost::filesystem::path filePath, bool checkExist = false);
 	bool IsFileOCT(boost::filesystem::path filePath, bool checkExist = false);
-	/*bool IsFileRec(boost::filesystem::path filePath, bool checkExist = false);
-	bool IsFileE57Rec(boost::filesystem::path filePath, bool checkExist = false);*/
 	bool IsFilePLY(boost::filesystem::path filePath, bool checkExist = false);
 }
 

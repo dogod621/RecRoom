@@ -21,9 +21,16 @@ namespace RecRoom
 		virtual std::size_t Size() const { return std::numeric_limits<unsigned short>::max(); }
 		virtual PTR(PcNDF) Quary(std::size_t i) const;
 
+	public:
+		boost::filesystem::path getFilePath() const { return filePath; }
+		PTR(OCT) getOCT() const { return oct; }
+
 	protected:
 		boost::filesystem::path filePath;
 		PTR(OCT) oct;
+
+		void LoadMeta();
+		void DumpMeta() const;
 	};
 }
 
