@@ -200,21 +200,21 @@ namespace RecRoom
 
 	int AStep_ShipData(const AsyncGlobal_ShipData& global, const AsyncQuery_ShipData& query, PcRAW& data)
 	{
+		std::vector<float> xBuffer;
+		std::vector<float> yBuffer;
+		std::vector<float> zBuffer;
+		std::vector<float> normalXBuffer;
+		std::vector<float> normalYBuffer;
+		std::vector<float> normalZBuffer;
+		std::vector<float> iBuffer;
+		std::vector<uint8_t> rBuffer;
+		std::vector<uint8_t> gBuffer;
+		std::vector<uint8_t> bBuffer;
+
 		{
-			PRINT_INFO("Load from E57 - Start");
+			PRINT_INFO("Load from E57 - Init - Start");
 
 			std::vector<e57::SourceDestBuffer> sdBuffers;
-
-			std::vector<float> xBuffer;
-			std::vector<float> yBuffer;
-			std::vector<float> zBuffer;
-			std::vector<float> normalXBuffer;
-			std::vector<float> normalYBuffer;
-			std::vector<float> normalZBuffer;
-			std::vector<float> iBuffer;
-			std::vector<uint8_t> rBuffer;
-			std::vector<uint8_t> gBuffer;
-			std::vector<uint8_t> bBuffer;
 
 			if (query.scanMeta.hasPointXYZ)
 			{
@@ -253,6 +253,10 @@ namespace RecRoom
 				sdBuffers.push_back(e57::SourceDestBuffer(*global.ptrScannerPcE57()->getImageFileE57(), "intensity", &iBuffer[0], query.scanMeta.numPoints, true, true));
 			}
 
+			PRINT_INFO("Load from E57 - Init - End");
+
+			PRINT_INFO("Load from E57 - Start");
+
 			if ((query.scanMeta.hasPointXYZ || query.scanMeta.hasPointRGB || query.scanMeta.hasPointI))
 			{
 				e57::CompressedVectorNode scanPoints(*global.ptrScannerPcE57()->getData3DE57());
@@ -263,6 +267,15 @@ namespace RecRoom
 				}
 				reader.close();
 			}
+
+			std::stringstream ss;
+			ss << "Load from E57 - End - size: " << query.scanMeta.numPoints;
+			PRINT_INFO(ss.str());
+		}
+
+		{
+			PRINT_INFO("Convert to PointCloud - Start");
+
 			for (std::size_t px = 0; px < query.scanMeta.numPoints; ++px)
 			{
 				PointRAW sp;
@@ -310,7 +323,7 @@ namespace RecRoom
 			}
 			
 			std::stringstream ss;
-			ss << "Load from E57 - End - pcSize: " << data.size();
+			ss << "Convert to PointCloud - End - pcSize: " << data.size();
 			PRINT_INFO(ss.str());
 		}
 
