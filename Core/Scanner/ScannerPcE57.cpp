@@ -211,6 +211,8 @@ namespace RecRoom
 		std::vector<uint8_t> gBuffer;
 		std::vector<uint8_t> bBuffer;
 
+		data.clear();
+		data.reserve(query.scanMeta.numPoints);
 		{
 			PRINT_INFO("Load from E57 - Init - Start");
 
