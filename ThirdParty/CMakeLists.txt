@@ -92,7 +92,7 @@ set_target_properties(${XercesC_Samples_TARGETS} PROPERTIES FOLDER "ThirdParty/X
 
 # E57
 if ( WIN32 )
-	set(USING_STATIC_XERCES OFF CACHE BOOL " " FORCE)
+	set(USING_STATIC_XERCES $<NOT:${BUILD_SHARED_LIBS}> CACHE BOOL " " FORCE)
 endif()
 add_subdirectory (E57Format EXCLUDE_FROM_ALL)
 set(E57Format_TARGETS)

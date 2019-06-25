@@ -21,6 +21,9 @@ void PrintHelp(int argc, char **argv)
 {
 	std::cout << "PrintHelp:" << std::endl << std::endl;
 
+	std::cout << "Description:==============================================================================================================================================" << std::endl << std::endl;
+	std::cout << "\tTest ScannerPcE57 with ContainerPcRAWOC container" << std::endl << std::endl;
+
 	std::cout << "Parmameters:==============================================================================================================================================" << std::endl << std::endl;
 	{
 		PRINT_HELP("\t", "e57", "sting \"\"", "Input e57 file.");
@@ -41,56 +44,65 @@ int main(int argc, char *argv[])
 	{
 		if (argc <= 1)
 			PrintHelp(argc, argv);
+		else
+		{
+			std::string e57Str = "";
+			pcl::console::parse_argument(argc, argv, "-e57", e57Str);
+			std::cout << "Parmameters -src: " << e57Str << std::endl;
 
-		std::string e57Str = "";
-		pcl::console::parse_argument(argc, argv, "-e57", e57Str);
-		std::cout << "Parmameters -src: " << e57Str << std::endl;
+			std::string containerStr = "";
+			pcl::console::parse_argument(argc, argv, "-container", containerStr);
+			std::cout << "Parmameters -container: " << containerStr << std::endl;
 
-		std::string containerStr = "";
-		pcl::console::parse_argument(argc, argv, "-container", containerStr);
-		std::cout << "Parmameters -container: " << containerStr << std::endl;
+			double res = 4;
+			pcl::console::parse_argument(argc, argv, "-res", res);
+			std::cout << "Parmameters -res: " << res << std::endl;
 
-		double res = 4;
-		pcl::console::parse_argument(argc, argv, "-res", res);
-		std::cout << "Parmameters -res: " << res << std::endl;
+			std::string minStr = "-100 -100 -100";
+			std::string maxStr = "100 100 100";
+			pcl::console::parse_argument(argc, argv, "-min", minStr);
+			pcl::console::parse_argument(argc, argv, "-max", maxStr);
+			double minX, minY, minZ, maxX, maxY, maxZ;
+			std::stringstream(minStr) >> minX >> minY >> minZ;
+			std::stringstream(maxStr) >> maxX >> maxY >> maxZ;
+			Eigen::Vector3d min(minX, minY, minZ);
+			Eigen::Vector3d max(maxX, maxY, maxZ);
+			std::cout << "Parmameters -min: " << min << std::endl;
+			std::cout << "Parmameters -max: " << max << std::endl;
 
-		std::string minStr = "-100 -100 -100";
-		std::string maxStr = "100 100 100";
-		pcl::console::parse_argument(argc, argv, "-min", minStr);
-		pcl::console::parse_argument(argc, argv, "-max", maxStr);
-		double minX, minY, minZ, maxX, maxY, maxZ;
-		std::stringstream(minStr) >> minX >> minY >> minZ;
-		std::stringstream(maxStr) >> maxX >> maxY >> maxZ;
-		Eigen::Vector3d min(minX, minY, minZ);
-		Eigen::Vector3d max(maxX, maxY, maxZ);
-		std::cout << "Parmameters -min: " << min << std::endl;
-		std::cout << "Parmameters -max: " << max << std::endl;
+			double overlap = 0.1;
+			pcl::console::parse_argument(argc, argv, "-overlap", overlap);
+			std::cout << "Parmameters -overlap: " << overlap << std::endl;
 
-		double overlap = 0.1;
-		pcl::console::parse_argument(argc, argv, "-overlap", overlap);
-		std::cout << "Parmameters -overlap: " << overlap << std::endl;
+			system("PAUSE");
 
-		system("PAUSE");
+			std::cout << "Start: " << std::endl;
 
-		std::cout << "Start: " << std::endl;
+			std::cout << "Create ContainerPcRAWOC" << std::endl;
+			PTR(RecRoom::ContainerPcRAWOC) container(
+				new RecRoom::ContainerPcRAWOC(
+					containerStr, min, max, res, overlap));
 
-		std::cout << "Create ContainerPcRAWOC" << std::endl;
-		PTR(RecRoom::ContainerPcRAWOC) container(
-			new RecRoom::ContainerPcRAWOC(
-				containerStr, min, max, res, overlap));
+			system("PAUSE");
 
-		std::cout << "Create ScannerPcE57" << std::endl;
+			std::cout << "Create ScannerPcE57" << std::endl;
 
-		PTR(RecRoom::ScannerPcE57) scanner(
-			new RecRoom::ScannerPcE57(
-				e57Str, container));
+			PTR(RecRoom::ScannerPcE57) scanner(
+				new RecRoom::ScannerPcE57(
+					e57Str, container));
 
-		std::cout << "E57 Format" << *scanner << std::endl;
+			system("PAUSE");
 
-		std::cout << "ScannerPcE57::ShipData" << std::endl;
+			std::cout << "Print E57 Format:" << std::endl;
 
-		scanner->ShipData();
+			std::cout << *scanner << std::endl;
 
+			system("PAUSE");
+
+			std::cout << "Perform ScannerPcE57::ShipData" << std::endl;
+
+			scanner->ShipData();
+		}
 	}
 	catch (RecRoom::exception& ex)
 	{

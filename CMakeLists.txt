@@ -13,6 +13,7 @@ endif(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/Cmake/Modules/")
 
 #
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build Shared Library or not" FORCE)
 option(POINT_RAW_WITH_RGB "Raw data per-point data can contain scanned RGB or not" ON)
 option(POINT_RAW_WITH_INTENSITY "Raw data per-point data can contain scanned intensity or not" ON)
 option(POINT_RAW_WITH_NORMAL "Raw data per-point data can contain scanned normal or not" ON)
