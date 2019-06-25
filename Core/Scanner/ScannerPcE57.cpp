@@ -218,6 +218,9 @@ namespace RecRoom
 
 			if (query.scanMeta.hasPointXYZ)
 			{
+				xBuffer.resize(query.scanMeta.numPoints);
+				yBuffer.resize(query.scanMeta.numPoints);
+				zBuffer.resize(query.scanMeta.numPoints);
 				if (query.scanMeta.rawDataCoordSys == CoordSys::XYZ_PX_PY_PZ)
 				{
 					sdBuffers.push_back(e57::SourceDestBuffer(*global.ptrScannerPcE57()->getImageFileE57(), "cartesianX", &xBuffer[0], query.scanMeta.numPoints, true, true));
@@ -237,12 +240,16 @@ namespace RecRoom
 				return 3;
 			if (query.scanMeta.hasPointRGB)
 			{
+				rBuffer.resize(query.scanMeta.numPoints);
+				gBuffer.resize(query.scanMeta.numPoints);
+				bBuffer.resize(query.scanMeta.numPoints);
 				sdBuffers.push_back(e57::SourceDestBuffer(*global.ptrScannerPcE57()->getImageFileE57(), "colorRed", &rBuffer[0], query.scanMeta.numPoints, true, true));
 				sdBuffers.push_back(e57::SourceDestBuffer(*global.ptrScannerPcE57()->getImageFileE57(), "colorGreen", &gBuffer[0], query.scanMeta.numPoints, true, true));
 				sdBuffers.push_back(e57::SourceDestBuffer(*global.ptrScannerPcE57()->getImageFileE57(), "colorBlue", &bBuffer[0], query.scanMeta.numPoints, true, true));
 			}
 			if (query.scanMeta.hasPointI)
 			{
+				iBuffer.resize(query.scanMeta.numPoints);
 				sdBuffers.push_back(e57::SourceDestBuffer(*global.ptrScannerPcE57()->getImageFileE57(), "intensity", &iBuffer[0], query.scanMeta.numPoints, true, true));
 			}
 
