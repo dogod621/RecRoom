@@ -12,6 +12,12 @@ namespace RecRoom
 	public:
 		virtual void Process(const PTR(PcMED)& inV, PcIndex& outV) const;
 
+	public:
+		int getMeanK() const { return meanK; }
+		double getStdMul() const { return stdMul; }
+		void setMeanK(int v) { meanK = v; }
+		void setStdMul(double v) { stdMul = v; }
+
 	protected:
 		int meanK;
 		double stdMul;

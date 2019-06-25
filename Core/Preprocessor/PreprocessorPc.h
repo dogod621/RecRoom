@@ -21,6 +21,7 @@ namespace RecRoom
 
 	public:
 		double getSearchRadius() const { return searchRadius; }
+		void setSearchRadius(double v) { searchRadius = v; }
 
 	protected:
 		double searchRadius;

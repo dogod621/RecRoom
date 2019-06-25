@@ -18,7 +18,7 @@ namespace RecRoom
 
 	public:
 		virtual void Merge(const PTR(PcNDF)& v) { oct->addPointCloud(v); }
-		virtual std::size_t Size() const { return 0; }
+		virtual std::size_t Size() const { return std::numeric_limits<unsigned short>::max(); }
 		virtual PTR(PcNDF) Quary(std::size_t i) const;
 
 	protected:

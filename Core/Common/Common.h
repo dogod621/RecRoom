@@ -66,6 +66,19 @@ namespace RecRoom
 
 	template<class PointType>
 	using Pc = pcl::PointCloud<PointType>;
+
+	class Common
+	{
+	public:
+		static double eps;
+		static Eigen::Vector3d tempVec1;
+		static Eigen::Vector3d tempVec2;
+		static Eigen::Vector3d tempVec3;
+		static Eigen::Vector3d tempVec4;
+
+		static bool GenFrame(const Eigen::Vector3d& notmal, Eigen::Vector3d& tangent, Eigen::Vector3d& bitangent);
+		static bool IsUnitVector(const Eigen::Vector3d& v);
+	};
 }
 
 #include "Common.hpp"

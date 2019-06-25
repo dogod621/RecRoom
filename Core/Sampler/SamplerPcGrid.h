@@ -14,6 +14,10 @@ namespace RecRoom
 			const PTR(PcMED) & inV,
 			PcMED & outV) const;
 
+	public:
+		float getVoxelSize() const { return voxelSize; }
+		void setVoxelSize(float v) { voxelSize = v; }
+
 	protected:
 		float voxelSize;
 	};

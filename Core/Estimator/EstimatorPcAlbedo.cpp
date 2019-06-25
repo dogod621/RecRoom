@@ -1,3 +1,5 @@
+#include "Common/AlbedoEstimation.h"
+
 #include "EstimatorPcAlbedo.h"
 
 namespace RecRoom
@@ -15,6 +17,15 @@ namespace RecRoom
 			searchMethod->setInputCloud(searchSurface);
 		}
 
-		THROW_EXCEPTION("Interface is not implemented");
+		AlbedoEstimationOMP ae(scanMeta, linearSolver, distInterParm, angleInterParm, cutFalloff, cutGrazing);
+		if (searchMethod)
+			ae.setSearchMethod(searchMethod);
+		ae.setRadiusSearch(searchRadius);
+		if (searchSurface)
+			ae.setSearchSurface(searchSurface);
+		ae.setInputCloud(inV);
+		if (inIdx)
+			ae.setIndices(inIdx);
+		ae.compute(outV);
 	}
 }

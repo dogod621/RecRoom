@@ -4,35 +4,26 @@ namespace RecRoom
 {
 	inline bool AlbedoEstimation::CollectScannLaserInfo(const pcl::PointCloud<PointMED>& cloud, const std::size_t k, const std::vector<int>& indices, const std::vector<float>& distance, const PointMED& inPoint, std::vector<ScannLaser>& scannLaser)
 	{
+		scannLaser.clear();
+		scannLaser.reserve(k);
+		double radius = search_radius_;
+
+#ifdef POINT_MED_WITH_NORMAL
 #ifdef POINT_MED_WITH_LABEL
 #ifdef POINT_MED_WITH_INTENSITY
 		Eigen::Vector3d inNormal (inPoint.normal_x, inPoint.normal_y, inPoint.normal_z);
 
-		if (std::abs(inNormal.norm() - 1.0f) > 0.05f)
+		if (!Common::IsUnitVector(inNormal))
 		{
 			PRINT_WARNING("inNormal is not valid!!?");
 			return false;
 		}
 
-		double radius = search_radius_;
-		scannLaser.clear();
-		scannLaser.reserve(k);
-		Eigen::Vector3d tempVec(1.0, 1.0, 1.0);
-		tempVec /= tempVec.norm();
-		Eigen::Vector3d centerTangent = inNormal.cross(tempVec);
-		double centerTangentNorm = centerTangent.norm();
-		if (!(centerTangentNorm > 0.0))
-		{
-			PRINT_WARNING("centerTangent is not valid!!?");
-			return false;
-		}
-		centerTangent /= centerTangentNorm;
-
 		//
 		for (std::size_t idx = 0; idx < k; ++idx)
 		{
 			int px = indices[idx];
-			double d = std::sqrt(distance[idx]);
+			double d = std::sqrt((double)distance[idx]);
 			if (d > radius)
 			{
 				PRINT_WARNING("distance is larger then radius, ignore");
@@ -40,49 +31,44 @@ namespace RecRoom
 			else
 			{
 				const PointMED& scanPoint = cloud[px];
-				const ScanMeta& scanMeta_ = scanMeta[scanPoint.label];
-				ScannLaser scannLaserInfo;
+				const ScanMeta& meta = scanMeta[scanPoint.label];
+				ScannLaser laser;
 
 				//
-				scannLaserInfo.hitNormal = Eigen::Vector3d(cloud[px].normal_x, cloud[px].normal_y, cloud[px].normal_z);
-				if (std::abs(scannLaserInfo.hitNormal.norm() - 1.0) > 0.05)
+				laser.hitNormal = Eigen::Vector3d(cloud[px].normal_x, cloud[px].normal_y, cloud[px].normal_z);
+				if (!Common::IsUnitVector(laser.hitNormal))
 				{
-					PRINT_WARNING("scannLaserInfo.hitNormal is not valid, ignore");
+					PRINT_WARNING("laser.hitNormal is not valid, ignore");
 				}
 				else
 				{
-					double dotNN = scannLaserInfo.hitNormal.dot(inNormal);
+					double dotNN = laser.hitNormal.dot(inNormal);
 					if (dotNN > cutGrazing)
 					{
-						scannLaserInfo.hitPosition = Eigen::Vector3d(scanPoint.x, scanPoint.y, scanPoint.z);
-						switch (scanMeta_.scanner)
+						laser.hitPosition = Eigen::Vector3d(scanPoint.x, scanPoint.y, scanPoint.z);
+						switch (meta.scanner)
 						{
 						case Scanner::BLK360:
 						{
-							scannLaserInfo.incidentDirection = scanMeta_.position - scannLaserInfo.hitPosition;
-							scannLaserInfo.hitDistance = scannLaserInfo.incidentDirection.norm();
-							scannLaserInfo.incidentDirection /= scannLaserInfo.hitDistance;
-							if (scannLaserInfo.incidentDirection.dot(inNormal) < 0)
-								scannLaserInfo.incidentDirection *= -1.0;
-							scannLaserInfo.reflectedDirection = scannLaserInfo.incidentDirection; // BLK360 
+							laser.incidentDirection = meta.position - laser.hitPosition;
+							laser.hitDistance = laser.incidentDirection.norm();
+							laser.incidentDirection /= laser.hitDistance;
+							if (laser.incidentDirection.dot(inNormal) < 0)
+								laser.incidentDirection *= -1.0;
+							laser.reflectedDirection = laser.incidentDirection; // BLK360 
 
 							// Ref - BLK 360 Spec - laser wavelength & Beam divergence : https://lasers.leica-geosystems.com/global/sites/lasers.leica-geosystems.com.global/files/leica_media/product_documents/blk/853811_leica_blk360_um_v2.0.0_en.pdf
 							// Ref - Gaussian beam : https://en.wikipedia.org/wiki/Gaussian_beam
 							// Ref - Beam divergence to Beam waist(w0) : http://www2.nsysu.edu.tw/optics/laser/angle.htm
-							double temp = scannLaserInfo.hitDistance / 26.2854504782;
-							scannLaserInfo.beamFalloff = 1.0f / (1 + temp * temp);
-							if ((scannLaserInfo.beamFalloff > cutFalloff))
+							double temp = laser.hitDistance / 26.2854504782;
+							laser.beamFalloff = 1.0f / (1 + temp * temp);
+							if ((laser.beamFalloff > cutFalloff))
 							{
-								scannLaserInfo.hitTangent = scannLaserInfo.hitNormal.cross(tempVec);
-								double hitTangentNorm = scannLaserInfo.hitTangent.norm();
-								if (hitTangentNorm > 0.0)
+								if (Common::GenFrame(laser.hitNormal, laser.hitTangent, laser.hitBitangent))
 								{
-									scannLaserInfo.hitTangent /= hitTangentNorm;
-									scannLaserInfo.hitBitangent = scannLaserInfo.hitNormal.cross(scannLaserInfo.hitTangent);
-									scannLaserInfo.hitBitangent /= scannLaserInfo.hitBitangent.norm();
-									scannLaserInfo.weight = std::pow((radius - d) / radius, distInterParm) * std::pow(dotNN, angleInterParm);
-									scannLaserInfo.intensity = (double)scanPoint.intensity;
-									scannLaser.push_back(scannLaserInfo);
+									laser.weight = std::pow((radius - d) / radius, distInterParm) * std::pow(dotNN, angleInterParm);
+									laser.intensity = (double)scanPoint.intensity;
+									scannLaser.push_back(laser);
 								}
 							}
 						}
@@ -98,11 +84,13 @@ namespace RecRoom
 		}
 #endif
 #endif
+#endif
 		return scannLaser.size() > 0;
 	}
 
 	inline bool AlbedoEstimation::ComputePointAlbedo(const std::vector<ScannLaser>& scannLaser, const PointMED& inPoint, PointMED& outPoint)
 	{
+#ifdef POINT_MED_WITH_NORMAL
 #ifdef POINT_MED_WITH_INTENSITY
 		Eigen::MatrixXf A;
 		Eigen::MatrixXf B;
@@ -152,7 +140,7 @@ namespace RecRoom
 		break;
 		default:
 		{
-			throw pcl::PCLException("LinearSolver is not supported.");
+			THROW_EXCEPTION("LinearSolver is not supported.");
 		}
 		break;
 		}
@@ -162,7 +150,7 @@ namespace RecRoom
 		if (std::isfinite(xVec.x()) && std::isfinite(xVec.y()) && std::isfinite(xVec.z()))
 		{
 			double xVecNorm = xVec.norm();
-			if (xVecNorm > 0.0)
+			if (xVecNorm > Common::eps)
 			{
 				outPoint.intensity = xVecNorm;
 				xVec /= xVecNorm;
@@ -183,14 +171,15 @@ namespace RecRoom
 			return false;
 		}
 #endif
+#endif
 		return true;
 	}
 
 	void AlbedoEstimation::computeFeature(PointCloudOut &output)
 	{
 		if (!(search_radius_ > 0.0))
-			throw pcl::PCLException("search_radius_ is not set");
-
+			THROW_EXCEPTION("search_radius_ is not set");
+#ifdef POINT_MED_WITH_NORMAL
 #ifdef POINT_MED_WITH_LABEL
 #ifdef POINT_MED_WITH_INTENSITY
 		std::vector<int> nn_indices(k_);
@@ -261,6 +250,7 @@ namespace RecRoom
 				}
 			}
 		}
+#endif
 #endif
 #endif
 	}
@@ -280,8 +270,8 @@ namespace RecRoom
 	void AlbedoEstimationOMP::computeFeature(PointCloudOut &output)
 	{
 		if (!(search_radius_ > 0.0))
-			throw pcl::PCLException("search_radius_ is not set");
-
+			THROW_EXCEPTION("search_radius_ is not set");
+#ifdef POINT_MED_WITH_NORMAL
 #ifdef POINT_MED_WITH_LABEL
 #ifdef POINT_MED_WITH_INTENSITY
 		std::vector<int> nn_indices(k_);
@@ -360,6 +350,6 @@ namespace RecRoom
 		}
 #endif
 #endif
-
+#endif
 	}
 }

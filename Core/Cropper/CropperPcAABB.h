@@ -15,6 +15,12 @@ namespace RecRoom
 	public:
 		virtual void Process(const PTR(PcMED)& inV, PcIndex& outV) const;
 
+	public:
+		Eigen::Vector3d getMinAABB() const { return minAABB; }
+		Eigen::Vector3d getMaxAABB() const { return maxAABB; }
+		void setMinAABB(const Eigen::Vector3d& v) { minAABB = v; }
+		void setMaxAABB(const Eigen::Vector3d& v) { maxAABB = v; }
+
 	protected:
 		Eigen::Vector3d minAABB;
 		Eigen::Vector3d maxAABB;

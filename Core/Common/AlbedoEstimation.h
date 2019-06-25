@@ -29,9 +29,12 @@ namespace RecRoom
 
 	public:
 		AlbedoEstimation(const std::vector<ScanMeta>& scanMeta, 
-			const LinearSolver linearSolver = LinearSolver::EIGEN_SVD, const double distInterParm = 10.0, const double angleInterParm = 20.0, const double cutFalloff = 0.33, const double cutGrazing = 0.86602540378)
+			const LinearSolver linearSolver = LinearSolver::EIGEN_SVD, 
+			const double distInterParm = 10.0, const double angleInterParm = 20.0, const double cutFalloff = 0.33, 
+			const double cutGrazing = 0.86602540378)
 			: scanMeta(scanMeta), linearSolver(linearSolver), 
-			distInterParm(distInterParm), angleInterParm(angleInterParm), cutFalloff(cutFalloff), cutGrazing(cutGrazing)
+			distInterParm(distInterParm), angleInterParm(angleInterParm), cutFalloff(cutFalloff), 
+			cutGrazing(cutGrazing)
 		{
 			feature_name_ = "AlbedoEstimation";
 		};
@@ -54,7 +57,6 @@ namespace RecRoom
 		double angleInterParm;
 		double cutFalloff;
 		double cutGrazing;
-
 		std::vector<ScanMeta> scanMeta;
 
 		void computeFeature(PointCloudOut &output);
@@ -80,7 +82,9 @@ namespace RecRoom
 		typedef typename AlbedoEstimation::PointCloudOut PointCloudOut;
 
 		AlbedoEstimationOMP(const std::vector<ScanMeta>& scanMeta, 
-			const LinearSolver linearSolver = LinearSolver::EIGEN_SVD, const double distInterParm = 10.0, const double angleInterParm = 20.0, const double cutFalloff = 0.33, const double cutGrazing = 0.86602540378,
+			const LinearSolver linearSolver = LinearSolver::EIGEN_SVD, 
+			const double distInterParm = 10.0, const double angleInterParm = 20.0, const double cutFalloff = 0.33, 
+			const double cutGrazing = 0.86602540378,
 			unsigned int nr_threads = 0)
 			: AlbedoEstimation(scanMeta, linearSolver, distInterParm, angleInterParm, cutFalloff, cutGrazing)
 		{
