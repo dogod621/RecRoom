@@ -7,14 +7,14 @@
 
 namespace RecRoom
 {
-	class ContainerPcNDFOCT : public ContainerPcNDF
+	class ContainerPcNDFOC : public ContainerPcNDF
 	{
 	public:
 		using OCTDC = pcl::outofcore::OutofcoreOctreeDiskContainer<PointNDF>;
 		using OCT = pcl::outofcore::OutofcoreOctreeBase<OCTDC, PointNDF>;
 
 	public:
-		ContainerPcNDFOCT(const boost::filesystem::path& filePath);
+		ContainerPcNDFOC(const boost::filesystem::path& filePath);
 
 	public:
 		virtual void Merge(const PTR(PcNDF)& v) { oct->addPointCloud(v); }
@@ -29,9 +29,9 @@ namespace RecRoom
 		boost::filesystem::path filePath;
 		PTR(OCT) oct;
 
-		void LoadMeta();
-		void DumpMeta() const;
+		virtual void LoadMeta();
+		virtual void DumpMeta() const;
 	};
 }
 
-#include "ContainerPcNDFOCT.hpp"
+#include "ContainerPcNDFOC.hpp"

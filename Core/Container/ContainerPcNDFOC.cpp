@@ -1,10 +1,10 @@
 #include "nlohmann/json.hpp"
 
-#include "ContainerPcNDFOCT.h"
+#include "ContainerPcNDFOC.h"
 
 namespace RecRoom
 {
-	ContainerPcNDFOCT::ContainerPcNDFOCT(const boost::filesystem::path& filePath_)
+	ContainerPcNDFOC::ContainerPcNDFOC(const boost::filesystem::path& filePath_)
 		: filePath(filePath_), ContainerPcNDF(), oct(nullptr)
 	{
 		bool createNew = false;
@@ -56,7 +56,7 @@ namespace RecRoom
 			THROW_EXCEPTION("oct is not created?")
 	}
 
-	PTR(PcNDF) ContainerPcNDFOCT::Quary(std::size_t i) const
+	PTR(PcNDF) ContainerPcNDFOC::Quary(std::size_t i) const
 	{
 		if (i >= std::numeric_limits<unsigned short>::max())
 			THROW_EXCEPTION("i is too large, max: " + std::to_string(std::numeric_limits<unsigned short>::max()));
@@ -75,7 +75,7 @@ namespace RecRoom
 		return q;
 	}
 
-	void ContainerPcNDFOCT::LoadMeta()
+	void ContainerPcNDFOC::LoadMeta()
 	{
 		std::string metaPath = (filePath / boost::filesystem::path("metaNDF.txt")).string();
 		std::ifstream file(metaPath, std::ios_base::in);
@@ -90,7 +90,7 @@ namespace RecRoom
 		file.close();
 	}
 
-	void ContainerPcNDFOCT::DumpMeta() const
+	void ContainerPcNDFOC::DumpMeta() const
 	{
 		std::string metaPath = (filePath / boost::filesystem::path("metaNDF.txt")).string();
 		std::ofstream file(metaPath, std::ios_base::out);

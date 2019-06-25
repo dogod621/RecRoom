@@ -4,11 +4,11 @@
 
 #include "nlohmann/json.hpp"
 
-#include "ContainerPcRAWOCT.h"
+#include "ContainerPcRAWOC.h"
 
 namespace RecRoom
 {
-	ContainerPcRAWOCT::ContainerPcRAWOCT(const boost::filesystem::path& filePath_)
+	ContainerPcRAWOC::ContainerPcRAWOC(const boost::filesystem::path& filePath_)
 		: filePath(filePath_), ContainerPcRAW(), oct(nullptr), outOfCoreOverlapSize(0.0), quaries()
 	{
 		if (!boost::filesystem::is_directory(filePath))
@@ -29,7 +29,7 @@ namespace RecRoom
 			THROW_EXCEPTION("oct is not created?")
 	}
 
-	ContainerPcRAWOCT::ContainerPcRAWOCT(const boost::filesystem::path& filePath_, const Eigen::Vector3d& min, const Eigen::Vector3d& max, const double res, double outOfCoreOverlapSize)
+	ContainerPcRAWOC::ContainerPcRAWOC(const boost::filesystem::path& filePath_, const Eigen::Vector3d& min, const Eigen::Vector3d& max, const double res, double outOfCoreOverlapSize)
 		: filePath(filePath_), ContainerPcRAW(), oct(nullptr), outOfCoreOverlapSize(outOfCoreOverlapSize), quaries()
 	{
 		if (!boost::filesystem::exists(filePath))
@@ -47,7 +47,7 @@ namespace RecRoom
 			THROW_EXCEPTION("oct is not created?")
 	}
 
-	void ContainerPcRAWOCT::Merge(const PTR(PcRAW)& v)
+	void ContainerPcRAWOC::Merge(const PTR(PcRAW)& v)
 	{
 		oct->addPointCloud(v);
 
@@ -72,13 +72,17 @@ namespace RecRoom
 		DumpMeta();
 	}
 
-	QuaryPcRAW ContainerPcRAWOCT::Quary(std::size_t i) const
+	ContainerPcRAW::QuaryData ContainerPcRAWOC::Quary(std::size_t i) const
 	{
 		if (i >= quaries.size())
 			THROW_EXCEPTION("i is too large, max: " + std::to_string(quaries.size()));
 
 
-		QuaryPcRAW q;
+		ContainerPcRAW::QuaryData q;
+
+		//
+		q.minAABB = quaries[i].minAABB;
+		q.maxAABB = quaries[i].maxAABB;
 
 		//
 		pcl::PCLPointCloud2::Ptr blob(new pcl::PCLPointCloud2);
@@ -86,7 +90,7 @@ namespace RecRoom
 		pcl::fromPCLPointCloud2(*blob, *q.data);
 
 		//
-		pcl::CropBox<PointRAW> cb;
+		pcl::CropBox<PointMED> cb;
 		cb.setMin(Eigen::Vector4f(quaries[i].minAABB.x(), quaries[i].minAABB.y(), quaries[i].minAABB.z(), 1.0));
 		cb.setMax(Eigen::Vector4f(quaries[i].maxAABB.x(), quaries[i].maxAABB.y(), quaries[i].maxAABB.z(), 1.0));
 		cb.setInputCloud(q.data);
@@ -95,7 +99,22 @@ namespace RecRoom
 		return q;
 	}
 
-	void ContainerPcRAWOCT::LoadMeta()
+	ContainerPcRAW::QuaryMeta ContainerPcRAWOC::TestQuary(std::size_t i) const
+	{
+		if (i >= quaries.size())
+			THROW_EXCEPTION("i is too large, max: " + std::to_string(quaries.size()));
+
+
+		ContainerPcRAW::QuaryMeta q;
+
+		//
+		q.minAABB = quaries[i].minAABB;
+		q.maxAABB = quaries[i].maxAABB;
+
+		return q;
+	}
+
+	void ContainerPcRAWOC::LoadMeta()
 	{
 		std::string metaPath = (filePath / boost::filesystem::path("metaRAW.txt")).string();
 		std::ifstream file(metaPath, std::ios_base::in);
@@ -159,7 +178,7 @@ namespace RecRoom
 		file.close();
 	}
 
-	void ContainerPcRAWOCT::DumpMeta() const
+	void ContainerPcRAWOC::DumpMeta() const
 	{
 		std::string metaPath = (filePath / boost::filesystem::path("metaRAW.txt")).string();
 		std::ofstream file(metaPath, std::ios_base::out);

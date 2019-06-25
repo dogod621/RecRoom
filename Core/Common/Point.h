@@ -2,6 +2,7 @@
 
 #include <pcl/point_types.h>
 #include <pcl/search/search.h>
+#include <pcl/search/kdtree.h>
 
 #include "Common.h"
 
@@ -458,6 +459,12 @@ namespace RecRoom
 	using AccREC = pcl::search::Search<PointREC>;
 	using AccNDF = pcl::search::Search<PointNDF>;
 	using AccLF = pcl::search::Search<PointLF>;
+
+	using KdTreeRAW = pcl::search::KdTree<PointRAW>;
+	using KdTreeMED = pcl::search::KdTree<PointMED>;
+	using KdTreeREC = pcl::search::KdTree<PointREC>;
+	using KdTreeNDF = pcl::search::KdTree<PointNDF>;
+	using KdTreeLF = pcl::search::KdTree<PointLF>;
 }
 
 //

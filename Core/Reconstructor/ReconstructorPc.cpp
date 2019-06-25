@@ -54,7 +54,7 @@ namespace RecRoom
 			THROW_EXCEPTION("pcMED is not created?")
 	}
 
-	void ReconstructorPc::WarpRecPointCloud()
+	void ReconstructorPc::DoRecPointCloud()
 	{
 		//
 		if (status != ReconstructStatus::ReconstructStatus_UNKNOWN)
@@ -74,7 +74,7 @@ namespace RecRoom
 		DumpMeta();
 	}
 
-	void ReconstructorPc::WarpRecPcAlbedo()
+	void ReconstructorPc::DoRecPcAlbedo()
 	{
 		if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 			THROW_EXCEPTION("pcMED is not reconstructed yet.");
@@ -89,7 +89,7 @@ namespace RecRoom
 		DumpMeta();
 	}
 
-	void ReconstructorPc::WarpRecPcSegment()
+	void ReconstructorPc::DoRecPcSegment()
 	{
 		if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 			THROW_EXCEPTION("pcMED is not reconstructed yet.");
@@ -104,7 +104,7 @@ namespace RecRoom
 		DumpMeta();
 	}
 
-	void ReconstructorPc::WarpRecSegNDF()
+	void ReconstructorPc::DoRecSegNDF()
 	{
 		if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 			THROW_EXCEPTION("pcMED is not reconstructed yet.");
@@ -121,7 +121,7 @@ namespace RecRoom
 		DumpMeta();
 	}
 
-	void ReconstructorPc::WarpRecMesh()
+	void ReconstructorPc::DoRecMesh()
 	{
 		if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 			THROW_EXCEPTION("pcMED is not reconstructed yet.");

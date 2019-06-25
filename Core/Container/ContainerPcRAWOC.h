@@ -24,21 +24,22 @@ namespace RecRoom
 			: minAABB(minAABB), maxAABB(maxAABB), extMinAABB(extMinAABB), extMaxAABB(extMaxAABB), depth(depth) {}
 	};
 
-	class ContainerPcRAWOCT : public ContainerPcRAW
+	class ContainerPcRAWOC : public ContainerPcRAW
 	{
 	public:
 		using OCTDC = pcl::outofcore::OutofcoreOctreeDiskContainer<PointRAW>;
 		using OCT = pcl::outofcore::OutofcoreOctreeBase<OCTDC, PointRAW>;
 
 	public:
-		ContainerPcRAWOCT(const boost::filesystem::path& filePath);
+		ContainerPcRAWOC(const boost::filesystem::path& filePath);
 
-		ContainerPcRAWOCT(const boost::filesystem::path& filePath, const Eigen::Vector3d& min, const Eigen::Vector3d& max, const double res, double outOfCoreOverlapSize);
+		ContainerPcRAWOC(const boost::filesystem::path& filePath, const Eigen::Vector3d& min, const Eigen::Vector3d& max, const double res, double outOfCoreOverlapSize);
 
 	public:
 		virtual void Merge(const PTR(PcRAW)& v);
 		virtual std::size_t Size() const { return quaries.size(); };
-		virtual QuaryPcRAW Quary(std::size_t i) const;
+		virtual ContainerPcRAW::QuaryData Quary(std::size_t i) const;
+		virtual ContainerPcRAW::QuaryMeta TestQuary(std::size_t i) const;
 
 	public:
 		boost::filesystem::path getFilePath() const { return filePath; }
@@ -51,9 +52,9 @@ namespace RecRoom
 		double outOfCoreOverlapSize;
 		std::vector<QuaryPcRAWOCT> quaries;
 
-		void LoadMeta();
-		void DumpMeta() const;
+		virtual void LoadMeta();
+		virtual void DumpMeta() const;
 	};
 }
 
-#include "ContainerPcRAWOCT.hpp"
+#include "ContainerPcRAWOC.hpp"

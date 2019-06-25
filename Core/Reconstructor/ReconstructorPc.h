@@ -33,11 +33,12 @@ namespace RecRoom
 			const PTR(ContainerPcNDF)& containerPcNDF);
 
 	public:
-		void WarpRecPointCloud();
-		void WarpRecPcAlbedo();
-		void WarpRecPcSegment();
-		void WarpRecSegNDF();
-		void WarpRecMesh();
+		void DoRecPointCloud();
+		void DoRecPcAlbedo();
+		void DoRecPcSegment();
+		void DoRecSegNDF();
+		void DoRecMesh();
+		void SynthScanImages(const boost::filesystem::path& scanImagePath, const Mapping mapping, unsigned int width, const unsigned int height) {}
 
 	public:
 		//virtual void Process(pcl::PolygonMesh& out) const = 0;
@@ -46,7 +47,6 @@ namespace RecRoom
 		virtual void RecPcSegment() = 0;
 		virtual void RecSegNDF() = 0;
 		virtual void RecMesh() = 0;
-		virtual void SynthScanImages(const boost::filesystem::path& scanImagePath, const Mapping mapping, unsigned int width, const unsigned int height) = 0;
 
 	public:
 		boost::filesystem::path getFilePath() const { return filePath; }
@@ -57,7 +57,7 @@ namespace RecRoom
 		CONST_PTR(ContainerPcRAW) getContainerPcRAW() const { return containerPcRAW; }
 		PTR(ContainerPcNDF) getContainerPcNDF() const { return containerPcNDF; }
 
-		CONST_PTR(SamplerPc) getDownSampler() const { return downSampler; }
+		CONST_PTR(ResamplerPc) getDownSampler() const { return downSampler; }
 		CONST_PTR(SamplerPc) getUpSampler() const { return upSampler; }
 		CONST_PTR(CropperPc) getOutlierRemover() const { return outlierRemover; }
 		CONST_PTR(EstimatorPc) getNormalEstimator() const { return normalEstimator; }
@@ -65,7 +65,7 @@ namespace RecRoom
 		CONST_PTR(SegmenterPc) getSegmenter() const { return segmenter; }
 		CONST_PTR(MesherPc) getMesher() const { return mesher; }
 
-		void setDownSampler(CONST_PTR(SamplerPc) downSampler_) { downSampler = downSampler_; }
+		void setDownSampler(CONST_PTR(ResamplerPc) downSampler_) { downSampler = downSampler_; }
 		void setUpSampler(CONST_PTR(SamplerPc) upSampler_) { upSampler = upSampler_; }
 		void setOutlierRemover(CONST_PTR(CropperPc) outlierRemover_) { outlierRemover = outlierRemover_; }
 		void setNormalEstimator(CONST_PTR(EstimatorPc) normalEstimator_) { normalEstimator = normalEstimator_; }
@@ -82,7 +82,7 @@ namespace RecRoom
 		CONST_PTR(ContainerPcRAW) containerPcRAW;
 		PTR(ContainerPcNDF) containerPcNDF;
 
-		CONST_PTR(SamplerPc) downSampler;
+		CONST_PTR(ResamplerPc) downSampler;
 		CONST_PTR(SamplerPc) upSampler;
 		CONST_PTR(CropperPc) outlierRemover;
 		CONST_PTR(EstimatorPc) normalEstimator;
@@ -90,8 +90,8 @@ namespace RecRoom
 		CONST_PTR(SegmenterPc) segmenter;
 		CONST_PTR(MesherPc) mesher;
 
-		void LoadMeta();
-		void DumpMeta() const;
+		virtual void LoadMeta();
+		virtual void DumpMeta() const;
 	};
 }
 

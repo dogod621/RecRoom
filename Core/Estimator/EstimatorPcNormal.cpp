@@ -17,6 +17,7 @@ namespace RecRoom
 			searchMethod->setInputCloud(searchSurface);
 		}
 
+#ifdef POINT_MED_WITH_NORMAL
 		pcl::NormalEstimationOMP<PointMED, PointMED> ne;
 		if (searchMethod)
 			ne.setSearchMethod(searchMethod);
@@ -27,5 +28,6 @@ namespace RecRoom
 		if (inIdx)
 			ne.setIndices(inIdx);
 		ne.compute(outV);
+#endif
 	}
 }
