@@ -107,7 +107,7 @@ namespace RecRoom
 			std::vector<BufferT>& b_buffer = doubleBuffer[!a_bufferPointer];
 
 			// Send queries
-			for (std::size_t b_locIdx = 0; (b_locIdx < size) && (a_gIdx < queries.size()); ++b_locIdx)
+			for (std::size_t b_locIdx = 0; (b_locIdx < size) && (b_gIdx < queries.size()); ++b_locIdx)
 			{
 				if (b_buffer[b_locIdx].a_status == 0)
 				{
