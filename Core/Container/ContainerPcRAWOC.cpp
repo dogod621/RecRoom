@@ -9,7 +9,7 @@
 namespace RecRoom
 {
 	ContainerPcRAWOC::ContainerPcRAWOC(const boost::filesystem::path& filePath_)
-		: filePath(filePath_), ContainerPcRAW(), oct(nullptr), outOfCoreOverlapSize(0.0), quaries()
+		: filePath(filePath_), ContainerPcRAW(), oct(nullptr), overlap(0.0), quaries()
 	{
 		if (!boost::filesystem::is_directory(filePath))
 			THROW_EXCEPTION("filePath is not valid.");
@@ -29,8 +29,8 @@ namespace RecRoom
 			THROW_EXCEPTION("oct is not created?")
 	}
 
-	ContainerPcRAWOC::ContainerPcRAWOC(const boost::filesystem::path& filePath_, const Eigen::Vector3d& min, const Eigen::Vector3d& max, const double res, double outOfCoreOverlapSize)
-		: filePath(filePath_), ContainerPcRAW(), oct(nullptr), outOfCoreOverlapSize(outOfCoreOverlapSize), quaries()
+	ContainerPcRAWOC::ContainerPcRAWOC(const boost::filesystem::path& filePath_, const Eigen::Vector3d& min, const Eigen::Vector3d& max, const double res, double overlap)
+		: filePath(filePath_), ContainerPcRAW(), oct(nullptr), overlap(overlap), quaries()
 	{
 		if (!boost::filesystem::exists(filePath))
 		{
@@ -54,7 +54,7 @@ namespace RecRoom
 		// update 
 		quaries.clear();
 		OCT::Iterator it(*oct);
-		Eigen::Vector3d ext(outOfCoreOverlapSize, outOfCoreOverlapSize, outOfCoreOverlapSize);
+		Eigen::Vector3d ext(overlap, overlap, overlap);
 		while (*it != nullptr)
 		{
 			if ((*it)->getNodeType() == pcl::octree::LEAF_NODE)
@@ -112,9 +112,9 @@ namespace RecRoom
 		file >> j;
 		
 		//
-		if (j.find("outOfCoreOverlapSize") == j.end())
-			THROW_EXCEPTION("metaRAW is not valid: missing \"outOfCoreOverlapSize\"");
-		outOfCoreOverlapSize = j["outOfCoreOverlapSize"];
+		if (j.find("overlap") == j.end())
+			THROW_EXCEPTION("metaRAW is not valid: missing \"overlap\"");
+		overlap = j["overlap"];
 
 		for (nlohmann::json::const_iterator qit = j["quaries"].begin(); qit != j["quaries"].end(); ++qit)
 		{
@@ -175,7 +175,7 @@ namespace RecRoom
 		nlohmann::json j;
 		
 		//
-		j["outOfCoreOverlapSize"] = outOfCoreOverlapSize;
+		j["overlap"] = overlap;
 
 		for (std::size_t i = 0; i < quaries.size(); ++i)
 		{

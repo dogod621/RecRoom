@@ -17,6 +17,8 @@ namespace RecRoom
 			scanMeta.resize(data3DE57->childCount());
 			for (std::size_t i = 0; i < scanMeta.size(); ++i)
 			{
+				scanMeta[i].scanner = Scanner::BLK360;
+
 				e57::StructureNode scan(data3DE57->get(i));
 				scanMeta[i].serialNumber = i;
 
@@ -178,111 +180,135 @@ namespace RecRoom
 
 		virtual std::string Info(const AsyncGlobal_ShipData& global) const
 		{
-			return std::to_string(scanMeta.serialNumber);
+			std::stringstream strQuery;
+			strQuery << scanMeta.serialNumber 
+				<< " - Size:" << scanMeta.numPoints
+				<< ", XYZ:" << scanMeta.hasPointXYZ 
+				<< ", N:" << scanMeta.hasPointNormal
+				<< ", RGB:" << scanMeta.hasPointRGB
+				<< ", I:" << scanMeta.hasPointI;
+			return strQuery.str();
 		}
 	};
 
 	int AStep_ShipData(AsyncGlobal_ShipData& global, AsyncQuery_ShipData& query, PcRAW& data)
 	{
-		std::vector<e57::SourceDestBuffer> sdBuffers;
+		{
+			PRINT_INFO("Load from E57 - Start");
 
-		std::vector<float> xBuffer;
-		std::vector<float> yBuffer;
-		std::vector<float> zBuffer;
-		std::vector<float> normalXBuffer;
-		std::vector<float> normalYBuffer;
-		std::vector<float> normalZBuffer;
-		std::vector<float> iBuffer;
-		std::vector<uint8_t> rBuffer;
-		std::vector<uint8_t> gBuffer;
-		std::vector<uint8_t> bBuffer;
+			std::vector<e57::SourceDestBuffer> sdBuffers;
 
-		if (query.scanMeta.hasPointXYZ)
-		{
-			if (query.scanMeta.rawDataCoordSys == CoordSys::XYZ_PX_PY_PZ)
-			{
-				sdBuffers.push_back(e57::SourceDestBuffer(*global.scannerPcE57->getImageFileE57(), "cartesianX", &xBuffer[0], query.scanMeta.numPoints, true, true));
-				sdBuffers.push_back(e57::SourceDestBuffer(*global.scannerPcE57->getImageFileE57(), "cartesianY", &yBuffer[0], query.scanMeta.numPoints, true, true));
-				sdBuffers.push_back(e57::SourceDestBuffer(*global.scannerPcE57->getImageFileE57(), "cartesianZ", &zBuffer[0], query.scanMeta.numPoints, true, true));
-			}
-			else if (query.scanMeta.rawDataCoordSys == CoordSys::RAE_PE_PX_PY)
-			{
-				sdBuffers.push_back(e57::SourceDestBuffer(*global.scannerPcE57->getImageFileE57(), "sphericalRange", &xBuffer[0], query.scanMeta.numPoints, true, true));
-				sdBuffers.push_back(e57::SourceDestBuffer(*global.scannerPcE57->getImageFileE57(), "sphericalAzimuth", &yBuffer[0], query.scanMeta.numPoints, true, true));
-				sdBuffers.push_back(e57::SourceDestBuffer(*global.scannerPcE57->getImageFileE57(), "sphericalElevation", &zBuffer[0], query.scanMeta.numPoints, true, true));
-			}
-			else
-				return 2;
-		}
-		if (query.scanMeta.hasPointNormal)
-			return 3;
-		if (query.scanMeta.hasPointRGB)
-		{
-			sdBuffers.push_back(e57::SourceDestBuffer(*global.scannerPcE57->getImageFileE57(), "colorRed", &rBuffer[0], query.scanMeta.numPoints, true, true));
-			sdBuffers.push_back(e57::SourceDestBuffer(*global.scannerPcE57->getImageFileE57(), "colorGreen", &gBuffer[0], query.scanMeta.numPoints, true, true));
-			sdBuffers.push_back(e57::SourceDestBuffer(*global.scannerPcE57->getImageFileE57(), "colorBlue", &bBuffer[0], query.scanMeta.numPoints, true, true));
-		}
-		if (query.scanMeta.hasPointI)
-		{
-			sdBuffers.push_back(e57::SourceDestBuffer(*global.scannerPcE57->getImageFileE57(), "intensity", &iBuffer[0], query.scanMeta.numPoints, true, true));
-		}
+			std::vector<float> xBuffer;
+			std::vector<float> yBuffer;
+			std::vector<float> zBuffer;
+			std::vector<float> normalXBuffer;
+			std::vector<float> normalYBuffer;
+			std::vector<float> normalZBuffer;
+			std::vector<float> iBuffer;
+			std::vector<uint8_t> rBuffer;
+			std::vector<uint8_t> gBuffer;
+			std::vector<uint8_t> bBuffer;
 
-		if ((query.scanMeta.hasPointXYZ || query.scanMeta.hasPointRGB || query.scanMeta.hasPointI))
-		{
-			e57::CompressedVectorNode scanPoints(*global.scannerPcE57->getData3DE57());
-			e57::CompressedVectorReader reader = scanPoints.reader(sdBuffers);
-			if (reader.read() <= 0)
-			{
-				return 4;
-			}
-			reader.close();
-		}
-		for (std::size_t px = 0; px < query.scanMeta.numPoints; ++px)
-		{
-			PointRAW sp;
 			if (query.scanMeta.hasPointXYZ)
 			{
-				Eigen::Vector3d xyz;
-				switch (query.scanMeta.rawDataCoordSys)
+				if (query.scanMeta.rawDataCoordSys == CoordSys::XYZ_PX_PY_PZ)
 				{
-				case CoordSys::XYZ_PX_PY_PZ: xyz = Eigen::Vector3d(xBuffer[px], yBuffer[px], zBuffer[px]); break;
-				case CoordSys::RAE_PE_PX_PY: xyz = CoodConvert<CoordSys::XYZ_PX_PY_PZ, CoordSys::RAE_PE_PX_PY>(Eigen::Vector3d(xBuffer[px], yBuffer[px], zBuffer[px])); break;
-				default: return 5;; break;
+					sdBuffers.push_back(e57::SourceDestBuffer(*global.scannerPcE57->getImageFileE57(), "cartesianX", &xBuffer[0], query.scanMeta.numPoints, true, true));
+					sdBuffers.push_back(e57::SourceDestBuffer(*global.scannerPcE57->getImageFileE57(), "cartesianY", &yBuffer[0], query.scanMeta.numPoints, true, true));
+					sdBuffers.push_back(e57::SourceDestBuffer(*global.scannerPcE57->getImageFileE57(), "cartesianZ", &zBuffer[0], query.scanMeta.numPoints, true, true));
 				}
-				sp.x = xyz.x();
-				sp.y = xyz.y();
-				sp.z = xyz.z();
+				else if (query.scanMeta.rawDataCoordSys == CoordSys::RAE_PE_PX_PY)
+				{
+					sdBuffers.push_back(e57::SourceDestBuffer(*global.scannerPcE57->getImageFileE57(), "sphericalRange", &xBuffer[0], query.scanMeta.numPoints, true, true));
+					sdBuffers.push_back(e57::SourceDestBuffer(*global.scannerPcE57->getImageFileE57(), "sphericalAzimuth", &yBuffer[0], query.scanMeta.numPoints, true, true));
+					sdBuffers.push_back(e57::SourceDestBuffer(*global.scannerPcE57->getImageFileE57(), "sphericalElevation", &zBuffer[0], query.scanMeta.numPoints, true, true));
+				}
+				else
+					return 2;
 			}
-
-#ifdef POINT_RAW_WITH_RGB
+			if (query.scanMeta.hasPointNormal)
+				return 3;
 			if (query.scanMeta.hasPointRGB)
 			{
-				sp.r = rBuffer[px];
-				sp.g = gBuffer[px];
-				sp.b = bBuffer[px];
+				sdBuffers.push_back(e57::SourceDestBuffer(*global.scannerPcE57->getImageFileE57(), "colorRed", &rBuffer[0], query.scanMeta.numPoints, true, true));
+				sdBuffers.push_back(e57::SourceDestBuffer(*global.scannerPcE57->getImageFileE57(), "colorGreen", &gBuffer[0], query.scanMeta.numPoints, true, true));
+				sdBuffers.push_back(e57::SourceDestBuffer(*global.scannerPcE57->getImageFileE57(), "colorBlue", &bBuffer[0], query.scanMeta.numPoints, true, true));
 			}
-			else
+			if (query.scanMeta.hasPointI)
 			{
-				sp.r = 255;
-				sp.g = 255;
-				sp.b = 255;
+				sdBuffers.push_back(e57::SourceDestBuffer(*global.scannerPcE57->getImageFileE57(), "intensity", &iBuffer[0], query.scanMeta.numPoints, true, true));
 			}
+
+			if ((query.scanMeta.hasPointXYZ || query.scanMeta.hasPointRGB || query.scanMeta.hasPointI))
+			{
+				e57::CompressedVectorNode scanPoints(*global.scannerPcE57->getData3DE57());
+				e57::CompressedVectorReader reader = scanPoints.reader(sdBuffers);
+				if (reader.read() <= 0)
+				{
+					return 4;
+				}
+				reader.close();
+			}
+			for (std::size_t px = 0; px < query.scanMeta.numPoints; ++px)
+			{
+				PointRAW sp;
+				if (query.scanMeta.hasPointXYZ)
+				{
+					Eigen::Vector3d xyz;
+					switch (query.scanMeta.rawDataCoordSys)
+					{
+					case CoordSys::XYZ_PX_PY_PZ: xyz = Eigen::Vector3d(xBuffer[px], yBuffer[px], zBuffer[px]); break;
+					case CoordSys::RAE_PE_PX_PY: xyz = CoodConvert<CoordSys::XYZ_PX_PY_PZ, CoordSys::RAE_PE_PX_PY>(Eigen::Vector3d(xBuffer[px], yBuffer[px], zBuffer[px])); break;
+					default: return 5;; break;
+					}
+					sp.x = xyz.x();
+					sp.y = xyz.y();
+					sp.z = xyz.z();
+				}
+
+#ifdef POINT_RAW_WITH_RGB
+				if (query.scanMeta.hasPointRGB)
+				{
+					sp.r = rBuffer[px];
+					sp.g = gBuffer[px];
+					sp.b = bBuffer[px];
+				}
+				else
+				{
+					sp.r = 255;
+					sp.g = 255;
+					sp.b = 255;
+				}
 #endif
 
 #ifdef POINT_RAW_WITH_INTENSITY
-			if (query.scanMeta.hasPointI)
-			{
-				sp.intensity = iBuffer[px];
-			}
+				if (query.scanMeta.hasPointI)
+				{
+					sp.intensity = iBuffer[px];
+				}
 #endif
 
 #ifdef POINT_RAW_WITH_LABEL
-			sp.label = (uint32_t)query.scanMeta.serialNumber;
+				sp.label = (uint32_t)query.scanMeta.serialNumber;
 #endif
-			if (pcl::isFinite(sp))
-				data.push_back(sp);
+				if (pcl::isFinite(sp))
+					data.push_back(sp);
+			}
+			
+			std::stringstream ss;
+			ss << "Load from E57 - End - pcSize: " << data.size();
+			PRINT_INFO(ss.str());
 		}
-		pcl::transformPointCloud(data, data, query.scanMeta.transform);
+
+		{
+			std::stringstream ss;
+			ss << "Transform to world - Start - transform: " << query.scanMeta.transform;
+			PRINT_INFO(ss.str());
+
+			pcl::transformPointCloud(data, data, query.scanMeta.transform);
+
+			PRINT_INFO("Transform to world - End");
+		}
 
 		return 0;
 	}

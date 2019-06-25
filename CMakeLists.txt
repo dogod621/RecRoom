@@ -63,4 +63,5 @@ add_subdirectory("ThirdParty")
 
 # RecRoom
 add_subdirectory("Core")
+add_subdirectory("Test")
 

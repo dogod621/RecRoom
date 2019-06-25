@@ -18,7 +18,7 @@ namespace RecRoom
 	public:
 		ContainerPcRAWOC(const boost::filesystem::path& filePath);
 
-		ContainerPcRAWOC(const boost::filesystem::path& filePath, const Eigen::Vector3d& min, const Eigen::Vector3d& max, const double res, double outOfCoreOverlapSize);
+		ContainerPcRAWOC(const boost::filesystem::path& filePath, const Eigen::Vector3d& min, const Eigen::Vector3d& max, const double res, double overlap);
 
 	public:
 		virtual void Merge(const PTR(PcRAW)& v);
@@ -29,12 +29,12 @@ namespace RecRoom
 	public:
 		boost::filesystem::path getFilePath() const { return filePath; }
 		PTR(OCT) getOCT() const { return oct; }
-		double getOutOfCoreOverlapSize() const { return outOfCoreOverlapSize; }
+		double getOverlap() const { return overlap; }
 
 	protected:
 		boost::filesystem::path filePath;
 		PTR(OCT) oct;
-		double outOfCoreOverlapSize;
+		double overlap;
 		std::vector<QuaryMeta> quaries;
 
 		virtual void LoadMeta();

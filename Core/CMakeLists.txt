@@ -10,7 +10,8 @@ foreach(module ${modules})
 	install(FILES ${module_hdrs} DESTINATION include/Core/${module})
 	source_group(${module} FILES ${module_source})
 endforeach() 
-add_library( Core ${modules_source} )
+add_library( Core STATIC ${modules_source} )
+set_target_properties(Core PROPERTIES FOLDER "API")
 
 #
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}")
