@@ -13,6 +13,7 @@ namespace RecRoom
 		if (!globalData) return -2;
 		if (!query) return -3;
 		if (!bufferData) return -4;
+		(*bufferData) = PTR(DataT)(new DataT);
 
 		//
 		int cerr = 0; 
@@ -34,6 +35,7 @@ namespace RecRoom
 		if (!globalData) return -2;
 		if (!query) return -3;
 		if (!bufferData) return -4;
+		if (!(*bufferData)) return -5;
 
 		//
 		int cerr = 0;
@@ -55,6 +57,7 @@ namespace RecRoom
 		if (!globalData) return -2;
 		if (!query) return -3;
 		if (!bufferData) return -4;
+		if (!(*bufferData)) return -5;
 
 		//
 		int cerr = 0;
