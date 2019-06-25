@@ -14,7 +14,26 @@
 
 namespace RecRoom
 {
-#define INFO_MESSAGE(file, line, func, message) ("File:" + std::string(file) + ", Line:" + std::to_string(line) + ", Func:" + std::string(func)  + ", What:" + std::string(message) + ".").c_str()
+#define FG_R std::string("\033[31m") // red
+#define FG_G std::string("\033[32m") // green
+#define FG_Y std::string("\033[33m") // yellow
+#define FG_B std::string("\033[34m") // blue
+#define FG_M std::string("\033[35m") // magenta
+#define FG_C std::string("\033[36m") // cyan
+#define FG_W std::string("\033[37m") // white
+#define FG_N std::string("\033[39m")
+#define BG_R std::string("\033[41m")
+#define BG_G std::string("\033[42m")
+#define BG_Y std::string("\033[43m")
+#define BG_B std::string("\033[44m")
+#define BG_M std::string("\033[45m")
+#define BG_C std::string("\033[46m") 
+#define BG_W std::string("\033[47m") 
+#define BG_N std::string("\033[49m")
+
+#define INFO_MESSAGE(file, line, func, message) (FG_W + std::string(message) + FG_N + " " + FG_G + std::string(file) + FG_N + " " + FG_B + std::to_string(line) + FG_N + " " + FG_C + std::string(func) + FG_N + ".").c_str()
+#define WARNING_MESSAGE(file, line, func, message) (BG_Y + FG_W + std::string(message) + FG_N + " " + FG_G + std::string(file) + FG_N + " " + FG_B + std::to_string(line) + FG_N + " " + FG_C + std::string(func) + FG_N + "." + BG_N).c_str()
+#define ERROR_MESSAGE(file, line, func, message) (BG_R + FG_W + std::string(message) + FG_N + " " + FG_G + std::string(file) + FG_N + " " + FG_B + std::to_string(line) + FG_N + " " + FG_C + std::string(func) + FG_N + "." + BG_N).c_str()
 
 	class exception : public std::exception
 	{
@@ -22,7 +41,7 @@ namespace RecRoom
 		exception(const char *file, int line, const char *func, const std::string &message_)
 			: std::exception()
 		{
-			message = INFO_MESSAGE(file, line, func, message_);
+			message = ERROR_MESSAGE(file, line, func, message_);
 		}
 		~exception() {}
 		const char *what() const { return message.c_str(); }
@@ -32,9 +51,9 @@ namespace RecRoom
 	};
 
 #define THROW_EXCEPTION(message) throw RecRoom::exception(__FILE__, __LINE__, __FUNCTION__, message);
-#define PRINT_ERROR(message) PCL_ERROR(INFO_MESSAGE(__FILE__, __LINE__, __FUNCTION__, message));
-#define PRINT_WARNING(message) PCL_WARN(INFO_MESSAGE(__FILE__, __LINE__, __FUNCTION__, message));
-#define PRINT_INFO(message) PCL_INFO(INFO_MESSAGE(__FILE__, __LINE__, __FUNCTION__, message));
+#define PRINT_ERROR(message) std::cout << ERROR_MESSAGE(__FILE__, __LINE__, __FUNCTION__, message) << std::endl;
+#define PRINT_WARNING(message) std::cout << WARNING_MESSAGE(__FILE__, __LINE__, __FUNCTION__, message) << std::endl;
+#define PRINT_INFO(message) std::cerr << INFO_MESSAGE(__FILE__, __LINE__, __FUNCTION__, message) << std::endl;
 
 	//
 	using Flag = unsigned int;

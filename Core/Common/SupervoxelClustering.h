@@ -12,6 +12,8 @@
 //DEBUG TODO REMOVE
 #include <pcl/common/time.h>
 
+#include "Common.h"
+
 namespace RecRoom
 {
 	template <typename PointT>

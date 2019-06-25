@@ -314,7 +314,7 @@ RecRoom::SupervoxelClustering<PointT>::createSupervoxelHelpers(std::vector<int> 
 		}
 		else
 		{
-			PCL_WARN("Could not find leaf in RecRoom::SupervoxelClustering<PointT>::createSupervoxelHelpers - supervoxel will be deleted \n");
+			PRINT_WARNING("Could not find leaf in RecRoom::SupervoxelClustering<PointT>::createSupervoxelHelpers, supervoxel will be deleted");
 		}
 	}
 
@@ -403,7 +403,7 @@ RecRoom::SupervoxelClustering<PointT>::reseedSupervoxels()
 		}
 		else
 		{
-			PCL_WARN("Could not find leaf in RecRoom::SupervoxelClustering<PointT>::reseedSupervoxels - supervoxel will be deleted \n");
+			PRINT_WARNING("Could not find leaf in RecRoom::SupervoxelClustering<PointT>::reseedSupervoxels, supervoxel will be deleted \n");
 		}
 	}
 
