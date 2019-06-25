@@ -80,7 +80,7 @@ namespace RecRoom
 			std::size_t a_perGIdx = a_gIdx;
 			std::size_t b_perGIdx = b_gIdx;
 			
-			std::vector<BufferT>& a_buffer = doubleBuffer[a_bufferPointer];
+			std::vector<BufferT>& a_buffer = doubleBuffer[!a_bufferPointer];
 
 			// Send queries
 			for (std::size_t a_locIdx = 0; (a_locIdx < size) && (a_gIdx < queries.size()); ++a_locIdx)
