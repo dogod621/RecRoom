@@ -16,9 +16,10 @@ namespace RecRoom
 		using QuaryData = ContainerPcRAW::QuaryData;
 
 	public:
-		ContainerPcRAWOC(const boost::filesystem::path& filePath);
-
-		ContainerPcRAWOC(const boost::filesystem::path& filePath, const Eigen::Vector3d& min, const Eigen::Vector3d& max, const double res, double overlap);
+		ContainerPcRAWOC(const boost::filesystem::path& filePath,
+			const Eigen::Vector3d& min = Eigen::Vector3d(-20.0, -20.0, -20.0),
+			const Eigen::Vector3d& max = Eigen::Vector3d(20.0, 20.0, 20.0),
+			const double res = 2, double overlap = 0.1);
 
 	public:
 		virtual void Merge(const PTR(PcRAW)& v);

@@ -17,7 +17,7 @@ namespace RecRoom
 			scanMeta.resize(data3DE57->childCount());
 			for (std::size_t i = 0; i < scanMeta.size(); ++i)
 			{
-				scanMeta[i].scanner = Scanner::BLK360;
+				scanMeta[i].scanner = scanner;
 
 				e57::StructureNode scan(data3DE57->get(i));
 				scanMeta[i].serialNumber = i;
@@ -105,8 +105,9 @@ namespace RecRoom
 
 	ScannerPcE57::ScannerPcE57(
 		const boost::filesystem::path& filePath,
-		const PTR(ContainerPcRAW)& containerPcRAW)
-		: ScannerPc(containerPcRAW), imageFileE57(nullptr), data3DE57(nullptr), images2DE57(nullptr)
+		const PTR(ContainerPcRAW)& containerPcRAW,
+		Scanner scanner)
+		: ScannerPc(containerPcRAW, scanner), imageFileE57(nullptr), data3DE57(nullptr), images2DE57(nullptr)
 	{
 		if (!IsFileE57(filePath, true))
 			THROW_EXCEPTION("filePath is not valid.");
@@ -146,10 +147,10 @@ namespace RecRoom
 	}
 
 	//
-	class AsyncGlobal_ShipData : public AsyncGlobal
+	class AsyncGlobal_ShipPcRAWData : public AsyncGlobal
 	{
 	public:
-		AsyncGlobal_ShipData(const ScannerPcE57* scannerPcE57 = nullptr)
+		AsyncGlobal_ShipPcRAWData(const ScannerPcE57* scannerPcE57 = nullptr)
 			: scannerPcE57(scannerPcE57) {}
 
 		virtual int Check() const
@@ -170,22 +171,22 @@ namespace RecRoom
 		const ScannerPcE57* scannerPcE57;
 	};
 
-	class AsyncQuery_ShipData : public AsyncQuery<AsyncGlobal_ShipData>
+	class AsyncQuery_ShipPcRAWData : public AsyncQuery<AsyncGlobal_ShipPcRAWData>
 	{
 	public:
 		ScanMeta scanMeta;
 
-		AsyncQuery_ShipData(ScanMeta scanMeta = ScanMeta())
+		AsyncQuery_ShipPcRAWData(ScanMeta scanMeta = ScanMeta())
 			: scanMeta(scanMeta) {}
 
-		virtual int Check(const AsyncGlobal_ShipData& global) const
+		virtual int Check(const AsyncGlobal_ShipPcRAWData& global) const
 		{
 			if (scanMeta.serialNumber < 0) return 1;
 			if (scanMeta.serialNumber >= global.ptrScannerPcE57()->getData3DE57()->childCount()) return 2;
 			return 0;
 		}
 
-		virtual std::string Info(const AsyncGlobal_ShipData& global) const
+		virtual std::string Info(const AsyncGlobal_ShipPcRAWData& global) const
 		{
 			std::stringstream strQuery;
 			strQuery << scanMeta.serialNumber
@@ -198,7 +199,7 @@ namespace RecRoom
 		}
 	};
 
-	int AStep_ShipData(const AsyncGlobal_ShipData& global, const AsyncQuery_ShipData& query, PcRAW& data)
+	int AStep_ShipPcRAWData(const AsyncGlobal_ShipPcRAWData& global, const AsyncQuery_ShipPcRAWData& query, PcRAW& data)
 	{
 		std::vector<float> xBuffer;
 		std::vector<float> yBuffer;
@@ -330,7 +331,7 @@ namespace RecRoom
 #ifdef POINT_RAW_WITH_LABEL
 				sp.label = (uint32_t)query.scanMeta.serialNumber;
 #endif
-				if (pcl::isFinite(sp))
+				if (global.ptrScannerPcE57()->Valid(sp))
 					data.push_back(sp);
 			}
 
@@ -352,7 +353,7 @@ namespace RecRoom
 		return 0;
 	}
 
-	int BStep_ShipData(const AsyncGlobal_ShipData& global, const AsyncQuery_ShipData& query, PcRAW& data)
+	int BStep_ShipPcRAWData(const AsyncGlobal_ShipPcRAWData& global, const AsyncQuery_ShipPcRAWData& query, PcRAW& data)
 	{
 		if (global.ptrScannerPcE57()->getPreprocessor())
 		{
@@ -364,7 +365,7 @@ namespace RecRoom
 		return 0;
 	}
 
-	int CStep_ShipData(AsyncGlobal_ShipData& global, const AsyncQuery_ShipData& query, const PcRAW& data)
+	int CStep_ShipPcRAWData(AsyncGlobal_ShipPcRAWData& global, const AsyncQuery_ShipPcRAWData& query, const PcRAW& data)
 	{
 		PTR(PcRAW)temp(new PcRAW);
 		pcl::copyPointCloud(data, *temp);
@@ -372,21 +373,21 @@ namespace RecRoom
 		return 0;
 	}
 
-	void ScannerPcE57::ShipData() const
+	void ScannerPcE57::ShipPcRAWData() const
 	{
 		if (imageFileE57)
 		{
 			if (data3DE57)
 			{
-				AsyncGlobal_ShipData global(this);
+				AsyncGlobal_ShipPcRAWData global(this);
 
-				std::vector<AsyncQuery_ShipData> queries(scanMeta.size());
+				std::vector<AsyncQuery_ShipPcRAWData> queries(scanMeta.size());
 				for (std::size_t i = 0; i < scanMeta.size(); ++i)
 					queries[i].scanMeta = scanMeta[i];
 
-				AsyncProcess<AsyncGlobal_ShipData, AsyncQuery_ShipData, PcRAW, 1>(
+				AsyncProcess<AsyncGlobal_ShipPcRAWData, AsyncQuery_ShipPcRAWData, PcRAW, 1>(
 					global, queries,
-					AStep_ShipData, BStep_ShipData, CStep_ShipData);
+					AStep_ShipPcRAWData, BStep_ShipPcRAWData, CStep_ShipPcRAWData);
 			}
 		}
 	}

@@ -12,7 +12,8 @@ namespace RecRoom
 	public:
 		ScannerPcE57(
 			const boost::filesystem::path& filePath,
-			const PTR(ContainerPcRAW)& containerPcRAW);
+			const PTR(ContainerPcRAW)& containerPcRAW,
+			Scanner scanner = Scanner::E57);
 
 		~ScannerPcE57()
 		{
@@ -21,7 +22,7 @@ namespace RecRoom
 		}
 
 	public:
-		virtual void ShipData() const;
+		virtual void ShipPcRAWData() const;
 
 	public:
 		PTR(e57::ImageFile) getImageFileE57() const { return imageFileE57; }

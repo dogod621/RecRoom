@@ -8,39 +8,49 @@
 
 namespace RecRoom
 {
-	ContainerPcRAWOC::ContainerPcRAWOC(const boost::filesystem::path& filePath_)
-		: filePath(filePath_), ContainerPcRAW(), oct(nullptr), overlap(0.0), quaries()
-	{
-		if (!boost::filesystem::is_directory(filePath))
-			THROW_EXCEPTION("filePath is not valid.");
-		if (!boost::filesystem::is_directory(filePath / boost::filesystem::path("RAW")))
-			THROW_EXCEPTION("filePath is not valid: missing ./RAW/");
-		if (!boost::filesystem::exists(filePath / boost::filesystem::path("RAW") / boost::filesystem::path("root.oct_idx")))
-			THROW_EXCEPTION("filePath is not valid: missing ./RAW/root.oct_idx.");
-		if (!boost::filesystem::exists(filePath / boost::filesystem::path("metaRAW.txt")))
-			THROW_EXCEPTION("filePath is not valid: missing ./metaRAW.txt.");
-
-		oct = OCT::Ptr(new OCT(filePath / boost::filesystem::path("RAW") / boost::filesystem::path("root.oct_idx"), true));
-
-		LoadMeta();
-
-		//
-		if (!oct)
-			THROW_EXCEPTION("oct is not created?")
-	}
-
-	ContainerPcRAWOC::ContainerPcRAWOC(const boost::filesystem::path& filePath_, const Eigen::Vector3d& min, const Eigen::Vector3d& max, const double res, double overlap)
+	ContainerPcRAWOC::ContainerPcRAWOC(const boost::filesystem::path& filePath_, 
+		const Eigen::Vector3d& min, const Eigen::Vector3d& max, const double res, double overlap)
 		: filePath(filePath_), ContainerPcRAW(), oct(nullptr), overlap(overlap), quaries()
 	{
-		if (!boost::filesystem::exists(filePath))
+		bool createNew = false;
+		if (!boost::filesystem::is_directory(filePath))
 		{
-			boost::filesystem::create_directory(filePath);
-			PRINT_INFO("Create directory: " + filePath.string());
+			createNew = true;
+		}
+		else if (!boost::filesystem::is_directory(filePath / boost::filesystem::path("RAW")))
+		{
+			createNew = true;
+			PRINT_WARNING("filePath is not valid: missing ./RAW/, create new");
+		}
+		else if (!boost::filesystem::exists(filePath / boost::filesystem::path("RAW") / boost::filesystem::path("root.oct_idx")))
+		{
+			createNew = true;
+			PRINT_WARNING("filePath is not valid: missing ./RAW/root.oct_idx, create new");
+		}
+		else if (!boost::filesystem::exists(filePath / boost::filesystem::path("metaRAW.txt")))
+		{
+			createNew = true;
+			PRINT_WARNING("filePath is not valid: missing ./metaRAW.txt, create new");
 		}
 
-		oct = OCT::Ptr(new OCT(min, max, res, filePath / boost::filesystem::path("RAW") / boost::filesystem::path("root.oct_idx"), "ECEF"));
+		if (createNew)
+		{
+			if (!boost::filesystem::exists(filePath))
+			{
+				boost::filesystem::create_directory(filePath);
+				PRINT_INFO("Create directory: " + filePath.string());
+			}
 
-		DumpMeta();
+			oct = OCT::Ptr(new OCT(min, max, res, filePath / boost::filesystem::path("RAW") / boost::filesystem::path("root.oct_idx"), "ECEF"));
+
+			DumpMeta();
+		}
+		else
+		{
+			oct = OCT::Ptr(new OCT(filePath / boost::filesystem::path("RAW") / boost::filesystem::path("root.oct_idx"), true));
+
+			LoadMeta();
+		}
 
 		//
 		if (!oct)

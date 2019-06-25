@@ -10,7 +10,7 @@
 
 #include "E57Format.h"
 
-#include "Scanner/ScannerPcE57.h"
+#include "Scanner/ScannerPcBLK360.h"
 #include "Container/ContainerPcRAWOC.h"
 
 #define CMD_SPACE 25
@@ -22,12 +22,15 @@ void PrintHelp(int argc, char **argv)
 	std::cout << "PrintHelp:" << std::endl << std::endl;
 
 	std::cout << "Description:==============================================================================================================================================" << std::endl << std::endl;
-	std::cout << "\tTest ScannerPcE57 with ContainerPcRAWOC container" << std::endl << std::endl;
+	std::cout << "\tTest ScannerPcBLK360 with ContainerPcRAWOC container" << std::endl << std::endl;
 
 	std::cout << "Parmameters:==============================================================================================================================================" << std::endl << std::endl;
 	{
+		PRINT_HELP("\t", "src", "sting \"\"", "File path.");
 		PRINT_HELP("\t", "e57", "sting \"\"", "Input e57 file.");
+		PRINT_HELP("\t", "lf", "sting \"\"", "Input lf file.");
 		PRINT_HELP("\t", "containerPcRAW", "sting \"\"", "ContainerPcRAWOC file path.");
+		PRINT_HELP("\t", "containerPcLF", "sting \"\"", "ContainerPcLF file path.");
 		PRINT_HELP("\t", "res", "float 4", "Gird unit size of ContainerPcRAWOC in meters.");
 		PRINT_HELP("\t", "min", "XYZ_string \"-100 -100 -100\"", "Min AABB corner of ContainerPcRAWOC in meters. For example: -min \"-100 -100 -100\".");
 		PRINT_HELP("\t", "max", "XYZ_string \"100 100 100\"", "Max AABB corner of ContainerPcRAWOC in meters. For example: -max \"100 100 100\".");
@@ -46,13 +49,25 @@ int main(int argc, char *argv[])
 			PrintHelp(argc, argv);
 		else
 		{
+			std::string srcStr = "";
+			pcl::console::parse_argument(argc, argv, "-src", srcStr);
+			std::cout << "Parmameters -src: " << srcStr << std::endl;
+
 			std::string e57Str = "";
 			pcl::console::parse_argument(argc, argv, "-e57", e57Str);
 			std::cout << "Parmameters -e57: " << e57Str << std::endl;
 
+			std::string lfStr = "";
+			pcl::console::parse_argument(argc, argv, "-lf", lfStr);
+			std::cout << "Parmameters -lf: " << lfStr << std::endl;
+
 			std::string containerPcRAWStr = "";
 			pcl::console::parse_argument(argc, argv, "-containerPcRAW", containerPcRAWStr);
 			std::cout << "Parmameters -containerPcRAW: " << containerPcRAWStr << std::endl;
+
+			std::string containerPcLFStr = "";
+			pcl::console::parse_argument(argc, argv, "-containerPcLF", containerPcLFStr);
+			std::cout << "Parmameters -containerPcLF: " << containerPcLFStr << std::endl;
 
 			double res = 4;
 			pcl::console::parse_argument(argc, argv, "-res", res);
@@ -85,11 +100,11 @@ int main(int argc, char *argv[])
 
 			system("PAUSE");
 
-			std::cout << "Create ScannerPcE57" << std::endl;
+			std::cout << "Create ScannerPcBLK360" << std::endl;
 
-			PTR(RecRoom::ScannerPcE57) scanner(
-				new RecRoom::ScannerPcE57(
-					e57Str, containerPcRAW));
+			PTR(RecRoom::ScannerPcBLK360) scanner(
+				new RecRoom::ScannerPcBLK360(
+					srcStr, e57Str, lfStr, containerPcRAW));
 
 			system("PAUSE");
 
@@ -99,7 +114,7 @@ int main(int argc, char *argv[])
 
 			system("PAUSE");
 
-			std::cout << "Perform ScannerPcE57::ShipPcRAWData" << std::endl;
+			std::cout << "Perform ScannerPcBLK360::ShipPcRAWData" << std::endl;
 
 			scanner->ShipPcRAWData();
 		}
