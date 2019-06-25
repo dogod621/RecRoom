@@ -28,14 +28,14 @@ namespace RecRoom
 		using Ptr = PTR(Self);
 		using ConstPtr = CONST_PTR(Self);
 
-		typedef int(*AStep)(GlobalT&, QueryT&, DataT&);
-		typedef int(*BStep)(GlobalT&, QueryT&, DataT&);
-		typedef int(*CStep)(GlobalT&, QueryT&, DataT&);
+		typedef int(*AStep)(const GlobalT&, const QueryT&, DataT&);
+		typedef int(*BStep)(const GlobalT&, const QueryT&, DataT&);
+		typedef int(*CStep)(GlobalT&, const QueryT&, const DataT&);
 
 	public:
-		static int Default_AStep(GlobalT&, QueryT&, DataT&) { return 0; }
-		static int Default_BStep(GlobalT&, QueryT&, DataT&) { return 0; }
-		static int Default_CStep(GlobalT&, QueryT&, DataT&) { return 0; }
+		static int Default_AStep(const GlobalT&, const QueryT&, DataT&) { return 0; }
+		static int Default_BStep(const GlobalT&, const QueryT&, DataT&) { return 0; }
+		static int Default_CStep(GlobalT&, const QueryT&, DataT&) { return 0; }
 
 		static int WarpAStep(AStep a_Callback, GlobalT* globalData, QueryT* query, PTR(DataT)* bufferData);
 

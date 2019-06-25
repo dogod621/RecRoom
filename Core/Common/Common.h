@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <cmath>
+#include <mutex>
 #include <string>
 #include <exception>
 #include <Eigen/Core>
@@ -14,6 +15,23 @@
 
 namespace RecRoom
 {
+#define PTR(T) boost::shared_ptr<T> // std::shared_ptr<T>
+#define CONST_PTR(T) boost::shared_ptr<const T> // std::shared_ptr<const T>
+
+	class Common
+	{
+	public:
+		static std::mutex gLock;
+		static double eps;
+		static Eigen::Vector3d tempVec1;
+		static Eigen::Vector3d tempVec2;
+		static Eigen::Vector3d tempVec3;
+		static Eigen::Vector3d tempVec4;
+
+		static bool GenFrame(const Eigen::Vector3d& notmal, Eigen::Vector3d& tangent, Eigen::Vector3d& bitangent);
+		static bool IsUnitVector(const Eigen::Vector3d& v);
+	};
+
 #define FG_R std::string("\033[31m") // red
 #define FG_G std::string("\033[32m") // green
 #define FG_Y std::string("\033[33m") // yellow
@@ -51,9 +69,9 @@ namespace RecRoom
 	};
 
 #define THROW_EXCEPTION(message) throw RecRoom::exception(__FILE__, __LINE__, __FUNCTION__, message);
-#define PRINT_ERROR(message) std::cout << ERROR_MESSAGE(__FILE__, __LINE__, __FUNCTION__, message) << std::endl;
-#define PRINT_WARNING(message) std::cout << WARNING_MESSAGE(__FILE__, __LINE__, __FUNCTION__, message) << std::endl;
-#define PRINT_INFO(message) std::cerr << INFO_MESSAGE(__FILE__, __LINE__, __FUNCTION__, message) << std::endl;
+#define PRINT_ERROR(message) {std::lock_guard<std::mutex> guard(RecRoom::Common::gLock);std::cout << ERROR_MESSAGE(__FILE__, __LINE__, __FUNCTION__, message) << std::endl;}
+#define PRINT_WARNING(message) {std::lock_guard<std::mutex> guard(RecRoom::Common::gLock);std::cout << WARNING_MESSAGE(__FILE__, __LINE__, __FUNCTION__, message) << std::endl;}
+#define PRINT_INFO(message) {std::lock_guard<std::mutex> guard(RecRoom::Common::gLock);std::cerr << INFO_MESSAGE(__FILE__, __LINE__, __FUNCTION__, message) << std::endl;}
 
 	//
 	using Flag = unsigned int;
@@ -80,24 +98,8 @@ namespace RecRoom
 	template<class outType, class inType>
 	inline outType Convert(const inType& v);
 
-#define PTR(T) boost::shared_ptr<T> // std::shared_ptr<T>
-#define CONST_PTR(T) boost::shared_ptr<const T> // std::shared_ptr<const T>
-
 	template<class PointType>
 	using Pc = pcl::PointCloud<PointType>;
-
-	class Common
-	{
-	public:
-		static double eps;
-		static Eigen::Vector3d tempVec1;
-		static Eigen::Vector3d tempVec2;
-		static Eigen::Vector3d tempVec3;
-		static Eigen::Vector3d tempVec4;
-
-		static bool GenFrame(const Eigen::Vector3d& notmal, Eigen::Vector3d& tangent, Eigen::Vector3d& bitangent);
-		static bool IsUnitVector(const Eigen::Vector3d& v);
-	};
 }
 
 #include "Common.hpp"

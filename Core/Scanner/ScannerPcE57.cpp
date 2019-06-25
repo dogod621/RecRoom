@@ -149,8 +149,6 @@ namespace RecRoom
 	class AsyncGlobal_ShipData : public AsyncGlobal
 	{
 	public:
-		const ScannerPcE57* scannerPcE57;
-
 		AsyncGlobal_ShipData(const ScannerPcE57* scannerPcE57 = nullptr)
 			: scannerPcE57(scannerPcE57) {}
 
@@ -161,9 +159,18 @@ namespace RecRoom
 			if (!scannerPcE57->getData3DE57()) return 3;
 			return 0;
 		}
+
+	public:
+		const ScannerPcE57* ptrScannerPcE57() const
+		{
+			return scannerPcE57;
+		}
+
+	protected:
+		const ScannerPcE57* scannerPcE57;
 	};
 
-	struct AsyncQuery_ShipData : public AsyncQuery<AsyncGlobal_ShipData>
+	class AsyncQuery_ShipData : public AsyncQuery<AsyncGlobal_ShipData>
 	{
 	public:
 		ScanMeta scanMeta;
@@ -174,7 +181,7 @@ namespace RecRoom
 		virtual int Check(const AsyncGlobal_ShipData& global) const
 		{
 			if (scanMeta.serialNumber < 0) return 1;
-			if (scanMeta.serialNumber >= global.scannerPcE57->getData3DE57()->childCount()) return 2;
+			if (scanMeta.serialNumber >= global.ptrScannerPcE57()->getData3DE57()->childCount()) return 2;
 			return 0;
 		}
 
@@ -191,7 +198,7 @@ namespace RecRoom
 		}
 	};
 
-	int AStep_ShipData(AsyncGlobal_ShipData& global, AsyncQuery_ShipData& query, PcRAW& data)
+	int AStep_ShipData(const AsyncGlobal_ShipData& global, const AsyncQuery_ShipData& query, PcRAW& data)
 	{
 		{
 			PRINT_INFO("Load from E57 - Start");
@@ -213,15 +220,15 @@ namespace RecRoom
 			{
 				if (query.scanMeta.rawDataCoordSys == CoordSys::XYZ_PX_PY_PZ)
 				{
-					sdBuffers.push_back(e57::SourceDestBuffer(*global.scannerPcE57->getImageFileE57(), "cartesianX", &xBuffer[0], query.scanMeta.numPoints, true, true));
-					sdBuffers.push_back(e57::SourceDestBuffer(*global.scannerPcE57->getImageFileE57(), "cartesianY", &yBuffer[0], query.scanMeta.numPoints, true, true));
-					sdBuffers.push_back(e57::SourceDestBuffer(*global.scannerPcE57->getImageFileE57(), "cartesianZ", &zBuffer[0], query.scanMeta.numPoints, true, true));
+					sdBuffers.push_back(e57::SourceDestBuffer(*global.ptrScannerPcE57()->getImageFileE57(), "cartesianX", &xBuffer[0], query.scanMeta.numPoints, true, true));
+					sdBuffers.push_back(e57::SourceDestBuffer(*global.ptrScannerPcE57()->getImageFileE57(), "cartesianY", &yBuffer[0], query.scanMeta.numPoints, true, true));
+					sdBuffers.push_back(e57::SourceDestBuffer(*global.ptrScannerPcE57()->getImageFileE57(), "cartesianZ", &zBuffer[0], query.scanMeta.numPoints, true, true));
 				}
 				else if (query.scanMeta.rawDataCoordSys == CoordSys::RAE_PE_PX_PY)
 				{
-					sdBuffers.push_back(e57::SourceDestBuffer(*global.scannerPcE57->getImageFileE57(), "sphericalRange", &xBuffer[0], query.scanMeta.numPoints, true, true));
-					sdBuffers.push_back(e57::SourceDestBuffer(*global.scannerPcE57->getImageFileE57(), "sphericalAzimuth", &yBuffer[0], query.scanMeta.numPoints, true, true));
-					sdBuffers.push_back(e57::SourceDestBuffer(*global.scannerPcE57->getImageFileE57(), "sphericalElevation", &zBuffer[0], query.scanMeta.numPoints, true, true));
+					sdBuffers.push_back(e57::SourceDestBuffer(*global.ptrScannerPcE57()->getImageFileE57(), "sphericalRange", &xBuffer[0], query.scanMeta.numPoints, true, true));
+					sdBuffers.push_back(e57::SourceDestBuffer(*global.ptrScannerPcE57()->getImageFileE57(), "sphericalAzimuth", &yBuffer[0], query.scanMeta.numPoints, true, true));
+					sdBuffers.push_back(e57::SourceDestBuffer(*global.ptrScannerPcE57()->getImageFileE57(), "sphericalElevation", &zBuffer[0], query.scanMeta.numPoints, true, true));
 				}
 				else
 					return 2;
@@ -230,18 +237,18 @@ namespace RecRoom
 				return 3;
 			if (query.scanMeta.hasPointRGB)
 			{
-				sdBuffers.push_back(e57::SourceDestBuffer(*global.scannerPcE57->getImageFileE57(), "colorRed", &rBuffer[0], query.scanMeta.numPoints, true, true));
-				sdBuffers.push_back(e57::SourceDestBuffer(*global.scannerPcE57->getImageFileE57(), "colorGreen", &gBuffer[0], query.scanMeta.numPoints, true, true));
-				sdBuffers.push_back(e57::SourceDestBuffer(*global.scannerPcE57->getImageFileE57(), "colorBlue", &bBuffer[0], query.scanMeta.numPoints, true, true));
+				sdBuffers.push_back(e57::SourceDestBuffer(*global.ptrScannerPcE57()->getImageFileE57(), "colorRed", &rBuffer[0], query.scanMeta.numPoints, true, true));
+				sdBuffers.push_back(e57::SourceDestBuffer(*global.ptrScannerPcE57()->getImageFileE57(), "colorGreen", &gBuffer[0], query.scanMeta.numPoints, true, true));
+				sdBuffers.push_back(e57::SourceDestBuffer(*global.ptrScannerPcE57()->getImageFileE57(), "colorBlue", &bBuffer[0], query.scanMeta.numPoints, true, true));
 			}
 			if (query.scanMeta.hasPointI)
 			{
-				sdBuffers.push_back(e57::SourceDestBuffer(*global.scannerPcE57->getImageFileE57(), "intensity", &iBuffer[0], query.scanMeta.numPoints, true, true));
+				sdBuffers.push_back(e57::SourceDestBuffer(*global.ptrScannerPcE57()->getImageFileE57(), "intensity", &iBuffer[0], query.scanMeta.numPoints, true, true));
 			}
 
 			if ((query.scanMeta.hasPointXYZ || query.scanMeta.hasPointRGB || query.scanMeta.hasPointI))
 			{
-				e57::CompressedVectorNode scanPoints(*global.scannerPcE57->getData3DE57());
+				e57::CompressedVectorNode scanPoints(*global.ptrScannerPcE57()->getData3DE57());
 				e57::CompressedVectorReader reader = scanPoints.reader(sdBuffers);
 				if (reader.read() <= 0)
 				{
@@ -313,23 +320,23 @@ namespace RecRoom
 		return 0;
 	}
 
-	int BStep_ShipData(AsyncGlobal_ShipData& global, AsyncQuery_ShipData& query, PcRAW& data)
+	int BStep_ShipData(const AsyncGlobal_ShipData& global, const AsyncQuery_ShipData& query, PcRAW& data)
 	{
-		if (global.scannerPcE57->getPreprocessor())
+		if (global.ptrScannerPcE57()->getPreprocessor())
 		{
 			PTR(PcRAW)temp(new PcRAW);
 			pcl::copyPointCloud(data, *temp);
 			data.clear();
-			global.scannerPcE57->getPreprocessor()->Process(nullptr, nullptr, temp, nullptr, data);
+			global.ptrScannerPcE57()->getPreprocessor()->Process(nullptr, nullptr, temp, nullptr, data);
 		}
 		return 0;
 	}
 
-	int CStep_ShipData(AsyncGlobal_ShipData& global, AsyncQuery_ShipData& query, PcRAW& data)
+	int CStep_ShipData(AsyncGlobal_ShipData& global, const AsyncQuery_ShipData& query, const PcRAW& data)
 	{
 		PTR(PcRAW)temp(new PcRAW);
 		pcl::copyPointCloud(data, *temp);
-		global.scannerPcE57->getContainerPcRAW()->Merge(temp);
+		global.ptrScannerPcE57()->getContainerPcRAW()->Merge(temp);
 		return 0;
 	}
 

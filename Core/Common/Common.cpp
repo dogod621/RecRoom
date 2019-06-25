@@ -2,6 +2,7 @@
 
 namespace RecRoom
 {
+	std::mutex Common::gLock;
 	double Common::eps = std::numeric_limits<float>::epsilon();
 	Eigen::Vector3d Common::tempVec1 = Eigen::Vector3d(1.0/std::sqrt(3.0), 1.0 / std::sqrt(3.0), 1.0 / std::sqrt(3.0));
 	Eigen::Vector3d Common::tempVec2 = Eigen::Vector3d(1.0 / std::sqrt(2.0), 1.0 / std::sqrt(2.0), 0.0);
