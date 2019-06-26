@@ -189,12 +189,7 @@ namespace RecRoom
 		virtual std::string Info(const AsyncGlobal_ShipPcRAWData& global) const
 		{
 			std::stringstream strQuery;
-			strQuery << scanMeta.serialNumber
-				<< " - Size:" << scanMeta.numPoints
-				<< ", XYZ:" << scanMeta.hasPointXYZ
-				<< ", N:" << scanMeta.hasPointNormal
-				<< ", RGB:" << scanMeta.hasPointRGB
-				<< ", I:" << scanMeta.hasPointI;
+			strQuery << scanMeta;
 			return strQuery.str();
 		}
 	};

@@ -27,7 +27,7 @@ void PrintHelp(int argc, char **argv)
 	std::cout << "Parmameters:==============================================================================================================================================" << std::endl << std::endl;
 	{
 		PRINT_HELP("\t", "e57", "sting \"\"", "Input e57 file.");
-		PRINT_HELP("\t", "containerPcRAW", "sting \"\"", "ContainerPcRAWOC file path.");
+		PRINT_HELP("\t", "pcRAW", "sting \"\"", "ContainerPcRAWOC file path.");
 		PRINT_HELP("\t", "res", "float 4", "Gird unit size of ContainerPcRAWOC in meters.");
 		PRINT_HELP("\t", "min", "XYZ_string \"-100 -100 -100\"", "Min AABB corner of ContainerPcRAWOC in meters. For example: -min \"-100 -100 -100\".");
 		PRINT_HELP("\t", "max", "XYZ_string \"100 100 100\"", "Max AABB corner of ContainerPcRAWOC in meters. For example: -max \"100 100 100\".");
@@ -50,9 +50,9 @@ int main(int argc, char *argv[])
 			pcl::console::parse_argument(argc, argv, "-e57", e57Str);
 			std::cout << "Parmameters -e57: " << e57Str << std::endl;
 
-			std::string containerPcRAWStr = "";
-			pcl::console::parse_argument(argc, argv, "-containerPcRAW", containerPcRAWStr);
-			std::cout << "Parmameters -containerPcRAW: " << containerPcRAWStr << std::endl;
+			std::string pcRAWStr = "";
+			pcl::console::parse_argument(argc, argv, "-pcRAW", pcRAWStr);
+			std::cout << "Parmameters -pcRAW: " << pcRAWStr << std::endl;
 
 			double res = 4;
 			pcl::console::parse_argument(argc, argv, "-res", res);
@@ -81,7 +81,7 @@ int main(int argc, char *argv[])
 			std::cout << "Create ContainerPcRAWOC" << std::endl;
 			PTR(RecRoom::ContainerPcRAWOC) containerPcRAW(
 				new RecRoom::ContainerPcRAWOC(
-					containerPcRAWStr, min, max, res, overlap));
+					pcRAWStr, min, max, res, overlap));
 
 			system("PAUSE");
 

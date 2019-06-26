@@ -5,6 +5,14 @@
 
 namespace RecRoom
 {
+	enum Scanner : Flag
+	{
+		Scaner_UNKNOWN = 0,
+
+		E57 = 1,
+		BLK360 = 2,
+	};
+
 	struct ScanMeta
 	{
 		Eigen::Matrix4d transform;
@@ -39,4 +47,8 @@ namespace RecRoom
 		double weight;
 		double beamFalloff;
 	};
+
+	std::ostream& operator << (std::ostream& os, const ScanMeta& v);
 }
+
+#include "Scan.hpp"

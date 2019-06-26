@@ -77,14 +77,6 @@ namespace RecRoom
 	using Flag = unsigned int;
 
 	//
-	enum Scanner : Flag
-	{
-		Scaner_UNKNOWN = 0,
-
-		E57 = 1,
-		BLK360 = 2,
-	};
-
 	enum LinearSolver : Flag
 	{
 		LinearSolver_UNKNOWN = 0,
