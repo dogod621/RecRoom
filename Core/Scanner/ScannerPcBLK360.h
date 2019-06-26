@@ -36,9 +36,6 @@ namespace RecRoom
 		virtual void LoadMeta();
 		virtual void DumpMeta() const;
 	};
-
-	//
-	std::ostream& operator << (std::ostream& os, const ScannerPcBLK360& v);
 }
 
 #include "ScannerPcBLK360.hpp"

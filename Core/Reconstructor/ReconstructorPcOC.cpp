@@ -217,7 +217,7 @@ namespace RecRoom
 		return 0;
 	}
 
-	void ReconstructorPcOC::RecPointCloud()
+	void ReconstructorPcOC::RecPointCloud(std::size_t asyncSize)
 	{
 		AsyncGlobal_Rec global(this);
 
@@ -225,9 +225,10 @@ namespace RecRoom
 		for (std::size_t i = 0; i < queries.size(); ++i)
 			queries[i].qi = i;
 
-		AsyncProcess<AsyncGlobal_Rec, AsyncQuery_Rec, AsyncData_Rec, 1>(
+		AsyncProcess<AsyncGlobal_Rec, AsyncQuery_Rec, AsyncData_Rec>(
 			global, queries,
-			AStep_RecPointCloud, BStep_RecPointCloud, CStep_RecPointCloud);
+			AStep_RecPointCloud, BStep_RecPointCloud, CStep_RecPointCloud,
+			asyncSize);
 	}
 
 	// Async Reconstruct Attribute
@@ -405,7 +406,7 @@ namespace RecRoom
 		return 0;
 	}
 
-	void ReconstructorPcOC::RecPcAlbedo()
+	void ReconstructorPcOC::RecPcAlbedo(std::size_t asyncSize)
 	{
 		AsyncGlobal_Rec global(this);
 
@@ -413,20 +414,21 @@ namespace RecRoom
 		for (std::size_t i = 0; i < queries.size(); ++i)
 			queries[i].qi = i;
 
-		AsyncProcess<AsyncGlobal_Rec, AsyncQuery_Rec, AsyncData_Rec, 1>(
+		AsyncProcess<AsyncGlobal_Rec, AsyncQuery_Rec, AsyncData_Rec>(
 			global, queries,
-			AStep_RecPcAtt, BStep_RecPcAlbedo, CStep_RecPcAtt);
+			AStep_RecPcAtt, BStep_RecPcAlbedo, CStep_RecPcAtt,
+			asyncSize);
 	}
 
-	void ReconstructorPcOC::RecPcSegment()
+	void ReconstructorPcOC::RecPcSegment(std::size_t asyncSize)
 	{
 	}
 
-	void ReconstructorPcOC::RecSegNDF()
+	void ReconstructorPcOC::RecSegNDF(std::size_t asyncSize)
 	{
 	}
 
-	void ReconstructorPcOC::RecMesh()
+	void ReconstructorPcOC::RecMesh(std::size_t asyncSize)
 	{
 
 	}

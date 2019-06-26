@@ -27,6 +27,7 @@ void PrintHelp(int argc, char **argv)
 
 	std::cout << "Parmameters:==============================================================================================================================================" << std::endl << std::endl;
 	{
+		PRINT_HELP("\t", "async", "uint 1", "Async size.");
 		PRINT_HELP("\t", "e57", "sting \"\"", "Input e57 file.");
 		PRINT_HELP("\t", "pcRAW", "sting \"\"", "ContainerPcRAWOC file path.");
 		PRINT_HELP("\t", "res", "float 4", "Gird unit size of ContainerPcRAWOC in meters.");
@@ -47,6 +48,10 @@ int main(int argc, char *argv[])
 			PrintHelp(argc, argv);
 		else
 		{
+			unsigned int async = 1;
+			pcl::console::parse_argument(argc, argv, "-async", async);
+			std::cout << "Parmameters -async: " << async << std::endl;
+
 			std::string e57Str = "";
 			pcl::console::parse_argument(argc, argv, "-e57", e57Str);
 			std::cout << "Parmameters -e57: " << e57Str << std::endl;
@@ -104,7 +109,7 @@ int main(int argc, char *argv[])
 			{
 				std::cout << "Perform ScannerPcE57::ShipPcRAWData" << std::endl;
 
-				scanner->ShipPcRAWData();
+				scanner->ShipPcRAWData(async);
 
 				system("PAUSE");
 			}

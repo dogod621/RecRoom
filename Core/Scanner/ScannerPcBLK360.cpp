@@ -18,7 +18,7 @@ namespace RecRoom
 		const boost::filesystem::path& lfFilePath,
 		const PTR(ContainerPcRAW)& containerPcRAW,
 		unsigned char colorThresh)
-		: filePath(filePath), ScannerPcE57(e57FilePath, containerPcRAW, Scanner::BLK360), colorThresh(colorThresh)
+		: ScannerPcE57(e57FilePath, containerPcRAW, Scanner::BLK360), filePath(filePath), colorThresh(colorThresh)
 	{
 		bool createNew = false;
 		if (!boost::filesystem::is_directory(filePath))
@@ -59,7 +59,7 @@ namespace RecRoom
 
 		//
 		if (j.find("colorThresh") == j.end())
-			THROW_EXCEPTION("metaRAW is not valid: missing \"colorThresh\"");
+			THROW_EXCEPTION("metaScanner is not valid: missing \"colorThresh\"");
 		colorThresh = j["colorThresh"];
 
 		//
@@ -81,12 +81,5 @@ namespace RecRoom
 		//
 		file << j;
 		file.close();
-	}
-
-	std::ostream& operator << (std::ostream& os, const ScannerPcBLK360& v)
-	{
-		if (v.getImageFileE57())
-			RecRoom::OStreamE57NodeFormat(os, 0, v.getImageFileE57()->root());
-		return os;
 	}
 }

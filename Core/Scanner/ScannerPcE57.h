@@ -22,7 +22,8 @@ namespace RecRoom
 		}
 
 	public:
-		virtual void ShipPcRAWData() const;
+		virtual void ShipPcRAWData() const { ShipPcRAWData(1); }
+		virtual void ShipPcRAWData(std::size_t asyncSize) const;
 
 	public:
 		PTR(e57::ImageFile) getImageFileE57() const { return imageFileE57; }
@@ -33,7 +34,7 @@ namespace RecRoom
 		PTR(e57::ImageFile) imageFileE57;
 		CONST_PTR(e57::VectorNode) data3DE57;
 		CONST_PTR(e57::VectorNode) images2DE57;
-
+		
 		void LoadScanMeta();
 	};
 

@@ -352,23 +352,41 @@ namespace RecRoom
 	{
 		if (global.ptrScannerPcE57()->getPreprocessor())
 		{
+			PRINT_INFO("Preprocessing - Start");
+
 			PTR(PcRAW)temp(new PcRAW);
 			pcl::copyPointCloud(data, *temp);
 			data.clear();
 			global.ptrScannerPcE57()->getPreprocessor()->Process(nullptr, nullptr, temp, nullptr, data);
+
+			std::stringstream ss;
+			ss << "Preprocessing - End - orgPcSize: " << temp->size() << ", pcSize: " << data.size();
+			PRINT_INFO(ss.str());
 		}
 		return 0;
 	}
 
 	int CStep_ShipPcRAWData(AsyncGlobal_ShipPcRAWData& global, const AsyncQuery_ShipPcRAWData& query, const PcRAW& data)
 	{
+		PRINT_INFO("Copy - Start");
+
 		PTR(PcRAW)temp(new PcRAW);
 		pcl::copyPointCloud(data, *temp);
+
+		PRINT_INFO("Copy - End");
+
+		PRINT_INFO("Merge to container - Start");
+
 		global.ptrScannerPcE57()->getContainerPcRAW()->Merge(temp);
+
+		std::stringstream ss;
+		ss << "Merge to container - End - size: " << global.ptrScannerPcE57()->getContainerPcRAW()->Size();
+		PRINT_INFO(ss.str());
+
 		return 0;
 	}
 
-	void ScannerPcE57::ShipPcRAWData() const
+	void ScannerPcE57::ShipPcRAWData(std::size_t asyncSize) const
 	{
 		if (imageFileE57)
 		{
@@ -380,9 +398,10 @@ namespace RecRoom
 				for (std::size_t i = 0; i < scanMeta.size(); ++i)
 					queries[i].scanMeta = scanMeta[i];
 
-				AsyncProcess<AsyncGlobal_ShipPcRAWData, AsyncQuery_ShipPcRAWData, PcRAW, 1>(
+				AsyncProcess<AsyncGlobal_ShipPcRAWData, AsyncQuery_ShipPcRAWData, PcRAW>(
 					global, queries,
-					AStep_ShipPcRAWData, BStep_ShipPcRAWData, CStep_ShipPcRAWData);
+					AStep_ShipPcRAWData, BStep_ShipPcRAWData, CStep_ShipPcRAWData,
+					asyncSize);
 			}
 		}
 	}
