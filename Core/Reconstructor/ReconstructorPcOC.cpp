@@ -1,7 +1,7 @@
 #include <algorithm>
 
-#include <pcl/filters/crop_box.h>
 #include <pcl/filters/extract_indices.h>
+#include <pcl/filters/crop_box.h>
 
 #include "Common/AsyncProcess.h"
 
@@ -187,20 +187,6 @@ namespace RecRoom
 
 	int BStep_RecPointCloud(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
 	{
-		//
-		PTR(PcMED) pcRec (new PcMED);
-		{
-			PRINT_INFO("Extract - Start");
-
-			pcl::ExtractIndices<PointMED> extract;
-			extract.setInputCloud(data.pcRec);
-			extract.setIndices(data.pcRecIdx);
-			extract.setNegative(false);
-			extract.filter(*pcRec);
-
-			PRINT_INFO("Extract - End - Size: " + std::to_string(pcRec->size()));
-		}
-
 #ifdef POINT_MED_WITH_NORMAL
 		// 
 		if (global.ptrReconstructorPcOC()->getNormalEstimator())
@@ -210,8 +196,7 @@ namespace RecRoom
 			global.ptrReconstructorPcOC()->getNormalEstimator()->Process(
 				data.pcRecAcc, data.pcRec,
 				//data.pcRawAcc, data.pcRaw,
-				data.pcRec, data.pcRecIdx,
-				*pcRec);
+				data.pcRec, data.pcRecIdx);
 
 			PRINT_INFO("Estimat Normal - End");
 		}
@@ -220,20 +205,27 @@ namespace RecRoom
 			PRINT_WARNING("normalEstimator is not set, ignore it");
 		}
 #endif
-
-		//
-		data.pcRec = pcRec;
-		data.pcRecIdx->clear();
-		data.pcRecAcc = PTR(KdTreeMED)(new KdTreeMED);
-
 		return 0;
 	}
 
 	int CStep_RecPointCloud(AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, const AsyncData_Rec& data)
 	{
-		PRINT_INFO("Merge - Start - Size: " + std::to_string(data.pcRec->size()));
+		PcMED temp;
+		{
+			PRINT_INFO("Extract - Start");
 
-		(*global.ptrReconstructorPcOC()->getPcMED()) += (*data.pcRec);
+			pcl::ExtractIndices<PointMED> extract;
+			extract.setInputCloud(data.pcRec);
+			extract.setIndices(data.pcRecIdx);
+			extract.setNegative(false);
+			extract.filter(temp);
+
+			PRINT_INFO("Extract - End - Size: " + std::to_string(temp.size()));
+		}
+
+		PRINT_INFO("Merge - Start");
+
+		(*global.ptrReconstructorPcOC()->getPcMED()) += temp;
 
 		PRINT_INFO("Merge - End - pcSize: " + std::to_string(global.ptrReconstructorPcOC()->getPcMED()->size()));
 
@@ -417,8 +409,7 @@ namespace RecRoom
 
 			global.ptrReconstructorPcOC()->getAlbedoEstimator()->Process(
 				data.pcRawAcc, data.pcRaw,
-				data.pcRec, data.pcRecIdx,
-				*data.pcRec);
+				data.pcRec, data.pcRecIdx);
 
 			PRINT_INFO("Estimat Albedo - End");
 		}

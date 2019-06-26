@@ -16,6 +16,12 @@ namespace RecRoom
 			const PTR(AccMED)& searchMethod,
 			const PTR(PcMED)& searchSurface,
 			const PTR(PcMED)& inV,
+			const PTR(PcIndex)& inIdx) const;
+
+		virtual void Process(
+			const PTR(AccMED)& searchMethod,
+			const PTR(PcMED)& searchSurface,
+			const PTR(PcMED)& inV,
 			const PTR(PcIndex)& inIdx,
 			PcMED& outV) const = 0;
 

@@ -252,6 +252,13 @@ int main(int argc, char *argv[])
 
 				reconstructorPC->DoRecPointCloud();
 			}
+
+			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::PC_ALBEDO) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
+			{
+				std::cout << "reconstructorPC->DoRecPcAlbedo()" << std::endl;
+
+				reconstructorPC->DoRecPcAlbedo();
+			}
 		}
 		catch (const RecRoom::exception& ex)
 		{
