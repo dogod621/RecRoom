@@ -14,5 +14,7 @@ namespace RecRoom
 		if (v.hasPointI)
 			os << "-I";
 		os << "-" << Convert<std::string, CoordSys>(v.rawDataCoordSys);
+
+		return os;
 	}
 }
