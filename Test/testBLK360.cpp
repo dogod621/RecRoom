@@ -93,6 +93,11 @@ int main(int argc, char *argv[])
 		std::cout << "Main Parmameters -wd: " << wdStr << std::endl;
 		boost::filesystem::path wd(wdStr);
 
+		if (!boost::filesystem::exists(wd))
+		{
+			boost::filesystem::create_directory(wd);
+		}
+
 		std::string e57File = "";
 		pcl::console::parse_argument(argc, argv, "-e57File", e57File);
 		std::cout << "Main Parmameters -e57File: " << e57File << std::endl;

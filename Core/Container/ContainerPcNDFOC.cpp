@@ -16,22 +16,22 @@ namespace RecRoom
 				16,
 				Eigen::Vector3d(0, 0, 0),
 				Eigen::Vector3d(
-				(double)std::numeric_limits<unsigned short>::max(),
-					(double)std::numeric_limits<unsigned short>::max(),
-					(double)std::numeric_limits<unsigned short>::max()),
+				(double)std::numeric_limits<unsigned short>::max()+1,
+					(double)std::numeric_limits<unsigned short>::max()+1,
+					(double)std::numeric_limits<unsigned short>::max()+1),
 				filePath / boost::filesystem::path("pcNDF") / boost::filesystem::path("root.oct_idx"), "ECEF"));
 
 			if (oct->getTreeDepth() != 16)
-				THROW_EXCEPTION("treeDepth is not 16")
-				if (std::abs(oct->getVoxelSideLength() - 1.0) > Common::eps)
-					THROW_EXCEPTION("voxelSideLength is not 1")
+				THROW_EXCEPTION("treeDepth is not 16");
+			if (std::abs(oct->getVoxelSideLength() - 1.0) > Common::eps)
+				THROW_EXCEPTION("voxelSideLength is not 1: " + std::to_string(oct->getVoxelSideLength()));
 
 			Dump();
 		}
 
 		//
-		if(!oct)
-			THROW_EXCEPTION("oct is not created?")
+		if (!oct)
+			THROW_EXCEPTION("oct is not created?");
 	}
 
 	void ContainerPcNDFOC::Merge(const PTR(PcNDF)& v)
@@ -50,7 +50,7 @@ namespace RecRoom
 				(*it)->getBoundingBox(minAABB, maxAABB);
 				Eigen::Vector3d center = (maxAABB + minAABB) * 0.5;
 				int segID = std::floor(center[0]);
-				if ((segID < 0) || (segID >= std::numeric_limits<unsigned short>::max()))
+				if ((segID < 0) || (segID > std::numeric_limits<unsigned short>::max()))
 					THROW_EXCEPTION("segID is not valid");
 				if (segID > maxSegID)
 					maxSegID = segID;
@@ -65,7 +65,7 @@ namespace RecRoom
 
 	ContainerPcNDFOC::Data ContainerPcNDFOC::GetData(std::size_t i) const
 	{
-		if (i >= std::numeric_limits<unsigned short>::max())
+		if (i > std::numeric_limits<unsigned short>::max())
 			THROW_EXCEPTION("i is too large, max: " + std::to_string(std::numeric_limits<unsigned short>::max()));
 
 

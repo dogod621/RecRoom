@@ -116,13 +116,15 @@ namespace RecRoom
 	void ReconstructorPc::Load()
 	{ 
 		DumpAble::Load(); 
-		pcl::io::loadPCDFile((filePath / boost::filesystem::path("pcMED.pcd")).string(), *pcMED);
+		if (boost::filesystem::exists(filePath / boost::filesystem::path("pcMED.pcd")))
+			pcl::io::loadPCDFile((filePath / boost::filesystem::path("pcMED.pcd")).string(), *pcMED);
 	};
 
 	void ReconstructorPc::Dump() const
 	{ 
 		DumpAble::Dump(); 
-		pcl::io::savePCDFile((filePath / boost::filesystem::path("pcMED.pcd")).string(), *pcMED, true);
+		if (pcMED->size() > 0)
+			pcl::io::savePCDFile((filePath / boost::filesystem::path("pcMED.pcd")).string(), *pcMED, true);
 	};
 
 	void ReconstructorPc::Load(const nlohmann::json& j)
@@ -140,8 +142,6 @@ namespace RecRoom
 	bool ReconstructorPc::CheckExist() const
 	{
 		if (!DumpAble::CheckExist())
-			return false;
-		if (!boost::filesystem::exists(filePath / boost::filesystem::path("pcMED.pcd")))
 			return false;
 		return true;
 	}
