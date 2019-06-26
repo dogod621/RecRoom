@@ -68,9 +68,14 @@ namespace RecRoom
 		ContainerPcRAW::Data data (meta);
 
 		//
+		PTR(PcRAW) temp(new PcRAW);
 		pcl::PCLPointCloud2::Ptr blob(new pcl::PCLPointCloud2);
 		oct->queryBoundingBox(meta.extMinAABB, meta.extMaxAABB, meta.depth, blob);
-		pcl::fromPCLPointCloud2(*blob, *data.pcMED);
+		pcl::fromPCLPointCloud2(*blob, *temp);
+
+		data.pcMED->resize(temp->size());
+		for (std::size_t px = 0; px < temp->size(); ++px)
+			(*data.pcMED)[px] = (*temp)[px];
 
 		//
 		pcl::CropBox<PointMED> cb;

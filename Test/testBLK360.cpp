@@ -190,7 +190,7 @@ int main(int argc, char *argv[])
 			PTR(RecRoom::ReconstructorPc)
 				reconstructorPC(
 					new RecRoom::ReconstructorPcOC(
-						wd / boost::filesystem::path("ContainerPcNDF"),
+						wd / boost::filesystem::path("ReconstructorPc"),
 						scannerPc, containerPcNDF));
 
 			std::cout << "Create DownSampler" << std::endl;
