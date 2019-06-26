@@ -11,11 +11,13 @@ namespace RecRoom
 #ifdef POINT_MED_WITH_NORMAL
 #ifdef POINT_MED_WITH_LABEL
 #ifdef POINT_MED_WITH_INTENSITY
-		Eigen::Vector3d inNormal (inPoint.normal_x, inPoint.normal_y, inPoint.normal_z);
+		Eigen::Vector3d inNormal(inPoint.normal_x, inPoint.normal_y, inPoint.normal_z);
 
 		if (!Common::IsUnitVector(inNormal))
 		{
-			PRINT_WARNING("inNormal is not valid!!?");
+			std::stringstream ss;
+			ss << "inNormal is not valid: " << inNormal;
+			PRINT_WARNING(ss.str());
 			return false;
 		}
 
@@ -26,7 +28,9 @@ namespace RecRoom
 			double d = std::sqrt((double)distance[idx]);
 			if (d > radius)
 			{
-				PRINT_WARNING("distance is larger then radius, ignore");
+				std::stringstream ss;
+				ss << "distance is larger then radius, ignore: " << d;
+				PRINT_WARNING(ss.str());
 			}
 			else
 			{
@@ -38,7 +42,9 @@ namespace RecRoom
 				scannLaser.hitNormal = Eigen::Vector3d(cloud[px].normal_x, cloud[px].normal_y, cloud[px].normal_z);
 				if (!Common::IsUnitVector(scannLaser.hitNormal))
 				{
-					PRINT_WARNING("scannLaser.hitNormal is not valid, ignore");
+					std::stringstream ss;
+					ss << "scannLaser.hitNormal is not valid, ignore: " << scannLaser.hitNormal;
+					PRINT_WARNING(ss.str());
 				}
 				else
 				{
@@ -75,8 +81,12 @@ namespace RecRoom
 						break;
 
 						default:
-							PRINT_WARNING("Scan data Scanner type is not support, ignore");
-							break;
+						{
+							std::stringstream ss;
+							ss << "Scan data Scanner type is not support, ignore: " << Convert<std::string, Scanner>(scanMeta.scanner);
+							PRINT_WARNING(ss.str());
+						}
+						break;
 						}
 					}
 				}
@@ -194,7 +204,7 @@ namespace RecRoom
 				PointMED& outPoint = output.points[idx];
 
 				std::vector<ScannLaser> scannLaserSet;
-				if (CollectScannLaserInfo(*surface_, 
+				if (CollectScannLaserInfo(*surface_,
 					this->searchForNeighbors((*indices_)[idx], search_parameter_, nn_indices, nn_dists),
 					nn_indices, nn_dists,
 					inPoint, scannLaserSet))
@@ -223,7 +233,7 @@ namespace RecRoom
 				if (pcl::isFinite(inPoint))
 				{
 					std::vector<ScannLaser> scannLaserSet;
-					if (CollectScannLaserInfo(*surface_, 
+					if (CollectScannLaserInfo(*surface_,
 						this->searchForNeighbors((*indices_)[idx], search_parameter_, nn_indices, nn_dists),
 						nn_indices, nn_dists,
 						inPoint, scannLaserSet))
@@ -289,7 +299,7 @@ namespace RecRoom
 				PointMED& outPoint = output.points[idx];
 
 				std::vector<ScannLaser> scannLaserSet;
-				if (CollectScannLaserInfo(*surface_, 
+				if (CollectScannLaserInfo(*surface_,
 					this->searchForNeighbors((*indices_)[idx], search_parameter_, nn_indices, nn_dists),
 					nn_indices, nn_dists,
 					inPoint, scannLaserSet))
@@ -321,7 +331,7 @@ namespace RecRoom
 				if (pcl::isFinite(inPoint))
 				{
 					std::vector<ScannLaser> scannLaserSet;
-					if (CollectScannLaserInfo(*surface_, 
+					if (CollectScannLaserInfo(*surface_,
 						this->searchForNeighbors((*indices_)[idx], search_parameter_, nn_indices, nn_dists),
 						nn_indices, nn_dists,
 						inPoint, scannLaserSet))

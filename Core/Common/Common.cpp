@@ -61,7 +61,7 @@ namespace RecRoom
 
 	bool Common::IsUnitVector(const Eigen::Vector3d& v)
 	{
-		return std::abs(v.norm() - 1.0f) < Common::eps;
+		return std::abs(v.norm() - 1.0f) < 0.001;
 	}
 
 	DumpAble::DumpAble(const std::string& className, const boost::filesystem::path& filePath)
