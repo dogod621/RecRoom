@@ -329,42 +329,7 @@ namespace RecRoom
 		{
 			PRINT_INFO("Upsampling Attribute - Start");
 
-			PcIndex upIdx;
-			global.ptrReconstructorPcOC()->getUpSampler()->Process(data.pcRecAcc, data.pcRec, data.pcRaw, upIdx);
-
-			for (std::size_t px = 0; px < upIdx.size(); ++px)
-			{
-				PointMED& tarP = (*data.pcRaw)[px];
-
-				if (upIdx[px] > 0)
-				{
-					PointMED& srcP = (*data.pcRec)[upIdx[px]];
-
-#ifdef POINT_MED_WITH_NORMAL
-					tarP.normal_x = srcP.normal_x;
-					tarP.normal_y = srcP.normal_y;
-					tarP.normal_z = srcP.normal_z;
-					tarP.curvature = srcP.curvature;
-#endif
-
-#ifdef POINT_MED_WITH_SEGLABEL
-					tarP.segLabel = srcP.segLabel;
-#endif
-				}
-				else
-				{
-#ifdef POINT_MED_WITH_NORMAL
-					tarP.normal_x = 0.0f;
-					tarP.normal_y = 0.0f;
-					tarP.normal_z = 0.0f;
-					tarP.curvature = 0.0f;
-#endif
-
-#ifdef POINT_MED_WITH_SEGLABEL
-					tarP.hasSegLabel = -1;
-#endif
-				}
-			}
+			global.ptrReconstructorPcOC()->getUpSampler()->Process(data.pcRecAcc, data.pcRec, data.pcRaw);
 
 			PRINT_INFO("Upsampling Attribute - End");
 		}

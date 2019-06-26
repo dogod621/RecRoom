@@ -193,13 +193,13 @@ namespace RecRoom
 				const PointMED& inPoint = (*input_)[(*indices_)[idx]];
 				PointMED& outPoint = output.points[idx];
 
-				std::vector<ScannLaser> scannLaser;
+				std::vector<ScannLaser> scannLaserSet;
 				if (CollectScannLaserInfo(*surface_, 
 					this->searchForNeighbors((*indices_)[idx], search_parameter_, nn_indices, nn_dists),
 					nn_indices, nn_dists,
-					inPoint, scannLaser))
+					inPoint, scannLaserSet))
 				{
-					if (!ComputePointAlbedo(scannLaser, inPoint, outPoint))
+					if (!ComputePointAlbedo(scannLaserSet, inPoint, outPoint))
 					{
 						PRINT_WARNING("ComputePointAlbedo failed");
 						outPoint.intensity = std::numeric_limits<float>::quiet_NaN();
@@ -222,13 +222,13 @@ namespace RecRoom
 				PointMED& outPoint = output.points[idx];
 				if (pcl::isFinite(inPoint))
 				{
-					std::vector<ScannLaser> scannLaser;
+					std::vector<ScannLaser> scannLaserSet;
 					if (CollectScannLaserInfo(*surface_, 
 						this->searchForNeighbors((*indices_)[idx], search_parameter_, nn_indices, nn_dists),
 						nn_indices, nn_dists,
-						inPoint, scannLaser))
+						inPoint, scannLaserSet))
 					{
-						if (!ComputePointAlbedo(scannLaser, inPoint, outPoint))
+						if (!ComputePointAlbedo(scannLaserSet, inPoint, outPoint))
 						{
 							PRINT_WARNING("ComputePointAlbedo failed");
 							outPoint.intensity = std::numeric_limits<float>::quiet_NaN();
@@ -288,13 +288,13 @@ namespace RecRoom
 				const PointMED& inPoint = (*input_)[(*indices_)[idx]];
 				PointMED& outPoint = output.points[idx];
 
-				std::vector<ScannLaser> scannLaser;
+				std::vector<ScannLaser> scannLaserSet;
 				if (CollectScannLaserInfo(*surface_, 
 					this->searchForNeighbors((*indices_)[idx], search_parameter_, nn_indices, nn_dists),
 					nn_indices, nn_dists,
-					inPoint, scannLaser))
+					inPoint, scannLaserSet))
 				{
-					if (!ComputePointAlbedo(scannLaser, inPoint, outPoint))
+					if (!ComputePointAlbedo(scannLaserSet, inPoint, outPoint))
 					{
 						PRINT_WARNING("ComputePointAlbedo failed");
 						outPoint.intensity = std::numeric_limits<float>::quiet_NaN();
@@ -320,13 +320,13 @@ namespace RecRoom
 				PointMED& outPoint = output.points[idx];
 				if (pcl::isFinite(inPoint))
 				{
-					std::vector<ScannLaser> scannLaser;
+					std::vector<ScannLaser> scannLaserSet;
 					if (CollectScannLaserInfo(*surface_, 
 						this->searchForNeighbors((*indices_)[idx], search_parameter_, nn_indices, nn_dists),
 						nn_indices, nn_dists,
-						inPoint, scannLaser))
+						inPoint, scannLaserSet))
 					{
-						if (!ComputePointAlbedo(scannLaser, inPoint, outPoint))
+						if (!ComputePointAlbedo(scannLaserSet, inPoint, outPoint))
 						{
 							PRINT_WARNING("ComputePointAlbedo failed");
 							outPoint.intensity = std::numeric_limits<float>::quiet_NaN();
