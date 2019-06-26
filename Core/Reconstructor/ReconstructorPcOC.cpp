@@ -174,7 +174,7 @@ namespace RecRoom
 
 			//
 			std::stringstream ss;
-			ss << "Outlier Removal - End - pcSize: " << data.pcRec->size() << ", idxSize: " << data.pcRecIdx->size();
+			ss << "Outlier Removal - End - pcSize: " << indices.size() << ", idxSize: " << data.pcRecIdx->size();
 			PRINT_INFO(ss.str());
 		}
 		else
@@ -187,6 +187,20 @@ namespace RecRoom
 
 	int BStep_RecPointCloud(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
 	{
+		//
+		PTR(PcMED) pcRec (new PcMED);
+		{
+			PRINT_INFO("Extract - Start");
+
+			pcl::ExtractIndices<PointMED> extract;
+			extract.setInputCloud(data.pcRec);
+			extract.setIndices(data.pcRecIdx);
+			extract.setNegative(false);
+			extract.filter(*pcRec);
+
+			PRINT_INFO("Extract - End");
+		}
+
 #ifdef POINT_MED_WITH_NORMAL
 		// 
 		if (global.ptrReconstructorPcOC()->getNormalEstimator())
@@ -197,7 +211,7 @@ namespace RecRoom
 				//data.pcRecAcc, data.pcRec,
 				data.pcRawAcc, data.pcRaw,
 				data.pcRec, data.pcRecIdx,
-				*data.pcRec);
+				*pcRec);
 
 			PRINT_INFO("Estimat Normal - End");
 		}
@@ -206,6 +220,12 @@ namespace RecRoom
 			PRINT_WARNING("normalEstimator is not set, ignore it");
 		}
 #endif
+
+		//
+		data.pcRec = pcRec;
+		data.pcRecIdx->clear();
+		data.pcRecAcc = PTR(KdTreeMED)(new KdTreeMED);
+
 		return 0;
 	}
 
@@ -213,13 +233,7 @@ namespace RecRoom
 	{
 		PRINT_INFO("Merge - Start");
 
-		pcl::ExtractIndices<PointMED> extract;
-		PcMED temp;
-		extract.setInputCloud(data.pcRec);
-		extract.setIndices(data.pcRecIdx);
-		extract.setNegative(false);
-		extract.filter(temp);
-		(*global.ptrReconstructorPcOC()->getPcMED()) += temp;
+		(*global.ptrReconstructorPcOC()->getPcMED()) += (*data.pcRec);
 
 		PRINT_INFO("Merge - End - pcSize: " + std::to_string(global.ptrReconstructorPcOC()->getPcMED()->size()));
 
@@ -286,16 +300,7 @@ namespace RecRoom
 			cb.setMin(Eigen::Vector4f(cData.extMinAABB.x(), cData.extMinAABB.y(), cData.extMinAABB.z(), 1.0));
 			cb.setMax(Eigen::Vector4f(cData.extMaxAABB.x(), cData.extMaxAABB.y(), cData.extMaxAABB.z(), 1.0));
 			cb.setInputCloud(global.ptrReconstructorPcOC()->getPcMED());
-			cb.filter(*data.pcRecIdx);
-
-			pcl::ExtractIndices<PointMED> extract;
-			extract.setInputCloud(global.ptrReconstructorPcOC()->getPcMED());
-			extract.setIndices(data.pcRecIdx);
-			extract.setNegative(false);
-			extract.filter(*data.pcRec);
-
-			//
-			data.pcRecIdx->clear();
+			cb.filter(*data.pcRec);
 
 			std::stringstream ss;
 			ss << "Extract pointCloud from pcMED - End - inSize: " << global.ptrReconstructorPcOC()->getPcMED()->size() << ", outSize:" << data.pcRec->size();
