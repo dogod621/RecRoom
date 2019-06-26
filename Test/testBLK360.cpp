@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
 			std::cout << "Not done, skip" << std::endl; // Not done**
 
 			std::cout << "Create ScannerPc" << std::endl;
-			PTR(RecRoom::ScannerPc)
+			PTR(RecRoom::ScannerPcBLK360)
 				scannerPc(
 					new RecRoom::ScannerPcBLK360(
 						wd / boost::filesystem::path("ScannerPc"),
@@ -232,6 +232,10 @@ int main(int argc, char *argv[])
 			std::cout << "Create Mesher" << std::endl;
 			std::cout << "Not done, skip" << std::endl; // Not done**
 			
+			//
+			std::cout << "Print scannerPc" << std::endl;
+			std::cout << (*scannerPc) << std::endl;
+
 			//
 			if (containerPcRAW->Size() == 0)
 			{

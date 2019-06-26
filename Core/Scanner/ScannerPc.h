@@ -23,8 +23,6 @@ namespace RecRoom
 	public:
 		virtual void ShipPcRAWData() const { THROW_EXCEPTION("Interface is not implemented") };
 		virtual void ShipPcLFData() const { THROW_EXCEPTION("Interface is not implemented") };
-		virtual void ShipPcRAWData(std::size_t asyncSize) const {THROW_EXCEPTION("Interface is not implemented")};
-		virtual void ShipPcLFData(std::size_t asyncSize) const { THROW_EXCEPTION("Interface is not implemented") };
 
 		virtual bool Valid(const PointRAW& pointRAW) const
 		{

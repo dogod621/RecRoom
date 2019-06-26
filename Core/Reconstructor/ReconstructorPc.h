@@ -47,12 +47,6 @@ namespace RecRoom
 		virtual void RecSegNDF() { THROW_EXCEPTION("Interface is not implemented") };
 		virtual void RecMesh() { THROW_EXCEPTION("Interface is not implemented") };
 
-		virtual void RecPointCloud(std::size_t asyncSize) { THROW_EXCEPTION("Interface is not implemented") };
-		virtual void RecPcAlbedo(std::size_t asyncSize) { THROW_EXCEPTION("Interface is not implemented") };
-		virtual void RecPcSegment(std::size_t asyncSize) { THROW_EXCEPTION("Interface is not implemented") };
-		virtual void RecSegNDF(std::size_t asyncSize) { THROW_EXCEPTION("Interface is not implemented") };
-		virtual void RecMesh(std::size_t asyncSize) { THROW_EXCEPTION("Interface is not implemented") };
-
 	public:
 		ReconstructStatus getStatus() const { return status; }
 		PTR(PcMED) getPcMED() const { return pcMED; }

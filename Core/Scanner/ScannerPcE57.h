@@ -22,8 +22,10 @@ namespace RecRoom
 		}
 
 	public:
-		virtual void ShipPcRAWData() const { ShipPcRAWData(1); }
+		virtual void ShipPcRAWData() const { ShipPcRAWData(1); };
+		virtual void ShipPcLFData() const { ShipPcLFData(1); };
 		virtual void ShipPcRAWData(std::size_t asyncSize) const;
+		virtual void ShipPcLFData(std::size_t asyncSize) const { THROW_EXCEPTION("Interface is not implemented") };
 
 	public:
 		PTR(e57::ImageFile) getImageFileE57() const { return imageFileE57; }

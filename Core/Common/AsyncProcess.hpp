@@ -103,6 +103,11 @@ namespace RecRoom
 	AsyncProcess<GlobalT, QueryT, DataT>::AsyncProcess(GlobalT& globalData, std::vector<QueryT>& queries, AStep a, BStep b, CStep c, std::size_t size_)
 		: doubleBuffer(2), a_bufferPointer(false), size(size_)
 	{
+		if (size < 1)
+			THROW_EXCEPTION("AsyncProcess size must at least 1");
+
+		PRINT_INFO("AsyncProcess - Start - size: " + std::to_string(size));
+
 		doubleBuffer[a_bufferPointer].resize(size);
 		doubleBuffer[!a_bufferPointer].resize(size);
 

@@ -401,7 +401,11 @@ namespace RecRoom
 					AStep_ShipPcRAWData, BStep_ShipPcRAWData, CStep_ShipPcRAWData,
 					asyncSize);
 			}
+			else
+				PRINT_WARNING("data3DE57 is not set, ignore");
 		}
+		else
+			PRINT_WARNING("data3DE57 is not set, ignore");
 	}
 
 	//
