@@ -42,9 +42,9 @@ namespace RecRoom
 		struct BufferT
 		{
 			PTR(DataT) data;
-			std::future<int>* a_future;
-			std::future<int>* b_future;
-			BufferT() : data(PTR(DataT)(new DataT)), a_future(nullptr), b_future(nullptr) {}
+			std::future<int> a_future;
+			std::future<int> b_future;
+			BufferT() : data(PTR(DataT)(new DataT)), a_future(), b_future() {}
 		};
 
 	public:

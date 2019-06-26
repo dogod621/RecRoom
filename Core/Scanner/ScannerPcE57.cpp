@@ -368,14 +368,10 @@ namespace RecRoom
 
 	int CStep_ShipPcRAWData(AsyncGlobal_ShipPcRAWData& global, const AsyncQuery_ShipPcRAWData& query, const PcRAW& data)
 	{
-		PRINT_INFO("Copy - Start");
-
+		PRINT_INFO("Merge to container - Start");
+		
 		PTR(PcRAW)temp(new PcRAW);
 		pcl::copyPointCloud(data, *temp);
-
-		PRINT_INFO("Copy - End");
-
-		PRINT_INFO("Merge to container - Start");
 
 		global.ptrScannerPcE57()->getContainerPcRAW()->Merge(temp);
 
