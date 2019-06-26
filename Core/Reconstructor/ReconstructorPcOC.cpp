@@ -198,7 +198,7 @@ namespace RecRoom
 			extract.setNegative(false);
 			extract.filter(*pcRec);
 
-			PRINT_INFO("Extract - End");
+			PRINT_INFO("Extract - End - Size: " + std::to_string(pcRec->size()));
 		}
 
 #ifdef POINT_MED_WITH_NORMAL
@@ -208,8 +208,8 @@ namespace RecRoom
 			PRINT_INFO("Estimat Normal - Start");
 
 			global.ptrReconstructorPcOC()->getNormalEstimator()->Process(
-				//data.pcRecAcc, data.pcRec,
-				data.pcRawAcc, data.pcRaw,
+				data.pcRecAcc, data.pcRec,
+				//data.pcRawAcc, data.pcRaw,
 				data.pcRec, data.pcRecIdx,
 				*pcRec);
 
@@ -231,7 +231,7 @@ namespace RecRoom
 
 	int CStep_RecPointCloud(AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, const AsyncData_Rec& data)
 	{
-		PRINT_INFO("Merge - Start");
+		PRINT_INFO("Merge - Start - Size: " + std::to_string(data.pcRec->size()));
 
 		(*global.ptrReconstructorPcOC()->getPcMED()) += (*data.pcRec);
 
@@ -240,7 +240,7 @@ namespace RecRoom
 		return 0;
 	}
 
-	void ReconstructorPcOC::RecPointCloud(std::size_t asyncSize)
+	void ReconstructorPcOC::RecPointCloud()
 	{
 		AsyncGlobal_Rec global(this);
 
@@ -432,7 +432,7 @@ namespace RecRoom
 		return 0;
 	}
 
-	void ReconstructorPcOC::RecPcAlbedo(std::size_t asyncSize)
+	void ReconstructorPcOC::RecPcAlbedo()
 	{
 		AsyncGlobal_Rec global(this);
 
@@ -446,15 +446,15 @@ namespace RecRoom
 			asyncSize);
 	}
 
-	void ReconstructorPcOC::RecPcSegment(std::size_t asyncSize)
+	void ReconstructorPcOC::RecPcSegment()
 	{
 	}
 
-	void ReconstructorPcOC::RecSegNDF(std::size_t asyncSize)
+	void ReconstructorPcOC::RecSegNDF()
 	{
 	}
 
-	void ReconstructorPcOC::RecMesh(std::size_t asyncSize)
+	void ReconstructorPcOC::RecMesh()
 	{
 
 	}

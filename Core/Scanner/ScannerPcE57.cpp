@@ -109,7 +109,7 @@ namespace RecRoom
 		const boost::filesystem::path& filePath,
 		const PTR(ContainerPcRAW)& containerPcRAW,
 		Scanner scanner)
-		: ScannerPc(containerPcRAW, scanner), imageFileE57(nullptr), data3DE57(nullptr), images2DE57(nullptr)
+		: ScannerPc(containerPcRAW, scanner), AsyncAble(1), imageFileE57(nullptr), data3DE57(nullptr), images2DE57(nullptr)
 	{
 		if (!IsFileE57(filePath, true))
 			THROW_EXCEPTION("filePath is not valid.");
@@ -384,7 +384,7 @@ namespace RecRoom
 		return 0;
 	}
 
-	void ScannerPcE57::ShipPcRAWData(std::size_t asyncSize) const
+	void ScannerPcE57::ShipPcRAWData() const
 	{
 		if (imageFileE57)
 		{

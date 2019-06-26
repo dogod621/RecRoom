@@ -20,13 +20,13 @@ namespace RecRoom
 		unsigned char colorThresh)
 		: DumpAble("ScannerPcBLK360", filePath_), ScannerPcE57(e57FilePath, containerPcRAW, Scanner::BLK360), colorThresh(colorThresh)
 	{
-		if (CheckExist())
+		if (this->CheckExist())
 		{
-			Load();
+			this->Load();
 		}
 		else
 		{
-			Dump();
+			this->Dump();
 		}
 	}
 

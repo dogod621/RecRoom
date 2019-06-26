@@ -84,7 +84,7 @@ namespace RecRoom
 		nlohmann::json j;
 		file >> j;
 
-		Load(j);
+		this->Load(j);
 	}
 
 	void DumpAble::Dump() const
@@ -96,7 +96,7 @@ namespace RecRoom
 
 		nlohmann::json j;
 
-		Dump(j);
+		this->Dump(j);
 
 		file << j;
 		file.close();

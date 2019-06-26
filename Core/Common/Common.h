@@ -116,6 +116,20 @@ namespace RecRoom
 
 		virtual bool CheckExist() const;
 	};
+
+	class AsyncAble
+	{
+	public:
+		AsyncAble(std::size_t asyncSize): asyncSize(asyncSize) {}
+
+	public:
+		std::size_t getAsyncSize() const { return asyncSize; }
+
+		void setAsyncSize(std::size_t asyncSize_) { asyncSize = asyncSize_; }
+
+	protected:
+		std::size_t asyncSize;
+	};
 }
 
 #include "Common.hpp"

@@ -39,7 +39,7 @@ namespace RecRoom
 		void DoRecMesh();
 		void SynthScanImages(const boost::filesystem::path& scanImagePath, const Mapping mapping, unsigned int width, const unsigned int height) {}
 
-	public:
+	protected:
 		//virtual void Process(pcl::PolygonMesh& out) const = 0;
 		virtual void RecPointCloud() { THROW_EXCEPTION("Interface is not implemented") };
 		virtual void RecPcAlbedo() { THROW_EXCEPTION("Interface is not implemented") };

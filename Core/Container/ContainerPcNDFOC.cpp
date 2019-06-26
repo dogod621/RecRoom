@@ -5,10 +5,10 @@ namespace RecRoom
 	ContainerPcNDFOC::ContainerPcNDFOC(const boost::filesystem::path& filePath_)
 		: DumpAble("ContainerPcNDFOC", filePath_), ContainerPcNDF(), oct(nullptr), size(0)
 	{
-		if (CheckExist())
+		if (this->CheckExist())
 		{
 			oct = OCT::Ptr(new OCT(filePath / boost::filesystem::path("pcNDF") / boost::filesystem::path("root.oct_idx"), true));
-			Load();
+			this->Load();
 		}
 		else
 		{
@@ -26,7 +26,7 @@ namespace RecRoom
 			if (std::abs(oct->getVoxelSideLength() - 1.0) > Common::eps)
 				THROW_EXCEPTION("voxelSideLength is not 1: " + std::to_string(oct->getVoxelSideLength()));
 
-			Dump();
+			this->Dump();
 		}
 
 		//

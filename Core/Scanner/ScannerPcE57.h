@@ -7,7 +7,7 @@
 
 namespace RecRoom
 {
-	class ScannerPcE57 : public ScannerPc
+	class ScannerPcE57 : public ScannerPc, public AsyncAble
 	{
 	public:
 		ScannerPcE57(
@@ -22,10 +22,8 @@ namespace RecRoom
 		}
 
 	public:
-		virtual void ShipPcRAWData() const { ShipPcRAWData(1); };
-		virtual void ShipPcLFData() const { ShipPcLFData(1); };
-		virtual void ShipPcRAWData(std::size_t asyncSize) const;
-		virtual void ShipPcLFData(std::size_t asyncSize) const { THROW_EXCEPTION("Interface is not implemented") };
+		virtual void ShipPcRAWData() const;
+		virtual void ShipPcLFData() const { THROW_EXCEPTION("Interface is not implemented") };
 
 	public:
 		PTR(e57::ImageFile) getImageFileE57() const { return imageFileE57; }

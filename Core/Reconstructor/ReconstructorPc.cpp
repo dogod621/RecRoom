@@ -17,13 +17,13 @@ namespace RecRoom
 		if (!containerPcNDF)
 			THROW_EXCEPTION("containerPcNDF is not set");
 
-		if (CheckExist())
+		if (this->CheckExist())
 		{
-			Load();
+			this->Load();
 		}
 		else
 		{
-			Dump();
+			this->Dump();
 		}
 
 		//
@@ -48,7 +48,7 @@ namespace RecRoom
 
 		//
 		status = (ReconstructStatus)(status | ReconstructStatus::POINT_CLOUD);
-		Dump();
+		this->Dump();
 	}
 
 	void ReconstructorPc::DoRecPcAlbedo()
@@ -63,7 +63,7 @@ namespace RecRoom
 
 		//
 		status = (ReconstructStatus)(status | ReconstructStatus::PC_ALBEDO);
-		Dump();
+		this->Dump();
 	}
 
 	void ReconstructorPc::DoRecPcSegment()
@@ -78,7 +78,7 @@ namespace RecRoom
 
 		//
 		status = (ReconstructStatus)(status | ReconstructStatus::PC_SEGMENT);
-		Dump();
+		this->Dump();
 	}
 
 	void ReconstructorPc::DoRecSegNDF()
@@ -95,7 +95,7 @@ namespace RecRoom
 
 		//
 		status = (ReconstructStatus)(status | ReconstructStatus::SEG_NDF);
-		Dump();
+		this->Dump();
 	}
 
 	void ReconstructorPc::DoRecMesh()
@@ -110,7 +110,7 @@ namespace RecRoom
 
 		//
 		status = (ReconstructStatus)(status | ReconstructStatus::MESH);
-		Dump();
+		this->Dump();
 	}
 
 	void ReconstructorPc::Load()

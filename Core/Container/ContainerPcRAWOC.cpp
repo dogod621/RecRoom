@@ -10,15 +10,15 @@ namespace RecRoom
 		const Eigen::Vector3d& min, const Eigen::Vector3d& max, const double res, double overlap)
 		: DumpAble("ContainerPcRAWOC", filePath_), ContainerPcRAW(), oct(nullptr), overlap(overlap), metaSet()
 	{
-		if (CheckExist())
+		if (this->CheckExist())
 		{
 			oct = OCT::Ptr(new OCT(filePath / boost::filesystem::path("pcRAW") / boost::filesystem::path("root.oct_idx"), true));
-			Load();
+			this->Load();
 		}
 		else
 		{
 			oct = OCT::Ptr(new OCT(min, max, res, filePath / boost::filesystem::path("pcRAW") / boost::filesystem::path("root.oct_idx"), "ECEF"));
-			Dump();
+			this->Dump();
 		}
 
 		//
@@ -48,7 +48,7 @@ namespace RecRoom
 		}
 
 		//
-		Dump();
+		this->Dump();
 	}
 
 	ContainerPcRAW::Meta ContainerPcRAWOC::GetMeta(std::size_t i) const

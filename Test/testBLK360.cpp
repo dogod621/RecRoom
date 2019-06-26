@@ -185,13 +185,15 @@ int main(int argc, char *argv[])
 					new RecRoom::ScannerPcBLK360(
 						wd / boost::filesystem::path("ScannerPc"),
 						e57File, lfFile, containerPcRAW));
+			scannerPc->setAsyncSize(async);
 
 			std::cout << "Create ReconstructorPc" << std::endl;
-			PTR(RecRoom::ReconstructorPc)
+			PTR(RecRoom::ReconstructorPcOC)
 				reconstructorPC(
 					new RecRoom::ReconstructorPcOC(
 						wd / boost::filesystem::path("ReconstructorPc"),
 						scannerPc, containerPcNDF));
+			reconstructorPC->setAsyncSize(async);
 
 			std::cout << "Create DownSampler" << std::endl;
 			PTR(RecRoom::ResamplerPc)
@@ -239,16 +241,16 @@ int main(int argc, char *argv[])
 			//
 			if (containerPcRAW->Size() == 0)
 			{
-				std::cout << "scannerPc->ShipPcRAWData(async)" << std::endl;
+				std::cout << "scannerPc->ShipPcRAWData()" << std::endl;
 
-				scannerPc->ShipPcRAWData(async);
+				scannerPc->ShipPcRAWData();
 			}
 
 			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::POINT_CLOUD) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
 			{
-				std::cout << "reconstructorPC->RecPointCloud()" << std::endl;
+				std::cout << "reconstructorPC->DoRecPointCloud()" << std::endl;
 
-				reconstructorPC->RecPointCloud();
+				reconstructorPC->DoRecPointCloud();
 			}
 		}
 		catch (const RecRoom::exception& ex)
