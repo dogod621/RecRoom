@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <future>
 
 #include <boost/filesystem.hpp>
 
@@ -122,33 +123,44 @@ int main(int argc, char *argv[])
 
 			system("PAUSE");
 
-			std::cout << "Perform ScannerPcBLK360::ShipPcRAWData" << std::endl;
+			if (containerPcRAW->Size() == 0)
+			{
+				std::cout << "Perform ScannerPcBLK360::ShipPcRAWData" << std::endl;
 
-			scanner->ShipPcRAWData();
+				scanner->ShipPcRAWData();
+
+				system("PAUSE");
+			}
 		}
 	}
-	catch (RecRoom::exception& ex)
+	catch (const RecRoom::exception& ex)
 	{
 		std::stringstream ss;
-		ss << "Got an RecRoom::exception, what=" << ex.what();
+		ss << "Caught a RecRoom::exception, what=" << ex.what();
 		PRINT_ERROR(ss.str().c_str());
 	}
-	catch (pcl::PCLException& ex)
+	catch (const std::future_error& ex)
 	{
 		std::stringstream ss;
-		ss << "Got an pcl::PCLException, what=" << ex.what();
+		ss << "Caught a std::future_error, what=" << ex.what();
 		PRINT_ERROR(ss.str().c_str());
 	}
-	catch (e57::E57Exception& ex)
+	catch (const pcl::PCLException& ex)
 	{
 		std::stringstream ss;
-		ss << "Got an e57::E57Exception, what=" << ex.what();
+		ss << "Caught a pcl::PCLException, what=" << ex.what();
 		PRINT_ERROR(ss.str().c_str());
 	}
-	catch (std::exception& ex)
+	catch (const e57::E57Exception& ex)
 	{
 		std::stringstream ss;
-		ss << "Got an std::exception, what=" << ex.what();
+		ss << "Caught an e57::E57Exception, what=" << ex.what();
+		PRINT_ERROR(ss.str().c_str());
+	}
+	catch (const std::exception& ex)
+	{
+		std::stringstream ss;
+		ss << "Caught a std::exception, what=" << ex.what();
 		PRINT_ERROR(ss.str().c_str());
 	}
 	catch (...)

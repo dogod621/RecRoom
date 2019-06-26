@@ -17,8 +17,8 @@ namespace RecRoom
 		ContainerPcNDFOC(const boost::filesystem::path& filePath);
 
 	public:
-		virtual void Merge(const PTR(PcNDF)& v) { oct->addPointCloud(v); }
-		virtual std::size_t Size() const { return std::numeric_limits<unsigned short>::max(); }
+		virtual void Merge(const PTR(PcNDF)& v);
+		virtual std::size_t Size() const { return size; }
 		virtual PTR(PcNDF) Quary(std::size_t i) const;
 
 	public:
@@ -28,6 +28,7 @@ namespace RecRoom
 	protected:
 		boost::filesystem::path filePath;
 		PTR(OCT) oct;
+		std::size_t size;
 
 		virtual void LoadMeta();
 		virtual void DumpMeta() const;

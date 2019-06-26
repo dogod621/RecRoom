@@ -5,7 +5,7 @@
 namespace RecRoom
 {
 	ContainerPcNDFOC::ContainerPcNDFOC(const boost::filesystem::path& filePath_)
-		: filePath(filePath_), ContainerPcNDF(), oct(nullptr)
+		: filePath(filePath_), ContainerPcNDF(), oct(nullptr), size(0)
 	{
 		bool createNew = false;
 		if (!boost::filesystem::is_directory(filePath))
@@ -39,8 +39,16 @@ namespace RecRoom
 			oct = OCT::Ptr(new OCT(
 				16,
 				Eigen::Vector3d(0, 0, 0),
-				Eigen::Vector3d((double)std::numeric_limits<unsigned short>::max(), 1.0, 1.0),
+				Eigen::Vector3d(
+					(double)std::numeric_limits<unsigned short>::max(), 
+					(double)std::numeric_limits<unsigned short>::max(),
+					(double)std::numeric_limits<unsigned short>::max()),
 				filePath / boost::filesystem::path("NDF") / boost::filesystem::path("root.oct_idx"), "ECEF"));
+
+			if(oct->getTreeDepth() != 16)
+				THROW_EXCEPTION("treeDepth is not 16")
+			if (std::abs(oct->getVoxelSideLength() - 1.0) > Common::eps)
+				THROW_EXCEPTION("voxelSideLength is not 1")
 
 			DumpMeta();
 		}
@@ -54,6 +62,35 @@ namespace RecRoom
 		//
 		if(!oct)
 			THROW_EXCEPTION("oct is not created?")
+	}
+
+	void ContainerPcNDFOC::Merge(const PTR(PcNDF)& v)
+	{
+		oct->addPointCloud(v);
+
+		// update 
+		int maxSegID = -1;
+		OCT::Iterator it(*oct);
+		while (*it != nullptr)
+		{
+			if ((*it)->getNodeType() == pcl::octree::LEAF_NODE)
+			{
+				Eigen::Vector3d minAABB;
+				Eigen::Vector3d maxAABB;
+				(*it)->getBoundingBox(minAABB, maxAABB);
+				Eigen::Vector3d center = (maxAABB + minAABB) * 0.5;
+				int segID = std::floor(center[0]);
+				if ((segID < 0) || (segID >= std::numeric_limits<unsigned short>::max()))
+					THROW_EXCEPTION("segID is not valid");
+				if (segID > maxSegID)
+					maxSegID = segID;
+			}
+			it++;
+		}
+		size = maxSegID + 1;
+
+		//
+		DumpMeta();
 	}
 
 	PTR(PcNDF) ContainerPcNDFOC::Quary(std::size_t i) const
@@ -85,6 +122,9 @@ namespace RecRoom
 		file >> j;
 
 		//
+		if (j.find("size") == j.end())
+			THROW_EXCEPTION("metaNDF is not valid: missing \"size\"");
+		size = j["size"];
 
 		//
 		file.close();
@@ -99,6 +139,7 @@ namespace RecRoom
 		nlohmann::json j;
 
 		//
+		j["size"] = size;
 
 		//
 		file << j;
