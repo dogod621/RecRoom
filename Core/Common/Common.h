@@ -13,6 +13,8 @@
 #include <pcl/console/print.h>
 #include <pcl/point_cloud.h>
 
+#include "nlohmann/json.hpp"
+
 namespace RecRoom
 {
 #define PTR(T) boost::shared_ptr<T> // std::shared_ptr<T>
@@ -92,6 +94,28 @@ namespace RecRoom
 
 	template<class PointType>
 	using Pc = pcl::PointCloud<PointType>;
+
+	class DumpAble
+	{
+	public:
+		DumpAble(const std::string& className, const boost::filesystem::path& filePath);
+
+	public:
+		boost::filesystem::path getFilePath() const { return filePath; }
+
+	protected:
+		std::string className;
+		boost::filesystem::path filePath;
+
+		virtual void Load();
+
+		virtual void Dump() const;
+
+		virtual void Load(const nlohmann::json& j) = 0;
+		virtual void Dump(nlohmann::json& j) const = 0;
+
+		virtual bool CheckNew() const;
+	};
 }
 
 #include "Common.hpp"

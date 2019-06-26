@@ -7,7 +7,7 @@
 
 namespace RecRoom
 {
-	class ContainerPcRAWOC : public ContainerPcRAW
+	class ContainerPcRAWOC : public ContainerPcRAW, public DumpAble
 	{
 	public:
 		using OCTDC = pcl::outofcore::OutofcoreOctreeDiskContainer<PointRAW>;
@@ -28,18 +28,19 @@ namespace RecRoom
 		virtual QuaryMeta TestQuary(std::size_t i) const;
 
 	public:
-		boost::filesystem::path getFilePath() const { return filePath; }
 		PTR(OCT) getOCT() const { return oct; }
 		double getOverlap() const { return overlap; }
 
 	protected:
-		boost::filesystem::path filePath;
 		PTR(OCT) oct;
 		double overlap;
 		std::vector<QuaryMeta> quaries;
 
-		virtual void LoadMeta();
-		virtual void DumpMeta() const;
+		virtual void Load() { DumpAble::Load(); };
+		virtual void Dump() const { DumpAble::Dump(); };
+		virtual void Load(const nlohmann::json& j);
+		virtual void Dump(nlohmann::json& j) const;
+		virtual bool CheckNew() const;
 	};
 }
 

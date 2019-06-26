@@ -32,6 +32,7 @@ void PrintHelp(int argc, char **argv)
 	{
 		PRINT_HELP("\t", "async", "uint 1", "Async size.");
 		PRINT_HELP("\t", "src", "sting \"\"", "File path.");
+		PRINT_HELP("\t", "scanner", "sting \"\"", "Input scanner path.");
 		PRINT_HELP("\t", "e57", "sting \"\"", "Input e57 file.");
 		PRINT_HELP("\t", "lf", "sting \"\"", "Input lf file.");
 		PRINT_HELP("\t", "pcRAW", "sting \"\"", "ContainerPcRAWOC file path.");
@@ -62,6 +63,10 @@ int main(int argc, char *argv[])
 			std::string srcStr = "";
 			pcl::console::parse_argument(argc, argv, "-src", srcStr);
 			std::cout << "Parmameters -src: " << srcStr << std::endl;
+
+			std::string scannerStr = "";
+			pcl::console::parse_argument(argc, argv, "-scanner", scannerStr);
+			std::cout << "Parmameters -scanner: " << scannerStr << std::endl;
 
 			std::string e57Str = "";
 			pcl::console::parse_argument(argc, argv, "-e57", e57Str);
@@ -123,7 +128,7 @@ int main(int argc, char *argv[])
 
 			PTR(RecRoom::ScannerPcBLK360) scanner(
 				new RecRoom::ScannerPcBLK360(
-					srcStr, e57Str, lfStr, containerPcRAW));
+					scannerStr, e57Str, lfStr, containerPcRAW));
 
 			//
 			/*std::cout << "Print E57 Format:" << std::endl;
@@ -141,6 +146,11 @@ int main(int argc, char *argv[])
 
 			//
 			PTR(RecRoom::ReconstructorPcOC) reconstructor(new RecRoom::ReconstructorPcOC(srcStr, scanner, containerPcNDF));
+
+			if ((RecRoom::ReconstructStatus)(reconstructor->getStatus() & RecRoom::ReconstructStatus::POINT_CLOUD) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
+			{
+				reconstructor->RecPointCloud();
+			}
 		}
 	}
 	catch (const RecRoom::exception& ex)

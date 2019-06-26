@@ -63,4 +63,51 @@ namespace RecRoom
 	{
 		return std::abs(v.norm() - 1.0f) < Common::eps;
 	}
+
+	DumpAble::DumpAble(const std::string& className, const boost::filesystem::path& filePath)
+		: className(className), filePath(filePath)
+	{
+		if (!boost::filesystem::exists(filePath))
+		{
+			boost::filesystem::create_directory(filePath);
+			PRINT_INFO("Create directory: " + filePath.string());
+		}
+	}
+
+	void DumpAble::Load()
+	{
+		std::string path = (filePath / boost::filesystem::path(className)).string();
+		std::ifstream file(path, std::ios_base::in);
+		if (!file)
+			THROW_EXCEPTION("Load file " + path + " failed.");
+
+		nlohmann::json j;
+		file >> j;
+
+		Load(j);
+	}
+
+	void DumpAble::Dump() const
+	{
+		std::string path = (filePath / boost::filesystem::path(className)).string();
+		std::ofstream file(path, std::ios_base::out);
+		if (!file)
+			THROW_EXCEPTION("Create file " + path + " failed.");
+
+		nlohmann::json j;
+
+		Dump(j);
+
+		file << j;
+		file.close();
+	}
+
+	bool DumpAble::CheckNew() const
+	{
+		if (!boost::filesystem::is_directory(filePath))
+			return true;
+		if (!boost::filesystem::exists(filePath / boost::filesystem::path(className)))
+			return true;
+		return false;
+	}
 }

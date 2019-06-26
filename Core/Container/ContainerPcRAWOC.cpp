@@ -2,54 +2,23 @@
 
 #include <pcl/filters/crop_box.h>
 
-#include "nlohmann/json.hpp"
-
 #include "ContainerPcRAWOC.h"
 
 namespace RecRoom
 {
 	ContainerPcRAWOC::ContainerPcRAWOC(const boost::filesystem::path& filePath_, 
 		const Eigen::Vector3d& min, const Eigen::Vector3d& max, const double res, double overlap)
-		: filePath(filePath_), ContainerPcRAW(), oct(nullptr), overlap(overlap), quaries()
+		: DumpAble("ContainerPcRAWOC", filePath_), ContainerPcRAW(), oct(nullptr), overlap(overlap), quaries()
 	{
-		bool createNew = false;
-		if (!boost::filesystem::is_directory(filePath))
+		if (CheckNew())
 		{
-			createNew = true;
-		}
-		else if (!boost::filesystem::is_directory(filePath / boost::filesystem::path("RAW")))
-		{
-			createNew = true;
-			PRINT_WARNING("filePath is not valid: missing ./RAW/, create new");
-		}
-		else if (!boost::filesystem::exists(filePath / boost::filesystem::path("RAW") / boost::filesystem::path("root.oct_idx")))
-		{
-			createNew = true;
-			PRINT_WARNING("filePath is not valid: missing ./RAW/root.oct_idx, create new");
-		}
-		else if (!boost::filesystem::exists(filePath / boost::filesystem::path("metaRAW.txt")))
-		{
-			createNew = true;
-			PRINT_WARNING("filePath is not valid: missing ./metaRAW.txt, create new");
-		}
-
-		if (createNew)
-		{
-			if (!boost::filesystem::exists(filePath))
-			{
-				boost::filesystem::create_directory(filePath);
-				PRINT_INFO("Create directory: " + filePath.string());
-			}
-
-			oct = OCT::Ptr(new OCT(min, max, res, filePath / boost::filesystem::path("RAW") / boost::filesystem::path("root.oct_idx"), "ECEF"));
-
-			DumpMeta();
+			oct = OCT::Ptr(new OCT(min, max, res, filePath / boost::filesystem::path("pcRAW") / boost::filesystem::path("root.oct_idx"), "ECEF"));
+			Dump();
 		}
 		else
 		{
-			oct = OCT::Ptr(new OCT(filePath / boost::filesystem::path("RAW") / boost::filesystem::path("root.oct_idx"), true));
-
-			LoadMeta();
+			oct = OCT::Ptr(new OCT(filePath / boost::filesystem::path("pcRAW") / boost::filesystem::path("root.oct_idx"), true));
+			Load();
 		}
 
 		//
@@ -79,7 +48,7 @@ namespace RecRoom
 		}
 
 		//
-		DumpMeta();
+		Dump();
 	}
 
 	ContainerPcRAW::QuaryData ContainerPcRAWOC::Quary(std::size_t i) const
@@ -112,18 +81,10 @@ namespace RecRoom
 		return quaries[i];
 	}
 
-	void ContainerPcRAWOC::LoadMeta()
+	void ContainerPcRAWOC::Load(const nlohmann::json& j)
 	{
-		std::string metaPath = (filePath / boost::filesystem::path("metaRAW.txt")).string();
-		std::ifstream file(metaPath, std::ios_base::in);
-		if (!file)
-			THROW_EXCEPTION("Load file " + metaPath + " failed.");
-		nlohmann::json j;
-		file >> j;
-		
-		//
 		if (j.find("overlap") == j.end())
-			THROW_EXCEPTION("metaRAW is not valid: missing \"overlap\"");
+			THROW_EXCEPTION("File is not valid: missing \"overlap\"");
 		overlap = j["overlap"];
 
 		for (nlohmann::json::const_iterator qit = j["quaries"].begin(); qit != j["quaries"].end(); ++qit)
@@ -131,7 +92,7 @@ namespace RecRoom
 			QuaryMeta q;
 			{
 				if (qit->find("minAABB") == qit->end())
-					THROW_EXCEPTION("metaRAW is not valid: missing \"minAABB\"");
+					THROW_EXCEPTION("File is not valid: missing \"minAABB\"");
 				nlohmann::json::const_iterator it = (*qit)["minAABB"].begin();
 				q.minAABB.x() = *it; ++it;
 				q.minAABB.y() = *it; ++it;
@@ -140,7 +101,7 @@ namespace RecRoom
 
 			{
 				if (qit->find("maxAABB") == qit->end())
-					THROW_EXCEPTION("metaRAW is not valid: missing \"maxAABB\"");
+					THROW_EXCEPTION("File is not valid: missing \"maxAABB\"");
 				nlohmann::json::const_iterator it = (*qit)["maxAABB"].begin();
 				q.maxAABB.x() = *it; ++it;
 				q.maxAABB.y() = *it; ++it;
@@ -149,7 +110,7 @@ namespace RecRoom
 
 			{
 				if (qit->find("extMinAABB") == qit->end())
-					THROW_EXCEPTION("metaRAW is not valid: missing \"extMinAABB\"");
+					THROW_EXCEPTION("File is not valid: missing \"extMinAABB\"");
 				nlohmann::json::const_iterator it = (*qit)["extMinAABB"].begin();
 				q.extMinAABB.x() = *it; ++it;
 				q.extMinAABB.y() = *it; ++it;
@@ -158,7 +119,7 @@ namespace RecRoom
 
 			{
 				if (qit->find("extMaxAABB") == qit->end())
-					THROW_EXCEPTION("metaRAW is not valid: missing \"extMaxAABB\"");
+					THROW_EXCEPTION("File is not valid: missing \"extMaxAABB\"");
 				nlohmann::json::const_iterator it = (*qit)["extMaxAABB"].begin();
 				q.extMaxAABB.x() = *it; ++it;
 				q.extMaxAABB.y() = *it; ++it;
@@ -166,25 +127,15 @@ namespace RecRoom
 			}
 
 			if (qit->find("depth") == qit->end())
-				THROW_EXCEPTION("metaRAW is not valid: missing \"depth\"");
+				THROW_EXCEPTION("File is not valid: missing \"depth\"");
 			q.depth = (*qit)["depth"];
 
 			quaries.push_back(q);
 		}
-
-		//
-		file.close();
 	}
 
-	void ContainerPcRAWOC::DumpMeta() const
+	void ContainerPcRAWOC::Dump(nlohmann::json& j) const
 	{
-		std::string metaPath = (filePath / boost::filesystem::path("metaRAW.txt")).string();
-		std::ofstream file(metaPath, std::ios_base::out);
-		if (!file)
-			THROW_EXCEPTION("Create file " + metaPath + " failed.");
-		nlohmann::json j;
-		
-		//
 		j["overlap"] = overlap;
 
 		for (std::size_t i = 0; i < quaries.size(); ++i)
@@ -211,9 +162,16 @@ namespace RecRoom
 
 			j["quaries"].push_back(jQ);
 		}
+	}
 
-		//
-		file << j;
-		file.close();
+	bool ContainerPcRAWOC::CheckNew() const
+	{
+		if(DumpAble::CheckNew())
+			return true;
+		else if (!boost::filesystem::is_directory(filePath / boost::filesystem::path("pcRAW")))
+			return true;
+		else if (!boost::filesystem::exists(filePath / boost::filesystem::path("pcRAW") / boost::filesystem::path("root.oct_idx")))
+			return true;
+		return false;
 	}
 }

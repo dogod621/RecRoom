@@ -13,73 +13,32 @@ namespace RecRoom
 {
 	//
 	ScannerPcBLK360::ScannerPcBLK360(
-		const boost::filesystem::path& filePath,
+		const boost::filesystem::path& filePath_,
 		const boost::filesystem::path& e57FilePath,
 		const boost::filesystem::path& lfFilePath,
 		const PTR(ContainerPcRAW)& containerPcRAW,
 		unsigned char colorThresh)
-		: ScannerPcE57(e57FilePath, containerPcRAW, Scanner::BLK360), filePath(filePath), colorThresh(colorThresh)
+		: DumpAble("ScannerPcBLK360", filePath_), ScannerPcE57(e57FilePath, containerPcRAW, Scanner::BLK360), colorThresh(colorThresh)
 	{
-		bool createNew = false;
-		if (!boost::filesystem::is_directory(filePath))
+		if (CheckNew())
 		{
-			createNew = true;
-		}
-		else if (!boost::filesystem::exists(filePath / boost::filesystem::path("metaScanner.txt")))
-		{
-			createNew = true;
-			PRINT_WARNING("filePath is not valid: missing ./metaScanner.txt, create new");
-		}
-
-		if (createNew)
-		{
-			if (!boost::filesystem::exists(filePath))
-			{
-				boost::filesystem::create_directory(filePath);
-				PRINT_INFO("Create directory: " + filePath.string());
-			}
-
-			DumpMeta();
+			Dump();
 		}
 		else
 		{
-			LoadMeta();
+			Load();
 		}
 	}
 
-	void ScannerPcBLK360::LoadMeta()
+	void ScannerPcBLK360::Load(const nlohmann::json& j)
 	{
-		//
-		std::string metaPath = (filePath / boost::filesystem::path("metaScanner.txt")).string();
-		std::ifstream file(metaPath, std::ios_base::in);
-		if (!file)
-			THROW_EXCEPTION("Load file " + metaPath + " failed.");
-		nlohmann::json j;
-		file >> j;
-
-		//
 		if (j.find("colorThresh") == j.end())
-			THROW_EXCEPTION("metaScanner is not valid: missing \"colorThresh\"");
+			THROW_EXCEPTION("File is not valid: missing \"colorThresh\"");
 		colorThresh = j["colorThresh"];
-
-		//
-		file.close();
 	}
 
-	void ScannerPcBLK360::DumpMeta() const
+	void ScannerPcBLK360::Dump(nlohmann::json& j) const
 	{
-		//
-		std::string metaPath = (filePath / boost::filesystem::path("metaScanner.txt")).string();
-		std::ofstream file(metaPath, std::ios_base::out);
-		if (!file)
-			THROW_EXCEPTION("Create file " + metaPath + " failed.");
-		nlohmann::json j;
-
-		//
 		j["colorThresh"] = colorThresh;
-
-		//
-		file << j;
-		file.close();
 	}
 }

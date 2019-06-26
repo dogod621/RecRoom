@@ -4,7 +4,7 @@
 
 namespace RecRoom
 {
-	class ScannerPcBLK360 : public ScannerPcE57
+	class ScannerPcBLK360 : public ScannerPcE57, public DumpAble
 	{
 	public:
 		ScannerPcBLK360(
@@ -26,15 +26,16 @@ namespace RecRoom
 		}
 
 	public:
-		boost::filesystem::path getFilePath() const { return filePath; }
 		unsigned char getColorThresh() const { return colorThresh; }
 
 	protected:
-		boost::filesystem::path filePath;
 		unsigned char colorThresh; // Use to remove black noise which is caused by BLK360
 
-		virtual void LoadMeta();
-		virtual void DumpMeta() const;
+		virtual void Load() { DumpAble::Load(); };
+		virtual void Dump() const { DumpAble::Dump(); };
+		virtual void Load(const nlohmann::json& j);
+		virtual void Dump(nlohmann::json& j) const;
+		virtual bool CheckNew() const { return DumpAble::CheckNew(); };
 	};
 }
 

@@ -23,7 +23,7 @@ namespace RecRoom
 		MESH = 1 << 5
 	};
 
-	class ReconstructorPc
+	class ReconstructorPc : public DumpAble
 	{
 	public:
 		ReconstructorPc(
@@ -48,7 +48,6 @@ namespace RecRoom
 		virtual void RecMesh() = 0;
 
 	public:
-		boost::filesystem::path getFilePath() const { return filePath; }
 		ReconstructStatus getStatus() const { return status; }
 		PTR(PcMED) getPcMED() const { return pcMED; }
 
@@ -72,7 +71,6 @@ namespace RecRoom
 		void setMesher(CONST_PTR(MesherPc) mesher_) { mesher = mesher_;}
 		
 	protected:
-		boost::filesystem::path filePath;
 		ReconstructStatus status;
 		PTR(PcMED) pcMED;
 
@@ -87,8 +85,11 @@ namespace RecRoom
 		CONST_PTR(SegmenterPc) segmenter;
 		CONST_PTR(MesherPc) mesher;
 
-		virtual void LoadMeta();
-		virtual void DumpMeta() const;
+		virtual void Load();
+		virtual void Dump() const;
+		virtual void Load(const nlohmann::json& j);
+		virtual void Dump(nlohmann::json& j) const;
+		virtual bool CheckNew() const;
 	};
 }
 

@@ -10,43 +10,18 @@ namespace RecRoom
 		boost::filesystem::path filePath_,
 		const CONST_PTR(ScannerPc)& scanner,
 		const PTR(ContainerPcNDF)& containerPcNDF)
-		: filePath(filePath_), status(ReconstructStatus::ReconstructStatus_UNKNOWN), scanner(scanner), containerPcNDF(containerPcNDF), pcMED(new PcMED)
+		: DumpAble("ReconstructorPc", filePath_), status(ReconstructStatus::ReconstructStatus_UNKNOWN), scanner(scanner), containerPcNDF(containerPcNDF), pcMED(new PcMED)
 	{
-		if (!scanner)
-			THROW_EXCEPTION("scanner is not set");
-		if (!containerPcNDF)
-			THROW_EXCEPTION("containerPcNDF is not set");
-
-		bool createNew = false;
-		if (!boost::filesystem::exists(filePath))
+		if (CheckNew())
 		{
-			createNew = true;
-		}
-		if (!boost::filesystem::exists(filePath / boost::filesystem::path("pcMED.pcd")))
-		{
-			createNew = true;
-			PRINT_WARNING("filePath is not valid: missing ./pcMED.pcd, create new");
-		}
-		if (!boost::filesystem::exists(filePath / boost::filesystem::path("metaREC.txt")))
-		{
-			createNew = true;
-			PRINT_WARNING("filePath is not valid: missing ./metaREC.txt, create new");
-		}
-		if (createNew)
-		{
-			if (!boost::filesystem::exists(filePath))
-			{
-				boost::filesystem::create_directory(filePath);
-				PRINT_INFO("Create directory: " + filePath.string());
-			}
-			
-			DumpMeta();
+			Dump();
 		}
 		else
 		{
-			LoadMeta();
+			Load();
 		}
 
+		//
 		if(!pcMED)
 			THROW_EXCEPTION("pcMED is not created?")
 	}
@@ -68,7 +43,7 @@ namespace RecRoom
 
 		//
 		status = (ReconstructStatus)(status | ReconstructStatus::POINT_CLOUD);
-		DumpMeta();
+		Dump();
 	}
 
 	void ReconstructorPc::DoRecPcAlbedo()
@@ -83,7 +58,7 @@ namespace RecRoom
 
 		//
 		status = (ReconstructStatus)(status | ReconstructStatus::PC_ALBEDO);
-		DumpMeta();
+		Dump();
 	}
 
 	void ReconstructorPc::DoRecPcSegment()
@@ -98,7 +73,7 @@ namespace RecRoom
 
 		//
 		status = (ReconstructStatus)(status | ReconstructStatus::PC_SEGMENT);
-		DumpMeta();
+		Dump();
 	}
 
 	void ReconstructorPc::DoRecSegNDF()
@@ -115,7 +90,7 @@ namespace RecRoom
 
 		//
 		status = (ReconstructStatus)(status | ReconstructStatus::SEG_NDF);
-		DumpMeta();
+		Dump();
 	}
 
 	void ReconstructorPc::DoRecMesh()
@@ -130,47 +105,40 @@ namespace RecRoom
 
 		//
 		status = (ReconstructStatus)(status | ReconstructStatus::MESH);
-		DumpMeta();
+		Dump();
 	}
 
-	void ReconstructorPc::LoadMeta()
-	{
+	void ReconstructorPc::Load()
+	{ 
+		DumpAble::Load(); 
 		pcl::io::loadPCDFile((filePath / boost::filesystem::path("pcMED.pcd")).string(), *pcMED);
+	};
 
-		//
-		std::string metaPath = (filePath / boost::filesystem::path("metaREC.txt")).string();
-		std::ifstream file(metaPath, std::ios_base::in);
-		if (!file)
-			THROW_EXCEPTION("Load file " + metaPath + " failed.");
-		nlohmann::json j;
-		file >> j;
+	void ReconstructorPc::Dump() const
+	{ 
+		DumpAble::Dump(); 
+		pcl::io::savePCDFile((filePath / boost::filesystem::path("pcMED.pcd")).string(), *pcMED, true);
+	};
 
-		//
+	void ReconstructorPc::Load(const nlohmann::json& j)
+	{
 		if (j.find("status") == j.end())
-			THROW_EXCEPTION("metaRAW is not valid: missing \"status\"");
+			THROW_EXCEPTION("File is not valid: missing \"status\"");
 		status = Convert<ReconstructStatus, nlohmann::json>(j["status"]);
-
-		//
-		file.close();
 	}
 
-	void ReconstructorPc::DumpMeta() const
+	void ReconstructorPc::Dump(nlohmann::json& j) const
 	{
-		pcl::io::savePCDFile((filePath / boost::filesystem::path("pcMED.pcd")).string(), *pcMED, true);
-
-		//
-		std::string metaPath = (filePath / boost::filesystem::path("metaREC.txt")).string();
-		std::ofstream file(metaPath, std::ios_base::out);
-		if (!file)
-			THROW_EXCEPTION("Create file " + metaPath + " failed.");
-		nlohmann::json j;
-
-		//
 		j["status"] = Convert<nlohmann::json, ReconstructStatus>(status);
+	}
 
-		//
-		file << j;
-		file.close();
+	bool ReconstructorPc::CheckNew() const
+	{
+		if (DumpAble::CheckNew())
+			return true;
+		if (!boost::filesystem::exists(filePath / boost::filesystem::path("pcMED.pcd")))
+			return true;
+		return false;
 	}
 }
 
