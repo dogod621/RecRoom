@@ -2,10 +2,10 @@
 
 namespace RecRoom
 {
-	inline bool AlbedoEstimation::CollectScannLaserInfo(const pcl::PointCloud<PointMED>& cloud, const std::size_t k, const std::vector<int>& indices, const std::vector<float>& distance, const PointMED& inPoint, std::vector<ScannLaser>& scannLaser)
+	inline bool AlbedoEstimation::CollectScannLaserInfo(const pcl::PointCloud<PointMED>& cloud, const std::size_t k, const std::vector<int>& indices, const std::vector<float>& distance, const PointMED& inPoint, std::vector<ScannLaser>& scannLaserSet)
 	{
-		scannLaser.clear();
-		scannLaser.reserve(k);
+		scannLaserSet.clear();
+		scannLaserSet.reserve(k);
 		double radius = search_radius_;
 
 #ifdef POINT_MED_WITH_NORMAL
@@ -31,44 +31,44 @@ namespace RecRoom
 			else
 			{
 				const PointMED& scanPoint = cloud[px];
-				const ScanMeta& meta = scanMeta[scanPoint.label];
-				ScannLaser laser;
+				const ScanMeta& scanMeta = scanMetaSet[scanPoint.label];
+				ScannLaser scannLaser;
 
 				//
-				laser.hitNormal = Eigen::Vector3d(cloud[px].normal_x, cloud[px].normal_y, cloud[px].normal_z);
-				if (!Common::IsUnitVector(laser.hitNormal))
+				scannLaser.hitNormal = Eigen::Vector3d(cloud[px].normal_x, cloud[px].normal_y, cloud[px].normal_z);
+				if (!Common::IsUnitVector(scannLaser.hitNormal))
 				{
-					PRINT_WARNING("laser.hitNormal is not valid, ignore");
+					PRINT_WARNING("scannLaser.hitNormal is not valid, ignore");
 				}
 				else
 				{
-					double dotNN = laser.hitNormal.dot(inNormal);
+					double dotNN = scannLaser.hitNormal.dot(inNormal);
 					if (dotNN > cutGrazing)
 					{
-						laser.hitPosition = Eigen::Vector3d(scanPoint.x, scanPoint.y, scanPoint.z);
-						switch (meta.scanner)
+						scannLaser.hitPosition = Eigen::Vector3d(scanPoint.x, scanPoint.y, scanPoint.z);
+						switch (scanMeta.scanner)
 						{
 						case Scanner::BLK360:
 						{
-							laser.incidentDirection = meta.position - laser.hitPosition;
-							laser.hitDistance = laser.incidentDirection.norm();
-							laser.incidentDirection /= laser.hitDistance;
-							if (laser.incidentDirection.dot(inNormal) < 0)
-								laser.incidentDirection *= -1.0;
-							laser.reflectedDirection = laser.incidentDirection; // BLK360 
+							scannLaser.incidentDirection = scanMeta.position - scannLaser.hitPosition;
+							scannLaser.hitDistance = scannLaser.incidentDirection.norm();
+							scannLaser.incidentDirection /= scannLaser.hitDistance;
+							if (scannLaser.incidentDirection.dot(inNormal) < 0)
+								scannLaser.incidentDirection *= -1.0;
+							scannLaser.reflectedDirection = scannLaser.incidentDirection; // BLK360 
 
 							// Ref - BLK 360 Spec - laser wavelength & Beam divergence : https://lasers.leica-geosystems.com/global/sites/lasers.leica-geosystems.com.global/files/leica_media/product_documents/blk/853811_leica_blk360_um_v2.0.0_en.pdf
 							// Ref - Gaussian beam : https://en.wikipedia.org/wiki/Gaussian_beam
 							// Ref - Beam divergence to Beam waist(w0) : http://www2.nsysu.edu.tw/optics/laser/angle.htm
-							double temp = laser.hitDistance / 26.2854504782;
-							laser.beamFalloff = 1.0f / (1 + temp * temp);
-							if ((laser.beamFalloff > cutFalloff))
+							double temp = scannLaser.hitDistance / 26.2854504782;
+							scannLaser.beamFalloff = 1.0f / (1 + temp * temp);
+							if ((scannLaser.beamFalloff > cutFalloff))
 							{
-								if (Common::GenFrame(laser.hitNormal, laser.hitTangent, laser.hitBitangent))
+								if (Common::GenFrame(scannLaser.hitNormal, scannLaser.hitTangent, scannLaser.hitBitangent))
 								{
-									laser.weight = std::pow((radius - d) / radius, distInterParm) * std::pow(dotNN, angleInterParm);
-									laser.intensity = (double)scanPoint.intensity;
-									scannLaser.push_back(laser);
+									scannLaser.weight = std::pow((radius - d) / radius, distInterParm) * std::pow(dotNN, angleInterParm);
+									scannLaser.intensity = (double)scanPoint.intensity;
+									scannLaserSet.push_back(scannLaser);
 								}
 							}
 						}
@@ -85,21 +85,21 @@ namespace RecRoom
 #endif
 #endif
 #endif
-		return scannLaser.size() > 0;
+		return scannLaserSet.size() > 0;
 	}
 
-	inline bool AlbedoEstimation::ComputePointAlbedo(const std::vector<ScannLaser>& scannLaser, const PointMED& inPoint, PointMED& outPoint)
+	inline bool AlbedoEstimation::ComputePointAlbedo(const std::vector<ScannLaser>& scannLaserSet, const PointMED& inPoint, PointMED& outPoint)
 	{
 #ifdef POINT_MED_WITH_NORMAL
 #ifdef POINT_MED_WITH_INTENSITY
 		Eigen::MatrixXf A;
 		Eigen::MatrixXf B;
 
-		A = Eigen::MatrixXf(scannLaser.size() * 3, 3);
-		B = Eigen::MatrixXf(scannLaser.size() * 3, 1);
+		A = Eigen::MatrixXf(scannLaserSet.size() * 3, 3);
+		B = Eigen::MatrixXf(scannLaserSet.size() * 3, 1);
 
 		std::size_t shifter = 0;
-		for (std::vector<ScannLaser>::const_iterator it = scannLaser.begin(); it != scannLaser.end(); ++it)
+		for (std::vector<ScannLaser>::const_iterator it = scannLaserSet.begin(); it != scannLaserSet.end(); ++it)
 		{
 			A(shifter, 0) = it->weight * it->incidentDirection.x();
 			A(shifter, 1) = it->weight * it->incidentDirection.y();

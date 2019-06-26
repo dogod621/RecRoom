@@ -114,7 +114,7 @@ namespace RecRoom
 		virtual void Load(const nlohmann::json& j) = 0;
 		virtual void Dump(nlohmann::json& j) const = 0;
 
-		virtual bool CheckNew() const;
+		virtual bool CheckExist() const;
 	};
 }
 

@@ -41,11 +41,17 @@ namespace RecRoom
 
 	public:
 		//virtual void Process(pcl::PolygonMesh& out) const = 0;
-		virtual void RecPointCloud() = 0;
-		virtual void RecPcAlbedo() = 0;
-		virtual void RecPcSegment() = 0;
-		virtual void RecSegNDF() = 0;
-		virtual void RecMesh() = 0;
+		virtual void RecPointCloud() { THROW_EXCEPTION("Interface is not implemented") };
+		virtual void RecPcAlbedo() { THROW_EXCEPTION("Interface is not implemented") };
+		virtual void RecPcSegment() { THROW_EXCEPTION("Interface is not implemented") };
+		virtual void RecSegNDF() { THROW_EXCEPTION("Interface is not implemented") };
+		virtual void RecMesh() { THROW_EXCEPTION("Interface is not implemented") };
+
+		virtual void RecPointCloud(std::size_t asyncSize) { THROW_EXCEPTION("Interface is not implemented") };
+		virtual void RecPcAlbedo(std::size_t asyncSize) { THROW_EXCEPTION("Interface is not implemented") };
+		virtual void RecPcSegment(std::size_t asyncSize) { THROW_EXCEPTION("Interface is not implemented") };
+		virtual void RecSegNDF(std::size_t asyncSize) { THROW_EXCEPTION("Interface is not implemented") };
+		virtual void RecMesh(std::size_t asyncSize) { THROW_EXCEPTION("Interface is not implemented") };
 
 	public:
 		ReconstructStatus getStatus() const { return status; }
@@ -89,7 +95,7 @@ namespace RecRoom
 		virtual void Dump() const;
 		virtual void Load(const nlohmann::json& j);
 		virtual void Dump(nlohmann::json& j) const;
-		virtual bool CheckNew() const;
+		virtual bool CheckExist() const;
 	};
 }
 

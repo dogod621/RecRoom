@@ -10,10 +10,9 @@ namespace RecRoom
 	class ContainerPcRAWOC : public ContainerPcRAW, public DumpAble
 	{
 	public:
-		using OCTDC = pcl::outofcore::OutofcoreOctreeDiskContainer<PointRAW>;
-		using OCT = pcl::outofcore::OutofcoreOctreeBase<OCTDC, PointRAW>;
-		using QuaryMeta = ContainerPcRAW::QuaryMeta;
-		using QuaryData = ContainerPcRAW::QuaryData;
+		using OCT = pcl::outofcore::OutofcoreOctreeBase<pcl::outofcore::OutofcoreOctreeDiskContainer<PointRAW>, PointRAW>;
+		using Meta = ContainerPcRAW::Meta;
+		using Data = ContainerPcRAW::Data;
 
 	public:
 		ContainerPcRAWOC(const boost::filesystem::path& filePath,
@@ -23,10 +22,10 @@ namespace RecRoom
 
 	public:
 		virtual void Merge(const PTR(PcRAW)& v);
-		virtual std::size_t Size() const { return quaries.size(); };
-		virtual QuaryData Quary(std::size_t i) const;
-		virtual QuaryMeta TestQuary(std::size_t i) const;
-
+		virtual std::size_t Size() const { return metaSet.size(); };
+		virtual Meta GetMeta(std::size_t i) const;
+		virtual Data GetData(std::size_t i) const;
+		
 	public:
 		PTR(OCT) getOCT() const { return oct; }
 		double getOverlap() const { return overlap; }
@@ -34,13 +33,13 @@ namespace RecRoom
 	protected:
 		PTR(OCT) oct;
 		double overlap;
-		std::vector<QuaryMeta> quaries;
+		std::vector<Meta> metaSet;
 
 		virtual void Load() { DumpAble::Load(); };
 		virtual void Dump() const { DumpAble::Dump(); };
 		virtual void Load(const nlohmann::json& j);
 		virtual void Dump(nlohmann::json& j) const;
-		virtual bool CheckNew() const;
+		virtual bool CheckExist() const;
 	};
 }
 

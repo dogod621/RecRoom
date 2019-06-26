@@ -8,7 +8,7 @@ namespace RecRoom
 	class ContainerPcRAW
 	{
 	public:
-		struct QuaryMeta
+		struct Meta
 		{
 			Eigen::Vector3d minAABB;
 			Eigen::Vector3d maxAABB;
@@ -16,7 +16,7 @@ namespace RecRoom
 			Eigen::Vector3d extMaxAABB;
 			std::size_t depth;
 
-			QuaryMeta(
+			Meta(
 				const Eigen::Vector3d& minAABB = Eigen::Vector3d(0.0, 0.0, 0.0),
 				const Eigen::Vector3d& maxAABB = Eigen::Vector3d(0.0, 0.0, 0.0),
 				const Eigen::Vector3d& extMinAABB = Eigen::Vector3d(0.0, 0.0, 0.0),
@@ -25,14 +25,14 @@ namespace RecRoom
 				: minAABB(minAABB), maxAABB(maxAABB), extMinAABB(extMinAABB), extMaxAABB(extMaxAABB), depth(depth) {}
 		};
 
-		struct QuaryData : public QuaryMeta
+		struct Data : public Meta
 		{
-			PTR(PcMED) data;
-			PTR(PcIndex) index;
+			PTR(PcMED) pcMED;
+			PTR(PcIndex) pcIndex;
 
-			QuaryData(const QuaryMeta& quaryMeta = QuaryMeta()) 
-				: QuaryMeta(quaryMeta),
-				data(new PcMED), index(new PcIndex) {}
+			Data(const Meta& meta = Meta())
+				: Meta(meta),
+				pcMED(new PcMED), pcIndex(new PcIndex) {}
 		};
 
 	public:
@@ -41,8 +41,8 @@ namespace RecRoom
 	public:
 		virtual void Merge(const PTR(PcRAW)& v) = 0;
 		virtual std::size_t Size() const = 0;
-		virtual QuaryData Quary(std::size_t i) const = 0;
-		virtual QuaryMeta TestQuary(std::size_t i) const = 0;
+		virtual Meta GetMeta(std::size_t i) const = 0;
+		virtual Data GetData(std::size_t i) const = 0;
 	};
 }
 

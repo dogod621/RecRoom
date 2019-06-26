@@ -10,17 +10,19 @@
 namespace RecRoom
 {
 	//
-	void ScannerPcE57::LoadScanMeta()
+	void ScannerPcE57::LoadScanMetaSet()
 	{
 		if (data3DE57)
 		{
-			scanMeta.resize(data3DE57->childCount());
-			for (std::size_t i = 0; i < scanMeta.size(); ++i)
+			scanMetaSet.resize(data3DE57->childCount());
+			for (std::size_t i = 0; i < scanMetaSet.size(); ++i)
 			{
-				scanMeta[i].scanner = scanner;
+				ScanMeta& scanMeta = scanMetaSet[i];
+
+				scanMeta.scanner = scanner;
 
 				e57::StructureNode scan(data3DE57->get(i));
-				scanMeta[i].serialNumber = i;
+				scanMeta.serialNumber = i;
 
 				// Parse pose
 				if (scan.isDefined("pose"))
@@ -30,12 +32,12 @@ namespace RecRoom
 					{
 						e57::StructureNode scanPoseTranslation(scanPose.get("translation"));
 
-						scanMeta[i].position = Eigen::Vector3d(
+						scanMeta.position = Eigen::Vector3d(
 							e57::FloatNode(scanPoseTranslation.get("x")).value(),
 							e57::FloatNode(scanPoseTranslation.get("y")).value(),
 							e57::FloatNode(scanPoseTranslation.get("z")).value());
 
-						scanMeta[i].transform.block(0, 3, 3, 1) = scanMeta[i].position;
+						scanMeta.transform.block(0, 3, 3, 1) = scanMeta.position;
 					}
 					else
 						PRINT_WARNING("Scan didnot define pose translation, use default value");
@@ -44,13 +46,13 @@ namespace RecRoom
 					{
 						e57::StructureNode scanPoseRotation(scanPose.get("rotation"));
 
-						scanMeta[i].orientation = Eigen::Quaterniond(
+						scanMeta.orientation = Eigen::Quaterniond(
 							e57::FloatNode(scanPoseRotation.get("w")).value(),
 							e57::FloatNode(scanPoseRotation.get("x")).value(),
 							e57::FloatNode(scanPoseRotation.get("y")).value(),
 							e57::FloatNode(scanPoseRotation.get("z")).value());
 
-						scanMeta[i].transform.block(0, 0, 3, 3) = scanMeta[i].orientation.toRotationMatrix();
+						scanMeta.transform.block(0, 0, 3, 3) = scanMeta.orientation.toRotationMatrix();
 					}
 					else
 						PRINT_WARNING("Scan didnot define pose rotation, use default value");
@@ -67,30 +69,30 @@ namespace RecRoom
 					{
 						e57::CompressedVectorNode scanPoints(scanPointsNode);
 						e57::StructureNode proto(scanPoints.prototype());
-						scanMeta[i].numPoints = scanPoints.childCount();
+						scanMeta.numPoints = scanPoints.childCount();
 
 						if (proto.isDefined("cartesianX") && proto.isDefined("cartesianY") && proto.isDefined("cartesianZ"))
 						{
-							scanMeta[i].rawDataCoordSys = CoordSys::XYZ_PX_PY_PZ;// E57 use this
-							scanMeta[i].hasPointXYZ = true;
+							scanMeta.rawDataCoordSys = CoordSys::XYZ_PX_PY_PZ;// E57 use this
+							scanMeta.hasPointXYZ = true;
 						}
 						else if (proto.isDefined("sphericalRange") && proto.isDefined("sphericalAzimuth") && proto.isDefined("sphericalElevation"))
 						{
-							scanMeta[i].rawDataCoordSys = CoordSys::RAE_PE_PX_PY;// E57 use this
-							scanMeta[i].hasPointXYZ = true;
+							scanMeta.rawDataCoordSys = CoordSys::RAE_PE_PX_PY;// E57 use this
+							scanMeta.hasPointXYZ = true;
 						}
 
 						// E57 cannot contain normal
-						scanMeta[i].hasPointNormal = false;
+						scanMeta.hasPointNormal = false;
 
 						if (proto.isDefined("colorRed") && proto.isDefined("colorGreen") && proto.isDefined("colorBlue") && RAW_CAN_CONTAIN_RGB)
 						{
-							scanMeta[i].hasPointRGB = true;
+							scanMeta.hasPointRGB = true;
 						}
 
 						if (proto.isDefined("intensity") && RAW_CAN_CONTAIN_INTENSITY)
 						{
-							scanMeta[i].hasPointI = true;
+							scanMeta.hasPointI = true;
 						}
 					}
 					else
@@ -122,7 +124,7 @@ namespace RecRoom
 			if (data3DNode.type() == e57::NodeType::E57_VECTOR)
 			{
 				data3DE57 = CONST_PTR(e57::VectorNode) (new e57::VectorNode(data3DNode));
-				LoadScanMeta();
+				LoadScanMetaSet();
 			}
 			else
 				PRINT_WARNING("E57 file data3D is not vector, ignore it");
@@ -390,9 +392,9 @@ namespace RecRoom
 			{
 				AsyncGlobal_ShipPcRAWData global(this);
 
-				std::vector<AsyncQuery_ShipPcRAWData> queries(scanMeta.size());
-				for (std::size_t i = 0; i < scanMeta.size(); ++i)
-					queries[i].scanMeta = scanMeta[i];
+				std::vector<AsyncQuery_ShipPcRAWData> queries(scanMetaSet.size());
+				for (std::size_t i = 0; i < scanMetaSet.size(); ++i)
+					queries[i].scanMeta = scanMetaSet[i];
 
 				AsyncProcess<AsyncGlobal_ShipPcRAWData, AsyncQuery_ShipPcRAWData, PcRAW>(
 					global, queries,

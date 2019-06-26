@@ -5,7 +5,12 @@ namespace RecRoom
 	ContainerPcNDFOC::ContainerPcNDFOC(const boost::filesystem::path& filePath_)
 		: DumpAble("ContainerPcNDFOC", filePath_), ContainerPcNDF(), oct(nullptr), size(0)
 	{
-		if (CheckNew())
+		if (CheckExist())
+		{
+			oct = OCT::Ptr(new OCT(filePath / boost::filesystem::path("pcNDF") / boost::filesystem::path("root.oct_idx"), true));
+			Load();
+		}
+		else
 		{
 			oct = OCT::Ptr(new OCT(
 				16,
@@ -23,12 +28,6 @@ namespace RecRoom
 
 			Dump();
 		}
-		else
-		{
-			oct = OCT::Ptr(new OCT(filePath / boost::filesystem::path("pcNDF") / boost::filesystem::path("root.oct_idx"), true));
-			Load();
-		}
-
 
 		//
 		if(!oct)
@@ -64,13 +63,13 @@ namespace RecRoom
 		Dump();
 	}
 
-	PTR(PcNDF) ContainerPcNDFOC::Quary(std::size_t i) const
+	ContainerPcNDFOC::Data ContainerPcNDFOC::GetData(std::size_t i) const
 	{
 		if (i >= std::numeric_limits<unsigned short>::max())
 			THROW_EXCEPTION("i is too large, max: " + std::to_string(std::numeric_limits<unsigned short>::max()));
 
 
-		PTR(PcNDF) q (new PcNDF);
+		Data q (new PcNDF);
 
 		//
 		pcl::PCLPointCloud2::Ptr blob(new pcl::PCLPointCloud2);
@@ -95,15 +94,14 @@ namespace RecRoom
 		j["size"] = size;
 	}
 
-	bool ContainerPcNDFOC::CheckNew() const
+	bool ContainerPcNDFOC::CheckExist() const
 	{
-		if (DumpAble::CheckNew())
-			return true;
+		if (!DumpAble::CheckExist())
+			return false;
 		if (!boost::filesystem::is_directory(filePath / boost::filesystem::path("pcNDF")))
-			return true;
+			return false;
 		if (!boost::filesystem::exists(filePath / boost::filesystem::path("pcNDF") / boost::filesystem::path("root.oct_idx")))
-			return true;
-
-		return false;
+			return false;
+		return true;
 	}
 }

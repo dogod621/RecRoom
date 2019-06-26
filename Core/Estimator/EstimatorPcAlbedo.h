@@ -1,6 +1,7 @@
 #pragma once
 
 #include "EstimatorPc.h"
+#include "Scanner/ScannerPc.h"
 
 namespace RecRoom
 {
@@ -8,14 +9,18 @@ namespace RecRoom
 	{
 	public:
 		EstimatorPcAlbedo(double searchRadius,
-			const std::vector<ScanMeta>& scanMeta,
+			const CONST_PTR(ScannerPc)& scanner,
 			const LinearSolver linearSolver = LinearSolver::EIGEN_SVD,
 			const double distInterParm = 10.0, const double angleInterParm = 20.0, const double cutFalloff = 0.33,
 			const double cutGrazing = 0.86602540378)
 			: EstimatorPc(searchRadius),
-			scanMeta(scanMeta), linearSolver(linearSolver),
+			scanner(scanner), linearSolver(linearSolver),
 			distInterParm(distInterParm), angleInterParm(angleInterParm), cutFalloff(cutFalloff),
-			cutGrazing(cutGrazing) {}
+			cutGrazing(cutGrazing) 
+		{
+			if(!scanner)
+				THROW_EXCEPTION("scanner is not set");
+		}
 
 	public:
 		virtual void Process(
@@ -31,7 +36,7 @@ namespace RecRoom
 		double angleInterParm;
 		double cutFalloff;
 		double cutGrazing;
-		std::vector<ScanMeta> scanMeta;
+		CONST_PTR(ScannerPc) scanner;
 	};
 }
 

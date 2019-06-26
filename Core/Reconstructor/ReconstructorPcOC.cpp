@@ -44,24 +44,24 @@ namespace RecRoom
 	class  AsyncQuery_Rec : public AsyncQuery<AsyncGlobal_Rec>
 	{
 	public:
-		int qi;
+		int index;
 
-		AsyncQuery_Rec(int qi = -1) : qi(qi)
+		AsyncQuery_Rec(int index = -1) : index(index)
 		{}
 
 		virtual int Check(const AsyncGlobal_Rec& global) const
 		{
-			if (qi < 0) return 1;
-			if (qi >= global.ptrReconstructorPcOC()->getScanner()->getContainerPcRAW()->Size()) return 2;
+			if (index < 0) return 1;
+			if (index >= global.ptrReconstructorPcOC()->getScanner()->getContainerPcRAW()->Size()) return 2;
 			return 0;
 		}
 
 		virtual std::string Info(const AsyncGlobal_Rec& global) const
 		{
-			std::stringstream strQuery;
-			ContainerPcRAW::QuaryMeta quaryMeta = global.ptrReconstructorPcOC()->getScanner()->getContainerPcRAW()->TestQuary(qi);
-			strQuery << qi << ": " << quaryMeta.minAABB << ", " << quaryMeta.maxAABB;
-			return strQuery.str();
+			std::stringstream ss;
+			ContainerPcRAW::Meta meta = global.ptrReconstructorPcOC()->getScanner()->getContainerPcRAW()->GetMeta(index);
+			ss << index << ": " << meta.minAABB << ", " << meta.maxAABB;
+			return ss.str();
 		}
 	};
 
@@ -93,16 +93,16 @@ namespace RecRoom
 	int AStep_RecPointCloud(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
 	{
 		// 
-		ContainerPcRAW::QuaryData quaryData;
+		ContainerPcRAW::Data cData;
 		{
-			PRINT_INFO("Quary pointCloud from container - Start");
+			PRINT_INFO("Get pointCloud from container - Start");
 
-			quaryData = global.ptrReconstructorPcOC()->getScanner()->getContainerPcRAW()->Quary(query.qi);
-			data.pcRaw = quaryData.data;
-			data.pcRawIdx = quaryData.index;
+			cData = global.ptrReconstructorPcOC()->getScanner()->getContainerPcRAW()->GetData(query.index);
+			data.pcRaw = cData.pcMED;
+			data.pcRawIdx = cData.pcIndex;
 
 			std::stringstream ss;
-			ss << "Quary pointCloud from container - End - pcSize: " << data.pcRaw->size() << ", idxSize: " << data.pcRawIdx->size();
+			ss << "Get pointCloud from container - End - pcSize: " << data.pcRaw->size() << ", idxSize: " << data.pcRawIdx->size();
 			PRINT_INFO(ss.str());
 		}
 
@@ -123,8 +123,8 @@ namespace RecRoom
 				PRINT_INFO("Extract indices - Start");
 
 				pcl::CropBox<PointMED> cb;
-				cb.setMin(Eigen::Vector4f(quaryData.minAABB.x(), quaryData.minAABB.y(), quaryData.minAABB.z(), 1.0));
-				cb.setMax(Eigen::Vector4f(quaryData.maxAABB.x(), quaryData.maxAABB.y(), quaryData.maxAABB.z(), 1.0));
+				cb.setMin(Eigen::Vector4f(cData.minAABB.x(), cData.minAABB.y(), cData.minAABB.z(), 1.0));
+				cb.setMax(Eigen::Vector4f(cData.maxAABB.x(), cData.maxAABB.y(), cData.maxAABB.z(), 1.0));
 				cb.setInputCloud(data.pcRec);
 				cb.filter(*data.pcRecIdx);
 				std::sort(data.pcRecIdx->begin(), data.pcRecIdx->end());
@@ -222,7 +222,7 @@ namespace RecRoom
 
 		std::vector<AsyncQuery_Rec> queries(scanner->getContainerPcRAW()->Size());
 		for (std::size_t i = 0; i < queries.size(); ++i)
-			queries[i].qi = i;
+			queries[i].index = i;
 
 		AsyncProcess<AsyncGlobal_Rec, AsyncQuery_Rec, AsyncData_Rec>(
 			global, queries,
@@ -234,16 +234,16 @@ namespace RecRoom
 	int AStep_RecPcAtt(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
 	{
 		// 
-		ContainerPcRAW::QuaryData quaryData;
+		ContainerPcRAW::Data cData;
 		{
-			PRINT_INFO("Quary pointCloud from container - Start");
+			PRINT_INFO("Get pointCloud from container - Start");
 
-			quaryData = global.ptrReconstructorPcOC()->getScanner()->getContainerPcRAW()->Quary(query.qi);
-			data.pcRaw = quaryData.data;
-			data.pcRawIdx = quaryData.index;
+			cData = global.ptrReconstructorPcOC()->getScanner()->getContainerPcRAW()->GetData(query.index);
+			data.pcRaw = cData.pcMED;
+			data.pcRawIdx = cData.pcIndex;
 
 			std::stringstream ss;
-			ss << "Quary pointCloud from container - End - pcSize: " << data.pcRaw->size() << ", idxSize: " << data.pcRawIdx->size();
+			ss << "Get pointCloud from container - End - pcSize: " << data.pcRaw->size() << ", idxSize: " << data.pcRawIdx->size();
 			PRINT_INFO(ss.str());
 		}
 
@@ -252,8 +252,8 @@ namespace RecRoom
 			PRINT_INFO("Extract return indices - Start");
 
 			pcl::CropBox<PointMED> cb;
-			cb.setMin(Eigen::Vector4f(quaryData.minAABB.x(), quaryData.minAABB.y(), quaryData.minAABB.z(), 1.0));
-			cb.setMax(Eigen::Vector4f(quaryData.maxAABB.x(), quaryData.maxAABB.y(), quaryData.maxAABB.z(), 1.0));
+			cb.setMin(Eigen::Vector4f(cData.minAABB.x(), cData.minAABB.y(), cData.minAABB.z(), 1.0));
+			cb.setMax(Eigen::Vector4f(cData.maxAABB.x(), cData.maxAABB.y(), cData.maxAABB.z(), 1.0));
 			cb.setInputCloud(global.ptrReconstructorPcOC()->getPcMED());
 			cb.filter(*data.pcReturnIdx);
 
@@ -267,8 +267,8 @@ namespace RecRoom
 			PRINT_INFO("Extract pointCloud from pcMED - Start");
 
 			pcl::CropBox<PointMED> cb;
-			cb.setMin(Eigen::Vector4f(quaryData.extMinAABB.x(), quaryData.extMinAABB.y(), quaryData.extMinAABB.z(), 1.0));
-			cb.setMax(Eigen::Vector4f(quaryData.extMaxAABB.x(), quaryData.extMaxAABB.y(), quaryData.extMaxAABB.z(), 1.0));
+			cb.setMin(Eigen::Vector4f(cData.extMinAABB.x(), cData.extMinAABB.y(), cData.extMinAABB.z(), 1.0));
+			cb.setMax(Eigen::Vector4f(cData.extMaxAABB.x(), cData.extMaxAABB.y(), cData.extMaxAABB.z(), 1.0));
 			cb.setInputCloud(global.ptrReconstructorPcOC()->getPcMED());
 			cb.filter(*data.pcRecIdx);
 
@@ -291,8 +291,8 @@ namespace RecRoom
 			PRINT_INFO("Extract indices - Start");
 
 			pcl::CropBox<PointMED> cb;
-			cb.setMin(Eigen::Vector4f(quaryData.minAABB.x(), quaryData.minAABB.y(), quaryData.minAABB.z(), 1.0));
-			cb.setMax(Eigen::Vector4f(quaryData.maxAABB.x(), quaryData.maxAABB.y(), quaryData.maxAABB.z(), 1.0));
+			cb.setMin(Eigen::Vector4f(cData.minAABB.x(), cData.minAABB.y(), cData.minAABB.z(), 1.0));
+			cb.setMax(Eigen::Vector4f(cData.maxAABB.x(), cData.maxAABB.y(), cData.maxAABB.z(), 1.0));
 			cb.setInputCloud(data.pcRec);
 			cb.filter(*data.pcRecIdx);
 
@@ -411,7 +411,7 @@ namespace RecRoom
 
 		std::vector<AsyncQuery_Rec> queries(scanner->getContainerPcRAW()->Size());
 		for (std::size_t i = 0; i < queries.size(); ++i)
-			queries[i].qi = i;
+			queries[i].index = i;
 
 		AsyncProcess<AsyncGlobal_Rec, AsyncQuery_Rec, AsyncData_Rec>(
 			global, queries,

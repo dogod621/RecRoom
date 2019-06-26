@@ -35,7 +35,7 @@ namespace RecRoom
 		CONST_PTR(e57::VectorNode) data3DE57;
 		CONST_PTR(e57::VectorNode) images2DE57;
 		
-		void LoadScanMeta();
+		void LoadScanMetaSet();
 	};
 
 	//

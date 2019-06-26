@@ -12,13 +12,18 @@ namespace RecRoom
 		const PTR(ContainerPcNDF)& containerPcNDF)
 		: DumpAble("ReconstructorPc", filePath_), status(ReconstructStatus::ReconstructStatus_UNKNOWN), scanner(scanner), containerPcNDF(containerPcNDF), pcMED(new PcMED)
 	{
-		if (CheckNew())
+		if (!scanner)
+			THROW_EXCEPTION("scanner is not set");
+		if (!containerPcNDF)
+			THROW_EXCEPTION("containerPcNDF is not set");
+
+		if (CheckExist())
 		{
-			Dump();
+			Load();
 		}
 		else
 		{
-			Load();
+			Dump();
 		}
 
 		//
@@ -132,13 +137,13 @@ namespace RecRoom
 		j["status"] = Convert<nlohmann::json, ReconstructStatus>(status);
 	}
 
-	bool ReconstructorPc::CheckNew() const
+	bool ReconstructorPc::CheckExist() const
 	{
-		if (DumpAble::CheckNew())
-			return true;
+		if (!DumpAble::CheckExist())
+			return false;
 		if (!boost::filesystem::exists(filePath / boost::filesystem::path("pcMED.pcd")))
-			return true;
-		return false;
+			return false;
+		return true;
 	}
 }
 

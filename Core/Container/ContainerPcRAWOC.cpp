@@ -8,17 +8,17 @@ namespace RecRoom
 {
 	ContainerPcRAWOC::ContainerPcRAWOC(const boost::filesystem::path& filePath_, 
 		const Eigen::Vector3d& min, const Eigen::Vector3d& max, const double res, double overlap)
-		: DumpAble("ContainerPcRAWOC", filePath_), ContainerPcRAW(), oct(nullptr), overlap(overlap), quaries()
+		: DumpAble("ContainerPcRAWOC", filePath_), ContainerPcRAW(), oct(nullptr), overlap(overlap), metaSet()
 	{
-		if (CheckNew())
-		{
-			oct = OCT::Ptr(new OCT(min, max, res, filePath / boost::filesystem::path("pcRAW") / boost::filesystem::path("root.oct_idx"), "ECEF"));
-			Dump();
-		}
-		else
+		if (CheckExist())
 		{
 			oct = OCT::Ptr(new OCT(filePath / boost::filesystem::path("pcRAW") / boost::filesystem::path("root.oct_idx"), true));
 			Load();
+		}
+		else
+		{
+			oct = OCT::Ptr(new OCT(min, max, res, filePath / boost::filesystem::path("pcRAW") / boost::filesystem::path("root.oct_idx"), "ECEF"));
+			Dump();
 		}
 
 		//
@@ -31,7 +31,7 @@ namespace RecRoom
 		oct->addPointCloud(v);
 
 		// update 
-		quaries.clear();
+		metaSet.clear();
 		OCT::Iterator it(*oct);
 		Eigen::Vector3d ext(overlap, overlap, overlap);
 		while (*it != nullptr)
@@ -42,7 +42,7 @@ namespace RecRoom
 				Eigen::Vector3d maxAABB;
 				std::size_t depth;
 				(*it)->getBoundingBox(minAABB, maxAABB);
-				quaries.push_back(QuaryMeta(minAABB, maxAABB, minAABB - ext, maxAABB + ext, (*it)->getDepth()));
+				metaSet.push_back(Meta(minAABB, maxAABB, minAABB - ext, maxAABB + ext, (*it)->getDepth()));
 			}
 			it++;
 		}
@@ -51,34 +51,35 @@ namespace RecRoom
 		Dump();
 	}
 
-	ContainerPcRAW::QuaryData ContainerPcRAWOC::Quary(std::size_t i) const
+	ContainerPcRAW::Meta ContainerPcRAWOC::GetMeta(std::size_t i) const
 	{
-		if (i >= quaries.size())
-			THROW_EXCEPTION("i is too large, max: " + std::to_string(quaries.size()));
+		if (i >= metaSet.size())
+			THROW_EXCEPTION("i is too large, max: " + std::to_string(metaSet.size()));
 
-		ContainerPcRAW::QuaryData q (quaries[i]);
+		return metaSet[i];
+	}
+
+	ContainerPcRAW::Data ContainerPcRAWOC::GetData(std::size_t i) const
+	{
+		if (i >= metaSet.size())
+			THROW_EXCEPTION("i is too large, max: " + std::to_string(metaSet.size()));
+
+		const Meta& meta =  metaSet[i];
+		ContainerPcRAW::Data data (meta);
 
 		//
 		pcl::PCLPointCloud2::Ptr blob(new pcl::PCLPointCloud2);
-		oct->queryBoundingBox(quaries[i].extMinAABB, quaries[i].extMaxAABB, quaries[i].depth, blob);
-		pcl::fromPCLPointCloud2(*blob, *q.data);
+		oct->queryBoundingBox(meta.extMinAABB, meta.extMaxAABB, meta.depth, blob);
+		pcl::fromPCLPointCloud2(*blob, *data.pcMED);
 
 		//
 		pcl::CropBox<PointMED> cb;
-		cb.setMin(Eigen::Vector4f(quaries[i].minAABB.x(), quaries[i].minAABB.y(), quaries[i].minAABB.z(), 1.0));
-		cb.setMax(Eigen::Vector4f(quaries[i].maxAABB.x(), quaries[i].maxAABB.y(), quaries[i].maxAABB.z(), 1.0));
-		cb.setInputCloud(q.data);
-		cb.filter(*q.index);
+		cb.setMin(Eigen::Vector4f(meta.minAABB.x(), meta.minAABB.y(), meta.minAABB.z(), 1.0));
+		cb.setMax(Eigen::Vector4f(meta.maxAABB.x(), meta.maxAABB.y(), meta.maxAABB.z(), 1.0));
+		cb.setInputCloud(data.pcMED);
+		cb.filter(*data.pcIndex);
 
-		return q;
-	}
-
-	ContainerPcRAW::QuaryMeta ContainerPcRAWOC::TestQuary(std::size_t i) const
-	{
-		if (i >= quaries.size())
-			THROW_EXCEPTION("i is too large, max: " + std::to_string(quaries.size()));
-
-		return quaries[i];
+		return data;
 	}
 
 	void ContainerPcRAWOC::Load(const nlohmann::json& j)
@@ -87,50 +88,50 @@ namespace RecRoom
 			THROW_EXCEPTION("File is not valid: missing \"overlap\"");
 		overlap = j["overlap"];
 
-		for (nlohmann::json::const_iterator qit = j["quaries"].begin(); qit != j["quaries"].end(); ++qit)
+		for (nlohmann::json::const_iterator jMetaIt = j["metaSet"].begin(); jMetaIt != j["metaSet"].end(); ++jMetaIt)
 		{
-			QuaryMeta q;
+			Meta meta;
 			{
-				if (qit->find("minAABB") == qit->end())
+				if (jMetaIt->find("minAABB") == jMetaIt->end())
 					THROW_EXCEPTION("File is not valid: missing \"minAABB\"");
-				nlohmann::json::const_iterator it = (*qit)["minAABB"].begin();
-				q.minAABB.x() = *it; ++it;
-				q.minAABB.y() = *it; ++it;
-				q.minAABB.z() = *it; ++it;
+				nlohmann::json::const_iterator it = (*jMetaIt)["minAABB"].begin();
+				meta.minAABB.x() = *it; ++it;
+				meta.minAABB.y() = *it; ++it;
+				meta.minAABB.z() = *it; ++it;
 			}
 
 			{
-				if (qit->find("maxAABB") == qit->end())
+				if (jMetaIt->find("maxAABB") == jMetaIt->end())
 					THROW_EXCEPTION("File is not valid: missing \"maxAABB\"");
-				nlohmann::json::const_iterator it = (*qit)["maxAABB"].begin();
-				q.maxAABB.x() = *it; ++it;
-				q.maxAABB.y() = *it; ++it;
-				q.maxAABB.z() = *it; ++it;
+				nlohmann::json::const_iterator it = (*jMetaIt)["maxAABB"].begin();
+				meta.maxAABB.x() = *it; ++it;
+				meta.maxAABB.y() = *it; ++it;
+				meta.maxAABB.z() = *it; ++it;
 			}
 
 			{
-				if (qit->find("extMinAABB") == qit->end())
+				if (jMetaIt->find("extMinAABB") == jMetaIt->end())
 					THROW_EXCEPTION("File is not valid: missing \"extMinAABB\"");
-				nlohmann::json::const_iterator it = (*qit)["extMinAABB"].begin();
-				q.extMinAABB.x() = *it; ++it;
-				q.extMinAABB.y() = *it; ++it;
-				q.extMinAABB.z() = *it; ++it;
+				nlohmann::json::const_iterator it = (*jMetaIt)["extMinAABB"].begin();
+				meta.extMinAABB.x() = *it; ++it;
+				meta.extMinAABB.y() = *it; ++it;
+				meta.extMinAABB.z() = *it; ++it;
 			}
 
 			{
-				if (qit->find("extMaxAABB") == qit->end())
+				if (jMetaIt->find("extMaxAABB") == jMetaIt->end())
 					THROW_EXCEPTION("File is not valid: missing \"extMaxAABB\"");
-				nlohmann::json::const_iterator it = (*qit)["extMaxAABB"].begin();
-				q.extMaxAABB.x() = *it; ++it;
-				q.extMaxAABB.y() = *it; ++it;
-				q.extMaxAABB.z() = *it; ++it;
+				nlohmann::json::const_iterator it = (*jMetaIt)["extMaxAABB"].begin();
+				meta.extMaxAABB.x() = *it; ++it;
+				meta.extMaxAABB.y() = *it; ++it;
+				meta.extMaxAABB.z() = *it; ++it;
 			}
 
-			if (qit->find("depth") == qit->end())
+			if (jMetaIt->find("depth") == jMetaIt->end())
 				THROW_EXCEPTION("File is not valid: missing \"depth\"");
-			q.depth = (*qit)["depth"];
+			meta.depth = (*jMetaIt)["depth"];
 
-			quaries.push_back(q);
+			metaSet.push_back(meta);
 		}
 	}
 
@@ -138,40 +139,41 @@ namespace RecRoom
 	{
 		j["overlap"] = overlap;
 
-		for (std::size_t i = 0; i < quaries.size(); ++i)
+		for (std::size_t i = 0; i < metaSet.size(); ++i)
 		{
-			nlohmann::json jQ;
+			nlohmann::json jMeta;
+			const Meta& meta = metaSet[i];
 
-			jQ["minAABB"].push_back(quaries[i].minAABB.x());
-			jQ["minAABB"].push_back(quaries[i].minAABB.y());
-			jQ["minAABB"].push_back(quaries[i].minAABB.z());
+			jMeta["minAABB"].push_back(meta.minAABB.x());
+			jMeta["minAABB"].push_back(meta.minAABB.y());
+			jMeta["minAABB"].push_back(meta.minAABB.z());
 
-			jQ["maxAABB"].push_back(quaries[i].maxAABB.x());
-			jQ["maxAABB"].push_back(quaries[i].maxAABB.y());
-			jQ["maxAABB"].push_back(quaries[i].maxAABB.z());
+			jMeta["maxAABB"].push_back(meta.maxAABB.x());
+			jMeta["maxAABB"].push_back(meta.maxAABB.y());
+			jMeta["maxAABB"].push_back(meta.maxAABB.z());
 
-			jQ["extMinAABB"].push_back(quaries[i].extMinAABB.x());
-			jQ["extMinAABB"].push_back(quaries[i].extMinAABB.y());
-			jQ["extMinAABB"].push_back(quaries[i].extMinAABB.z());
+			jMeta["extMinAABB"].push_back(meta.extMinAABB.x());
+			jMeta["extMinAABB"].push_back(meta.extMinAABB.y());
+			jMeta["extMinAABB"].push_back(meta.extMinAABB.z());
 
-			jQ["extMaxAABB"].push_back(quaries[i].extMaxAABB.x());
-			jQ["extMaxAABB"].push_back(quaries[i].extMaxAABB.y());
-			jQ["extMaxAABB"].push_back(quaries[i].extMaxAABB.z());
+			jMeta["extMaxAABB"].push_back(meta.extMaxAABB.x());
+			jMeta["extMaxAABB"].push_back(meta.extMaxAABB.y());
+			jMeta["extMaxAABB"].push_back(meta.extMaxAABB.z());
 
-			jQ["depth"] = quaries[i].depth;
+			jMeta["depth"] = meta.depth;
 
-			j["quaries"].push_back(jQ);
+			j["metaSet"].push_back(jMeta);
 		}
 	}
 
-	bool ContainerPcRAWOC::CheckNew() const
+	bool ContainerPcRAWOC::CheckExist() const
 	{
-		if(DumpAble::CheckNew())
-			return true;
-		else if (!boost::filesystem::is_directory(filePath / boost::filesystem::path("pcRAW")))
-			return true;
-		else if (!boost::filesystem::exists(filePath / boost::filesystem::path("pcRAW") / boost::filesystem::path("root.oct_idx")))
-			return true;
-		return false;
+		if(!DumpAble::CheckExist())
+			return false;
+		if (!boost::filesystem::is_directory(filePath / boost::filesystem::path("pcRAW")))
+			return false;
+		if (!boost::filesystem::exists(filePath / boost::filesystem::path("pcRAW") / boost::filesystem::path("root.oct_idx")))
+			return false;
+		return true;
 	}
 }

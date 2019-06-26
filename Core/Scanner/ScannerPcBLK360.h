@@ -15,7 +15,6 @@ namespace RecRoom
 			unsigned char colorThresh = 6);
 
 	public:
-		virtual void ShipPcLFData() const { THROW_EXCEPTION("NOT DONE"); }
 		virtual bool Valid(const PointRAW& pointRAW) const
 		{
 #ifdef POINT_RAW_WITH_RGB
@@ -35,7 +34,7 @@ namespace RecRoom
 		virtual void Dump() const { DumpAble::Dump(); };
 		virtual void Load(const nlohmann::json& j);
 		virtual void Dump(nlohmann::json& j) const;
-		virtual bool CheckNew() const { return DumpAble::CheckNew(); };
+		virtual bool CheckExist() const { return DumpAble::CheckExist(); };
 	};
 }
 

@@ -10,8 +10,9 @@ namespace RecRoom
 	class ContainerPcNDFOC : public ContainerPcNDF, public DumpAble
 	{
 	public:
-		using OCTDC = pcl::outofcore::OutofcoreOctreeDiskContainer<PointNDF>;
-		using OCT = pcl::outofcore::OutofcoreOctreeBase<OCTDC, PointNDF>;
+		using OCT = pcl::outofcore::OutofcoreOctreeBase<pcl::outofcore::OutofcoreOctreeDiskContainer<PointNDF>, PointNDF>;
+		using Meta = ContainerPcNDF::Meta;
+		using Data = ContainerPcNDF::Data;
 
 	public:
 		ContainerPcNDFOC(const boost::filesystem::path& filePath);
@@ -19,7 +20,7 @@ namespace RecRoom
 	public:
 		virtual void Merge(const PTR(PcNDF)& v);
 		virtual std::size_t Size() const { return size; }
-		virtual PTR(PcNDF) Quary(std::size_t i) const;
+		virtual Data GetData(std::size_t i) const;
 
 	public:
 		PTR(OCT) getOCT() const { return oct; }
@@ -32,7 +33,7 @@ namespace RecRoom
 		virtual void Dump() const { DumpAble::Dump(); };
 		virtual void Load(const nlohmann::json& j);
 		virtual void Dump(nlohmann::json& j) const;
-		virtual bool CheckNew() const;
+		virtual bool CheckExist() const;
 	};
 }
 

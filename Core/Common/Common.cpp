@@ -4,7 +4,7 @@ namespace RecRoom
 {
 	std::mutex Common::gLock;
 	double Common::eps = std::numeric_limits<float>::epsilon();
-	Eigen::Vector3d Common::tempVec1 = Eigen::Vector3d(1.0/std::sqrt(3.0), 1.0 / std::sqrt(3.0), 1.0 / std::sqrt(3.0));
+	Eigen::Vector3d Common::tempVec1 = Eigen::Vector3d(1.0 / std::sqrt(3.0), 1.0 / std::sqrt(3.0), 1.0 / std::sqrt(3.0));
 	Eigen::Vector3d Common::tempVec2 = Eigen::Vector3d(1.0 / std::sqrt(2.0), 1.0 / std::sqrt(2.0), 0.0);
 	Eigen::Vector3d Common::tempVec3 = Eigen::Vector3d(1.0 / std::sqrt(2.0), 0.0, 1.0 / std::sqrt(2.0));
 	Eigen::Vector3d Common::tempVec4 = Eigen::Vector3d(0.0, 1.0 / std::sqrt(2.0), 1.0 / std::sqrt(2.0));
@@ -102,12 +102,12 @@ namespace RecRoom
 		file.close();
 	}
 
-	bool DumpAble::CheckNew() const
+	bool DumpAble::CheckExist() const
 	{
 		if (!boost::filesystem::is_directory(filePath))
-			return true;
+			return false;
 		if (!boost::filesystem::exists(filePath / boost::filesystem::path(className)))
-			return true;
-		return false;
+			return false;
+		return true;
 	}
 }
