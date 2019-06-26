@@ -21,9 +21,8 @@ namespace RecRoom
 		{
 			if (reconstructorPcOC == nullptr) return 1;
 			if (!reconstructorPcOC->getScanner()) return 2;
-			if (!reconstructorPcOC->getContainerPcRAW()) return 3;
-			if (!reconstructorPcOC->getContainerPcNDF()) return 4;
-			if (!reconstructorPcOC->getPcMED()) return 5;
+			if (!reconstructorPcOC->getContainerPcNDF()) return 3;
+			if (!reconstructorPcOC->getPcMED()) return 4;
 			return 0;
 		}
 
@@ -53,14 +52,14 @@ namespace RecRoom
 		virtual int Check(const AsyncGlobal_Rec& global) const
 		{
 			if (qi < 0) return 1;
-			if (qi >= global.ptrReconstructorPcOC()->getContainerPcRAW()->Size()) return 2;
+			if (qi >= global.ptrReconstructorPcOC()->getScanner()->getContainerPcRAW()->Size()) return 2;
 			return 0;
 		}
 
 		virtual std::string Info(const AsyncGlobal_Rec& global) const
 		{
 			std::stringstream strQuery;
-			ContainerPcRAW::QuaryMeta quaryMeta = global.ptrReconstructorPcOC()->getContainerPcRAW()->TestQuary(qi);
+			ContainerPcRAW::QuaryMeta quaryMeta = global.ptrReconstructorPcOC()->getScanner()->getContainerPcRAW()->TestQuary(qi);
 			strQuery << qi << ": " << quaryMeta.minAABB << ", " << quaryMeta.maxAABB;
 			return strQuery.str();
 		}
@@ -98,7 +97,7 @@ namespace RecRoom
 		{
 			PRINT_INFO("Quary pointCloud from container - Start");
 
-			quaryData = global.ptrReconstructorPcOC()->getContainerPcRAW()->Quary(query.qi);
+			quaryData = global.ptrReconstructorPcOC()->getScanner()->getContainerPcRAW()->Quary(query.qi);
 			data.pcRaw = quaryData.data;
 			data.pcRawIdx = quaryData.index;
 
@@ -221,7 +220,7 @@ namespace RecRoom
 	{
 		AsyncGlobal_Rec global(this);
 
-		std::vector<AsyncQuery_Rec> queries(containerPcRAW->Size());
+		std::vector<AsyncQuery_Rec> queries(scanner->getContainerPcRAW()->Size());
 		for (std::size_t i = 0; i < queries.size(); ++i)
 			queries[i].qi = i;
 
@@ -239,7 +238,7 @@ namespace RecRoom
 		{
 			PRINT_INFO("Quary pointCloud from container - Start");
 
-			quaryData = global.ptrReconstructorPcOC()->getContainerPcRAW()->Quary(query.qi);
+			quaryData = global.ptrReconstructorPcOC()->getScanner()->getContainerPcRAW()->Quary(query.qi);
 			data.pcRaw = quaryData.data;
 			data.pcRawIdx = quaryData.index;
 
@@ -410,7 +409,7 @@ namespace RecRoom
 	{
 		AsyncGlobal_Rec global(this);
 
-		std::vector<AsyncQuery_Rec> queries(containerPcRAW->Size());
+		std::vector<AsyncQuery_Rec> queries(scanner->getContainerPcRAW()->Size());
 		for (std::size_t i = 0; i < queries.size(); ++i)
 			queries[i].qi = i;
 

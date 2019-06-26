@@ -29,7 +29,6 @@ namespace RecRoom
 		ReconstructorPc(
 			boost::filesystem::path filePath,
 			const CONST_PTR(ScannerPc)& scanner,
-			const CONST_PTR(ContainerPcRAW)& containerPcRAW,
 			const PTR(ContainerPcNDF)& containerPcNDF);
 
 	public:
@@ -54,7 +53,6 @@ namespace RecRoom
 		PTR(PcMED) getPcMED() const { return pcMED; }
 
 		CONST_PTR(ScannerPc) getScanner() const { return scanner; }
-		CONST_PTR(ContainerPcRAW) getContainerPcRAW() const { return containerPcRAW; }
 		PTR(ContainerPcNDF) getContainerPcNDF() const { return containerPcNDF; }
 
 		CONST_PTR(ResamplerPc) getDownSampler() const { return downSampler; }
@@ -79,7 +77,6 @@ namespace RecRoom
 		PTR(PcMED) pcMED;
 
 		CONST_PTR(ScannerPc) scanner; 
-		CONST_PTR(ContainerPcRAW) containerPcRAW;
 		PTR(ContainerPcNDF) containerPcNDF;
 
 		CONST_PTR(ResamplerPc) downSampler;

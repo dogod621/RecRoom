@@ -10,9 +10,8 @@ namespace RecRoom
 		ReconstructorPcOC(
 			boost::filesystem::path filePath,
 			const CONST_PTR(ScannerPc)& scanner,
-			const CONST_PTR(ContainerPcRAW)& containerPcRAW,
 			const PTR(ContainerPcNDF)& containerPcNDF)
-			: ReconstructorPc(filePath, scanner, containerPcRAW, containerPcNDF) {}
+			: ReconstructorPc(filePath, scanner, containerPcNDF) {}
 
 	public:
 		//virtual void Process(pcl::PolygonMesh& out) const = 0;

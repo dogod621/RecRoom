@@ -9,14 +9,11 @@ namespace RecRoom
 	ReconstructorPc::ReconstructorPc(
 		boost::filesystem::path filePath_,
 		const CONST_PTR(ScannerPc)& scanner,
-		const CONST_PTR(ContainerPcRAW)& containerPcRAW,
 		const PTR(ContainerPcNDF)& containerPcNDF)
-		: filePath(filePath_), status(ReconstructStatus::ReconstructStatus_UNKNOWN), scanner(scanner), containerPcRAW(containerPcRAW), containerPcNDF(containerPcNDF), pcMED(new PcMED)
+		: filePath(filePath_), status(ReconstructStatus::ReconstructStatus_UNKNOWN), scanner(scanner), containerPcNDF(containerPcNDF), pcMED(new PcMED)
 	{
 		if (!scanner)
 			THROW_EXCEPTION("scanner is not set");
-		if (!containerPcRAW)
-			THROW_EXCEPTION("containerPcRAW is not set");
 		if (!containerPcNDF)
 			THROW_EXCEPTION("containerPcNDF is not set");
 
