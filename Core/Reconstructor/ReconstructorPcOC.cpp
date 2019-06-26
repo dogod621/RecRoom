@@ -84,8 +84,6 @@ namespace RecRoom
 			pcRecAcc(new KdTreeMED),
 			pcReturnIdx(new PcIndex)
 		{
-			pcRawAcc->setInputCloud(pcRaw);
-			pcRecAcc->setInputCloud(pcRec);
 		}
 	};
 
@@ -106,6 +104,12 @@ namespace RecRoom
 			PRINT_INFO(ss.str());
 		}
 
+		{
+			PRINT_INFO("Build pcRawAcc - Start");
+			data.pcRawAcc->setInputCloud(data.pcRaw);
+			PRINT_INFO("Build pcRawAcc - End");
+		}
+
 		// 
 		if (global.ptrReconstructorPcOC()->getDownSampler())
 		{
@@ -117,6 +121,12 @@ namespace RecRoom
 				std::stringstream ss;
 				ss << "DownSampling - End - inSize: " << data.pcRaw->size() << ", outSize:" << data.pcRec->size();
 				PRINT_INFO(ss.str());
+			}
+
+			{
+				PRINT_INFO("Build pcRecAcc - Start");
+				data.pcRecAcc->setInputCloud(data.pcRec);
+				PRINT_INFO("Build pcRecAcc - End");
 			}
 
 			{
@@ -247,6 +257,12 @@ namespace RecRoom
 			PRINT_INFO(ss.str());
 		}
 
+		{
+			PRINT_INFO("Build pcRawAcc - Start");
+			data.pcRawAcc->setInputCloud(data.pcRaw);
+			PRINT_INFO("Build pcRawAcc - End");
+		}
+
 		// 
 		{
 			PRINT_INFO("Extract return indices - Start");
@@ -285,6 +301,12 @@ namespace RecRoom
 			ss << "Extract pointCloud from pcMED - End - inSize: " << global.ptrReconstructorPcOC()->getPcMED()->size() << ", outSize:" << data.pcRec->size();
 			PRINT_INFO(ss.str());
 
+		}
+
+		{
+			PRINT_INFO("Build pcRecAcc - Start");
+			data.pcRecAcc->setInputCloud(data.pcRec);
+			PRINT_INFO("Build pcRecAcc - End");
 		}
 
 		{
