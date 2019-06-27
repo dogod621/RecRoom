@@ -45,10 +45,10 @@ namespace RecRoom
 	{
 		nlohmann::json j;
 		if (v & ReconstructStatus::POINT_CLOUD) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::POINT_CLOUD));
-		else if (v & ReconstructStatus::PC_ALBEDO) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::PC_ALBEDO));
-		else if (v & ReconstructStatus::PC_SEGMENT) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::PC_SEGMENT));
-		else if (v & ReconstructStatus::SEG_NDF) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::SEG_NDF));
-		else if (v & ReconstructStatus::MESH) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::MESH));
+		if (v & ReconstructStatus::PC_ALBEDO) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::PC_ALBEDO));
+		if (v & ReconstructStatus::PC_SEGMENT) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::PC_SEGMENT));
+		if (v & ReconstructStatus::SEG_NDF) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::SEG_NDF));
+		if (v & ReconstructStatus::MESH) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::MESH));
 		return j;
 	}
 }
