@@ -14,15 +14,19 @@ namespace RecRoom
 		{
 			if (upIdx[px] >= 0)
 			{
-				float tempX = (*inV)[px].x;
-				float tempY = (*inV)[px].y;
-				float tempZ = (*inV)[px].z;
-				uint32_t tempLable = (*inV)[px].label;
-				(*inV)[px] = (*searchSurface)[upIdx[px]];
-				(*inV)[px].x = tempX;
-				(*inV)[px].y = tempY;
-				(*inV)[px].z = tempZ;
-				(*inV)[px].label = tempLable;
+				PointMED& tarP = (*inV)[px];
+				PointMED& srcP = (*searchSurface)[upIdx[px]];
+
+#ifdef POINT_MED_WITH_NORMAL
+				tarP.normal_x = srcP.normal_x;
+				tarP.normal_y = srcP.normal_y;
+				tarP.normal_z = srcP.normal_z;
+				tarP.curvature = srcP.curvature;
+#endif
+
+#ifdef POINT_MED_WITH_SEGLABEL
+				tarP.segLabel = srcP.segLabel;
+#endif		
 			}
 		}
 	}
