@@ -6,6 +6,7 @@
 #include <cmath>
 #include <mutex>
 #include <string>
+#include <vector>
 #include <exception>
 #include <Eigen/Core>
 #include <boost/filesystem.hpp>
@@ -20,18 +21,35 @@ namespace RecRoom
 #define PTR(T) boost::shared_ptr<T> // std::shared_ptr<T>
 #define CONST_PTR(T) boost::shared_ptr<const T> // std::shared_ptr<const T>
 
+	struct Color
+	{
+		union
+		{
+			struct
+			{
+				unsigned char r;
+				unsigned char g;
+				unsigned char b;
+				unsigned char a;
+			};
+			uint32_t rgba;
+		};
+	};
+
 	class Common
 	{
 	public:
 		static std::mutex gLock;
 		static double eps;
+		
+		static bool GenFrame(const Eigen::Vector3d& notmal, Eigen::Vector3d& tangent, Eigen::Vector3d& bitangent);
+		static bool IsUnitVector(const Eigen::Vector3d& v);
+	
+	protected:
 		static Eigen::Vector3d tempVec1;
 		static Eigen::Vector3d tempVec2;
 		static Eigen::Vector3d tempVec3;
 		static Eigen::Vector3d tempVec4;
-
-		static bool GenFrame(const Eigen::Vector3d& notmal, Eigen::Vector3d& tangent, Eigen::Vector3d& bitangent);
-		static bool IsUnitVector(const Eigen::Vector3d& v);
 	};
 
 #define FG_R std::string("\033[31m") // red

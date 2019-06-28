@@ -241,9 +241,9 @@ int main(int argc, char *argv[])
 			//
 			if (containerPcRAW->Size() == 0)
 			{
-				std::cout << "scannerPc->ShipPcRAWData()" << std::endl;
+				std::cout << "scannerPc->ShipPcRAW()" << std::endl;
 
-				scannerPc->ShipPcRAWData();
+				scannerPc->ShipPcRAW();
 			}
 
 			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::POINT_CLOUD) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
@@ -259,6 +259,10 @@ int main(int argc, char *argv[])
 
 				reconstructorPC->DoRecPcAlbedo();
 			}
+
+			//
+			std::cout << "reconstructorPC->SynthScans()" << std::endl;
+			reconstructorPC->SynthScans();
 		}
 		catch (const RecRoom::exception& ex)
 		{

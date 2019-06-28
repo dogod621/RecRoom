@@ -35,7 +35,7 @@ namespace RecRoom
 			else
 			{
 				const PointMED& scanPoint = cloud[px];
-				const ScanMeta& scanMeta = scanMetaSet[scanPoint.label];
+				const ScanMeta& scanMeta = scanner->getScanMeta(scanPoint.label);
 				ScannLaser scannLaser;
 
 				//

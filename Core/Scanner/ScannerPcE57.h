@@ -22,8 +22,10 @@ namespace RecRoom
 		}
 
 	public:
-		virtual void ShipPcRAWData() const;
-		virtual void ShipPcLFData() const { THROW_EXCEPTION("Interface is not implemented") };
+		virtual void ShipPcRAW() const;
+		virtual void ShipPcLF() const { THROW_EXCEPTION("ScannerPcE57 cannot retrieve light field data") };
+		virtual void LoadPcRAW(int serialNumber, PcRAW& pc, bool local = false) const;
+		virtual void LoadPcLF(int serialNumber, PcLF& pc, bool local = false) const { THROW_EXCEPTION("ScannerPcE57 cannot retrieve light field data") };
 
 	public:
 		PTR(e57::ImageFile) getImageFileE57() const { return imageFileE57; }

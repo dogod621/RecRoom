@@ -315,7 +315,6 @@ namespace RecRoom
 			cb.setInputCloud(data.pcRec);
 			cb.filter(*data.pcRecIdx);
 
-
 			std::stringstream ss;
 			ss << "Extract indices - End - inSize: " << data.pcRec->size() << ", outSize:" << data.pcRecIdx->size();
 			PRINT_INFO(ss.str());

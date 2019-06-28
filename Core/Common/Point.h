@@ -320,6 +320,18 @@ namespace RecRoom
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	};
 
+	struct EIGEN_ALIGN16 _PointVisAtt
+	{
+		PCL_ADD_POINT4D;
+		PCL_ADD_NORMAL4D; float curvature;
+		PCL_ADD_RGB;
+		float fR; float fG; float fB;
+		PCL_ADD_INTENSITY;
+		union { uint32_t label; int32_t hasLabel; };
+
+		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+	};
+
 	//
 	struct PointMED;
 	struct PointRAW;
@@ -411,7 +423,7 @@ namespace RecRoom
 		inline PointNDF()
 		{
 			x = y = z = 0.0f; data[3] = 1.f;
-			normal_x = normal_y = normal_z = data_n[3];
+			normal_x = normal_y = normal_z = data_n[3] = 0.f;
 			intensity = 0.f;
 		}
 
@@ -435,7 +447,7 @@ namespace RecRoom
 		inline PointLF()
 		{
 			x = y = z = 0.0f; data[3] = 1.f;
-			normal_x = normal_y = normal_z = data_n[3];
+			normal_x = normal_y = normal_z = data_n[3] = 0.f;
 			intensity = 0.f;
 		}
 
@@ -447,12 +459,38 @@ namespace RecRoom
 		}
 	};
 
+	struct PointVisAtt : public _PointVisAtt
+	{
+		inline PointVisAtt()
+		{
+			x = y = z = 0.0f; data[3] = 1.f;
+			normal_x = normal_y = normal_z = data_n[3] = curvature = 0.f;
+			r = g = b = 0; a = 1;
+			fR = fG = fB = 0.f;
+			intensity = 0.f;
+			hasLabel = -1;
+		}
+
+		inline PointVisAtt(const PointVisAtt& p)
+		{
+			x = p.x; y = p.y; z = p.z; data[3] = 1.0f;
+			normal_x = p.normal_x; normal_y = p.normal_y; normal_z = p.normal_z; data_n[3] = 0.f;
+			rgba = p.rgba;
+			fR = p.fR; fG = p.fG; fB = p.fB;
+			intensity = p.intensity;
+			label = p.label;
+		}
+
+		inline bool HasLabel() { return (hasLabel != -1); }
+	};
+
 	using PcIndex = std::vector<int>;
 	using PcRAW = Pc<PointRAW>;
 	using PcMED = Pc<PointMED>;
 	using PcREC = Pc<PointREC>;
 	using PcNDF = Pc<PointNDF>;
 	using PcLF = Pc<PointLF>;
+	using PcVisAtt = Pc<PointVisAtt>;
 
 	using AccRAW = pcl::search::Search<PointRAW>;
 	using AccMED = pcl::search::Search<PointMED>;
@@ -509,5 +547,14 @@ POINT_CLOUD_REGISTER_POINT_STRUCT(RecRoom::PointLF,
 (float, intensity, intensity)
 )
 POINT_CLOUD_REGISTER_POINT_WRAPPER(RecRoom::PointLF, RecRoom::PointLF)
+
+POINT_CLOUD_REGISTER_POINT_STRUCT(RecRoom::PointVisAtt,
+(float, x, x) (float, y, y) (float, z, z)
+(float, normal_x, normal_x) (float, normal_y, normal_y) (float, normal_z, normal_z) (float, curvature, curvature)
+(uint32_t, rgba, rgba)
+(float, intensity, intensity)
+(uint32_t, label, label)
+)
+POINT_CLOUD_REGISTER_POINT_WRAPPER(RecRoom::PointVisAtt, RecRoom::PointVisAtt)
 
 #include "Point.hpp"

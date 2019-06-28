@@ -12,8 +12,18 @@ namespace RecRoom
 
 		for (std::size_t px = 0; px < upIdx.size(); ++px)
 		{
-			if(upIdx[px] >= 0)
+			if (upIdx[px] >= 0)
+			{
+				float tempX = (*inV)[px].x;
+				float tempY = (*inV)[px].y;
+				float tempZ = (*inV)[px].z;
+				uint32_t tempLable = (*inV)[px].label;
 				(*inV)[px] = (*searchSurface)[upIdx[px]];
+				(*inV)[px].x = tempX;
+				(*inV)[px].y = tempY;
+				(*inV)[px].z = tempZ;
+				(*inV)[px].label = tempLable;
+			}
 		}
 	}
 }

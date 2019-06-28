@@ -24,4 +24,17 @@ namespace RecRoom
 		default: return std::string("UNKNOWN"); break;
 		}
 	}
+
+	template<>
+	inline Color Convert<Color, uint32_t>(const uint32_t& v)
+	{
+		// 4-byte Integer Hashing: http://burtleburtle.net/bob/hash/integer.html
+		Color c;
+		c.rgba = (v ^ 61) ^ (v >> 16);
+		c.rgba = c.rgba + (c.rgba << 3);
+		c.rgba = c.rgba ^ (c.rgba >> 4);
+		c.rgba = c.rgba * 0x27d4eb2d;
+		c.rgba = c.rgba ^ (c.rgba >> 15);
+		return c;
+	}
 }

@@ -20,7 +20,7 @@ namespace RecRoom
 #ifdef POINT_MED_WITH_NORMAL
 #ifdef POINT_MED_WITH_LABEL
 #ifdef POINT_MED_WITH_INTENSITY
-		AlbedoEstimationOMP ae(scanner->getScanMetaSet(), linearSolver, distInterParm, angleInterParm, cutFalloff, cutGrazing);
+		AlbedoEstimationOMP ae(scanner, linearSolver, distInterParm, angleInterParm, cutFalloff, cutGrazing);
 		if (searchMethod)
 			ae.setSearchMethod(searchMethod);
 		ae.setRadiusSearch(searchRadius);

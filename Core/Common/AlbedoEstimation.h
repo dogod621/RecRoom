@@ -7,6 +7,7 @@
 
 #include "Scan.h"
 #include "Point.h"
+#include "Scanner/ScannerPc.h"
 
 namespace RecRoom
 {
@@ -28,11 +29,11 @@ namespace RecRoom
 		typedef typename pcl::Feature<PointMED, PointMED>::PointCloudConstPtr PointCloudConstPtr;
 
 	public:
-		AlbedoEstimation(const std::vector<ScanMeta>& scanMetaSet, 
+		AlbedoEstimation(const CONST_PTR(ScannerPc)& scanner,
 			const LinearSolver linearSolver = LinearSolver::EIGEN_SVD, 
 			const double distInterParm = 10.0, const double angleInterParm = 20.0, const double cutFalloff = 0.33, 
 			const double cutGrazing = 0.86602540378)
-			: scanMetaSet(scanMetaSet), linearSolver(linearSolver),
+			: scanner(scanner), linearSolver(linearSolver),
 			distInterParm(distInterParm), angleInterParm(angleInterParm), cutFalloff(cutFalloff), 
 			cutGrazing(cutGrazing)
 		{
@@ -57,7 +58,7 @@ namespace RecRoom
 		double angleInterParm;
 		double cutFalloff;
 		double cutGrazing;
-		std::vector<ScanMeta> scanMetaSet;
+		CONST_PTR(ScannerPc) scanner;
 
 		void computeFeature(PointCloudOut &output);
 
@@ -81,12 +82,12 @@ namespace RecRoom
 		
 		typedef typename AlbedoEstimation::PointCloudOut PointCloudOut;
 
-		AlbedoEstimationOMP(const std::vector<ScanMeta>& scanMetaSet,
+		AlbedoEstimationOMP(const CONST_PTR(ScannerPc)& scanner,
 			const LinearSolver linearSolver = LinearSolver::EIGEN_SVD, 
 			const double distInterParm = 10.0, const double angleInterParm = 20.0, const double cutFalloff = 0.33, 
 			const double cutGrazing = 0.86602540378,
 			unsigned int nr_threads = 0)
-			: AlbedoEstimation(scanMetaSet, linearSolver, distInterParm, angleInterParm, cutFalloff, cutGrazing)
+			: AlbedoEstimation(scanner, linearSolver, distInterParm, angleInterParm, cutFalloff, cutGrazing)
 		{
 			feature_name_ = "AlbedoEstimationOMP";
 

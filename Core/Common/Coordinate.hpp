@@ -182,12 +182,11 @@ namespace RecRoom
 		}
 	}
 
-	template<Mapping type>
-	inline Eigen::Vector2d XYZ_To_UV(const Eigen::Vector3d& coord)
+	inline Eigen::Vector2d XYZ_To_UV(Mapping mapping, const Eigen::Vector3d& coord)
 	{
 		Eigen::Vector2d uv;
 
-		switch (Mapping_UVMode(type))
+		switch (Mapping_UVMode(mapping))
 		{
 		default:
 			THROW_EXCEPTION("UVMode is not support");
@@ -199,17 +198,16 @@ namespace RecRoom
 		return uv;
 	}
 
-	template<Mapping type>
-	inline Eigen::Vector2d RAE_To_UV(const Eigen::Vector3d& rae)
+	inline Eigen::Vector2d RAE_To_UV(Mapping mapping, const Eigen::Vector3d& rae)
 	{
 		Eigen::Vector2d uv;
 
 		uv.x() = 0.5 * (1.0 - rae.y() * M_1_PI);
 
-		switch (Mapping_UVMode(type))
+		switch (Mapping_UVMode(mapping))
 		{
 		case UVMode::PANORAMA:
-			switch (Mapping_RAE_ElevationMode(type))
+			switch (Mapping_RAE_ElevationMode(mapping))
 			{
 			case ElevationMode::PE: uv.y() = 0.5 * (1.0 + rae.z() / M_PI_2); break;
 			case ElevationMode::NP: uv.y() = (1.0 - rae.z() * M_1_PI); break;
@@ -219,7 +217,7 @@ namespace RecRoom
 			break;
 
 		case UVMode::PANORAMA_EQUIRECTANGULAR:
-			switch (Mapping_RAE_ElevationMode(type))
+			switch (Mapping_RAE_ElevationMode(mapping))
 			{
 			case ElevationMode::PE: uv.y() = 0.5 * (1.0 + std::sin(rae.z())); break;
 			case ElevationMode::NP: uv.y() = std::cos(rae.z()); break;
@@ -238,13 +236,12 @@ namespace RecRoom
 		return uv;
 	}
 
-	template<Mapping type>
-	inline Eigen::Vector2d ToUV(const Eigen::Vector3d& coord)
+	inline Eigen::Vector2d ToUV(Mapping mapping, const Eigen::Vector3d& coord)
 	{
-		switch (Mapping_CoodMode(type))
+		switch (Mapping_CoodMode(mapping))
 		{
-		case CoodMode::XYZ: return XYZ_To_UV<type>(coord); break;
-		case CoodMode::RAE: return RAE_To_UV<type>(coord); break;
+		case CoodMode::XYZ: return XYZ_To_UV(mapping, coord); break;
+		case CoodMode::RAE: return RAE_To_UV(mapping, coord); break;
 		default: THROW_EXCEPTION("CoordSys is not support"); break;
 		}
 	}

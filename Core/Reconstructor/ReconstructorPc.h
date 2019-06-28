@@ -37,15 +37,15 @@ namespace RecRoom
 		void DoRecPcSegment();
 		void DoRecSegNDF();
 		void DoRecMesh();
-		void SynthScanImages(const boost::filesystem::path& scanImagePath, const Mapping mapping, unsigned int width, const unsigned int height) {}
+		void SynthScans();
 
 	protected:
 		//virtual void Process(pcl::PolygonMesh& out) const = 0;
-		virtual void RecPointCloud() { THROW_EXCEPTION("Interface is not implemented") };
-		virtual void RecPcAlbedo() { THROW_EXCEPTION("Interface is not implemented") };
-		virtual void RecPcSegment() { THROW_EXCEPTION("Interface is not implemented") };
-		virtual void RecSegNDF() { THROW_EXCEPTION("Interface is not implemented") };
-		virtual void RecMesh() { THROW_EXCEPTION("Interface is not implemented") };
+		virtual void RecPointCloud() = 0;
+		virtual void RecPcAlbedo() = 0;
+		virtual void RecPcSegment() = 0;
+		virtual void RecSegNDF() = 0;
+		virtual void RecMesh() = 0;
 
 	public:
 		ReconstructStatus getStatus() const { return status; }

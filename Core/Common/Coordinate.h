@@ -180,8 +180,7 @@ namespace RecRoom
 	template<CoordSys outType, CoordSys inType>
 	inline Eigen::Vector3d CoodConvert(const Eigen::Vector3d& coord);
 
-	template<Mapping type>
-	inline Eigen::Vector2d ToUV(const Eigen::Vector3d& coord);
+	inline Eigen::Vector2d ToUV(Mapping mapping, const Eigen::Vector3d& coord);
 }
 
 #include "Coordinate.hpp"
