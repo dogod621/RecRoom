@@ -164,6 +164,7 @@ namespace RecRoom
 
 			//
 			PTR(PcMED) pcScan(new PcMED);
+			PTR(PcMED) pcRecAtt(new PcMED);
 			{
 				PcRAW pcScan_;
 				scanner->LoadPcRAW(it->serialNumber, pcScan_, false);
@@ -171,17 +172,18 @@ namespace RecRoom
 				pcScan->resize(pcScan_.size());
 				for (std::size_t px = 0; px < pcScan_.size(); ++px)
 					(*pcScan)[px] = pcScan_[px];
+				(*pcRecAtt) = (*pcScan);
 			}
 
 			// Upsampling
 			PcIndex upIdx;
-			upSampler->Process(accMED, pcMED, pcScan, upIdx);
+			upSampler->Process(accMED, pcMED, pcRecAtt, upIdx);
 
 			for (std::size_t px = 0; px < upIdx.size(); ++px)
 			{
 				if (upIdx[px] >= 0)
 				{
-					PointMED& tarP = (*pcScan)[px];
+					PointMED& tarP = (*pcRecAtt)[px];
 					PointMED& srcP = (*pcMED)[upIdx[px]];
 
 #ifdef POINT_MED_WITH_NORMAL
@@ -204,9 +206,12 @@ namespace RecRoom
 
 			//
 			Eigen::Matrix4d wordToScan = it->transform.inverse();
-			for (PcMED::iterator jt = pcScan->begin(); jt != pcScan->end(); ++jt)
+			for (std::size_t px = 0; px < pcScan->size(); ++px)
 			{
-				Eigen::Vector4d xyz = wordToScan * Eigen::Vector4d(jt->x, jt->y, jt->z, 1.0);
+				PointMED& pScan = (*pcScan)[px];
+				PointMED& pRecAtt = (*pcRecAtt)[px];
+
+				Eigen::Vector4d xyz = wordToScan * Eigen::Vector4d(pScan.x, pScan.y, pScan.z, 1.0);
 				Eigen::Vector2d uv;
 				double depth;
 				switch (it->scanner)
@@ -239,26 +244,27 @@ namespace RecRoom
 					{
 						pVisAtt.z = depth;
 #ifdef POINT_MED_WITH_SEGLABEL
-						pVisAtt.label = jt->segLabel;
+						pVisAtt.label = pRecAtt.segLabel;
 #endif
 					}
 
 #ifdef POINT_MED_WITH_NORMAL
-					pVisAtt.normal_x += jt->normal_x;
-					pVisAtt.normal_y += jt->normal_y;
-					pVisAtt.normal_z += jt->normal_z;
-					pVisAtt.curvature += jt->curvature;
+					pVisAtt.normal_x += pRecAtt.normal_x;
+					pVisAtt.normal_y += pRecAtt.normal_y;
+					pVisAtt.normal_z += pRecAtt.normal_z;
+					pVisAtt.curvature += pRecAtt.curvature;
 #endif
 
 
 #ifdef POINT_MED_WITH_RGB
-					pVisAtt.fR += (float)jt->r;
-					pVisAtt.fG += (float)jt->g;
-					pVisAtt.fB += (float)jt->b;
+					pVisAtt.fR += (float)pScan.r;
+					pVisAtt.fG += (float)pScan.g;
+					pVisAtt.fB += (float)pScan.b;
 #endif
 
 #ifdef POINT_MED_WITH_INTENSITY
-					pVisAtt.intensity += jt->intensity;
+					pVisAtt.albedo += pRecAtt.intensity;
+					pVisAtt.intensity += pScan.intensity;
 #endif
 				}
 			}
@@ -282,6 +288,7 @@ namespace RecRoom
 #endif
 
 #ifdef POINT_MED_WITH_INTENSITY
+					jt->albedo /= jt->x;
 					jt->intensity /= jt->x;
 #endif
 				}
@@ -355,6 +362,25 @@ namespace RecRoom
 			{
 				std::stringstream fileName;
 				fileName << "scan" << it->serialNumber << "_Intensity.png";
+
+				pcl::PCLImage image;
+				pcl::io::PointCloudImageExtractorFromIntensityField<PointVisAtt> pcie;
+				pcie.setPaintNaNsWithBlack(true);
+				pcie.setScalingMethod(pcie.SCALING_FIXED_FACTOR);
+				pcie.setScalingFactor(255.f);
+				if (!pcie.extract(pcVisAtt, image))
+					THROW_EXCEPTION("Failed to extract an image from Intensity field .");
+				pcl::io::savePNGFile((filePath / boost::filesystem::path(fileName.str())).string(), image);
+			}
+
+			{
+				for (PcVisAtt::iterator jt = pcVisAtt.begin(); jt != pcVisAtt.end(); ++jt)
+				{
+					jt->intensity = jt->albedo;
+				}
+
+				std::stringstream fileName;
+				fileName << "scan" << it->serialNumber << "_Albedo.png";
 
 				pcl::PCLImage image;
 				pcl::io::PointCloudImageExtractorFromIntensityField<PointVisAtt> pcie;

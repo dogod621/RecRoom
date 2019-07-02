@@ -326,6 +326,7 @@ namespace RecRoom
 		PCL_ADD_NORMAL4D; float curvature;
 		PCL_ADD_RGB;
 		float fR; float fG; float fB;
+		float albedo;
 		PCL_ADD_INTENSITY;
 		union { uint32_t label; int32_t hasLabel; };
 
@@ -467,6 +468,7 @@ namespace RecRoom
 			normal_x = normal_y = normal_z = data_n[3] = curvature = 0.f;
 			r = g = b = 0; a = 1;
 			fR = fG = fB = 0.f;
+			albedo = 0.f;
 			intensity = 0.f;
 			hasLabel = -1;
 		}
@@ -478,6 +480,7 @@ namespace RecRoom
 			curvature = p.curvature;
 			rgba = p.rgba;
 			fR = p.fR; fG = p.fG; fB = p.fB;
+			albedo = p.albedo;
 			intensity = p.intensity;
 			label = p.label;
 		}

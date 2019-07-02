@@ -49,6 +49,11 @@ void PrintHelp(int argc, char **argv)
 		PRINT_HELP("\t", "overlap", "float 0.1", "Overlap size in meters when doing out-of-core.");
 	}
 
+	std::cout << "ScannerPcBLK360 Parmameters:==============================================================================================================================" << std::endl << std::endl;
+	{
+		PRINT_HELP("\t", "colorThresh", "uint 6", "For remove black noise of BLK360.");
+	}
+
 	std::cout << "SamplerPcGrid Parmameters:================================================================================================================================" << std::endl << std::endl;
 	{
 		PRINT_HELP("\t", "voxelSize", "float 0.05", "Gird unit size in meters.");
@@ -127,6 +132,12 @@ int main(int argc, char *argv[])
 		pcl::console::parse_argument(argc, argv, "-overlap", overlap);
 		std::cout << "ContainerPcRAWOC Parmameters -overlap: " << overlap << std::endl;
 
+		// Parse ScannerPcBLK360 Parmameters
+		unsigned int colorThresh = 6;
+		pcl::console::parse_argument(argc, argv, "-colorThresh", colorThresh);
+		std::cout << "ScannerPcBLK360 Parmameters -colorThresh: " << colorThresh << std::endl;
+
+
 		// Parse SamplerPcGrid Parmameters
 		float voxelSize = 0.05;
 		pcl::console::parse_argument(argc, argv, "-voxelSize", voxelSize);
@@ -184,7 +195,8 @@ int main(int argc, char *argv[])
 				scannerPc(
 					new RecRoom::ScannerPcBLK360(
 						wd / boost::filesystem::path("ScannerPc"),
-						e57File, lfFile, containerPcRAW));
+						e57File, lfFile, containerPcRAW,
+						colorThresh = colorThresh));
 			scannerPc->setAsyncSize(async);
 
 			std::cout << "Create ReconstructorPc" << std::endl;
@@ -208,10 +220,11 @@ int main(int argc, char *argv[])
 			reconstructorPC->setUpSampler(upSampler);
 
 			std::cout << "Create OutlierRemover" << std::endl;
-			PTR(RecRoom::CropperPc)
+			std::cout << "Not used" << std::endl;
+			/*PTR(RecRoom::CropperPc)
 				outlierRemover(
 					new RecRoom::CropperPcOutlier(meanK, stdMul));
-			reconstructorPC->setOutlierRemover(outlierRemover);
+			reconstructorPC->setOutlierRemover(outlierRemover);*/
 
 			std::cout << "Create NormalEstimator" << std::endl;
 			PTR(RecRoom::EstimatorPc)

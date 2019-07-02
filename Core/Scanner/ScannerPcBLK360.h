@@ -18,7 +18,7 @@ namespace RecRoom
 		virtual bool Valid(const PointRAW& pointRAW) const
 		{
 #ifdef POINT_RAW_WITH_RGB
-			return pcl::isFinite(pointRAW) && ((pointRAW.r > colorThresh) | (pointRAW.g > colorThresh) | (pointRAW.b > colorThresh));// Use to remove black noise which is caused by BLK360
+			return pcl::isFinite(pointRAW) && ((pointRAW.r >= colorThresh) | (pointRAW.g >= colorThresh) | (pointRAW.b >= colorThresh));// Use to remove black noise which is caused by BLK360
 #else
 			return pcl::isFinite(pointRAW);
 #endif
