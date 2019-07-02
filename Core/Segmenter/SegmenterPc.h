@@ -11,7 +11,7 @@ namespace RecRoom
 		SegmenterPc() {}
 
 	public:
-		virtual void Process(PTR(PcMED)& inV) const = 0;
+		virtual void Process(const PTR(PcMED)& pc) const = 0;
 	};
 }
 

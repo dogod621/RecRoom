@@ -21,6 +21,7 @@
 #include "Cropper/CropperPcOutlier.h"
 #include "Estimator/EstimatorPcNormal.h"
 #include "Estimator/EstimatorPcAlbedo.h"
+#include "Segmenter/SegmenterPcSVC.h"
 
 #define CMD_SPACE 25
 #define PRINT_HELP(prefix, cmd, parms, info) std::cout << prefix << std::left << "-" << std::setw (CMD_SPACE) << cmd \
@@ -79,7 +80,18 @@ void PrintHelp(int argc, char **argv)
 	}
 
 	std::cout << "==========================================================================================================================================================" << std::endl << std::endl;
+	
+	std::cout << "SegmenterPcSVC Parmameters:============================================================================================================================" << std::endl << std::endl;
+	{
+		PRINT_HELP("\t", "voxelResolution", "float ${voxelSize}", "Gird unit size in meters.");
+		PRINT_HELP("\t", "seedResolution", "float ${voxelSize*50}", "Seed unit size in meters.");
+		PRINT_HELP("\t", "xyzImportance", "float 0.4", "Distance importance of XYZ.");
+		PRINT_HELP("\t", "normalImportance", "float 1.0", "Distance importance of normal.");
+		PRINT_HELP("\t", "rgbImportance", "float 0.1", "Distance importance of RGB.");
+		PRINT_HELP("\t", "intensityImportance", "float 1.0", "Distance importance of intensity.");
+	}
 
+	std::cout << "==========================================================================================================================================================" << std::endl << std::endl;
 }
 
 int main(int argc, char *argv[])
@@ -154,8 +166,8 @@ int main(int argc, char *argv[])
 		// Parse EstimatorPc Parmameters
 		double searchRadius = overlap;
 		pcl::console::parse_argument(argc, argv, "-searchRadius", searchRadius);
-		std::cout << "CropperPcOutlier EstimatorPcNormal -searchRadius: " << searchRadius << std::endl;
-		std::cout << "CropperPcOutlier EstimatorPcAlbedo -searchRadius: " << searchRadius << std::endl;
+		std::cout << "EstimatorPcNormal -searchRadius: " << searchRadius << std::endl;
+		std::cout << "EstimatorPcAlbedo -searchRadius: " << searchRadius << std::endl;
 
 		// Parse EstimatorPcAlbedo Parmameters
 		double distInterParm = 10.0;
@@ -166,10 +178,30 @@ int main(int argc, char *argv[])
 		pcl::console::parse_argument(argc, argv, "-angleInterParm", angleInterParm);
 		pcl::console::parse_argument(argc, argv, "-cutFalloff", cutFalloff);
 		pcl::console::parse_argument(argc, argv, "-cutGrazing", cutGrazing);
-		std::cout << "CropperPcOutlier EstimatorPcAlbedo -distInterParm: " << distInterParm << std::endl;
-		std::cout << "CropperPcOutlier EstimatorPcAlbedo -angleInterParm: " << angleInterParm << std::endl;
-		std::cout << "CropperPcOutlier EstimatorPcAlbedo -cutFalloff: " << cutFalloff << std::endl;
-		std::cout << "CropperPcOutlier EstimatorPcAlbedo -cutGrazing: " << cutGrazing << std::endl;
+		std::cout << "EstimatorPcAlbedo -distInterParm: " << distInterParm << std::endl;
+		std::cout << "EstimatorPcAlbedo -angleInterParm: " << angleInterParm << std::endl;
+		std::cout << "EstimatorPcAlbedo -cutFalloff: " << cutFalloff << std::endl;
+		std::cout << "EstimatorPcAlbedo -cutGrazing: " << cutGrazing << std::endl;
+
+		// Parse SegmenterPcSVC Parmameters
+		float voxelResolution = voxelSize;
+		float seedResolution = voxelSize * 50.f;
+		float xyzImportance = 0.4f;
+		float normalImportance = 1.0f;
+		float rgbImportance = 0.1f;
+		float intensityImportance = 1.0f;
+		pcl::console::parse_argument(argc, argv, "-voxelResolution", voxelResolution);
+		pcl::console::parse_argument(argc, argv, "-seedResolution", seedResolution);
+		pcl::console::parse_argument(argc, argv, "-xyzImportance", xyzImportance);
+		pcl::console::parse_argument(argc, argv, "-normalImportance", normalImportance);
+		pcl::console::parse_argument(argc, argv, "-rgbImportance", rgbImportance);
+		pcl::console::parse_argument(argc, argv, "-intensityImportance", intensityImportance);
+		std::cout << "SegmenterPcSVC -voxelResolution: " << voxelResolution << std::endl;
+		std::cout << "SegmenterPcSVC -seedResolution: " << seedResolution << std::endl;
+		std::cout << "SegmenterPcSVC -xyzImportance: " << xyzImportance << std::endl;
+		std::cout << "SegmenterPcSVC -normalImportance: " << normalImportance << std::endl;
+		std::cout << "SegmenterPcSVC -rgbImportance: " << rgbImportance << std::endl;
+		std::cout << "SegmenterPcSVC -intensityImportance: " << intensityImportance << std::endl;
 
 		// Start
 		try
@@ -241,6 +273,14 @@ int main(int argc, char *argv[])
 			reconstructorPC->setAlbedoEstimator(albedoEstimator);
 
 			std::cout << "Create Segmenter" << std::endl;
+			PTR(RecRoom::SegmenterPc)
+				segmenter(
+					new RecRoom::SegmenterPcSVC(
+						voxelResolution, seedResolution,
+						xyzImportance, normalImportance, rgbImportance, intensityImportance));
+			reconstructorPC->setSegmenter(segmenter);
+
+			std::cout << "Create Segmenter" << std::endl;
 			std::cout << "Not done, skip" << std::endl; // Not done**
 
 
@@ -271,6 +311,13 @@ int main(int argc, char *argv[])
 				std::cout << "reconstructorPC->DoRecPcAlbedo()" << std::endl;
 
 				reconstructorPC->DoRecPcAlbedo();
+			}
+
+			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::PC_SEGMENT) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
+			{
+				std::cout << "reconstructorPC->DoRecPcSegment()" << std::endl;
+
+				reconstructorPC->DoRecPcSegment();
 			}
 
 			//
