@@ -163,9 +163,6 @@ namespace RecRoom
 			}
 
 			//
-			Eigen::Matrix4d wordToScan = it->transform.inverse();
-
-			//
 			PTR(PcMED) pcScan(new PcMED);
 			{
 				PcRAW pcScan_;
@@ -177,20 +174,46 @@ namespace RecRoom
 			}
 
 			// Upsampling
-			upSampler->Process(accMED, pcMED, pcScan);
+			PcIndex upIdx;
+			upSampler->Process(accMED, pcMED, pcScan, upIdx);
+
+			for (std::size_t px = 0; px < upIdx.size(); ++px)
+			{
+				if (upIdx[px] >= 0)
+				{
+					PointMED& tarP = (*pcScan)[px];
+					PointMED& srcP = (*pcMED)[upIdx[px]];
+
+#ifdef POINT_MED_WITH_NORMAL
+					tarP.normal_x = srcP.normal_x;
+					tarP.normal_y = srcP.normal_y;
+					tarP.normal_z = srcP.normal_z;
+					tarP.curvature = srcP.curvature;
+#endif
+
+#ifdef POINT_MED_WITH_INTENSITY
+					tarP.intensity = srcP.intensity;
+#endif
+
+#ifdef POINT_MED_WITH_SEGLABEL
+					tarP.segLabel = srcP.segLabel;
+#endif		
+				}
+			}
+			
 
 			//
+			Eigen::Matrix4d wordToScan = it->transform.inverse();
 			for (PcMED::iterator jt = pcScan->begin(); jt != pcScan->end(); ++jt)
 			{
-				Eigen::Vector4d xyz(jt->x, jt->y, jt->z, 1.0);
-				xyz = wordToScan * xyz;
+				Eigen::Vector4d xyz = wordToScan * Eigen::Vector4d(jt->x, jt->y, jt->z, 1.0);
 				Eigen::Vector2d uv;
 				double depth;
 				switch (it->scanner)
 				{
 				case Scanner::BLK360:
 				{
-					Eigen::Vector3d rae = CoodConvert<CoordSys::RAE_PE_PX_PY, CoordSys::XYZ_PX_PY_NZ>(Eigen::Vector3d(xyz.x(), xyz.y(), xyz.z()));
+					Eigen::Vector3d rae = CoodConvert<CoordSys::RAE_PE_PX_PY, CoordSys::XYZ_PX_PY_PZ>(Eigen::Vector3d(xyz.x(), xyz.y(), xyz.z()));
 					uv = ToUV(ToMapping(UVMode::PANORAMA, CoordSys::RAE_PE_PX_PY), rae);
 					depth = rae.x();
 				}
@@ -202,13 +225,13 @@ namespace RecRoom
 				std::size_t col = uv.x() * (width - 1);
 				std::size_t row = (1.0 - uv.y()) * (height - 1);
 				std::size_t index = row * width + col;
-				std::cout << col << ", " << row << "\n";
+
 				PointVisAtt& pVisAtt = pcVisAtt[index];
 				{
 					pVisAtt.x += 1;
 
 					bool cloest = false;
-					if (std::isfinite(pVisAtt.z))
+					if (!std::isfinite(pVisAtt.z))
 						cloest = true;
 					else if (pVisAtt.z < depth)
 						cloest = true;

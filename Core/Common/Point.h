@@ -475,6 +475,7 @@ namespace RecRoom
 		{
 			x = p.x; y = p.y; z = p.z; data[3] = 1.0f;
 			normal_x = p.normal_x; normal_y = p.normal_y; normal_z = p.normal_z; data_n[3] = 0.f;
+			curvature = p.curvature;
 			rgba = p.rgba;
 			fR = p.fR; fG = p.fG; fB = p.fB;
 			intensity = p.intensity;
