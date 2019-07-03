@@ -320,12 +320,12 @@ int main(int argc, char *argv[])
 				reconstructorPC->DoRecPcSegment();
 			}
 
-			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::SEG_NDF) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
+			/*if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::SEG_NDF) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
 			{
 				std::cout << "reconstructorPC->DoRecSegNDF()" << std::endl;
 
 				reconstructorPC->DoRecSegNDF();
-			}
+			}*/
 
 			//
 			std::cout << "reconstructorPC->SynthScans()" << std::endl;

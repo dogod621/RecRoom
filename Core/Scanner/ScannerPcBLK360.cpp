@@ -32,10 +32,6 @@ namespace RecRoom
 
 	bool ScannerPcBLK360::ToScanLaser(const PointMED& scanPoint, const Eigen::Vector3d& macroNormal, ScanLaser& scanLaser) const
 	{
-#ifdef POINT_MED_WITH_INTENSITY
-#	ifdef POINT_MED_WITH_LABEL
-		const ScanMeta& scanMeta = getScanMeta(scanPoint.label);
-
 		if (!Common::IsUnitVector(macroNormal))
 		{
 			std::stringstream ss;
@@ -43,6 +39,11 @@ namespace RecRoom
 			PRINT_WARNING(ss.str());
 			return false;
 		}
+
+#ifdef POINT_MED_WITH_LABEL
+		const ScanMeta& scanMeta = getScanMeta(scanPoint.label);
+
+#	ifdef POINT_MED_WITH_NORMAL
 		scanLaser.hitNormal = Eigen::Vector3d(scanPoint.normal_x, scanPoint.normal_y, scanPoint.normal_z);
 		if (!Common::IsUnitVector(scanLaser.hitNormal))
 		{
@@ -51,6 +52,8 @@ namespace RecRoom
 			PRINT_WARNING(ss.str());
 			return false;
 		}
+
+#		ifdef POINT_MED_WITH_INTENSITY
 
 		scanLaser.hitPosition = Eigen::Vector3d(scanPoint.x, scanPoint.y, scanPoint.z);
 		scanLaser.incidentDirection = scanMeta.position - scanLaser.hitPosition;
@@ -70,6 +73,10 @@ namespace RecRoom
 		if (Common::GenFrame(scanLaser.hitNormal, scanLaser.hitTangent, scanLaser.hitBitangent))
 			return true;
 		return false;
+
+#		else
+		return false;
+#		endif
 #	else
 		return false;
 #	endif

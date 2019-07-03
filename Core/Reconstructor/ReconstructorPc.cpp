@@ -364,7 +364,7 @@ namespace RecRoom
 			// Z
 			{
 				std::stringstream fileName;
-				fileName << "raw" << it->serialNumber << "_Depth.png";
+				fileName << it->serialNumber << "_raw_Depth.png";
 
 				pcl::PCLImage image;
 				pcl::io::PointCloudImageExtractorFromZField<PointMED> pcie;
@@ -377,7 +377,7 @@ namespace RecRoom
 
 			{
 				std::stringstream fileName;
-				fileName << "rec" << it->serialNumber << "_Depth.png";
+				fileName << it->serialNumber << "_rec_Depth.png";
 
 				pcl::PCLImage image;
 				pcl::io::PointCloudImageExtractorFromZField<PointMED> pcie;
@@ -391,7 +391,7 @@ namespace RecRoom
 #ifdef POINT_RAW_WITH_NORMAL
 			{
 				std::stringstream fileName;
-				fileName << "raw" << it->serialNumber << "_Normal.png";
+				fileName << it->serialNumber << "_raw_Normal.png";
 
 				pcl::PCLImage image;
 				pcl::io::PointCloudImageExtractorFromNormalField<PointMED> pcie;
@@ -402,7 +402,7 @@ namespace RecRoom
 			}
 			{
 				std::stringstream fileName;
-				fileName << "raw" << it->serialNumber << "_Curvature.png";
+				fileName << it->serialNumber << "_raw_Curvature.png";
 
 				pcl::PCLImage image;
 				pcl::io::PointCloudImageExtractorFromCurvatureField<PointMED> pcie;
@@ -417,7 +417,7 @@ namespace RecRoom
 #ifdef POINT_REC_WITH_NORMAL
 			{
 				std::stringstream fileName;
-				fileName << "rec" << it->serialNumber << "_Normal.png";
+				fileName << it->serialNumber << "_rec_Normal.png";
 
 				pcl::PCLImage image;
 				pcl::io::PointCloudImageExtractorFromNormalField<PointMED> pcie;
@@ -428,7 +428,7 @@ namespace RecRoom
 			}
 			{
 				std::stringstream fileName;
-				fileName << "rec" << it->serialNumber << "_Curvature.png";
+				fileName << it->serialNumber << "_rec_Curvature.png";
 
 				pcl::PCLImage image;
 				pcl::io::PointCloudImageExtractorFromCurvatureField<PointMED> pcie;
@@ -444,7 +444,7 @@ namespace RecRoom
 #ifdef POINT_RAW_WITH_RGB
 			{
 				std::stringstream fileName;
-				fileName << "raw" << it->serialNumber << "_RGB.png";
+				fileName << it->serialNumber << "_raw_RGB.png";
 
 				pcl::PCLImage image;
 				pcl::io::PointCloudImageExtractorFromRGBField<PointMED> pcie;
@@ -458,7 +458,7 @@ namespace RecRoom
 #ifdef POINT_REC_WITH_RGB
 			{
 				std::stringstream fileName;
-				fileName << "rec" << it->serialNumber << "_RGB.png";
+				fileName << it->serialNumber << "_rec_RGB.png";
 
 				pcl::PCLImage image;
 				pcl::io::PointCloudImageExtractorFromRGBField<PointMED> pcie;
@@ -472,7 +472,7 @@ namespace RecRoom
 #ifdef POINT_RAW_WITH_INTENSITY
 			{
 				std::stringstream fileName;
-				fileName << "raw" << it->serialNumber << "_Intensity.png";
+				fileName << it->serialNumber << "_raw_Intensity.png";
 
 				pcl::PCLImage image;
 				pcl::io::PointCloudImageExtractorFromIntensityField<PointMED> pcie;
@@ -488,7 +488,7 @@ namespace RecRoom
 #ifdef POINT_REC_WITH_INTENSITY
 			{
 				std::stringstream fileName;
-				fileName << "rec" << it->serialNumber << "_Intensity.png";
+				fileName << it->serialNumber << "_rec_Intensity.png";
 
 				pcl::PCLImage image;
 				pcl::io::PointCloudImageExtractorFromIntensityField<PointMED> pcie;
@@ -504,11 +504,11 @@ namespace RecRoom
 #ifdef POINT_RAW_WITH_LABEL
 			{
 				std::stringstream fileName;
-				fileName << "raw" << it->serialNumber << "_Label.png";
+				fileName << it->serialNumber << "_raw_Label.png";
 
 				pcl::PCLImage image;
-				//pcl::io::PointCloudImageExtractorFromLabelField<PointVisAtt> pcie;
-				pcl::io::PointCloudImageExtractorFromRGBField<PointMED> pcie;
+				pcl::io::PointCloudImageExtractorFromLabelField<PointMED> pcie;
+				pcie.setColorMode(pcl::io::PointCloudImageExtractorFromLabelField<PointMED>::COLORS_RGB_GLASBEY);
 				pcie.setPaintNaNsWithBlack(true);
 				if (!pcie.extract(pcVisRaw, image))
 					THROW_EXCEPTION("Failed to extract an image from Label field .");
@@ -519,11 +519,12 @@ namespace RecRoom
 #ifdef POINT_REC_WITH_LABEL
 			{
 				std::stringstream fileName;
-				fileName << "rec" << it->serialNumber << "_Label.png";
+				fileName << it->serialNumber << "_rec_Label.png";
 
 				pcl::PCLImage image;
 				//pcl::io::PointCloudImageExtractorFromLabelField<PointVisAtt> pcie;
-				pcl::io::PointCloudImageExtractorFromRGBField<PointMED> pcie;
+				pcl::io::PointCloudImageExtractorFromLabelField<PointMED> pcie;
+				pcie.setColorMode(pcl::io::PointCloudImageExtractorFromLabelField<PointMED>::COLORS_RGB_GLASBEY);
 				pcie.setPaintNaNsWithBlack(true);
 				if (!pcie.extract(pcVisRec, image))
 					THROW_EXCEPTION("Failed to extract an image from Label field .");
