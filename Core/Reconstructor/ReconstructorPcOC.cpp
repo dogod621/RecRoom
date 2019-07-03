@@ -187,8 +187,10 @@ namespace RecRoom
 
 	int BStep_RecPointCloud(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
 	{
-#ifdef POINT_MED_WITH_NORMAL
-		// 
+#ifdef POINT_RAW_WITH_NORMAL
+		THROW_EXCEPTION("Not done, using scane normal is a feature in to-do list.");
+		return 1;
+#elif defined POINT_REC_WITH_NORMAL
 		if (global.ptrReconstructorPcOC()->getNormalEstimator())
 		{
 			PRINT_INFO("Estimat Normal - Start");
@@ -204,8 +206,11 @@ namespace RecRoom
 		{
 			PRINT_WARNING("normalEstimator is not set, ignore it");
 		}
-#endif
 		return 0;
+#else
+		PRINT_WARNING("None of POINT_RAW_WITH_NORMAL or POINT_REC_WITH_NORMAL is set, ignore it");
+		return 0;
+#endif
 	}
 
 	int CStep_RecPointCloud(AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, const AsyncData_Rec& data)
@@ -328,7 +333,28 @@ namespace RecRoom
 		{
 			PRINT_INFO("Upsampling Attribute - Start");
 
-			global.ptrReconstructorPcOC()->getUpSampler()->Process(data.pcRecAcc, data.pcRec, data.pcRaw);
+			PcIndex upIdx;
+			global.ptrReconstructorPcOC()->getUpSampler()->Process(data.pcRecAcc, data.pcRec, data.pcRaw, upIdx);
+
+			for (std::size_t px = 0; px < upIdx.size(); ++px)
+			{
+				if (upIdx[px] >= 0)
+				{
+					PointMED& tarP = (*data.pcRaw)[px];
+					PointMED& srcP = (*data.pcRec)[upIdx[px]];
+
+#ifdef POINT_REC_WITH_NORMAL
+					tarP.normal_x = srcP.normal_x;
+					tarP.normal_y = srcP.normal_y;
+					tarP.normal_z = srcP.normal_z;
+					tarP.curvature = srcP.curvature;
+#endif
+
+#ifdef POINT_REC_WITH_LABEL
+					tarP.segLabel = srcP.segLabel;
+#endif		
+				}
+			}
 
 			PRINT_INFO("Upsampling Attribute - End");
 		}
@@ -387,6 +413,51 @@ namespace RecRoom
 		return 0;
 	}
 
+	// Async Reconstruct Attribute - NDF
+	int BStep_RecPcNDF(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
+	{
+		return 0;
+	}
+
+	int CStep_RecPcNDF(AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, const AsyncData_Rec& data)
+	{
+		const double cutFalloff = 0.33; // 
+#ifdef POINT_MED_WITH_NORMAL
+#ifdef POINT_MED_WITH_INTENSITY
+#ifdef POINT_MED_WITH_LABEL
+#ifdef POINT_MED_WITH_SEGLABEL
+		PTR(PcNDF) pcNDF (new PcNDF);
+		pcNDF->reserve(data.pcRawIdx->size());
+		for (PcIndex::const_iterator it = data.pcRawIdx->begin(); it != data.pcRawIdx->end(); ++it)
+		{
+			PointMED& pRaw = (*data.pcRaw)[*it];
+			ScanLaser scanLaser;
+			if (global.ptrReconstructorPcOC()->getScanner()->ToScanLaser(pRaw, scanLaser))
+			{
+				Eigen::Vector3d hafway = scanLaser.incidentDirection + scanLaser.reflectedDirection;
+				double hafwayNorm = hafway.norm();
+				if (hafwayNorm > Common::eps)
+				{
+					hafway /= hafwayNorm;
+					if (scanLaser.beamFalloff > cutFalloff)
+					{
+						Eigen::Vector3d tanHafway(
+							scanLaser.hitTangent.dot(hafway),
+							scanLaser.hitBitangent.dot(hafway),
+							scanLaser.hitNormal.dot(hafway));
+						pcNDF->push_back(PointNDF(hafway.x(), hafway.y(), hafway.z(), pRaw.segLabel, scanLaser.intensity / scanLaser.beamFalloff));
+					}
+				}
+			}
+		}
+		global.ptrReconstructorPcOC()->getContainerPcNDF()->Merge(pcNDF);
+#endif
+#endif
+#endif
+#endif
+		return 0;
+	}
+
 	void ReconstructorPcOC::RecPcAlbedo()
 	{
 		AsyncGlobal_Rec global(this);
@@ -421,6 +492,16 @@ namespace RecRoom
 
 	void ReconstructorPcOC::RecSegNDF()
 	{
+		AsyncGlobal_Rec global(this);
+
+		std::vector<AsyncQuery_Rec> queries(scanner->getContainerPcRAW()->Size());
+		for (std::size_t i = 0; i < queries.size(); ++i)
+			queries[i].index = i;
+
+		AsyncProcess<AsyncGlobal_Rec, AsyncQuery_Rec, AsyncData_Rec>(
+			global, queries,
+			AStep_RecPcAtt, BStep_RecPcNDF, CStep_RecPcNDF,
+			asyncSize);
 	}
 
 	void ReconstructorPcOC::RecMesh()

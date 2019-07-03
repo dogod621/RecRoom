@@ -5,7 +5,6 @@
 #include <pcl/features/feature.h>
 #include <pcl/common/centroid.h>
 
-#include "Scan.h"
 #include "Point.h"
 #include "Scanner/ScannerPc.h"
 
@@ -47,9 +46,9 @@ namespace RecRoom
 			input_ = cloud;
 		}
 
-		inline bool CollectScannLaserInfo(const pcl::PointCloud<PointMED>& cloud, const std::size_t k, const std::vector<int>& indices, const std::vector<float>& distance, const PointMED& inPoint, std::vector<ScannLaser>& scannLaser);
+		inline bool CollectScanLaserInfo(const pcl::PointCloud<PointMED>& cloud, const std::size_t k, const std::vector<int>& indices, const std::vector<float>& distance, const PointMED& inPoint, std::vector<ScanLaser>& scanLaser);
 
-		inline bool ComputePointAlbedo(const std::vector<ScannLaser>& scannLaser, const PointMED& inPoint, PointMED& outPoint);
+		inline bool ComputePointAlbedo(const std::vector<ScanLaser>& scanLaser, const PointMED& inPoint, PointMED& outPoint);
 
 
 	protected:

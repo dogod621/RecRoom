@@ -35,83 +35,123 @@ namespace RecRoom
 	void ReconstructorPc::DoRecPointCloud()
 	{
 		//
-		if (status != ReconstructStatus::ReconstructStatus_UNKNOWN)
+		if (status & ReconstructStatus::POINT_CLOUD)
 		{
-			PRINT_WARNING("Already exist reconstructed data, clear them.");
+			PRINT_WARNING("Aready reconstructed, ignore.");
 		}
-		status = ReconstructStatus::ReconstructStatus_UNKNOWN;
-
-		//
-		pcMED->clear();
-
-		//
-		RecPointCloud();
-
-		//
-		status = (ReconstructStatus)(status | ReconstructStatus::POINT_CLOUD);
-		this->Dump();
+		{
+			status = ReconstructStatus::ReconstructStatus_UNKNOWN;
+			pcMED->clear();
+			RecPointCloud();
+			status = (ReconstructStatus)(status | ReconstructStatus::POINT_CLOUD);
+			this->Dump();
+		}
 	}
 
 	void ReconstructorPc::DoRecPcAlbedo()
 	{
-		if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
-			THROW_EXCEPTION("pcMED is not reconstructed yet.");
-		if (pcMED->empty())
-			THROW_EXCEPTION("pcMED is empty.");
-
-		//
-		RecPcAlbedo();
-
-		//
-		status = (ReconstructStatus)(status | ReconstructStatus::PC_ALBEDO);
-		this->Dump();
+		if (status & ReconstructStatus::PC_ALBEDO)
+		{
+			PRINT_WARNING("Aready reconstructed, ignore.");
+		}
+		else if (!RAW_CAN_CONTAIN_LABEL)
+		{
+			PRINT_WARNING("!RAW_CAN_CONTAIN_LABEL, ignore. You must compile with POINT_RAW_WITH_LABEL to enable this feature.");
+		}
+		else if (!RAW_CAN_CONTAIN_INTENSITY)
+		{
+			PRINT_WARNING("!RAW_CAN_CONTAIN_INTENSITY, ignore. You must compile with POINT_RAW_WITH_INTENSITY to enable this feature.");
+		}
+		else if (!MED_CAN_CONTAIN_NORMAL)
+		{
+			PRINT_WARNING("!MED_CAN_CONTAIN_NORMAL, ignore. You must compile with POINT_REC_WITH_NORMAL or POINT_RAW_WITH_NORMAL to enable this feature.");
+		}
+		else
+		{
+			if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+				THROW_EXCEPTION("pcMED is not reconstructed yet.");
+			if (pcMED->empty())
+				THROW_EXCEPTION("pcMED is empty.");
+			RecPcAlbedo();
+			status = (ReconstructStatus)(status | ReconstructStatus::PC_ALBEDO);
+			this->Dump();
+		}
 	}
 
 	void ReconstructorPc::DoRecPcSegment()
 	{
-		if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
-			THROW_EXCEPTION("pcMED is not reconstructed yet.");
-		if (pcMED->empty())
-			THROW_EXCEPTION("pcMED is empty.");
-
-		//
-		RecPcSegment();
-
-		//
-		status = (ReconstructStatus)(status | ReconstructStatus::PC_SEGMENT);
-		this->Dump();
+		if (status & ReconstructStatus::PC_SEGMENT)
+		{
+			PRINT_WARNING("Aready reconstructed, ignore.");
+		}
+		else if (!REC_CAN_CONTAIN_LABEL)
+		{
+			PRINT_WARNING("!REC_CAN_CONTAIN_LABEL, ignore. You must compile with POINT_REC_WITH_LABEL to enable this feature.");
+		}
+		else
+		{
+			if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+				THROW_EXCEPTION("pcMED is not reconstructed yet.");
+			if (pcMED->empty())
+				THROW_EXCEPTION("pcMED is empty.");
+			RecPcSegment();
+			status = (ReconstructStatus)(status | ReconstructStatus::PC_SEGMENT);
+			this->Dump();
+		}
 	}
 
 	void ReconstructorPc::DoRecSegNDF()
 	{
-		if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
-			THROW_EXCEPTION("pcMED is not reconstructed yet.");
-		if ((status & ReconstructStatus::PC_SEGMENT) == ReconstructStatus::ReconstructStatus_UNKNOWN)
-			THROW_EXCEPTION("pcMED segment is not reconstructed yet.");
-		if (pcMED->empty())
-			THROW_EXCEPTION("pcMED is empty.");
-
-		//
-		RecSegNDF();
-
-		//
-		status = (ReconstructStatus)(status | ReconstructStatus::SEG_NDF);
-		this->Dump();
+		if (status & ReconstructStatus::SEG_NDF)
+		{
+			PRINT_WARNING("Aready reconstructed, ignore.");
+		}
+		else if (!RAW_CAN_CONTAIN_LABEL)
+		{
+			PRINT_WARNING("!RAW_CAN_CONTAIN_LABEL, ignore. You must compile with POINT_RAW_WITH_LABEL to enable this feature.");
+		}
+		else if (!REC_CAN_CONTAIN_LABEL)
+		{
+			PRINT_WARNING("!REC_CAN_CONTAIN_LABEL, ignore. You must compile with POINT_REC_WITH_LABEL to enable this feature.");
+		}
+		else if (!MED_CAN_CONTAIN_NORMAL)
+		{
+			PRINT_WARNING("!MED_CAN_CONTAIN_NORMAL, ignore. You must compile with POINT_REC_WITH_NORMAL or POINT_RAW_WITH_NORMAL to enable this feature.");
+		}
+		else if (containerPcNDF->Size() != 0)
+		{
+			PRINT_WARNING("containerPcLF is already used, ignore");
+		}
+		else
+		{
+			if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+				THROW_EXCEPTION("pcMED is not reconstructed yet.");
+			if ((status & ReconstructStatus::PC_SEGMENT) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+				THROW_EXCEPTION("pcMED segment is not reconstructed yet.");
+			if (pcMED->empty())
+				THROW_EXCEPTION("pcMED is empty.");
+			RecSegNDF();
+			status = (ReconstructStatus)(status | ReconstructStatus::SEG_NDF);
+			this->Dump();
+		}
 	}
 
 	void ReconstructorPc::DoRecMesh()
 	{
-		if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
-			THROW_EXCEPTION("pcMED is not reconstructed yet.");
-		if (pcMED->empty())
-			THROW_EXCEPTION("pcMED is empty.");
-
-		//
-		RecMesh();
-
-		//
-		status = (ReconstructStatus)(status | ReconstructStatus::MESH);
-		this->Dump();
+		if (status & ReconstructStatus::MESH)
+		{
+			PRINT_WARNING("Aready reconstructed, ignore.");
+		}
+		else
+		{
+			if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+				THROW_EXCEPTION("pcMED is not reconstructed yet.");
+			if (pcMED->empty())
+				THROW_EXCEPTION("pcMED is empty.");
+			RecMesh();
+			status = (ReconstructStatus)(status | ReconstructStatus::MESH);
+			this->Dump();
+		}
 	}
 
 	void ReconstructorPc::SynthScans()
@@ -131,165 +171,192 @@ namespace RecRoom
 		{
 			{
 				std::stringstream ss;
-				ss << "SynthScans scanner: " << Convert<std::string, Scanner>(it->scanner) << ", serialNumber: " << it->serialNumber;
+				ss << "SynthScans : " << it->serialNumber;
 				PRINT_INFO(ss.str().c_str());
 			}
 
 			//
-			PcVisAtt pcVisAtt;
-			unsigned int width;
-			unsigned int height;
-			switch (it->scanner)
+			PTR(PcMED) pcRaw(new PcMED);
+			PTR(PcMED) pcRec(new PcMED);
+			PcMED pcVisRaw;
+			PcMED pcVisRec;
+			std::vector<ColorHDR> pcVisRawRGB;
+			std::vector<ColorHDR> pcVisRecRGB;
+			std::size_t width = scanner->ScanImageWidth() / 4;
+			std::size_t height = scanner->ScanImageHeight() / 4;
 			{
-			case Scanner::BLK360:
-			{
-				width = 1024;
-				height = 512;
-			}
-			break;
-			default:
-				THROW_EXCEPTION("Scanner is not support.");
-			}
-
-			pcVisAtt.width = width;
-			pcVisAtt.height = height;
-			pcVisAtt.is_dense = false;
-			pcVisAtt.resize(width*height);
-			for (PcVisAtt::iterator jt = pcVisAtt.begin(); jt != pcVisAtt.end(); ++jt)
-			{
-				jt->x = 0.0; // use as counter
-				jt->y = 0.0; 
-				jt->z = NAN; // use as depth buffer
-			}
-
-			//
-			PTR(PcMED) pcScan(new PcMED);
-			PTR(PcMED) pcRecAtt(new PcMED);
-			{
-				PcRAW pcScan_;
-				scanner->LoadPcRAW(it->serialNumber, pcScan_, false);
-
-				pcScan->resize(pcScan_.size());
-				for (std::size_t px = 0; px < pcScan_.size(); ++px)
-					(*pcScan)[px] = pcScan_[px];
-				(*pcRecAtt) = (*pcScan);
-			}
-
-			// Upsampling
-			PcIndex upIdx;
-			upSampler->Process(accMED, pcMED, pcRecAtt, upIdx);
-
-			for (std::size_t px = 0; px < upIdx.size(); ++px)
-			{
-				if (upIdx[px] >= 0)
+				pcVisRaw.width = width;
+				pcVisRaw.height = height;
+				pcVisRaw.is_dense = false;
+				pcVisRaw.resize(width*height);
+				pcVisRawRGB.resize(width*height);
+				for (PcMED::iterator jt = pcVisRaw.begin(); jt != pcVisRaw.end(); ++jt)
 				{
-					PointMED& tarP = (*pcRecAtt)[px];
-					PointMED& srcP = (*pcMED)[upIdx[px]];
+					jt->x = 0.0; // use as counter
+					jt->y = 0.0;
+					jt->z = NAN; // use as depth buffer
+				}
+				pcVisRec = pcVisRaw;
+				pcVisRecRGB.resize(width*height);
 
-#ifdef POINT_MED_WITH_NORMAL
-					tarP.normal_x = srcP.normal_x;
-					tarP.normal_y = srcP.normal_y;
-					tarP.normal_z = srcP.normal_z;
-					tarP.curvature = srcP.curvature;
+				//
+				{
+					PcRAW pcRaw_;
+					scanner->LoadPcRAW(it->serialNumber, pcRaw_, false);
+
+					pcRaw->resize(pcRaw_.size());
+					for (std::size_t px = 0; px < pcRaw_.size(); ++px)
+						(*pcRaw)[px] = pcRaw_[px];
+					(*pcRec) = (*pcRaw);
+				}
+
+				// Upsampling
+				PcIndex upIdx;
+				upSampler->Process(accMED, pcMED, pcRec, upIdx);
+
+				for (std::size_t px = 0; px < upIdx.size(); ++px)
+				{
+					if (upIdx[px] >= 0)
+					{
+						PointMED& tarP = (*pcRec)[px];
+						PointMED& srcP = (*pcMED)[upIdx[px]];
+
+#ifdef POINT_REC_WITH_NORMAL
+						tarP.normal_x = srcP.normal_x;
+						tarP.normal_y = srcP.normal_y;
+						tarP.normal_z = srcP.normal_z;
+						tarP.curvature = srcP.curvature;
 #endif
 
-#ifdef POINT_MED_WITH_INTENSITY
-					tarP.intensity = srcP.intensity;
+#ifdef POINT_REC_WITH_INTENSITY
+						tarP.intensity = srcP.intensity;
 #endif
 
-#ifdef POINT_MED_WITH_SEGLABEL
-					tarP.segLabel = srcP.segLabel;
+#ifdef POINT_REC_WITH_LABEL
+						tarP.segLabel = srcP.segLabel;
+						tarP.label = srcP.segLabel;
 #endif		
+					}
 				}
 			}
-			
 
 			//
 			Eigen::Matrix4d wordToScan = it->transform.inverse();
-			for (std::size_t px = 0; px < pcScan->size(); ++px)
+			for (std::size_t px = 0; px < pcRaw->size(); ++px)
 			{
-				PointMED& pScan = (*pcScan)[px];
-				PointMED& pRecAtt = (*pcRecAtt)[px];
+				PointMED& pRaw = (*pcRaw)[px];
+				PointMED& pRec = (*pcRec)[px];
 
-				Eigen::Vector4d xyz = wordToScan * Eigen::Vector4d(pScan.x, pScan.y, pScan.z, 1.0);
-				Eigen::Vector2d uv;
-				double depth;
-				switch (it->scanner)
-				{
-				case Scanner::BLK360:
-				{
-					Eigen::Vector3d rae = CoodConvert<CoordSys::RAE_PE_PX_PY, CoordSys::XYZ_PX_PY_PZ>(Eigen::Vector3d(xyz.x(), xyz.y(), xyz.z()));
-					uv = ToUV(ToMapping(UVMode::PANORAMA, CoordSys::RAE_PE_PX_PY), rae);
-					depth = rae.x();
-				}
-				break;
-				default:
-					THROW_EXCEPTION("Scanner is not support.");
-				}
-				
-				std::size_t col = uv.x() * (width - 1);
-				std::size_t row = (1.0 - uv.y()) * (height - 1);
+				Eigen::Vector4d xyz = wordToScan * Eigen::Vector4d(pRaw.x, pRaw.y, pRaw.z, 1.0);
+				Eigen::Vector3d uvd = scanner->ToScanImageUVDepth(Eigen::Vector3d(xyz.x(), xyz.y(), xyz.z()));
+				std::size_t col = uvd.x() * (width - 1);
+				std::size_t row = (1.0 - uvd.y()) * (height - 1);
 				std::size_t index = row * width + col;
 
-				PointVisAtt& pVisAtt = pcVisAtt[index];
+				PointMED& pVisRaw = pcVisRaw[index];
+				PointMED& pVisRec = pcVisRec[index];
+				ColorHDR& pVisRawRGB = pcVisRawRGB[index];
+				ColorHDR& pVisRecRGB = pcVisRecRGB[index];
 				{
-					pVisAtt.x += 1;
+					pVisRaw.x += 1;
+					pVisRec.x += 1;
 
+					//
 					bool cloest = false;
-					if (!std::isfinite(pVisAtt.z))
+					if (!std::isfinite(pVisRaw.z))
 						cloest = true;
-					else if (pVisAtt.z < depth)
+					else if (pVisRaw.z < uvd.z())
 						cloest = true;
 					if(cloest)
 					{
-						pVisAtt.z = depth;
-#ifdef POINT_MED_WITH_SEGLABEL
-						pVisAtt.label = pRecAtt.segLabel;
+						pVisRaw.z = uvd.z();
+						pVisRec.z = uvd.z();
+#ifdef POINT_RAW_WITH_LABEL
+						pVisRaw.label = pRaw.label;
+#endif
+#ifdef POINT_REC_WITH_LABEL
+						pVisRec.label = pRec.segLabel;
 #endif
 					}
 
-#ifdef POINT_MED_WITH_NORMAL
-					pVisAtt.normal_x += pRecAtt.normal_x;
-					pVisAtt.normal_y += pRecAtt.normal_y;
-					pVisAtt.normal_z += pRecAtt.normal_z;
-					pVisAtt.curvature += pRecAtt.curvature;
+					//
+#ifdef POINT_RAW_WITH_NORMAL
+					pVisRaw.normal_x += pRaw.normal_x;
+					pVisRaw.normal_y += pRaw.normal_y;
+					pVisRaw.normal_z += pRaw.normal_z;
+					pVisRaw.curvature += pRaw.curvature;
+#endif
+#ifdef POINT_REC_WITH_NORMAL
+					pVisRec.normal_x += pRec.normal_x;
+					pVisRec.normal_y += pRec.normal_y;
+					pVisRec.normal_z += pRec.normal_z;
+					pVisRec.curvature += pRec.curvature;
 #endif
 
-
-#ifdef POINT_MED_WITH_RGB
-					pVisAtt.fR += (float)pScan.r;
-					pVisAtt.fG += (float)pScan.g;
-					pVisAtt.fB += (float)pScan.b;
+					//
+#ifdef POINT_RAW_WITH_RGB
+					pVisRawRGB.r += (float)pRaw.r;
+					pVisRawRGB.g += (float)pRaw.g;
+					pVisRawRGB.b += (float)pRaw.b;
+#endif
+#ifdef POINT_REC_WITH_RGB
+					pVisRecRGB.r += (float)pRec.r;
+					pVisRecRGB.g += (float)pRec.g;
+					pVisRecRGB.b += (float)pRec.b;
 #endif
 
-#ifdef POINT_MED_WITH_INTENSITY
-					pVisAtt.albedo += pRecAtt.intensity;
-					pVisAtt.intensity += pScan.intensity;
+					//
+#ifdef POINT_RAW_WITH_INTENSITY
+					pVisRaw.intensity += pRaw.intensity;
+#endif
+#ifdef POINT_REC_WITH_INTENSITY
+					pVisRec.intensity += pRec.intensity;
 #endif
 				}
 			}
 
-			for (PcVisAtt::iterator jt = pcVisAtt.begin(); jt != pcVisAtt.end(); ++jt)
+			for (std::size_t px = 0; px < pcVisRaw.size(); ++px)
 			{
-				if (jt->x > 0)
+				PointMED& pVisRaw = pcVisRaw[px];
+				PointMED& pVisRec = pcVisRec[px];
+				ColorHDR& pVisRawRGB = pcVisRawRGB[px];
+				ColorHDR& pVisRecRGB = pcVisRecRGB[px];
+
+				if (pVisRaw.x > 0)
 				{
-#ifdef POINT_MED_WITH_NORMAL
-					jt->normal_x /= jt->x;
-					jt->normal_y /= jt->x;
-					jt->normal_z /= jt->x;
-					jt->curvature /= jt->x;
+#ifdef POINT_RAW_WITH_NORMAL
+					pVisRaw.normal_x /= pVisRaw.x;
+					pVisRaw.normal_y /= pVisRaw.x;
+					pVisRaw.normal_z /= pVisRaw.x;
+					pVisRaw.curvature /= pVisRaw.x;
+#endif
+
+#ifdef POINT_REC_WITH_NORMAL
+					pVisRec.normal_x /= pVisRec.x;
+					pVisRec.normal_y /= pVisRec.x;
+					pVisRec.normal_z /= pVisRec.x;
+					pVisRec.curvature /= pVisRec.x;
 #endif
 
 
-#ifdef POINT_MED_WITH_RGB
-					jt->fR /= jt->x;
-					jt->fG /= jt->x;
-					jt->fB /= jt->x;
+#ifdef POINT_RAW_WITH_RGB
+					pVisRaw.r = std::max(std::min(pVisRawRGB.r / pVisRaw.x, 255.0f), 0.0f);
+					pVisRaw.g = std::max(std::min(pVisRawRGB.g / pVisRaw.x, 255.0f), 0.0f);
+					pVisRaw.b = std::max(std::min(pVisRawRGB.b / pVisRaw.x, 255.0f), 0.0f);
 #endif
 
-#ifdef POINT_MED_WITH_INTENSITY
-					jt->albedo /= jt->x;
-					jt->intensity /= jt->x;
+#ifdef POINT_REC_WITH_RGB
+					pVisRec.r = std::max(std::min(pVisRecRGB.r / pVisRec.x, 255.0f), 0.0f);
+					pVisRec.g = std::max(std::min(pVisRecRGB.g / pVisRec.x, 255.0f), 0.0f);
+					pVisRec.b = std::max(std::min(pVisRecRGB.b / pVisRec.x, 255.0f), 0.0f);
+#endif
+
+#ifdef POINT_RAW_WITH_INTENSITY
+					pVisRaw.intensity /= pVisRaw.x;
+#endif
+
+#ifdef POINT_REC_WITH_INTENSITY
+					pVisRec.intensity /= pVisRec.x;
 #endif
 				}
 			}
@@ -297,120 +364,168 @@ namespace RecRoom
 			// Z
 			{
 				std::stringstream fileName;
-				fileName << "scan" << it->serialNumber << "_Depth.png";
+				fileName << "raw" << it->serialNumber << "_Depth.png";
 
 				pcl::PCLImage image;
-				pcl::io::PointCloudImageExtractorFromZField<PointVisAtt> pcie;
+				pcl::io::PointCloudImageExtractorFromZField<PointMED> pcie;
 				pcie.setPaintNaNsWithBlack(true);
 				pcie.setScalingMethod(pcie.SCALING_FULL_RANGE);
-				if (!pcie.extract(pcVisAtt, image))
+				if (!pcie.extract(pcVisRaw, image))
 					THROW_EXCEPTION("Failed to extract an image from Depth field .");
 				pcl::io::savePNGFile((filePath / boost::filesystem::path(fileName.str())).string(), image);
 			}
 
-#ifdef POINT_MED_WITH_NORMAL
-			// Normal
 			{
 				std::stringstream fileName;
-				fileName << "scan" << it->serialNumber << "_Normal.png";
+				fileName << "rec" << it->serialNumber << "_Depth.png";
 
 				pcl::PCLImage image;
-				pcl::io::PointCloudImageExtractorFromNormalField<PointVisAtt> pcie;
+				pcl::io::PointCloudImageExtractorFromZField<PointMED> pcie;
 				pcie.setPaintNaNsWithBlack(true);
-				if (!pcie.extract(pcVisAtt, image))
-					THROW_EXCEPTION("Failed to extract an image from Normal field .");
+				pcie.setScalingMethod(pcie.SCALING_FULL_RANGE);
+				if (!pcie.extract(pcVisRec, image))
+					THROW_EXCEPTION("Failed to extract an image from Depth field .");
 				pcl::io::savePNGFile((filePath / boost::filesystem::path(fileName.str())).string(), image);
 			}
 
-			// Curvature
+#ifdef POINT_RAW_WITH_NORMAL
 			{
 				std::stringstream fileName;
-				fileName << "scan" << it->serialNumber << "_Curvature.png";
+				fileName << "raw" << it->serialNumber << "_Normal.png";
 
 				pcl::PCLImage image;
-				pcl::io::PointCloudImageExtractorFromCurvatureField<PointVisAtt> pcie;
+				pcl::io::PointCloudImageExtractorFromNormalField<PointMED> pcie;
+				pcie.setPaintNaNsWithBlack(true);
+				if (!pcie.extract(pcVisRaw, image))
+					THROW_EXCEPTION("Failed to extract an image from Normal field .");
+				pcl::io::savePNGFile((filePath / boost::filesystem::path(fileName.str())).string(), image);
+			}
+			{
+				std::stringstream fileName;
+				fileName << "raw" << it->serialNumber << "_Curvature.png";
+
+				pcl::PCLImage image;
+				pcl::io::PointCloudImageExtractorFromCurvatureField<PointMED> pcie;
 				pcie.setPaintNaNsWithBlack(true);
 				pcie.setScalingMethod(pcie.SCALING_FULL_RANGE);
-				if (!pcie.extract(pcVisAtt, image))
+				if (!pcie.extract(pcVisRaw, image))
 					THROW_EXCEPTION("Failed to extract an image from Curvature field .");
 				pcl::io::savePNGFile((filePath / boost::filesystem::path(fileName.str())).string(), image);
 			}
 #endif
 
-#ifdef POINT_MED_WITH_RGB
+#ifdef POINT_REC_WITH_NORMAL
 			{
-				for (PcVisAtt::iterator jt = pcVisAtt.begin(); jt != pcVisAtt.end(); ++jt)
-				{
-					jt->r = (unsigned char)std::max(std::min(jt->fR, 255.f), 0.f);
-					jt->g = (unsigned char)std::max(std::min(jt->fG, 255.f), 0.f);
-					jt->b = (unsigned char)std::max(std::min(jt->fB, 255.f), 0.f);
-				}
-
 				std::stringstream fileName;
-				fileName << "scan" << it->serialNumber << "_RGB.png";
+				fileName << "rec" << it->serialNumber << "_Normal.png";
 
 				pcl::PCLImage image;
-				pcl::io::PointCloudImageExtractorFromRGBField<PointVisAtt> pcie;
+				pcl::io::PointCloudImageExtractorFromNormalField<PointMED> pcie;
 				pcie.setPaintNaNsWithBlack(true);
-				if (!pcie.extract(pcVisAtt, image))
+				if (!pcie.extract(pcVisRec, image))
+					THROW_EXCEPTION("Failed to extract an image from Normal field .");
+				pcl::io::savePNGFile((filePath / boost::filesystem::path(fileName.str())).string(), image);
+			}
+			{
+				std::stringstream fileName;
+				fileName << "rec" << it->serialNumber << "_Curvature.png";
+
+				pcl::PCLImage image;
+				pcl::io::PointCloudImageExtractorFromCurvatureField<PointMED> pcie;
+				pcie.setPaintNaNsWithBlack(true);
+				pcie.setScalingMethod(pcie.SCALING_FULL_RANGE);
+				if (!pcie.extract(pcVisRec, image))
+					THROW_EXCEPTION("Failed to extract an image from Curvature field .");
+				pcl::io::savePNGFile((filePath / boost::filesystem::path(fileName.str())).string(), image);
+			}
+#endif
+
+
+#ifdef POINT_RAW_WITH_RGB
+			{
+				std::stringstream fileName;
+				fileName << "raw" << it->serialNumber << "_RGB.png";
+
+				pcl::PCLImage image;
+				pcl::io::PointCloudImageExtractorFromRGBField<PointMED> pcie;
+				pcie.setPaintNaNsWithBlack(true);
+				if (!pcie.extract(pcVisRaw, image))
 					THROW_EXCEPTION("Failed to extract an image from RGB field .");
 				pcl::io::savePNGFile((filePath / boost::filesystem::path(fileName.str())).string(), image);
 			}
 #endif
 
-#ifdef POINT_MED_WITH_INTENSITY
+#ifdef POINT_REC_WITH_RGB
 			{
 				std::stringstream fileName;
-				fileName << "scan" << it->serialNumber << "_Intensity.png";
+				fileName << "rec" << it->serialNumber << "_RGB.png";
 
 				pcl::PCLImage image;
-				pcl::io::PointCloudImageExtractorFromIntensityField<PointVisAtt> pcie;
+				pcl::io::PointCloudImageExtractorFromRGBField<PointMED> pcie;
 				pcie.setPaintNaNsWithBlack(true);
-				pcie.setScalingMethod(pcie.SCALING_FIXED_FACTOR);
-				pcie.setScalingFactor(255.f);
-				if (!pcie.extract(pcVisAtt, image))
-					THROW_EXCEPTION("Failed to extract an image from Intensity field .");
+				if (!pcie.extract(pcVisRec, image))
+					THROW_EXCEPTION("Failed to extract an image from RGB field .");
 				pcl::io::savePNGFile((filePath / boost::filesystem::path(fileName.str())).string(), image);
 			}
+#endif
 
+#ifdef POINT_RAW_WITH_INTENSITY
 			{
-				for (PcVisAtt::iterator jt = pcVisAtt.begin(); jt != pcVisAtt.end(); ++jt)
-				{
-					jt->intensity = jt->albedo;
-				}
-
 				std::stringstream fileName;
-				fileName << "scan" << it->serialNumber << "_Albedo.png";
+				fileName << "raw" << it->serialNumber << "_Intensity.png";
 
 				pcl::PCLImage image;
-				pcl::io::PointCloudImageExtractorFromIntensityField<PointVisAtt> pcie;
+				pcl::io::PointCloudImageExtractorFromIntensityField<PointMED> pcie;
 				pcie.setPaintNaNsWithBlack(true);
 				pcie.setScalingMethod(pcie.SCALING_FIXED_FACTOR);
 				pcie.setScalingFactor(255.f);
-				if (!pcie.extract(pcVisAtt, image))
+				if (!pcie.extract(pcVisRaw, image))
 					THROW_EXCEPTION("Failed to extract an image from Intensity field .");
 				pcl::io::savePNGFile((filePath / boost::filesystem::path(fileName.str())).string(), image);
 			}
 #endif
 
-#ifdef POINT_MED_WITH_SEGLABEL
+#ifdef POINT_REC_WITH_INTENSITY
 			{
-				for (PcVisAtt::iterator jt = pcVisAtt.begin(); jt != pcVisAtt.end(); ++jt)
-				{
-					Color c = Convert<Color, uint32_t>(jt->label);
-					jt->r = c.r;
-					jt->g = c.g;
-					jt->b = c.b;
-				}
-
 				std::stringstream fileName;
-				fileName << "scan" << it->serialNumber << "_SegLabel.png";
+				fileName << "rec" << it->serialNumber << "_Intensity.png";
+
+				pcl::PCLImage image;
+				pcl::io::PointCloudImageExtractorFromIntensityField<PointMED> pcie;
+				pcie.setPaintNaNsWithBlack(true);
+				pcie.setScalingMethod(pcie.SCALING_FIXED_FACTOR);
+				pcie.setScalingFactor(255.f);
+				if (!pcie.extract(pcVisRec, image))
+					THROW_EXCEPTION("Failed to extract an image from Intensity field .");
+				pcl::io::savePNGFile((filePath / boost::filesystem::path(fileName.str())).string(), image);
+			}
+#endif
+
+#ifdef POINT_RAW_WITH_LABEL
+			{
+				std::stringstream fileName;
+				fileName << "raw" << it->serialNumber << "_Label.png";
 
 				pcl::PCLImage image;
 				//pcl::io::PointCloudImageExtractorFromLabelField<PointVisAtt> pcie;
-				pcl::io::PointCloudImageExtractorFromRGBField<PointVisAtt> pcie;
+				pcl::io::PointCloudImageExtractorFromRGBField<PointMED> pcie;
 				pcie.setPaintNaNsWithBlack(true);
-				if (!pcie.extract(pcVisAtt, image))
+				if (!pcie.extract(pcVisRaw, image))
+					THROW_EXCEPTION("Failed to extract an image from Label field .");
+				pcl::io::savePNGFile((filePath / boost::filesystem::path(fileName.str())).string(), image);
+			}
+#endif
+
+#ifdef POINT_REC_WITH_LABEL
+			{
+				std::stringstream fileName;
+				fileName << "rec" << it->serialNumber << "_Label.png";
+
+				pcl::PCLImage image;
+				//pcl::io::PointCloudImageExtractorFromLabelField<PointVisAtt> pcie;
+				pcl::io::PointCloudImageExtractorFromRGBField<PointMED> pcie;
+				pcie.setPaintNaNsWithBlack(true);
+				if (!pcie.extract(pcVisRec, image))
 					THROW_EXCEPTION("Failed to extract an image from Label field .");
 				pcl::io::savePNGFile((filePath / boost::filesystem::path(fileName.str())).string(), image);
 			}

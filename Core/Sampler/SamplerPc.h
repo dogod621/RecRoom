@@ -25,11 +25,6 @@ namespace RecRoom
 		virtual void Process(
 			const PTR(AccMED)& searchMethod,
 			const PTR(PcMED)& searchSurface,
-			const PTR(PcMED)& inV) const;
-
-		virtual void Process(
-			const PTR(AccMED)& searchMethod,
-			const PTR(PcMED)& searchSurface,
 			const PTR(PcMED)& inV,
 			PcIndex& outV) const = 0;
 	};

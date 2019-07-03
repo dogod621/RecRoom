@@ -296,7 +296,7 @@ int main(int argc, char *argv[])
 			{
 				std::cout << "scannerPc->ShipPcRAW()" << std::endl;
 
-				scannerPc->ShipPcRAW();
+				scannerPc->DoShipPcRAW();
 			}
 
 			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::POINT_CLOUD) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
@@ -318,6 +318,13 @@ int main(int argc, char *argv[])
 				std::cout << "reconstructorPC->DoRecPcSegment()" << std::endl;
 
 				reconstructorPC->DoRecPcSegment();
+			}
+
+			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::SEG_NDF) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
+			{
+				std::cout << "reconstructorPC->DoRecSegNDF()" << std::endl;
+
+				reconstructorPC->DoRecSegNDF();
 			}
 
 			//

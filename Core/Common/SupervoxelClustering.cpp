@@ -149,7 +149,6 @@ namespace RecRoom
 			CreateSupervoxels(InitialSeeds());
 			ExpandSupervoxels(static_cast<int> (1.8f*seedResolution / voxelResolution));
 		}
-
 #ifdef POINT_MED_WITH_SEGLABEL
 		{
 			for (PcMED::iterator it = pcLabel.begin(); it != pcLabel.end(); ++it)

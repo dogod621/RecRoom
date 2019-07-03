@@ -19,8 +19,6 @@ namespace RecRoom
 			{
 				ScanMeta& scanMeta = (*scanMetaSet)[i];
 
-				scanMeta.scanner = scanner;
-
 				e57::StructureNode scan(data3DE57->get(i));
 				scanMeta.serialNumber = i;
 
@@ -107,9 +105,8 @@ namespace RecRoom
 
 	ScannerPcE57::ScannerPcE57(
 		const boost::filesystem::path& filePath,
-		const PTR(ContainerPcRAW)& containerPcRAW,
-		Scanner scanner)
-		: ScannerPc(containerPcRAW, scanner), AsyncAble(1), imageFileE57(nullptr), data3DE57(nullptr), images2DE57(nullptr)
+		const PTR(ContainerPcRAW)& containerPcRAW)
+		: ScannerPc(containerPcRAW), AsyncAble(1), imageFileE57(nullptr), data3DE57(nullptr), images2DE57(nullptr)
 	{
 		if (!IsFileE57(filePath, true))
 			THROW_EXCEPTION("filePath is not valid.");
@@ -199,9 +196,6 @@ namespace RecRoom
 						else
 							THROW_EXCEPTION("CoordSys is not support");
 					}
-
-					if (scanMeta.hasPointNormal)
-						THROW_EXCEPTION("E57 didnot is not support PointNormal");
 
 					if (scanMeta.hasPointRGB)
 					{

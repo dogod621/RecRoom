@@ -12,8 +12,7 @@ namespace RecRoom
 	public:
 		ScannerPcE57(
 			const boost::filesystem::path& filePath,
-			const PTR(ContainerPcRAW)& containerPcRAW,
-			Scanner scanner = Scanner::E57);
+			const PTR(ContainerPcRAW)& containerPcRAW);
 
 		~ScannerPcE57()
 		{
@@ -22,11 +21,13 @@ namespace RecRoom
 		}
 
 	public:
-		virtual void ShipPcRAW() const;
-		virtual void ShipPcLF() const { THROW_EXCEPTION("ScannerPcE57 cannot retrieve light field data") };
 		virtual void LoadPcRAW(int serialNumber, PcRAW& pc, bool local = false) const;
 		virtual void LoadPcLF(int serialNumber, PcLF& pc, bool local = false) const { THROW_EXCEPTION("ScannerPcE57 cannot retrieve light field data") };
 
+	protected:
+		virtual void ShipPcRAW() const;
+		virtual void ShipPcLF() const { THROW_EXCEPTION("ScannerPcE57 cannot retrieve light field data") };
+		
 	public:
 		PTR(e57::ImageFile) getImageFileE57() const { return imageFileE57; }
 		CONST_PTR(e57::VectorNode) getData3DE57() const { return data3DE57; }

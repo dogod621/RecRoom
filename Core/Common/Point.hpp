@@ -70,17 +70,39 @@ namespace RecRoom
 		REC_COPY_NORMAL;
 		REC_COPY_RGB;
 		REC_COPY_INTENSITY;
-		REC_COPY_SEGLABEL;
+
+#ifdef POINT_REC_WITH_LABEL
+		label = p.segLabel;
+#endif
 	}
 
 	inline PointMED::PointMED(const PointRAW& p)
 	{
 		x = p.x; y = p.y; z = p.z; data[3] = 1.0f;
 
+#ifdef POINT_RAW_WITH_NORMAL
 		MED_COPY_NORMAL;
+#else
+		MED_INIT_NORMAL;
+#endif
+
+#ifdef POINT_RAW_WITH_RGB
 		MED_COPY_RGB;
+#else
+		MED_INIT_RGB;
+#endif
+
+#ifdef POINT_RAW_WITH_INTENSITY
 		MED_COPY_INTENSITY;
+#else
+		MED_INIT_INTENSITY;
+#endif
+
+#ifdef POINT_RAW_WITH_LABEL
 		MED_COPY_LABEL;
+#else
+		MED_INIT_LABEL;
+#endif
 		MED_INIT_SEGLABEL;
 	}
 
@@ -88,11 +110,26 @@ namespace RecRoom
 	{
 		x = p.x; y = p.y; z = p.z; data[3] = 1.0f;
 
+#ifdef POINT_REC_WITH_NORMAL
 		MED_COPY_NORMAL;
+#else
+		MED_INIT_NORMAL;
+#endif
+
+#ifdef POINT_REC_WITH_RGB
 		MED_COPY_RGB;
-		MED_COPY_INTENSITY;
-		MED_INIT_LABEL;
+#else
+		MED_INIT_RGB;
+#endif
+
 #ifdef POINT_REC_WITH_INTENSITY
+		MED_COPY_INTENSITY;
+#else
+		MED_INIT_INTENSITY;
+#endif
+
+		MED_INIT_LABEL;
+#ifdef POINT_REC_WITH_LABEL
 		segLabel = p.label;
 #else
 		MED_INIT_SEGLABEL;

@@ -2,15 +2,13 @@
 
 namespace RecRoom
 {
-	inline bool AlbedoEstimation::CollectScannLaserInfo(const pcl::PointCloud<PointMED>& cloud, const std::size_t k, const std::vector<int>& indices, const std::vector<float>& distance, const PointMED& inPoint, std::vector<ScannLaser>& scannLaserSet)
+	inline bool AlbedoEstimation::CollectScanLaserInfo(const pcl::PointCloud<PointMED>& cloud, const std::size_t k, const std::vector<int>& indices, const std::vector<float>& distance, const PointMED& inPoint, std::vector<ScanLaser>& scanLaserSet)
 	{
-		scannLaserSet.clear();
-		scannLaserSet.reserve(k);
+		scanLaserSet.clear();
+		scanLaserSet.reserve(k);
 		double radius = search_radius_;
 
 #ifdef POINT_MED_WITH_NORMAL
-#ifdef POINT_MED_WITH_LABEL
-#ifdef POINT_MED_WITH_INTENSITY
 		Eigen::Vector3d inNormal(inPoint.normal_x, inPoint.normal_y, inPoint.normal_z);
 
 		if (!Common::IsUnitVector(inNormal))
@@ -21,6 +19,8 @@ namespace RecRoom
 			return false;
 		}
 
+#ifdef POINT_MED_WITH_LABEL
+#ifdef POINT_MED_WITH_INTENSITY
 		//
 		for (std::size_t idx = 0; idx < k; ++idx)
 		{
@@ -34,60 +34,14 @@ namespace RecRoom
 			}
 			else
 			{
-				const PointMED& scanPoint = cloud[px];
-				const ScanMeta& scanMeta = scanner->getScanMeta(scanPoint.label);
-				ScannLaser scannLaser;
-
-				//
-				scannLaser.hitNormal = Eigen::Vector3d(cloud[px].normal_x, cloud[px].normal_y, cloud[px].normal_z);
-				if (!Common::IsUnitVector(scannLaser.hitNormal))
+				ScanLaser scanLaser;
+				if (scanner->ToScanLaser(cloud[px], inNormal, scanLaser))
 				{
-					std::stringstream ss;
-					ss << "scannLaser.hitNormal is not valid, ignore: " << scannLaser.hitNormal;
-					PRINT_WARNING(ss.str());
-				}
-				else
-				{
-					double dotNN = scannLaser.hitNormal.dot(inNormal);
-					if (dotNN > cutGrazing)
+					double dotNN = scanLaser.hitNormal.dot(inNormal);
+					if ((dotNN > cutGrazing) && (scanLaser.beamFalloff > cutFalloff))
 					{
-						scannLaser.hitPosition = Eigen::Vector3d(scanPoint.x, scanPoint.y, scanPoint.z);
-						switch (scanMeta.scanner)
-						{
-						case Scanner::BLK360:
-						{
-							scannLaser.incidentDirection = scanMeta.position - scannLaser.hitPosition;
-							scannLaser.hitDistance = scannLaser.incidentDirection.norm();
-							scannLaser.incidentDirection /= scannLaser.hitDistance;
-							if (scannLaser.incidentDirection.dot(inNormal) < 0)
-								scannLaser.incidentDirection *= -1.0;
-							scannLaser.reflectedDirection = scannLaser.incidentDirection; // BLK360 
-
-							// Ref - BLK 360 Spec - laser wavelength & Beam divergence : https://lasers.leica-geosystems.com/global/sites/lasers.leica-geosystems.com.global/files/leica_media/product_documents/blk/853811_leica_blk360_um_v2.0.0_en.pdf
-							// Ref - Gaussian beam : https://en.wikipedia.org/wiki/Gaussian_beam
-							// Ref - Beam divergence to Beam waist(w0) : http://www2.nsysu.edu.tw/optics/laser/angle.htm
-							double temp = scannLaser.hitDistance / 26.2854504782;
-							scannLaser.beamFalloff = 1.0f / (1 + temp * temp);
-							if ((scannLaser.beamFalloff > cutFalloff))
-							{
-								if (Common::GenFrame(scannLaser.hitNormal, scannLaser.hitTangent, scannLaser.hitBitangent))
-								{
-									scannLaser.weight = std::pow((radius - d) / radius, distInterParm) * std::pow(dotNN, angleInterParm);
-									scannLaser.intensity = (double)scanPoint.intensity;
-									scannLaserSet.push_back(scannLaser);
-								}
-							}
-						}
-						break;
-
-						default:
-						{
-							std::stringstream ss;
-							ss << "Scan data Scanner type is not support, ignore: " << Convert<std::string, Scanner>(scanMeta.scanner);
-							PRINT_WARNING(ss.str());
-						}
-						break;
-						}
+						scanLaser.weight = std::pow((radius - d) / radius, distInterParm) * std::pow(dotNN, angleInterParm);
+						scanLaserSet.push_back(scanLaser);
 					}
 				}
 			}
@@ -95,21 +49,21 @@ namespace RecRoom
 #endif
 #endif
 #endif
-		return scannLaserSet.size() > 0;
+		return scanLaserSet.size() > 0;
 	}
 
-	inline bool AlbedoEstimation::ComputePointAlbedo(const std::vector<ScannLaser>& scannLaserSet, const PointMED& inPoint, PointMED& outPoint)
+	inline bool AlbedoEstimation::ComputePointAlbedo(const std::vector<ScanLaser>& scanLaserSet, const PointMED& inPoint, PointMED& outPoint)
 	{
 #ifdef POINT_MED_WITH_NORMAL
 #ifdef POINT_MED_WITH_INTENSITY
 		Eigen::MatrixXf A;
 		Eigen::MatrixXf B;
 
-		A = Eigen::MatrixXf(scannLaserSet.size() * 3, 3);
-		B = Eigen::MatrixXf(scannLaserSet.size() * 3, 1);
+		A = Eigen::MatrixXf(scanLaserSet.size() * 3, 3);
+		B = Eigen::MatrixXf(scanLaserSet.size() * 3, 1);
 
 		std::size_t shifter = 0;
-		for (std::vector<ScannLaser>::const_iterator it = scannLaserSet.begin(); it != scannLaserSet.end(); ++it)
+		for (std::vector<ScanLaser>::const_iterator it = scanLaserSet.begin(); it != scanLaserSet.end(); ++it)
 		{
 			A(shifter, 0) = it->weight * it->incidentDirection.x();
 			A(shifter, 1) = it->weight * it->incidentDirection.y();
@@ -203,13 +157,13 @@ namespace RecRoom
 				const PointMED& inPoint = (*input_)[(*indices_)[idx]];
 				PointMED& outPoint = output.points[idx];
 
-				std::vector<ScannLaser> scannLaserSet;
-				if (CollectScannLaserInfo(*surface_,
+				std::vector<ScanLaser> scanLaserSet;
+				if (CollectScanLaserInfo(*surface_,
 					this->searchForNeighbors((*indices_)[idx], search_parameter_, nn_indices, nn_dists),
 					nn_indices, nn_dists,
-					inPoint, scannLaserSet))
+					inPoint, scanLaserSet))
 				{
-					if (!ComputePointAlbedo(scannLaserSet, inPoint, outPoint))
+					if (!ComputePointAlbedo(scanLaserSet, inPoint, outPoint))
 					{
 						PRINT_WARNING("ComputePointAlbedo failed");
 						outPoint.intensity = std::numeric_limits<float>::quiet_NaN();
@@ -218,7 +172,7 @@ namespace RecRoom
 				}
 				else
 				{
-					PRINT_WARNING("CollectScannLaserInfo failed");
+					PRINT_WARNING("CollectScanLaserInfo failed");
 					outPoint.intensity = std::numeric_limits<float>::quiet_NaN();
 					output.is_dense = false;
 				}
@@ -232,13 +186,13 @@ namespace RecRoom
 				PointMED& outPoint = output.points[idx];
 				if (pcl::isFinite(inPoint))
 				{
-					std::vector<ScannLaser> scannLaserSet;
-					if (CollectScannLaserInfo(*surface_,
+					std::vector<ScanLaser> scanLaserSet;
+					if (CollectScanLaserInfo(*surface_,
 						this->searchForNeighbors((*indices_)[idx], search_parameter_, nn_indices, nn_dists),
 						nn_indices, nn_dists,
-						inPoint, scannLaserSet))
+						inPoint, scanLaserSet))
 					{
-						if (!ComputePointAlbedo(scannLaserSet, inPoint, outPoint))
+						if (!ComputePointAlbedo(scanLaserSet, inPoint, outPoint))
 						{
 							PRINT_WARNING("ComputePointAlbedo failed");
 							outPoint.intensity = std::numeric_limits<float>::quiet_NaN();
@@ -247,7 +201,7 @@ namespace RecRoom
 					}
 					else
 					{
-						PRINT_WARNING("CollectScannLaserInfo failed");
+						PRINT_WARNING("CollectScanLaserInfo failed");
 						outPoint.intensity = std::numeric_limits<float>::quiet_NaN();
 						output.is_dense = false;
 					}
@@ -298,13 +252,13 @@ namespace RecRoom
 				const PointMED& inPoint = (*input_)[(*indices_)[idx]];
 				PointMED& outPoint = output.points[idx];
 
-				std::vector<ScannLaser> scannLaserSet;
-				if (CollectScannLaserInfo(*surface_,
+				std::vector<ScanLaser> scanLaserSet;
+				if (CollectScanLaserInfo(*surface_,
 					this->searchForNeighbors((*indices_)[idx], search_parameter_, nn_indices, nn_dists),
 					nn_indices, nn_dists,
-					inPoint, scannLaserSet))
+					inPoint, scanLaserSet))
 				{
-					if (!ComputePointAlbedo(scannLaserSet, inPoint, outPoint))
+					if (!ComputePointAlbedo(scanLaserSet, inPoint, outPoint))
 					{
 						PRINT_WARNING("ComputePointAlbedo failed");
 						outPoint.intensity = std::numeric_limits<float>::quiet_NaN();
@@ -313,7 +267,7 @@ namespace RecRoom
 				}
 				else
 				{
-					PRINT_WARNING("CollectScannLaserInfo failed");
+					PRINT_WARNING("CollectScanLaserInfo failed");
 					outPoint.intensity = std::numeric_limits<float>::quiet_NaN();
 					output.is_dense = false;
 				}
@@ -330,13 +284,13 @@ namespace RecRoom
 				PointMED& outPoint = output.points[idx];
 				if (pcl::isFinite(inPoint))
 				{
-					std::vector<ScannLaser> scannLaserSet;
-					if (CollectScannLaserInfo(*surface_,
+					std::vector<ScanLaser> scanLaserSet;
+					if (CollectScanLaserInfo(*surface_,
 						this->searchForNeighbors((*indices_)[idx], search_parameter_, nn_indices, nn_dists),
 						nn_indices, nn_dists,
-						inPoint, scannLaserSet))
+						inPoint, scanLaserSet))
 					{
-						if (!ComputePointAlbedo(scannLaserSet, inPoint, outPoint))
+						if (!ComputePointAlbedo(scanLaserSet, inPoint, outPoint))
 						{
 							PRINT_WARNING("ComputePointAlbedo failed");
 							outPoint.intensity = std::numeric_limits<float>::quiet_NaN();
@@ -345,7 +299,7 @@ namespace RecRoom
 					}
 					else
 					{
-						PRINT_WARNING("CollectScannLaserInfo failed");
+						PRINT_WARNING("CollectScanLaserInfo failed");
 						outPoint.intensity = std::numeric_limits<float>::quiet_NaN();
 						output.is_dense = false;
 					}
