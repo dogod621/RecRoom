@@ -41,6 +41,12 @@ namespace RecRoom
 		}
 
 #ifdef POINT_MED_WITH_LABEL
+		if (!scanPoint.HasLabel())
+		{
+			PRINT_WARNING("!scanPoint.HasLabel(), ignore");
+			return false;
+		}
+
 		const ScanMeta& scanMeta = getScanMeta(scanPoint.label);
 
 #	ifdef POINT_MED_WITH_NORMAL
@@ -72,6 +78,7 @@ namespace RecRoom
 
 		if (Common::GenFrame(scanLaser.hitNormal, scanLaser.hitTangent, scanLaser.hitBitangent))
 			return true;
+		PRINT_WARNING("GenFrame failed, ignore");
 		return false;
 
 #		else

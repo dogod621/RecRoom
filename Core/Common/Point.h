@@ -192,7 +192,7 @@ namespace RecRoom
 #	define RAW_ISFINITE_LABEL
 #	define RAW_INIT_LABEL					hasLabel = -1;
 #	define RAW_COPY_LABEL					label = p.label;
-#	define RAW_HASLABEL						inline bool HasLabel() { return (hasLabel != -1); }
+#	define RAW_HASLABEL						inline bool HasLabel() const { return (hasLabel != -1); }
 #else
 #	define RAW_CAN_CONTAIN_LABEL			false
 #	define RAW_ADD_LABEL
@@ -210,7 +210,7 @@ namespace RecRoom
 #	define REC_ISFINITE_LABEL
 #	define REC_INIT_LABEL					hasLabel = -1;
 #	define REC_COPY_LABEL					label = p.label;
-#	define REC_HASLABEL						inline bool HasLabel() { return (hasLabel != -1); }
+#	define REC_HASLABEL						inline bool HasLabel() const { return (hasLabel != -1); }
 #else
 #	define REC_CAN_CONTAIN_LABEL			false
 #	define REC_ADD_LABEL
@@ -229,7 +229,7 @@ namespace RecRoom
 #	define MED_ISFINITE_LABEL
 #	define MED_INIT_LABEL					hasLabel = -1;
 #	define MED_COPY_LABEL					label = p.label;
-#	define MED_HASLABEL						inline bool HasLabel() { return (hasLabel != -1); }
+#	define MED_HASLABEL						inline bool HasLabel() const { return (hasLabel != -1); }
 #else
 #	define MED_CAN_CONTAIN_LABEL			false
 #	define MED_ADD_LABEL
@@ -248,7 +248,7 @@ namespace RecRoom
 #	define MED_ISFINITE_SEGLABEL
 #	define MED_INIT_SEGLABEL				hasSegLabel = -1;
 #	define MED_COPY_SEGLABEL				segLabel = p.segLabel;
-#	define MED_HASSEGLABEL					inline bool HasSegLabel() { return (hasSegLabel != -1); }
+#	define MED_HASSEGLABEL					inline bool HasSegLabel() const { return (hasSegLabel != -1); }
 #else
 #	define MED_CAN_CONTAIN_SEGLABEL			false
 #	define MED_ADD_SEGLABEL

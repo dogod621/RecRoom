@@ -431,24 +431,29 @@ namespace RecRoom
 		for (PcIndex::const_iterator it = data.pcRawIdx->begin(); it != data.pcRawIdx->end(); ++it)
 		{
 			PointMED& pRaw = (*data.pcRaw)[*it];
-			ScanLaser scanLaser;
-			if (global.ptrReconstructorPcOC()->getScanner()->ToScanLaser(pRaw, scanLaser))
+			if (pRaw.HasSegLabel())
 			{
-				Eigen::Vector3d hafway = scanLaser.incidentDirection + scanLaser.reflectedDirection;
-				double hafwayNorm = hafway.norm();
-				if (hafwayNorm > Common::eps)
+				ScanLaser scanLaser;
+				if (global.ptrReconstructorPcOC()->getScanner()->ToScanLaser(pRaw, scanLaser))
 				{
-					hafway /= hafwayNorm;
-					if (scanLaser.beamFalloff > cutFalloff)
+					Eigen::Vector3d hafway = scanLaser.incidentDirection + scanLaser.reflectedDirection;
+					double hafwayNorm = hafway.norm();
+					if (hafwayNorm > Common::eps)
 					{
-						Eigen::Vector3d tanHafway(
-							scanLaser.hitTangent.dot(hafway),
-							scanLaser.hitBitangent.dot(hafway),
-							scanLaser.hitNormal.dot(hafway));
-						pcNDF->push_back(PointNDF(hafway.x(), hafway.y(), hafway.z(), pRaw.segLabel, scanLaser.intensity / scanLaser.beamFalloff));
+						hafway /= hafwayNorm;
+						if (scanLaser.beamFalloff > cutFalloff)
+						{
+							Eigen::Vector3d tanHafway(
+								scanLaser.hitTangent.dot(hafway),
+								scanLaser.hitBitangent.dot(hafway),
+								scanLaser.hitNormal.dot(hafway));
+							pcNDF->push_back(PointNDF(hafway.x(), hafway.y(), hafway.z(), pRaw.segLabel, scanLaser.intensity / scanLaser.beamFalloff));
+						}
 					}
 				}
 			}
+			else
+				PRINT_WARNING("!pRaw.HasSegLabel(), ignore");
 		}
 		global.ptrReconstructorPcOC()->getContainerPcNDF()->Merge(pcNDF);
 #endif
