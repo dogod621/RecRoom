@@ -154,8 +154,117 @@ namespace RecRoom
 		}
 	}
 
-	void ReconstructorPc::SynthScans()
+	//
+	void ReconstructorPc::VisualSegmentNDFs()
 	{
+		if (!boost::filesystem::exists(filePath / boost::filesystem::path("VisualSegmentNDFs")))
+		{
+			boost::filesystem::create_directory(filePath / boost::filesystem::path("VisualSegmentNDFs"));
+			PRINT_INFO("Create directory: " + (filePath / boost::filesystem::path("VisualSegmentNDFs")).string());
+		}
+
+		std::size_t width = 256;
+		std::size_t height = 256;
+		for (std::size_t segID = 0; segID < containerPcNDF->Size(); ++segID)
+		{
+			{
+				std::stringstream ss;
+				ss << "VisualSegmentNDFs : " << segID;
+				PRINT_INFO(ss.str().c_str());
+			}
+
+
+			PTR(PcNDF) pcNDF = containerPcNDF->GetData(segID);
+			PcNDF pcVisNDF;
+			pcVisNDF.width = width;
+			pcVisNDF.height = height;
+			pcVisNDF.is_dense = false;
+			pcVisNDF.resize(width * height);
+			for (PcNDF::iterator it = pcVisNDF.begin(); it != pcVisNDF.end(); ++it)
+			{
+				it->x = 0.0;// use as counter
+				it->y = 0.0;
+				it->z = 0.0;
+				it->normal_x = NAN;
+				it->normal_y = NAN;
+				it->normal_z = NAN;
+				it->intensity = 0.0;
+			}
+
+			for (PcNDF::iterator it = pcNDF->begin(); it != pcNDF->end(); ++it)
+			{
+				Eigen::Vector2d uv = ToUV(ToMapping(UVMode::HEMISPHERE, CoordSys::XYZ_PX_PY_PZ), Eigen::Vector3d(it->normal_x, it->normal_y, it->normal_z));
+				std::size_t col = uv.x() * (width - 1);
+				std::size_t row = (1.0 - uv.y()) * (height - 1);
+				std::size_t index = row * width + col;
+				PointNDF& pVisNDF = pcVisNDF[index];
+				{
+					pVisNDF.x += 1;
+					pVisNDF.intensity += it->intensity;
+				}
+			}
+
+			std::size_t index = 0;
+			for (PcNDF::iterator it = pcVisNDF.begin(); it != pcVisNDF.end(); ++it)
+			{
+				if (it->x > 0)
+				{
+					it->intensity /= it->x;
+					it->x = 0.0f;
+
+					std::size_t col = index % width;
+					std::size_t row = index / width;
+					Eigen::Vector2d uv(
+						(((double)col) + 0.5/ (double)(width - 1)) * 2.0 - 1.0,
+						(1.0 - ((double)row) + 0.5 / (double)(height - 1)) * 2.0 - 1.0);
+
+					it->normal_x = uv.x();
+					it->normal_y = uv.y();
+					it->normal_z = std::sqrt(1.0 - uv.x()*uv.x() - uv.y()*uv.y());
+
+				}
+
+				index++;
+			}
+
+			{
+				std::stringstream fileName;
+				fileName << segID << "_Dir.png";
+
+				pcl::PCLImage image;
+				pcl::io::PointCloudImageExtractorFromNormalField<PointNDF> pcie;
+				pcie.setPaintNaNsWithBlack(true);
+				if (!pcie.extract(pcVisNDF, image))
+					THROW_EXCEPTION("Failed to extract an image from Normal field .");
+				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualSegmentNDFs") / boost::filesystem::path(fileName.str())).string(), image);
+			}
+
+			{
+				std::stringstream fileName;
+				fileName << segID << "_Intensity.png";
+
+				pcl::PCLImage image;
+				pcl::io::PointCloudImageExtractorFromIntensityField<PointNDF> pcie;
+				pcie.setPaintNaNsWithBlack(true);
+				pcie.setScalingMethod(pcie.SCALING_FIXED_FACTOR);
+				pcie.setScalingFactor(255.f);
+				if (!pcie.extract(pcVisNDF, image))
+					THROW_EXCEPTION("Failed to extract an image from Intensity field .");
+				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualSegmentNDFs") / boost::filesystem::path(fileName.str())).string(), image);
+			}
+
+		}
+	}
+
+	void ReconstructorPc::VisualRecAtts()
+	{
+		if (!boost::filesystem::exists(filePath / boost::filesystem::path("VisualRecAtts")))
+		{
+			boost::filesystem::create_directory(filePath / boost::filesystem::path("VisualRecAtts"));
+			PRINT_INFO("Create directory: " + (filePath / boost::filesystem::path("VisualRecAtts")).string());
+		}
+
+
 		if (!upSampler)
 			THROW_EXCEPTION("upSampler is not set");
 		if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
@@ -163,7 +272,7 @@ namespace RecRoom
 		if (pcMED->empty())
 			THROW_EXCEPTION("pcMED is empty.");
 
-		PTR(KdTreeMED) accMED (new KdTreeMED);
+		PTR(KdTreeMED) accMED(new KdTreeMED);
 		accMED->setInputCloud(pcMED);
 
 		//
@@ -171,7 +280,7 @@ namespace RecRoom
 		{
 			{
 				std::stringstream ss;
-				ss << "SynthScans : " << it->serialNumber;
+				ss << "VisualRecAtts : " << it->serialNumber;
 				PRINT_INFO(ss.str().c_str());
 			}
 
@@ -267,7 +376,7 @@ namespace RecRoom
 						cloest = true;
 					else if (pVisRaw.z < uvd.z())
 						cloest = true;
-					if(cloest)
+					if (cloest)
 					{
 						pVisRaw.z = uvd.z();
 						pVisRec.z = uvd.z();
@@ -372,7 +481,7 @@ namespace RecRoom
 				pcie.setScalingMethod(pcie.SCALING_FULL_RANGE);
 				if (!pcie.extract(pcVisRaw, image))
 					THROW_EXCEPTION("Failed to extract an image from Depth field .");
-				pcl::io::savePNGFile((filePath / boost::filesystem::path(fileName.str())).string(), image);
+				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
 
 			{
@@ -385,7 +494,7 @@ namespace RecRoom
 				pcie.setScalingMethod(pcie.SCALING_FULL_RANGE);
 				if (!pcie.extract(pcVisRec, image))
 					THROW_EXCEPTION("Failed to extract an image from Depth field .");
-				pcl::io::savePNGFile((filePath / boost::filesystem::path(fileName.str())).string(), image);
+				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
 
 #ifdef POINT_RAW_WITH_NORMAL
@@ -398,7 +507,7 @@ namespace RecRoom
 				pcie.setPaintNaNsWithBlack(true);
 				if (!pcie.extract(pcVisRaw, image))
 					THROW_EXCEPTION("Failed to extract an image from Normal field .");
-				pcl::io::savePNGFile((filePath / boost::filesystem::path(fileName.str())).string(), image);
+				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
 			{
 				std::stringstream fileName;
@@ -410,7 +519,7 @@ namespace RecRoom
 				pcie.setScalingMethod(pcie.SCALING_FULL_RANGE);
 				if (!pcie.extract(pcVisRaw, image))
 					THROW_EXCEPTION("Failed to extract an image from Curvature field .");
-				pcl::io::savePNGFile((filePath / boost::filesystem::path(fileName.str())).string(), image);
+				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
 #endif
 
@@ -424,7 +533,7 @@ namespace RecRoom
 				pcie.setPaintNaNsWithBlack(true);
 				if (!pcie.extract(pcVisRec, image))
 					THROW_EXCEPTION("Failed to extract an image from Normal field .");
-				pcl::io::savePNGFile((filePath / boost::filesystem::path(fileName.str())).string(), image);
+				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
 			{
 				std::stringstream fileName;
@@ -436,7 +545,7 @@ namespace RecRoom
 				pcie.setScalingMethod(pcie.SCALING_FULL_RANGE);
 				if (!pcie.extract(pcVisRec, image))
 					THROW_EXCEPTION("Failed to extract an image from Curvature field .");
-				pcl::io::savePNGFile((filePath / boost::filesystem::path(fileName.str())).string(), image);
+				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
 #endif
 
@@ -451,7 +560,7 @@ namespace RecRoom
 				pcie.setPaintNaNsWithBlack(true);
 				if (!pcie.extract(pcVisRaw, image))
 					THROW_EXCEPTION("Failed to extract an image from RGB field .");
-				pcl::io::savePNGFile((filePath / boost::filesystem::path(fileName.str())).string(), image);
+				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
 #endif
 
@@ -465,7 +574,7 @@ namespace RecRoom
 				pcie.setPaintNaNsWithBlack(true);
 				if (!pcie.extract(pcVisRec, image))
 					THROW_EXCEPTION("Failed to extract an image from RGB field .");
-				pcl::io::savePNGFile((filePath / boost::filesystem::path(fileName.str())).string(), image);
+				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
 #endif
 
@@ -481,7 +590,7 @@ namespace RecRoom
 				pcie.setScalingFactor(255.f);
 				if (!pcie.extract(pcVisRaw, image))
 					THROW_EXCEPTION("Failed to extract an image from Intensity field .");
-				pcl::io::savePNGFile((filePath / boost::filesystem::path(fileName.str())).string(), image);
+				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
 #endif
 
@@ -497,7 +606,7 @@ namespace RecRoom
 				pcie.setScalingFactor(255.f);
 				if (!pcie.extract(pcVisRec, image))
 					THROW_EXCEPTION("Failed to extract an image from Intensity field .");
-				pcl::io::savePNGFile((filePath / boost::filesystem::path(fileName.str())).string(), image);
+				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
 #endif
 
@@ -512,7 +621,7 @@ namespace RecRoom
 				pcie.setPaintNaNsWithBlack(true);
 				if (!pcie.extract(pcVisRaw, image))
 					THROW_EXCEPTION("Failed to extract an image from Label field .");
-				pcl::io::savePNGFile((filePath / boost::filesystem::path(fileName.str())).string(), image);
+				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
 #endif
 
@@ -528,7 +637,7 @@ namespace RecRoom
 				pcie.setPaintNaNsWithBlack(true);
 				if (!pcie.extract(pcVisRec, image))
 					THROW_EXCEPTION("Failed to extract an image from Label field .");
-				pcl::io::savePNGFile((filePath / boost::filesystem::path(fileName.str())).string(), image);
+				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
 #endif
 		}

@@ -328,8 +328,10 @@ int main(int argc, char *argv[])
 			}
 
 			//
-			std::cout << "reconstructorPC->SynthScans()" << std::endl;
-			reconstructorPC->SynthScans();
+			std::cout << "reconstructorPC->VisualSegmentNDFs()" << std::endl;
+			reconstructorPC->VisualSegmentNDFs();
+			std::cout << "reconstructorPC->VisualRecAtts()" << std::endl;
+			reconstructorPC->VisualRecAtts();
 		}
 		catch (const RecRoom::exception& ex)
 		{

@@ -37,7 +37,8 @@ namespace RecRoom
 		void DoRecPcSegment();
 		void DoRecSegNDF();
 		void DoRecMesh();
-		void SynthScans();
+		void VisualSegmentNDFs();
+		void VisualRecAtts();
 
 	protected:
 		//virtual void Process(pcl::PolygonMesh& out) const = 0;

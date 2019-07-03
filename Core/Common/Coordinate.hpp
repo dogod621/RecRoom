@@ -182,12 +182,20 @@ namespace RecRoom
 		}
 	}
 
-	inline Eigen::Vector2d XYZ_To_UV(Mapping mapping, const Eigen::Vector3d& coord)
+	inline Eigen::Vector2d XYZ_To_UV(Mapping mapping, const Eigen::Vector3d& xyz)
 	{
 		Eigen::Vector2d uv;
 
 		switch (Mapping_UVMode(mapping))
 		{
+		case UVMode::HEMISPHERE:
+		{
+			Eigen::Vector3d xyz2 = xyz / xyz.norm();
+			uv.x() = ( xyz2.x() + 1.0 ) * 0.5;
+			uv.y() = ( xyz2.y() + 1.0 ) * 0.5;
+		}
+		break;
+
 		default:
 			THROW_EXCEPTION("UVMode is not support");
 			break;
@@ -278,6 +286,7 @@ namespace RecRoom
 	{
 		if (v == "PANORAMA") return UVMode::PANORAMA;
 		else if (v == "PANORAMA_EQUIRECTANGULAR") return UVMode::PANORAMA_EQUIRECTANGULAR;
+		else if (v == "HEMISPHERE") return UVMode::HEMISPHERE;
 		else return UVMode::UVMode_UNKNOWN;
 	}
 
@@ -288,6 +297,7 @@ namespace RecRoom
 		{
 		case UVMode::PANORAMA: return std::string("PANORAMA"); break;
 		case UVMode::PANORAMA_EQUIRECTANGULAR: return std::string("PANORAMA_EQUIRECTANGULAR"); break;
+		case UVMode::HEMISPHERE: return std::string("HEMISPHERE"); break;
 		default: return std::string("UNKNOWN"); break;
 		}
 	}

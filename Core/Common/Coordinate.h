@@ -26,6 +26,7 @@ namespace RecRoom
 
 		PANORAMA = 1, // Direct convert Azimuth to U and Elevation to V.
 		PANORAMA_EQUIRECTANGULAR = 2, // Equirectangular projection.
+		HEMISPHERE = 3,
 	};
 
 #define CoodMode_NUM_BITS 16
