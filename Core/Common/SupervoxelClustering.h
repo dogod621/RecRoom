@@ -104,7 +104,7 @@ namespace RecRoom
 
 	public:
 		SupervoxelClustering(float voxelResolution, float seedResolution,
-			float xyzImportance = 0.4f, float normalImportance = 1.0f, float rgbImportance = 0.1f, float intensityImportance = 1.0f)
+			float xyzImportance = 0.4f, float normalImportance = 1.0f, float rgbImportance = 0.4f, float intensityImportance = 5.0f)
 			: voxelResolution(voxelResolution), seedResolution(seedResolution),
 			xyzImportance(xyzImportance), normalImportance(normalImportance), rgbImportance(rgbImportance), intensityImportance(intensityImportance),
 			oat(new OAT(voxelResolution)), pcCentroid(), accCentroid(new pcl::search::KdTree<PointMED>) {}
@@ -160,7 +160,7 @@ namespace RecRoom
 #endif
 
 #ifdef POINT_MED_WITH_INTENSITY
-			dist += intensityImportance * std::abs(v1.intensity - v2.intensity);
+			dist += intensityImportance * std::abs(v1.intensity - v2.intensity) / 255.0f;
 #endif
 
 			return  dist;

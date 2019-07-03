@@ -403,6 +403,20 @@ namespace RecRoom
 
 	void ReconstructorPcOC::RecPcSegment()
 	{
+#ifdef POINT_MED_WITH_SEGLABEL
+		if (segmenter)
+		{
+			PRINT_INFO("Segment - Start");
+
+			segmenter->Process(pcMED);
+
+			PRINT_INFO("Segment - End");
+		}
+		else
+		{
+			PRINT_WARNING("segmenter is not set, ignore it");
+		}
+#endif
 	}
 
 	void ReconstructorPcOC::RecSegNDF()

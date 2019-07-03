@@ -217,7 +217,6 @@ namespace RecRoom
 	void SupervoxelClustering::CreateSupervoxels(std::vector<int>& seeds)
 	{
 		supervoxels.clear();
-		supervoxels.reserve(seeds.size());
 		for (std::size_t i = 0; i < seeds.size(); ++i)
 		{
 			supervoxels.push_back(new Supervoxel(i + 1, this));

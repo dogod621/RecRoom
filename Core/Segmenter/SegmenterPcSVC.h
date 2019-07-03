@@ -8,7 +8,7 @@ namespace RecRoom
 	{
 	public:
 		SegmenterPcSVC(float voxelResolution, float seedResolution, 
-			float xyzImportance = 0.4f, float normalImportance = 1.0f, float rgbImportance = 0.1f, float intensityImportance = 1.0f)
+			float xyzImportance = 0.4f, float normalImportance = 1.0f, float rgbImportance = 0.4f, float intensityImportance = 5.0f)
 			: SegmenterPc(), voxelResolution(voxelResolution), seedResolution(seedResolution), 
 			xyzImportance(xyzImportance), normalImportance(normalImportance), rgbImportance(rgbImportance), intensityImportance(intensityImportance) {}
 
