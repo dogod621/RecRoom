@@ -17,9 +17,7 @@ namespace RecRoom
 		//virtual void Process(pcl::PolygonMesh& out) const = 0;
 		virtual void RecPointCloud();
 		virtual void RecPcAlbedo();
-		virtual void RecPcSegment();
 		virtual void RecSegNDF();
-		virtual void RecMesh();
 	};
 }
 

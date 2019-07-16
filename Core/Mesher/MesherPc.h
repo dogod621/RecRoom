@@ -13,7 +13,7 @@ namespace RecRoom
 		MesherPc() {}
 
 	public:
-		virtual void Process(PTR(PcREC)& inV, pcl::PolygonMesh& out) const = 0;
+		virtual void Process(PTR(PcMED)& inV, pcl::PolygonMesh& out) const = 0;
 	};
 }
 

@@ -1,5 +1,6 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/io/png_io.h>
+#include <pcl/io/ply_io.h>
 
 #include "nlohmann/json.hpp"
 
@@ -11,7 +12,7 @@ namespace RecRoom
 		boost::filesystem::path filePath_,
 		const CONST_PTR(ScannerPc)& scanner,
 		const PTR(ContainerPcNDF)& containerPcNDF)
-		: DumpAble("ReconstructorPc", filePath_), status(ReconstructStatus::ReconstructStatus_UNKNOWN), scanner(scanner), containerPcNDF(containerPcNDF), pcMED(new PcMED)
+		: DumpAble("ReconstructorPc", filePath_), status(ReconstructStatus::ReconstructStatus_UNKNOWN), scanner(scanner), containerPcNDF(containerPcNDF), pcMED(new PcMED), mesh(new pcl::PolygonMesh)
 	{
 		if (!scanner)
 			THROW_EXCEPTION("scanner is not set");
@@ -30,6 +31,8 @@ namespace RecRoom
 		//
 		if (!pcMED)
 			THROW_EXCEPTION("pcMED is not created?")
+		if (!mesh)
+			THROW_EXCEPTION("mesh is not created?")
 	}
 
 	void ReconstructorPc::DoRecPointCloud()
@@ -66,15 +69,23 @@ namespace RecRoom
 		{
 			PRINT_WARNING("!MED_CAN_CONTAIN_NORMAL, ignore. You must compile with POINT_REC_WITH_NORMAL or POINT_RAW_WITH_NORMAL to enable this feature.");
 		}
-		else
+		else if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 		{
-			if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
-				THROW_EXCEPTION("pcMED is not reconstructed yet.");
-			if (pcMED->empty())
-				THROW_EXCEPTION("pcMED is empty.");
+			PRINT_WARNING("pcMED is not reconstructed yet, ignore.");
+		}
+		else if (pcMED->empty())
+		{
+			PRINT_WARNING("pcMED is empty, ignore.");
+		}
+		else if(albedoEstimator)
+		{
 			RecPcAlbedo();
 			status = (ReconstructStatus)(status | ReconstructStatus::PC_ALBEDO);
 			this->Dump();
+		}
+		else
+		{
+			PRINT_WARNING("albedoEstimater is not set, ignore it");
 		}
 	}
 
@@ -88,15 +99,23 @@ namespace RecRoom
 		{
 			PRINT_WARNING("!REC_CAN_CONTAIN_LABEL, ignore. You must compile with POINT_REC_WITH_LABEL to enable this feature.");
 		}
-		else
+		else if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 		{
-			if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
-				THROW_EXCEPTION("pcMED is not reconstructed yet.");
-			if (pcMED->empty())
-				THROW_EXCEPTION("pcMED is empty.");
+			PRINT_WARNING("pcMED is not reconstructed yet, ignore.");
+		}
+		else if (pcMED->empty())
+		{
+			PRINT_WARNING("pcMED is empty, ignore.");
+		}
+		else if (segmenter)
+		{
 			RecPcSegment();
 			status = (ReconstructStatus)(status | ReconstructStatus::PC_SEGMENT);
 			this->Dump();
+		}
+		else
+		{
+			PRINT_WARNING("segmenter is not set, ignore it");
 		}
 	}
 
@@ -122,14 +141,20 @@ namespace RecRoom
 		{
 			PRINT_WARNING("containerPcLF is already used, ignore");
 		}
+		else if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("pcMED is not reconstructed yet, ignore.");
+		}
+		else if ((status & ReconstructStatus::PC_SEGMENT) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("pcMED segment is not reconstructed yet, ignore.");
+		}
+		else if (pcMED->empty())
+		{
+			PRINT_WARNING("pcMED is empty, ignore.");
+		}
 		else
 		{
-			if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
-				THROW_EXCEPTION("pcMED is not reconstructed yet.");
-			if ((status & ReconstructStatus::PC_SEGMENT) == ReconstructStatus::ReconstructStatus_UNKNOWN)
-				THROW_EXCEPTION("pcMED segment is not reconstructed yet.");
-			if (pcMED->empty())
-				THROW_EXCEPTION("pcMED is empty.");
 			RecSegNDF();
 			status = (ReconstructStatus)(status | ReconstructStatus::SEG_NDF);
 			this->Dump();
@@ -142,15 +167,27 @@ namespace RecRoom
 		{
 			PRINT_WARNING("Aready reconstructed, ignore.");
 		}
-		else
+		else if (!REC_CAN_CONTAIN_NORMAL)
 		{
-			if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
-				THROW_EXCEPTION("pcMED is not reconstructed yet.");
-			if (pcMED->empty())
-				THROW_EXCEPTION("pcMED is empty.");
+			PRINT_WARNING("!REC_CAN_CONTAIN_NORMAL, ignore. You must compile with POINT_REC_WITH_NORMAL to enable this feature.");
+		}
+		else if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("pcMED is not reconstructed yet, ignore.");
+		}
+		else if (pcMED->empty())
+		{
+			PRINT_WARNING("pcMED is empty, ignore.");
+		}
+		else if(mesher)
+		{
 			RecMesh();
 			status = (ReconstructStatus)(status | ReconstructStatus::MESH);
 			this->Dump();
+		}
+		else
+		{
+			PRINT_WARNING("mesher is not set, ignore it");
 		}
 	}
 
@@ -648,6 +685,8 @@ namespace RecRoom
 		DumpAble::Load();
 		if (boost::filesystem::exists(filePath / boost::filesystem::path("pcMED.pcd")))
 			pcl::io::loadPCDFile((filePath / boost::filesystem::path("pcMED.pcd")).string(), *pcMED);
+		if (boost::filesystem::exists(filePath / boost::filesystem::path("mesh.ply")))
+			pcl::io::loadPLYFile((filePath / boost::filesystem::path("mesh.ply")).string(), *mesh);
 	};
 
 	void ReconstructorPc::Dump() const
@@ -655,6 +694,8 @@ namespace RecRoom
 		DumpAble::Dump();
 		if (pcMED->size() > 0)
 			pcl::io::savePCDFile((filePath / boost::filesystem::path("pcMED.pcd")).string(), *pcMED, true);
+		if (mesh->polygons.size() > 0)
+			pcl::io::savePLYFile((filePath / boost::filesystem::path("mesh.ply")).string(), *mesh);
 	};
 
 	void ReconstructorPc::Load(const nlohmann::json& j)
@@ -674,6 +715,25 @@ namespace RecRoom
 		if (!DumpAble::CheckExist())
 			return false;
 		return true;
+	}
+
+
+	void ReconstructorPc::RecPcSegment()
+	{
+		PRINT_INFO("Segment - Start");
+
+		segmenter->Process(pcMED);
+
+		PRINT_INFO("Segment - End");
+	}
+
+	void ReconstructorPc::RecMesh()
+	{
+		PRINT_INFO("RecMesh - Start");
+
+		mesher->Process(pcMED, *mesh);
+
+		PRINT_INFO("RecMesh - End");
 	}
 }
 

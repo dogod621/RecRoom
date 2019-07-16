@@ -44,9 +44,9 @@ namespace RecRoom
 		//virtual void Process(pcl::PolygonMesh& out) const = 0;
 		virtual void RecPointCloud() = 0;
 		virtual void RecPcAlbedo() = 0;
-		virtual void RecPcSegment() = 0;
+		virtual void RecPcSegment();
 		virtual void RecSegNDF() = 0;
-		virtual void RecMesh() = 0;
+		virtual void RecMesh();
 
 	public:
 		ReconstructStatus getStatus() const { return status; }
@@ -74,6 +74,7 @@ namespace RecRoom
 	protected:
 		ReconstructStatus status;
 		PTR(PcMED) pcMED;
+		PTR(pcl::PolygonMesh) mesh;
 
 		CONST_PTR(ScannerPc) scanner; 
 		PTR(ContainerPcNDF) containerPcNDF;

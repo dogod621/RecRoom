@@ -22,6 +22,7 @@
 #include "Estimator/EstimatorPcNormal.h"
 #include "Estimator/EstimatorPcAlbedo.h"
 #include "Segmenter/SegmenterPcSVC.h"
+#include "Mesher/MesherPcMCRBF.h"
 
 #define CMD_SPACE 25
 #define PRINT_HELP(prefix, cmd, parms, info) std::cout << prefix << std::left << "-" << std::setw (CMD_SPACE) << cmd \
@@ -40,6 +41,8 @@ void PrintHelp(int argc, char **argv)
 		PRINT_HELP("\t", "wd", "sting \"\"", "Working directory.");
 		PRINT_HELP("\t", "e57File", "sting \"\"", "Input e57 file path.");
 		PRINT_HELP("\t", "lfFile", "sting \"\"", "Input light field file path.");
+		PRINT_HELP("\t", "visSegmentNDFs", "", "Plot segment NDFs after reconstruction.");
+		PRINT_HELP("\t", "visRecAtts", "", "Plot reconstruction result after reconstruction.");
 	}
 
 	std::cout << "ContainerPcRAWOC Parmameters:=============================================================================================================================" << std::endl << std::endl;
@@ -89,6 +92,13 @@ void PrintHelp(int argc, char **argv)
 		PRINT_HELP("\t", "normalImportance", "float 1.0", "Distance importance of normal.");
 		PRINT_HELP("\t", "rgbImportance", "float 0.4", "Distance importance of RGB.");
 		PRINT_HELP("\t", "intensityImportance", "float 5.0", "Distance importance of intensity.");
+	}
+
+	std::cout << "MesherPcMCRBF Parmameters:============================================================================================================================" << std::endl << std::endl;
+	{
+		PRINT_HELP("\t", "offSurfaceEpsilon", "float 0.1", "");
+		PRINT_HELP("\t", "percentageExtendGrid", "float 0.0", "");
+		PRINT_HELP("\t", "isoLevel", "float 0.0", "");
 	}
 
 	std::cout << "==========================================================================================================================================================" << std::endl << std::endl;
@@ -203,6 +213,17 @@ int main(int argc, char *argv[])
 		std::cout << "SegmenterPcSVC -rgbImportance: " << rgbImportance << std::endl;
 		std::cout << "SegmenterPcSVC -intensityImportance: " << intensityImportance << std::endl;
 
+		// Parse MesherPcMCRBF Parmameters
+		float offSurfaceEpsilon = 0.1f;
+		float percentageExtendGrid = 0.0f;
+		float isoLevel = 0.0f;
+		pcl::console::parse_argument(argc, argv, "-offSurfaceEpsilon", offSurfaceEpsilon);
+		pcl::console::parse_argument(argc, argv, "-percentageExtendGrid", percentageExtendGrid);
+		pcl::console::parse_argument(argc, argv, "-isoLevel", isoLevel);
+		std::cout << "SegmenterPcSVC -offSurfaceEpsilon: " << offSurfaceEpsilon << std::endl;
+		std::cout << "SegmenterPcSVC -percentageExtendGrid: " << percentageExtendGrid << std::endl;
+		std::cout << "SegmenterPcSVC -isoLevel: " << isoLevel << std::endl;
+
 		// Start
 		try
 		{
@@ -280,13 +301,12 @@ int main(int argc, char *argv[])
 						xyzImportance, normalImportance, rgbImportance, intensityImportance));
 			reconstructorPC->setSegmenter(segmenter);
 
-			std::cout << "Create Segmenter" << std::endl;
-			std::cout << "Not done, skip" << std::endl; // Not done**
-
-
 			std::cout << "Create Mesher" << std::endl;
-			std::cout << "Not done, skip" << std::endl; // Not done**
-			
+			PTR(RecRoom::MesherPc)
+				mesher(
+					new RecRoom::MesherPcMCRBF(offSurfaceEpsilon, percentageExtendGrid, isoLevel));
+			reconstructorPC->setMesher(mesher);
+
 			//
 			std::cout << "Print scannerPc" << std::endl;
 			std::cout << (*scannerPc) << std::endl;
@@ -327,11 +347,25 @@ int main(int argc, char *argv[])
 				reconstructorPC->DoRecSegNDF();
 			}
 
+			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::SEG_NDF) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
+			{
+				std::cout << "reconstructorPC->DoRecSegNDF()" << std::endl;
+
+				reconstructorPC->DoRecSegNDF();
+			}
+
 			//
-			std::cout << "reconstructorPC->VisualSegmentNDFs()" << std::endl;
-			reconstructorPC->VisualSegmentNDFs();
-			std::cout << "reconstructorPC->VisualRecAtts()" << std::endl;
-			reconstructorPC->VisualRecAtts();
+			if (pcl::console::find_argument(argc, argv, "-visSegmentNDFs"))
+			{
+				std::cout << "reconstructorPC->VisualSegmentNDFs()" << std::endl;
+				reconstructorPC->VisualSegmentNDFs();
+			}
+
+			if (pcl::console::find_argument(argc, argv, "-visRecAtts"))
+			{
+				std::cout << "reconstructorPC->VisualRecAtts()" << std::endl;
+				reconstructorPC->VisualRecAtts();
+			}
 		}
 		catch (const RecRoom::exception& ex)
 		{

@@ -389,27 +389,14 @@ namespace RecRoom
 	// Async Reconstruct Attribute - Albedo
 	int BStep_RecPcAlbedo(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
 	{
-#ifdef POINT_MED_WITH_NORMAL
-#ifdef POINT_MED_WITH_LABEL
-#ifdef POINT_MED_WITH_INTENSITY
-		// 
-		if (global.ptrReconstructorPcOC()->getAlbedoEstimator())
-		{
-			PRINT_INFO("Estimat Albedo - Start");
+		PRINT_INFO("Estimat Albedo - Start");
 
-			global.ptrReconstructorPcOC()->getAlbedoEstimator()->Process(
-				data.pcRawAcc, data.pcRaw,
-				data.pcRec, data.pcRecIdx);
+		global.ptrReconstructorPcOC()->getAlbedoEstimator()->Process(
+			data.pcRawAcc, data.pcRaw,
+			data.pcRec, data.pcRecIdx);
 
-			PRINT_INFO("Estimat Albedo - End");
-		}
-		else
-		{
-			PRINT_WARNING("albedoEstimater is not set, ignore it");
-		}
-#endif
-#endif
-#endif
+		PRINT_INFO("Estimat Albedo - End");
+
 		return 0;
 	}
 
@@ -477,24 +464,6 @@ namespace RecRoom
 			asyncSize);
 	}
 
-	void ReconstructorPcOC::RecPcSegment()
-	{
-#ifdef POINT_MED_WITH_SEGLABEL
-		if (segmenter)
-		{
-			PRINT_INFO("Segment - Start");
-
-			segmenter->Process(pcMED);
-
-			PRINT_INFO("Segment - End");
-		}
-		else
-		{
-			PRINT_WARNING("segmenter is not set, ignore it");
-		}
-#endif
-	}
-
 	void ReconstructorPcOC::RecSegNDF()
 	{
 		AsyncGlobal_Rec global(this);
@@ -507,11 +476,6 @@ namespace RecRoom
 			global, queries,
 			AStep_RecPcAtt, BStep_RecPcNDF, CStep_RecPcNDF,
 			asyncSize);
-	}
-
-	void ReconstructorPcOC::RecMesh()
-	{
-
 	}
 }
 
