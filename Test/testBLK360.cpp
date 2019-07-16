@@ -347,11 +347,11 @@ int main(int argc, char *argv[])
 				reconstructorPC->DoRecSegNDF();
 			}
 
-			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::SEG_NDF) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
+			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::MESH) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
 			{
-				std::cout << "reconstructorPC->DoRecSegNDF()" << std::endl;
+				std::cout << "reconstructorPC->DoRecMesh()" << std::endl;
 
-				reconstructorPC->DoRecSegNDF();
+				reconstructorPC->DoRecMesh();
 			}
 
 			//
