@@ -49,8 +49,8 @@ void PrintHelp(int argc, char **argv)
 	std::cout << "ContainerPcRAWOC Parmameters:=============================================================================================================================" << std::endl << std::endl;
 	{
 		PRINT_HELP("\t", "res", "float 4", "Gird unit size in meters.");
-		PRINT_HELP("\t", "min", "XYZ_string \"-100 -100 -100\"", "Min AABB corner in meters. For example: -min \"-100 -100 -100\".");
-		PRINT_HELP("\t", "max", "XYZ_string \"100 100 100\"", "Max AABB corner in meters. For example: -max \"100 100 100\".");
+		PRINT_HELP("\t", "min", "float[3] -100 -100 -100", "Min AABB corner in meters. For example: -min \"-100 -100 -100\".");
+		PRINT_HELP("\t", "max", "float[3] 100 100 100", "Max AABB corner in meters. For example: -max \"100 100 100\".");
 		PRINT_HELP("\t", "overlap", "float 0.1", "Overlap size in meters when doing out-of-core.");
 	}
 
@@ -139,13 +139,14 @@ int main(int argc, char *argv[])
 		pcl::console::parse_argument(argc, argv, "-res", res);
 		std::cout << "ContainerPcRAWOC Parmameters -res: " << res << std::endl;
 
-		std::string minStr = "-100 -100 -100";
-		std::string maxStr = "100 100 100";
-		pcl::console::parse_argument(argc, argv, "-min", minStr);
-		pcl::console::parse_argument(argc, argv, "-max", maxStr);
-		double minX, minY, minZ, maxX, maxY, maxZ;
-		std::stringstream(minStr) >> minX >> minY >> minZ;
-		std::stringstream(maxStr) >> maxX >> maxY >> maxZ;
+		float minX = -100.f;
+		float minY = -100.f;
+		float minZ = -100.f;
+		float maxX = 100.f;
+		float maxY = 100.f;
+		float maxZ = 100.f;
+		pcl::console::parse_3x_arguments(argc, argv, "-min", minX, minY, minZ);
+		pcl::console::parse_3x_arguments(argc, argv, "-max", maxX, maxY, maxZ);
 		Eigen::Vector3d min(minX, minY, minZ);
 		Eigen::Vector3d max(maxX, maxY, maxZ);
 		std::cout << "ContainerPcRAWOC Parmameters -min: " << min << std::endl;
@@ -309,7 +310,7 @@ int main(int argc, char *argv[])
 			reconstructorPC->setMesher(mesher);
 
 			//
-			if (pcl::console::find_argument(argc, argv, "-printScannerInfo"))
+			if (pcl::console::find_switch(argc, argv, "-printScannerInfo"))
 			{
 				std::cout << "Print scannerPc" << std::endl;
 				std::cout << (*scannerPc) << std::endl;
@@ -359,13 +360,13 @@ int main(int argc, char *argv[])
 			}
 
 			//
-			if (pcl::console::find_argument(argc, argv, "-visSegmentNDFs"))
+			if (pcl::console::find_switch(argc, argv, "-visSegmentNDFs"))
 			{
 				std::cout << "reconstructorPC->VisualSegmentNDFs()" << std::endl;
 				reconstructorPC->VisualSegmentNDFs();
 			}
 
-			if (pcl::console::find_argument(argc, argv, "-visRecAtts"))
+			if (pcl::console::find_switch(argc, argv, "-visRecAtts"))
 			{
 				std::cout << "reconstructorPC->VisualRecAtts()" << std::endl;
 				reconstructorPC->VisualRecAtts();
