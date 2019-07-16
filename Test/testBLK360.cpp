@@ -41,6 +41,7 @@ void PrintHelp(int argc, char **argv)
 		PRINT_HELP("\t", "wd", "sting \"\"", "Working directory.");
 		PRINT_HELP("\t", "e57File", "sting \"\"", "Input e57 file path.");
 		PRINT_HELP("\t", "lfFile", "sting \"\"", "Input light field file path.");
+		PRINT_HELP("\t", "printScannerInfo", "", "Print scanner information.");
 		PRINT_HELP("\t", "visSegmentNDFs", "", "Plot segment NDFs after reconstruction.");
 		PRINT_HELP("\t", "visRecAtts", "", "Plot reconstruction result after reconstruction.");
 	}
@@ -308,8 +309,11 @@ int main(int argc, char *argv[])
 			reconstructorPC->setMesher(mesher);
 
 			//
-			std::cout << "Print scannerPc" << std::endl;
-			std::cout << (*scannerPc) << std::endl;
+			if (pcl::console::find_argument(argc, argv, "-printScannerInfo"))
+			{
+				std::cout << "Print scannerPc" << std::endl;
+				std::cout << (*scannerPc) << std::endl;
+			}
 
 			//
 			if (containerPcRAW->Size() == 0)
