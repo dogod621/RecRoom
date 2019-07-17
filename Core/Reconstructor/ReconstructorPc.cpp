@@ -309,7 +309,7 @@ namespace RecRoom
 		if (pcMED->empty())
 			THROW_EXCEPTION("pcMED is empty.");
 
-		PTR(KdTreeMED) accMED(new KdTreeMED);
+		PTR(KDTreeMED) accMED(new KDTreeMED);
 		accMED->setInputCloud(pcMED);
 
 		//

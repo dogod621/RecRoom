@@ -71,8 +71,8 @@ namespace RecRoom
 		PTR(PcMED) pcRec;
 		PTR(PcIndex) pcRawIdx;
 		PTR(PcIndex) pcRecIdx;
-		PTR(KdTreeMED) pcRawAcc;
-		PTR(KdTreeMED) pcRecAcc;
+		PTR(KDTreeMED) pcRawAcc;
+		PTR(KDTreeMED) pcRecAcc;
 		PTR(PcIndex) pcReturnIdx;
 
 		AsyncData_Rec() :
@@ -80,8 +80,8 @@ namespace RecRoom
 			pcRec(new PcMED),
 			pcRawIdx(new PcIndex),
 			pcRecIdx(new PcIndex),
-			pcRawAcc(new KdTreeMED),
-			pcRecAcc(new KdTreeMED),
+			pcRawAcc(new KDTreeMED),
+			pcRecAcc(new KDTreeMED),
 			pcReturnIdx(new PcIndex)
 		{
 		}

@@ -13,6 +13,8 @@
 #include <boost/shared_ptr.hpp>
 #include <pcl/console/print.h>
 #include <pcl/point_cloud.h>
+#include <pcl/search/search.h>
+#include <pcl/search/kdtree.h>
 
 #include "nlohmann/json.hpp"
 
@@ -130,6 +132,12 @@ namespace RecRoom
 
 	template<class PointType>
 	using Pc = pcl::PointCloud<PointType>;
+
+	template<class PointType>
+	using Acc = pcl::search::Search<PointType>;
+
+	template<class PointType>
+	using KDTree = pcl::search::KdTree<PointType>;
 
 	class DumpAble
 	{

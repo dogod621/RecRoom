@@ -4,15 +4,16 @@
 
 namespace RecRoom
 {
-	class SamplerPcGrid : public ResamplerPc
+	template<class PointType>
+	class SamplerPcGrid : public ResamplerPc<PointType>
 	{
 	public:
-		SamplerPcGrid(float voxelSize) : ResamplerPc(), voxelSize(voxelSize){}
+		SamplerPcGrid(float voxelSize) : ResamplerPc<PointType>(), voxelSize(voxelSize){}
 
 	public:
 		virtual void Process(
-			const PTR(PcMED) & inV,
-			PcMED & outV) const;
+			const PTR(Pc<PointType>) & inV,
+			Pc<PointType> & outV) const;
 
 	public:
 		float getVoxelSize() const { return voxelSize; }
@@ -21,6 +22,12 @@ namespace RecRoom
 	protected:
 		float voxelSize;
 	};
+
+	using SamplerPcGridRAW = SamplerPcGrid<PointRAW>;
+	using SamplerPcGridMED = SamplerPcGrid<PointMED>;
+	using SamplerPcGridREC = SamplerPcGrid<PointREC>;
+	using SamplerPcGridNDF = SamplerPcGrid<PointNDF>;
+	using SamplerPcGridLF = SamplerPcGrid<PointLF>;
 }
 
 #include "SamplerPcGrid.hpp"

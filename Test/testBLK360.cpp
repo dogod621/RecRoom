@@ -22,7 +22,7 @@
 #include "Estimator/EstimatorPcNormal.h"
 #include "Estimator/EstimatorPcAlbedo.h"
 #include "Segmenter/SegmenterPcSVC.h"
-#include "Mesher/MesherPcMCRBF.h"
+#include "Mesher/MesherPcMC.h"
 
 #define CMD_SPACE 25
 #define PRINT_HELP(prefix, cmd, parms, info) std::cout << prefix << std::left << "-" << std::setw (CMD_SPACE) << cmd \
@@ -95,11 +95,12 @@ void PrintHelp(int argc, char **argv)
 		PRINT_HELP("\t", "intensityImportance", "float 5.0", "Distance importance of intensity.");
 	}
 
-	std::cout << "MesherPcMCRBF Parmameters:============================================================================================================================" << std::endl << std::endl;
+	std::cout << "MesherPcMCHoppe Parmameters:============================================================================================================================" << std::endl << std::endl;
 	{
-		PRINT_HELP("\t", "offSurfaceEpsilon", "float 0.1", "");
+		PRINT_HELP("\t", "distIgnore", "float -1.0", "");
 		PRINT_HELP("\t", "percentageExtendGrid", "float 0.0", "");
 		PRINT_HELP("\t", "isoLevel", "float 0.0", "");
+		PRINT_HELP("\t", "gridRes", "int 256", "");
 	}
 
 	std::cout << "==========================================================================================================================================================" << std::endl << std::endl;
@@ -215,16 +216,19 @@ int main(int argc, char *argv[])
 		std::cout << "SegmenterPcSVC -rgbImportance: " << rgbImportance << std::endl;
 		std::cout << "SegmenterPcSVC -intensityImportance: " << intensityImportance << std::endl;
 
-		// Parse MesherPcMCRBF Parmameters
-		float offSurfaceEpsilon = 0.1f;
+		// Parse MesherPcMCHoppe Parmameters
+		float distIgnore = -1.0f;
 		float percentageExtendGrid = 0.0f;
 		float isoLevel = 0.0f;
-		pcl::console::parse_argument(argc, argv, "-offSurfaceEpsilon", offSurfaceEpsilon);
+		int gridRes = 256;
+		pcl::console::parse_argument(argc, argv, "-distIgnore", distIgnore);
 		pcl::console::parse_argument(argc, argv, "-percentageExtendGrid", percentageExtendGrid);
 		pcl::console::parse_argument(argc, argv, "-isoLevel", isoLevel);
-		std::cout << "SegmenterPcSVC -offSurfaceEpsilon: " << offSurfaceEpsilon << std::endl;
+		pcl::console::parse_argument(argc, argv, "-gridRes", gridRes);
+		std::cout << "SegmenterPcSVC -distIgnore: " << distIgnore << std::endl;
 		std::cout << "SegmenterPcSVC -percentageExtendGrid: " << percentageExtendGrid << std::endl;
 		std::cout << "SegmenterPcSVC -isoLevel: " << isoLevel << std::endl;
+		std::cout << "SegmenterPcSVC -gridRes: " << gridRes << std::endl;
 
 		// Start
 		try
@@ -263,15 +267,15 @@ int main(int argc, char *argv[])
 			reconstructorPC->setAsyncSize(async);
 
 			std::cout << "Create DownSampler" << std::endl;
-			PTR(RecRoom::ResamplerPc)
+			PTR(RecRoom::ResamplerPcMED)
 				downSampler(
-					new RecRoom::SamplerPcGrid(voxelSize));
+					new RecRoom::SamplerPcGridMED(voxelSize));
 			reconstructorPC->setDownSampler(downSampler);
 
 			std::cout << "Create UpSampler" << std::endl;
-			PTR(RecRoom::SamplerPc)
+			PTR(RecRoom::SamplerPcMED)
 				upSampler(
-					new RecRoom::SamplerPcNearest());
+					new RecRoom::SamplerPcNearestMED());
 			reconstructorPC->setUpSampler(upSampler);
 
 			std::cout << "Create OutlierRemover" << std::endl;
@@ -306,7 +310,7 @@ int main(int argc, char *argv[])
 			std::cout << "Create Mesher" << std::endl;
 			PTR(RecRoom::MesherPc)
 				mesher(
-					new RecRoom::MesherPcMCRBF(offSurfaceEpsilon, percentageExtendGrid, isoLevel));
+					new RecRoom::MesherPcMCHoppe(distIgnore, percentageExtendGrid, isoLevel, gridRes));
 			reconstructorPC->setMesher(mesher);
 
 			//
@@ -345,12 +349,12 @@ int main(int argc, char *argv[])
 				reconstructorPC->DoRecPcSegment();
 			}
 
-			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::SEG_NDF) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
+			/*if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::SEG_NDF) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
 			{
 				std::cout << "reconstructorPC->DoRecSegNDF()" << std::endl;
 
 				reconstructorPC->DoRecSegNDF();
-			}
+			}*/
 
 			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::MESH) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
 			{

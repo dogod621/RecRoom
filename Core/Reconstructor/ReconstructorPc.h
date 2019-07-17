@@ -55,16 +55,16 @@ namespace RecRoom
 		CONST_PTR(ScannerPc) getScanner() const { return scanner; }
 		PTR(ContainerPcNDF) getContainerPcNDF() const { return containerPcNDF; }
 
-		CONST_PTR(ResamplerPc) getDownSampler() const { return downSampler; }
-		CONST_PTR(SamplerPc) getUpSampler() const { return upSampler; }
+		CONST_PTR(ResamplerPcMED) getDownSampler() const { return downSampler; }
+		CONST_PTR(SamplerPcMED) getUpSampler() const { return upSampler; }
 		CONST_PTR(CropperPc) getOutlierRemover() const { return outlierRemover; }
 		CONST_PTR(EstimatorPc) getNormalEstimator() const { return normalEstimator; }
 		CONST_PTR(EstimatorPc) getAlbedoEstimator() const { return albedoEstimator; }
 		CONST_PTR(SegmenterPc) getSegmenter() const { return segmenter; }
 		CONST_PTR(MesherPc) getMesher() const { return mesher; }
 
-		void setDownSampler(CONST_PTR(ResamplerPc) downSampler_) { downSampler = downSampler_; }
-		void setUpSampler(CONST_PTR(SamplerPc) upSampler_) { upSampler = upSampler_; }
+		void setDownSampler(CONST_PTR(ResamplerPcMED) downSampler_) { downSampler = downSampler_; }
+		void setUpSampler(CONST_PTR(SamplerPcMED) upSampler_) { upSampler = upSampler_; }
 		void setOutlierRemover(CONST_PTR(CropperPc) outlierRemover_) { outlierRemover = outlierRemover_; }
 		void setNormalEstimator(CONST_PTR(EstimatorPc) normalEstimator_) { normalEstimator = normalEstimator_; }
 		void setAlbedoEstimator(CONST_PTR(EstimatorPc) albedoEstimator_) { albedoEstimator = albedoEstimator_; }
@@ -79,8 +79,8 @@ namespace RecRoom
 		CONST_PTR(ScannerPc) scanner; 
 		PTR(ContainerPcNDF) containerPcNDF;
 
-		CONST_PTR(ResamplerPc) downSampler;
-		CONST_PTR(SamplerPc) upSampler;
+		CONST_PTR(ResamplerPcMED) downSampler;
+		CONST_PTR(SamplerPcMED) upSampler;
 		CONST_PTR(CropperPc) outlierRemover;
 		CONST_PTR(EstimatorPc) normalEstimator;
 		CONST_PTR(EstimatorPc) albedoEstimator;

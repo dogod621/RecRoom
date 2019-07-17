@@ -16,7 +16,7 @@ namespace RecRoom
 			PRINT_WARNING("searchMethod is not using searchSurface, set to it.");
 			searchMethod->setInputCloud(searchSurface);
 		}
-
+		
 #ifdef POINT_MED_WITH_NORMAL
 		pcl::NormalEstimationOMP<PointMED, PointMED> ne;
 		if (searchMethod)
