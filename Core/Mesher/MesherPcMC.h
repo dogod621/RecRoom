@@ -17,12 +17,6 @@ namespace RecRoom
 			MesherPc() {}
 
 	public:
-		virtual void Process(PTR(PcMED)& inV, pcl::PolygonMesh& out) const;
-
-	protected:
-		virtual void ToMesh(PTR(PcREC)& inV, PTR(KDTreeREC)& tree, pcl::PolygonMesh& out) const = 0;
-
-	public:
 		float getPercentageExtendGrid() const { return percentageExtendGrid; }
 		float getISOLevel() const { return isoLevel; }
 		int getGridRes() const { return gridRes; }
