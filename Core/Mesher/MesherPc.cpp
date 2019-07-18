@@ -1,3 +1,5 @@
+#include <pcl/surface/mls.h>
+
 #include "Sampler/SamplerPcNearest.h"
 
 #include "MesherPc.h"
@@ -19,9 +21,10 @@ namespace RecRoom
 				p.x = it->x;
 				p.y = it->y;
 				p.z = it->z;
-				p.normal_x = it->normal_x;
-				p.normal_y = it->normal_y;
-				p.normal_z = it->normal_z;
+				float norm = std::sqrt(it->normal_x*it->normal_x + it->normal_y*it->normal_y + it->normal_z*it->normal_z);
+				p.normal_x = it->normal_x / norm;
+				p.normal_y = it->normal_y / norm;
+				p.normal_z = it->normal_z / norm;
 				p.curvature = it->curvature;
 				pcNT->push_back(p);
 				pcREC->push_back(*it);

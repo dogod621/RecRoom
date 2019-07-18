@@ -107,7 +107,7 @@ void PrintHelp(int argc, char **argv)
 
 	std::cout << "MesherPcGP3 Parmameters:==================================================================================================================================" << std::endl << std::endl;
 	{
-		PRINT_HELP("\t", "maxEdgeSize", "float ${voxelSize*20}", "The nearest neighbors search radius for each point and the maximum edge length.");
+		PRINT_HELP("\t", "maxEdgeSize", "float ${overlap}", "The nearest neighbors search radius for each point and the maximum edge length.");
 		PRINT_HELP("\t", "mu", "float 2.5", "The nearest neighbor distance multiplier to obtain the final search radius.");
 		PRINT_HELP("\t", "maxNumNei", "int ${(maxEdgeSize/voxelSize)^2*M_PI}", "The maximum number of nearest neighbors accepted by searching.");
 		PRINT_HELP("\t", "minAngle", "float 10.0", "The preferred minimum angle in degrees for the triangles.");
@@ -241,7 +241,7 @@ int main(int argc, char *argv[])
 		std::cout << "SegmenterPcSVC -percentageExtendGrid: " << percentageExtendGrid << std::endl;
 		std::cout << "SegmenterPcSVC -isoLevel: " << isoLevel << std::endl;
 		std::cout << "SegmenterPcSVC -gridRes: " << gridRes << std::endl;*/
-		double maxEdgeSize = voxelSize * 20;
+		double maxEdgeSize = overlap;
 		double mu = 2.5;
 		int maxNumNei = int(maxEdgeSize/voxelSize * maxEdgeSize/voxelSize * M_PI);
 		double minAngle = 10.0;
