@@ -8,15 +8,6 @@ namespace RecRoom
 	{
 		pcl::GreedyProjectionTriangulation<PointREC> gp3;
 		
-		double searchRadius;
-		double mu;
-		int maxNumNei;
-		double minAngle;
-		double maxAngle;
-		double epsAngle;
-		bool consistent;
-		bool consistentOrdering;
-
 		gp3.setSearchRadius(searchRadius);
 		gp3.setMu(mu);
 		gp3.setMaximumNearestNeighbors(maxNumNei);

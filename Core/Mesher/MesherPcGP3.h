@@ -15,7 +15,7 @@ namespace RecRoom
 			double maxAngle = 2.0 * M_PI / 3.0,
 			double epsAngle = M_PI / 4.0,
 			bool consistent = false,
-			bool consistentOrdering = true)
+			bool consistentOrdering = false)
 			: searchRadius(searchRadius), mu(mu), maxNumNei(maxNumNei), 
 			minAngle(minAngle), maxAngle(maxAngle), epsAngle(epsAngle), 
 			consistent(consistent), consistentOrdering(consistentOrdering), MesherPc() {}

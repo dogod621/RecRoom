@@ -23,6 +23,7 @@
 #include "Estimator/EstimatorPcAlbedo.h"
 #include "Segmenter/SegmenterPcSVC.h"
 #include "Mesher/MesherPcMC.h"
+#include "Mesher/MesherPcGP3.h"
 
 #define CMD_SPACE 25
 #define PRINT_HELP(prefix, cmd, parms, info) std::cout << prefix << std::left << "-" << std::setw (CMD_SPACE) << cmd \
@@ -95,13 +96,13 @@ void PrintHelp(int argc, char **argv)
 		PRINT_HELP("\t", "intensityImportance", "float 5.0", "Distance importance of intensity.");
 	}
 
-	std::cout << "MesherPcMCHoppe Parmameters:============================================================================================================================" << std::endl << std::endl;
+	/*std::cout << "MesherPcMCHoppe Parmameters:============================================================================================================================" << std::endl << std::endl;
 	{
 		PRINT_HELP("\t", "distIgnore", "float -1.0", "");
 		PRINT_HELP("\t", "percentageExtendGrid", "float 0.0", "");
 		PRINT_HELP("\t", "isoLevel", "float 0.0", "");
 		PRINT_HELP("\t", "gridRes", "int 256", "");
-	}
+	}*/
 
 	std::cout << "==========================================================================================================================================================" << std::endl << std::endl;
 }
@@ -217,7 +218,7 @@ int main(int argc, char *argv[])
 		std::cout << "SegmenterPcSVC -intensityImportance: " << intensityImportance << std::endl;
 
 		// Parse MesherPcMCHoppe Parmameters
-		float distIgnore = -1.0f;
+		/*float distIgnore = -1.0f;
 		float percentageExtendGrid = 0.0f;
 		float isoLevel = 0.0f;
 		int gridRes = 256;
@@ -228,7 +229,7 @@ int main(int argc, char *argv[])
 		std::cout << "SegmenterPcSVC -distIgnore: " << distIgnore << std::endl;
 		std::cout << "SegmenterPcSVC -percentageExtendGrid: " << percentageExtendGrid << std::endl;
 		std::cout << "SegmenterPcSVC -isoLevel: " << isoLevel << std::endl;
-		std::cout << "SegmenterPcSVC -gridRes: " << gridRes << std::endl;
+		std::cout << "SegmenterPcSVC -gridRes: " << gridRes << std::endl;*/
 
 		// Start
 		try
@@ -308,10 +309,17 @@ int main(int argc, char *argv[])
 			reconstructorPC->setSegmenter(segmenter);
 
 			std::cout << "Create Mesher" << std::endl;
+			/*
 			PTR(RecRoom::MesherPc)
 				mesher(
 					new RecRoom::MesherPcMCHoppe(distIgnore, percentageExtendGrid, isoLevel, gridRes));
 			reconstructorPC->setMesher(mesher);
+			*/
+			PTR(RecRoom::MesherPc)
+				mesher(
+					new RecRoom::MesherPcGP3(overlap, 2.5));
+			reconstructorPC->setMesher(mesher);
+			
 
 			//
 			if (pcl::console::find_switch(argc, argv, "-printScannerInfo"))
