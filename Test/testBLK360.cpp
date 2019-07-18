@@ -87,7 +87,7 @@ void PrintHelp(int argc, char **argv)
 
 	std::cout << "==========================================================================================================================================================" << std::endl << std::endl;
 	
-	std::cout << "SegmenterPcSVC Parmameters:============================================================================================================================" << std::endl << std::endl;
+	std::cout << "SegmenterPcSVC Parmameters:===============================================================================================================================" << std::endl << std::endl;
 	{
 		PRINT_HELP("\t", "voxelResolution", "float ${voxelSize}", "Gird unit size in meters.");
 		PRINT_HELP("\t", "seedResolution", "float ${voxelSize*50}", "Seed unit size in meters.");
@@ -104,6 +104,16 @@ void PrintHelp(int argc, char **argv)
 		PRINT_HELP("\t", "isoLevel", "float 0.0", "");
 		PRINT_HELP("\t", "gridRes", "int 256", "");
 	}*/
+
+	std::cout << "MesherPcGP3 Parmameters:==================================================================================================================================" << std::endl << std::endl;
+	{
+		PRINT_HELP("\t", "maxEdgeSize", "float ${voxelSize*20}", "The nearest neighbors search radius for each point and the maximum edge length.");
+		PRINT_HELP("\t", "mu", "float 2.5", "The nearest neighbor distance multiplier to obtain the final search radius.");
+		PRINT_HELP("\t", "maxNumNei", "int ${(maxEdgeSize/voxelSize)^2*M_PI}", "The maximum number of nearest neighbors accepted by searching.");
+		PRINT_HELP("\t", "minAngle", "float 10.0", "The preferred minimum angle in degrees for the triangles.");
+		PRINT_HELP("\t", "maxAngle", "float 120.0", "The maximum angle in degrees for the triangles.");
+		PRINT_HELP("\t", "minAngle", "float 10.0", "Maximum surface angle in degrees.");
+	}
 
 	std::cout << "==========================================================================================================================================================" << std::endl << std::endl;
 }
@@ -231,6 +241,27 @@ int main(int argc, char *argv[])
 		std::cout << "SegmenterPcSVC -percentageExtendGrid: " << percentageExtendGrid << std::endl;
 		std::cout << "SegmenterPcSVC -isoLevel: " << isoLevel << std::endl;
 		std::cout << "SegmenterPcSVC -gridRes: " << gridRes << std::endl;*/
+		double maxEdgeSize = voxelSize * 20;
+		double mu = 2.5;
+		int maxNumNei = int(maxEdgeSize/voxelSize * maxEdgeSize/voxelSize * M_PI);
+		double minAngle = 10.0;
+		double maxAngle = 120.0;
+		double epsAngle = 45.0;
+		pcl::console::parse_argument(argc, argv, "-maxEdgeSize", maxEdgeSize);
+		pcl::console::parse_argument(argc, argv, "-mu", mu);
+		pcl::console::parse_argument(argc, argv, "-maxNumNei", maxNumNei);
+		pcl::console::parse_argument(argc, argv, "-minAngle", minAngle);
+		pcl::console::parse_argument(argc, argv, "-maxAngle", maxAngle);
+		pcl::console::parse_argument(argc, argv, "-epsAngle", epsAngle);
+		std::cout << "SegmenterPcSVC -maxEdgeSize: " << maxEdgeSize << std::endl;
+		std::cout << "SegmenterPcSVC -mu: " << mu << std::endl;
+		std::cout << "SegmenterPcSVC -maxNumNei: " << maxNumNei << std::endl;
+		std::cout << "SegmenterPcSVC -minAngle: " << minAngle << std::endl;
+		std::cout << "SegmenterPcSVC -maxAngle: " << maxAngle << std::endl;
+		std::cout << "SegmenterPcSVC -epsAngle: " << epsAngle << std::endl;
+		minAngle *= M_PI / 180.0;
+		maxAngle *= M_PI / 180.0;
+		epsAngle *= M_PI / 180.0;
 
 		// Start
 		try
@@ -319,9 +350,9 @@ int main(int argc, char *argv[])
 
 			PTR(RecRoom::MesherPc)
 				mesher(
-					new RecRoom::MesherPcGP3(overlap, 2.5));
+					new RecRoom::MesherPcGP3(maxEdgeSize, mu, maxNumNei, minAngle, maxAngle, epsAngle));
 			reconstructorPC->setMesher(mesher);
-			
+
 			/*PTR(RecRoom::MesherPc)
 				mesher(
 					new RecRoom::MesherPcGP(voxelSize));
