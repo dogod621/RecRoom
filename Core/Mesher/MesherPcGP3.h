@@ -15,13 +15,13 @@ namespace RecRoom
 			double maxAngle = 2.0 * M_PI / 3.0,
 			double epsAngle = M_PI / 4.0,
 			bool consistent = false,
-			bool consistentOrdering = false)
+			bool consistentOrdering = true)
 			: searchRadius(searchRadius), mu(mu), maxNumNei(maxNumNei), 
 			minAngle(minAngle), maxAngle(maxAngle), epsAngle(epsAngle), 
 			consistent(consistent), consistentOrdering(consistentOrdering), MesherPc() {}
 
 	protected:
-		virtual void ToMesh(PTR(PcREC)& inV, PTR(KDTreeREC)& tree, pcl::PolygonMesh& out) const;
+		virtual void ToMesh(PTR(Pc<pcl::PointNormal>)& inV, PTR(KDTree<pcl::PointNormal>)& tree, pcl::PolygonMesh& out) const;
 
 	public:
 		double getSearchRadius() const { return searchRadius; }

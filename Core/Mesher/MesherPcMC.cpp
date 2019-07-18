@@ -8,17 +8,17 @@
 
 namespace RecRoom
 {
-	void MesherPcMCRBF::ToMesh(PTR(PcREC)& inV, PTR(KDTreeREC)& tree, pcl::PolygonMesh& out) const
+	void MesherPcMCRBF::ToMesh(PTR(Pc<pcl::PointNormal>)& inV, PTR(KDTree<pcl::PointNormal>)& tree, pcl::PolygonMesh& out) const
 	{
-		MarchingCubesRBF mc(offSurfaceEpsilon, percentageExtendGrid, isoLevel, gridRes, gridRes, gridRes);
+		MarchingCubesRBF<pcl::PointNormal> mc(offSurfaceEpsilon, percentageExtendGrid, isoLevel, gridRes, gridRes, gridRes);
 		mc.setInputCloud(inV);
 		mc.setSearchMethod(tree);
 		mc.reconstruct(out);
 	}
 
-	void MesherPcMCHoppe::ToMesh(PTR(PcREC)& inV, PTR(KDTreeREC)& tree, pcl::PolygonMesh& out) const
+	void MesherPcMCHoppe::ToMesh(PTR(Pc<pcl::PointNormal>)& inV, PTR(KDTree<pcl::PointNormal>)& tree, pcl::PolygonMesh& out) const
 	{
-		MarchingCubesHoppe mc(distIgnore, percentageExtendGrid, isoLevel, gridRes, gridRes, gridRes);
+		MarchingCubesHoppe<pcl::PointNormal> mc(distIgnore, percentageExtendGrid, isoLevel, gridRes, gridRes, gridRes);
 		mc.setInputCloud(inV);
 		mc.setSearchMethod(tree);
 		mc.reconstruct(out);

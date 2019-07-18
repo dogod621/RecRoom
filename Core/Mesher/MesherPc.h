@@ -16,7 +16,7 @@ namespace RecRoom
 		virtual void Process(PTR(PcMED)& inV, pcl::PolygonMesh& out) const;
 
 	protected:
-		virtual void ToMesh(PTR(PcREC)& inV, PTR(KDTreeREC)& tree, pcl::PolygonMesh& out) const = 0;
+		virtual void ToMesh(PTR(Pc<pcl::PointNormal>)& inV, PTR(KDTree<pcl::PointNormal>)& tree, pcl::PolygonMesh& out) const = 0;
 	};
 }
 

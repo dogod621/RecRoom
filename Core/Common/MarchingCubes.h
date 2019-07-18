@@ -7,19 +7,20 @@
 
 namespace RecRoom
 {
-	class MarchingCubes : public pcl::SurfaceReconstruction<PointREC>
+	template<class PointNT>
+	class MarchingCubes : public pcl::SurfaceReconstruction<PointNT>
 	{
 	public:
-		typedef boost::shared_ptr<MarchingCubes> Ptr;
-		typedef boost::shared_ptr<const MarchingCubes> ConstPtr;
+		typedef boost::shared_ptr<MarchingCubes<PointNT>> Ptr;
+		typedef boost::shared_ptr<const MarchingCubes<PointNT>> ConstPtr;
 
-		using SurfaceReconstruction<PointREC>::input_;
-		using SurfaceReconstruction<PointREC>::tree_;
+		using SurfaceReconstruction<PointNT>::input_;
+		using SurfaceReconstruction<PointNT>::tree_;
 
 		MarchingCubes(const float percentage_extend_grid = 0.0f, const float iso_level = 0.0f,
 			int res_x = 50, int res_y = 50, int res_z = 50)
 			: percentage_extend_grid_(percentage_extend_grid), iso_level_(iso_level), res_x_(res_x), res_y_(res_y), res_z_(res_z),
-			pcl::SurfaceReconstruction<PointREC>()
+			pcl::SurfaceReconstruction<PointNT>()
 		{
 			if (!(iso_level_ >= 0 && iso_level_ < 1))
 				THROW_EXCEPTION("iso_level is not valid");
@@ -34,7 +35,7 @@ namespace RecRoom
 			output = p1 + mu * (p2 - p1);
 		}
 
-		void createSurface(const std::vector<float>& leaf_node, const Eigen::Vector3i& index_3d, PcREC& cloud);
+		void createSurface(const std::vector<float>& leaf_node, const Eigen::Vector3i& index_3d, Pc<PointNT>& cloud);
 
 		virtual float getGridValue(Eigen::Vector3i pos)
 		{
@@ -51,12 +52,12 @@ namespace RecRoom
 
 		virtual void performReconstruction(pcl::PolygonMesh &output)
 		{
-			PcREC points;
+			Pc<PointNT> points;
 			performReconstruction(points, output.polygons);
 			pcl::toPCLPointCloud2(points, output.cloud);
 		}
 
-		virtual void performReconstruction(PcREC& points, std::vector<pcl::Vertices>& polygons);
+		virtual void performReconstruction(Pc<PointNT>& points, std::vector<pcl::Vertices>& polygons);
 
 	protected:
 		std::vector<float> grid_;

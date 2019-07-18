@@ -4,9 +4,9 @@
 
 namespace RecRoom
 {
-	void MesherPcPoisson::ToMesh(PTR(PcREC)& inV, PTR(KDTreeREC)& tree, pcl::PolygonMesh& out) const
+	void MesherPcPoisson::ToMesh(PTR(Pc<pcl::PointNormal>)& inV, PTR(KDTree<pcl::PointNormal>)& tree, pcl::PolygonMesh& out) const
 	{
-		pcl::Poisson<PointREC> pn;
+		pcl::Poisson<pcl::PointNormal> pn;
 		
 		pn.setDepth(depth);
 		pn.setMinDepth(minDepth);

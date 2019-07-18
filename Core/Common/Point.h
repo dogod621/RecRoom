@@ -72,7 +72,7 @@ namespace RecRoom
 #	define RAW_ADD_RGB						PCL_ADD_RGB;
 #	define RAW_REGISTER_RGB					(uint32_t, rgba, rgba)
 #	define RAW_ISFINITE_RGB
-#	define RAW_INIT_RGB						r = g = b = 0; a = 1;
+#	define RAW_INIT_RGB						r = g = b = 0; a = 255;
 #	define RAW_COPY_RGB						rgba = p.rgba;
 #else
 #	define RAW_CAN_CONTAIN_RGB				false
@@ -88,7 +88,7 @@ namespace RecRoom
 #	define REC_ADD_RGB						PCL_ADD_RGB;
 #	define REC_REGISTER_RGB					(uint32_t, rgba, rgba)
 #	define REC_ISFINITE_RGB
-#	define REC_INIT_RGB						r = g = b = 0; a = 1;
+#	define REC_INIT_RGB						r = g = b = 0; a = 255;
 #	define REC_COPY_RGB						rgba = p.rgba;
 #else
 #	define REC_CAN_CONTAIN_RGB				false
@@ -105,7 +105,7 @@ namespace RecRoom
 #	define MED_ADD_RGB						PCL_ADD_RGB;
 #	define MED_REGISTER_RGB					(uint32_t, rgba, rgba)
 #	define MED_ISFINITE_RGB
-#	define MED_INIT_RGB						r = g = b = 0; a = 1;
+#	define MED_INIT_RGB						r = g = b = 0; a = 255;
 #	define MED_COPY_RGB						rgba = p.rgba;
 #elif defined POINT_REC_WITH_RGB
 #	define POINT_MED_WITH_RGB
@@ -113,7 +113,7 @@ namespace RecRoom
 #	define MED_ADD_RGB						PCL_ADD_RGB;
 #	define MED_REGISTER_RGB					(uint32_t, rgba, rgba)
 #	define MED_ISFINITE_RGB
-#	define MED_INIT_RGB						r = g = b = 0; a = 1;
+#	define MED_INIT_RGB						r = g = b = 0; a = 255;
 #	define MED_COPY_RGB						rgba = p.rgba;
 #else
 #	define MED_CAN_CONTAIN_RGB				false

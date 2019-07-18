@@ -24,7 +24,7 @@ namespace RecRoom
 			manifold(manifold), degree(degree), MesherPc() {}
 
 	protected:
-		virtual void ToMesh(PTR(PcREC)& inV, PTR(KDTreeREC)& tree, pcl::PolygonMesh& out) const;
+		virtual void ToMesh(PTR(Pc<pcl::PointNormal>)& inV, PTR(KDTree<pcl::PointNormal>)& tree, pcl::PolygonMesh& out) const;
 
 	public:
 		int getDepth() const { return depth; }

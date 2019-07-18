@@ -5,9 +5,9 @@
 
 namespace RecRoom
 {
-	void MesherPcGP::ToMesh(PTR(PcREC)& inV, PTR(KDTreeREC)& tree, pcl::PolygonMesh& out) const
+	void MesherPcGP::ToMesh(PTR(Pc<pcl::PointNormal>)& inV, PTR(KDTree<pcl::PointNormal>)& tree, pcl::PolygonMesh& out) const
 	{
-		pcl::GridProjection<PointREC> gp (resolution);
+		pcl::GridProjection<pcl::PointNormal> gp (resolution);
 
 		gp.setMaxBinarySearchLevel(maxBinarySearchLevel);
 		gp.setNearestNeighborNum(maxNumNei);

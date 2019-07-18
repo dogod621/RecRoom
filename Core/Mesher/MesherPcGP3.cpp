@@ -4,10 +4,10 @@
 
 namespace RecRoom
 {
-	void MesherPcGP3::ToMesh(PTR(PcREC)& inV, PTR(KDTreeREC)& tree, pcl::PolygonMesh& out) const
+	void MesherPcGP3::ToMesh(PTR(Pc<pcl::PointNormal>)& inV, PTR(KDTree<pcl::PointNormal>)& tree, pcl::PolygonMesh& out) const
 	{
-		pcl::GreedyProjectionTriangulation<PointREC> gp3;
-		
+		pcl::GreedyProjectionTriangulation<pcl::PointNormal> gp3;
+
 		gp3.setSearchRadius(searchRadius);
 		gp3.setMu(mu);
 		gp3.setMaximumNearestNeighbors(maxNumNei);

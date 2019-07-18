@@ -1,9 +1,11 @@
 #include <pcl/io/pcd_io.h>
 #include <pcl/io/png_io.h>
 #include <pcl/io/ply_io.h>
+#include <pcl/io/auto_io.h>
 
 #include "nlohmann/json.hpp"
 
+#include "Common/PCLUtils.h"
 #include "ReconstructorPc.h"
 
 namespace RecRoom
@@ -167,9 +169,9 @@ namespace RecRoom
 		{
 			PRINT_WARNING("Aready reconstructed, ignore.");
 		}
-		else if (!REC_CAN_CONTAIN_NORMAL)
+		else if (!MED_CAN_CONTAIN_NORMAL)
 		{
-			PRINT_WARNING("!REC_CAN_CONTAIN_NORMAL, ignore. You must compile with POINT_REC_WITH_NORMAL to enable this feature.");
+			PRINT_WARNING("!MED_CAN_CONTAIN_NORMAL, ignore. You must compile with POINT_REC_WITH_NORMAL or POINT_RAW_WITH_NORMAL to enable this feature.");
 		}
 		else if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 		{
@@ -686,7 +688,11 @@ namespace RecRoom
 		if (boost::filesystem::exists(filePath / boost::filesystem::path("pcMED.pcd")))
 			pcl::io::loadPCDFile((filePath / boost::filesystem::path("pcMED.pcd")).string(), *pcMED);
 		if (boost::filesystem::exists(filePath / boost::filesystem::path("mesh.ply")))
+		{
+			//pcl::io::load((filePath / boost::filesystem::path("mesh.ply")).string(), *mesh);
 			pcl::io::loadPLYFile((filePath / boost::filesystem::path("mesh.ply")).string(), *mesh);
+			pcl::io::loadPCDFile((filePath / boost::filesystem::path("meshVertices.pcd")).string(), mesh->cloud);
+		}
 	};
 
 	void ReconstructorPc::Dump() const
@@ -694,8 +700,12 @@ namespace RecRoom
 		DumpAble::Dump();
 		if (pcMED->size() > 0)
 			pcl::io::savePCDFile((filePath / boost::filesystem::path("pcMED.pcd")).string(), *pcMED, true);
-		if (mesh->polygons.size() > 0)
-			pcl::io::savePLYFile((filePath / boost::filesystem::path("mesh.ply")).string(), *mesh);
+		if (!mesh->cloud.data.empty())
+		{
+			SaveAsPLY((filePath / boost::filesystem::path("mesh.ply")).string(), *mesh, 5, false);
+			pcl::io::savePCDFile((filePath / boost::filesystem::path("meshVertices.pcd")).string(), mesh->cloud,
+				Eigen::Vector4f::Zero(), Eigen::Quaternionf::Identity(), true);
+		}
 	};
 
 	void ReconstructorPc::Load(const nlohmann::json& j)

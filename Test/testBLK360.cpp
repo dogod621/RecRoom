@@ -24,6 +24,7 @@
 #include "Segmenter/SegmenterPcSVC.h"
 #include "Mesher/MesherPcMC.h"
 #include "Mesher/MesherPcGP3.h"
+#include "Mesher/MesherPcGP.h"
 
 #define CMD_SPACE 25
 #define PRINT_HELP(prefix, cmd, parms, info) std::cout << prefix << std::left << "-" << std::setw (CMD_SPACE) << cmd \
@@ -315,11 +316,16 @@ int main(int argc, char *argv[])
 					new RecRoom::MesherPcMCHoppe(distIgnore, percentageExtendGrid, isoLevel, gridRes));
 			reconstructorPC->setMesher(mesher);
 			*/
+
 			PTR(RecRoom::MesherPc)
 				mesher(
 					new RecRoom::MesherPcGP3(overlap, 2.5));
 			reconstructorPC->setMesher(mesher);
 			
+			/*PTR(RecRoom::MesherPc)
+				mesher(
+					new RecRoom::MesherPcGP(voxelSize));
+			reconstructorPC->setMesher(mesher);*/
 
 			//
 			if (pcl::console::find_switch(argc, argv, "-printScannerInfo"))

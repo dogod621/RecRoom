@@ -43,7 +43,7 @@ namespace RecRoom
 			MesherPcMC(percentageExtendGrid, isoLevel, gridRes) {}
 
 	protected:
-		virtual void ToMesh(PTR(PcREC)& inV, PTR(KDTreeREC)& tree, pcl::PolygonMesh& out) const;
+		virtual void ToMesh(PTR(Pc<pcl::PointNormal>)& inV, PTR(KDTree<pcl::PointNormal>)& tree, pcl::PolygonMesh& out) const;
 
 	public:
 		float getOffSurfaceEpsilon() const { return offSurfaceEpsilon; }
@@ -66,7 +66,7 @@ namespace RecRoom
 			MesherPcMC(percentageExtendGrid, isoLevel, gridRes) {}
 
 	protected:
-		virtual void ToMesh(PTR(PcREC)& inV, PTR(KDTreeREC)& tree, pcl::PolygonMesh& out) const;
+		virtual void ToMesh(PTR(Pc<pcl::PointNormal>)& inV, PTR(KDTree<pcl::PointNormal>)& tree, pcl::PolygonMesh& out) const;
 
 	public:
 		float getDistIgnore() const { return distIgnore; }
