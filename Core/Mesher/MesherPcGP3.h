@@ -15,10 +15,11 @@ namespace RecRoom
 			double maxAngle = 2.0 * M_PI / 3.0,
 			double epsAngle = M_PI / 4.0,
 			bool consistent = false,
-			bool consistentOrdering = true)
+			bool consistentOrdering = true,
+			CONST_PTR(ResamplerPcMED) resampler = nullptr)
 			: searchRadius(searchRadius), mu(mu), maxNumNei(maxNumNei), 
 			minAngle(minAngle), maxAngle(maxAngle), epsAngle(epsAngle), 
-			consistent(consistent), consistentOrdering(consistentOrdering), MesherPc() {}
+			consistent(consistent), consistentOrdering(consistentOrdering), MesherPc(resampler) {}
 
 	protected:
 		virtual void ToMesh(PTR(Pc<pcl::PointNormal>)& inV, PTR(KDTree<pcl::PointNormal>)& tree, pcl::PolygonMesh& out) const;

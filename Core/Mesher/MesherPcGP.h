@@ -11,9 +11,10 @@ namespace RecRoom
 			double resolution,
 			int maxBinarySearchLevel = 10,
 			int maxNumNei = 50,
-			int paddingSize = 3)
+			int paddingSize = 3,
+			CONST_PTR(ResamplerPcMED) resampler = nullptr)
 			: resolution(resolution), maxBinarySearchLevel(maxBinarySearchLevel), maxNumNei(maxNumNei), paddingSize(paddingSize),
-			MesherPc() {}
+			MesherPc(resampler) {}
 
 	protected:
 		virtual void ToMesh(PTR(Pc<pcl::PointNormal>)& inV, PTR(KDTree<pcl::PointNormal>)& tree, pcl::PolygonMesh& out) const;

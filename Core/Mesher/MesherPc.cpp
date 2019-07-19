@@ -8,12 +8,23 @@ namespace RecRoom
 {
 	void MesherPc::Process(PTR(PcMED)& inV, pcl::PolygonMesh& out) const
 	{
+		PTR(PcMED) inV2;
+		if (resampler)
+		{
+			inV2 = PTR(PcMED)(new PcMED);
+			resampler->Process(inV, *inV2);
+		}
+		else
+		{
+			inV2 = inV;
+		}
+
 		PTR(Pc<pcl::PointNormal>) pcNT(new Pc<pcl::PointNormal>);
 		PTR(PcREC) pcREC(new PcREC);
 		
-		pcNT->reserve(inV->size());
-		pcREC->reserve(inV->size());
-		for (PcMED::const_iterator it = inV->begin(); it != inV->end(); ++it)
+		pcNT->reserve(inV2->size());
+		pcREC->reserve(inV2->size());
+		for (PcMED::const_iterator it = inV2->begin(); it != inV2->end(); ++it)
 		{
 			if (pcl::isFinite(*it))
 			{

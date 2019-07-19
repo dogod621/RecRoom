@@ -10,11 +10,12 @@ namespace RecRoom
 		MesherPcMC(
 			float percentageExtendGrid = 0.0f,
 			float isoLevel = 0.0f,
-			int gridRes = 50)
+			int gridRes = 50,
+			CONST_PTR(ResamplerPcMED) resampler = nullptr)
 			: percentageExtendGrid(percentageExtendGrid),
 			isoLevel(isoLevel),
 			gridRes(gridRes),
-			MesherPc() {}
+			MesherPc(resampler) {}
 
 	public:
 		float getPercentageExtendGrid() const { return percentageExtendGrid; }
@@ -38,9 +39,10 @@ namespace RecRoom
 			float offSurfaceEpsilon = 0.1f,
 			float percentageExtendGrid = 0.0f,
 			float isoLevel = 0.0f,
-			int gridRes = 50)
+			int gridRes = 50,
+			CONST_PTR(ResamplerPcMED) resampler = nullptr)
 			: offSurfaceEpsilon(offSurfaceEpsilon),
-			MesherPcMC(percentageExtendGrid, isoLevel, gridRes) {}
+			MesherPcMC(percentageExtendGrid, isoLevel, gridRes, resampler) {}
 
 	protected:
 		virtual void ToMesh(PTR(Pc<pcl::PointNormal>)& inV, PTR(KDTree<pcl::PointNormal>)& tree, pcl::PolygonMesh& out) const;
@@ -61,9 +63,10 @@ namespace RecRoom
 			float distIgnore = -1.0f,
 			float percentageExtendGrid = 0.0f,
 			float isoLevel = 0.0f,
-			int gridRes = 50)
+			int gridRes = 50,
+			CONST_PTR(ResamplerPcMED) resampler = nullptr)
 			: distIgnore(distIgnore),
-			MesherPcMC(percentageExtendGrid, isoLevel, gridRes) {}
+			MesherPcMC(percentageExtendGrid, isoLevel, gridRes, resampler) {}
 
 	protected:
 		virtual void ToMesh(PTR(Pc<pcl::PointNormal>)& inV, PTR(KDTree<pcl::PointNormal>)& tree, pcl::PolygonMesh& out) const;

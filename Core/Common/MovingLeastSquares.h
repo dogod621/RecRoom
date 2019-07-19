@@ -16,27 +16,27 @@
 
 namespace RecRoom
 {
-	enum ProjectionMethod
+	enum MLSProjectionMethod
 	{
-		ProjectionMethod_NONE,	// brief Project to the mls plane.
-		SIMPLE,					// brief Project along the mls plane normal to the polynomial surface.
-		ORTHOGONAL				// brief Project to the closest point on the polynonomial surface.
+		MLSProjectionMethod_NONE,	// brief Project to the mls plane.
+		SIMPLE,						// brief Project along the mls plane normal to the polynomial surface.
+		ORTHOGONAL					// brief Project to the closest point on the polynonomial surface.
 	};
 
-	enum UpsamplingMethod
+	enum MLSUpsamplingMethod
 	{
-		UpsamplingMethod_NONE,	// brief No upsampling will be done, only the input points will be projected to their own MLS surfaces.
-		DISTINCT_CLOUD,         // brief Project the points of the distinct cloud to the MLS surface. 
-		SAMPLE_LOCAL_PLANE,     // brief The local plane of each input point will be sampled in a circular fashion
-								// using the upsampling_radius_ and the upsampling_step_ parameters. 
-		RANDOM_UNIFORM_DENSITY, // brief The local plane of each input point will be sampled using an uniform random
-								// distribution such that the density of points is constant throughout the
-								// cloud - given by the desired_num_points_in_radius_ parameter. 
-		VOXEL_GRID_DILATION     // brief The input cloud will be inserted into a voxel grid with voxels of
-								// size voxel_size_; this voxel grid will be dilated dilation_iteration_num_
-								// times and the resulting points will be projected to the MLS surface
-								// of the closest point in the input cloud; the result is a point cloud
-								// with filled holes and a constant point density. 
+		MLSUpsamplingMethod_NONE,	// brief No upsampling will be done, only the input points will be projected to their own MLS surfaces.
+		DISTINCT_CLOUD,				// brief Project the points of the distinct cloud to the MLS surface. 
+		SAMPLE_LOCAL_PLANE,			// brief The local plane of each input point will be sampled in a circular fashion
+									// using the upsampling_radius_ and the upsampling_step_ parameters. 
+		RANDOM_UNIFORM_DENSITY,		// brief The local plane of each input point will be sampled using an uniform random
+									// distribution such that the density of points is constant throughout the
+									// cloud - given by the desired_num_points_in_radius_ parameter. 
+		VOXEL_GRID_DILATION			// brief The input cloud will be inserted into a voxel grid with voxels of
+									// size voxel_size_; this voxel grid will be dilated dilation_iteration_num_
+									// times and the resulting points will be projected to the MLS surface
+									// of the closest point in the input cloud; the result is a point cloud
+									// with filled holes and a constant point density. 
 	};
 
 	// brief Data structure used to store the MLS polynomial partial derivatives
@@ -99,10 +99,10 @@ namespace RecRoom
 		inline MLSProjectionResults projectPointSimpleToPolynomialSurface(const double u, const double v) const;
 
 		// brief Project a point using the specified method.
-		inline MLSProjectionResults projectPoint(const Eigen::Vector3d &pt, ProjectionMethod method, int required_neighbors = 0) const;
+		inline MLSProjectionResults projectPoint(const Eigen::Vector3d &pt, MLSProjectionMethod method, int required_neighbors = 0) const;
 
 		// brief Project the query point used to generate the mls surface about using the specified method.
-		inline MLSProjectionResults projectQueryPoint(ProjectionMethod method, int required_neighbors = 0) const;
+		inline MLSProjectionResults projectQueryPoint(MLSProjectionMethod method, int required_neighbors = 0) const;
 
 		// brief Smooth a given point and its neighborghood using Moving Least Squares.
 		template <class PointT>
@@ -193,8 +193,8 @@ namespace RecRoom
 		MovingLeastSquares(
 			double search_radius_,
 			int order_ = 2,
-			ProjectionMethod projection_method_ = ProjectionMethod::SIMPLE,
-			UpsamplingMethod upsample_method_ = UpsamplingMethod::UpsamplingMethod_NONE,
+			MLSProjectionMethod projection_method_ = MLSProjectionMethod::SIMPLE,
+			MLSUpsamplingMethod upsample_method_ = MLSUpsamplingMethod::MLSUpsamplingMethod_NONE,
 			unsigned int threads_ = 1,
 			bool compute_normals_ = true ) 
 			: 
@@ -221,10 +221,18 @@ namespace RecRoom
 
 			// Vars
 			distinct_cloud_(),
-			corresponding_input_indices_()
+			corresponding_input_indices_(),
+			rng_alg_(),
+			rng_uniform_distribution_()
 		{
 			nr_coeff_ = (order_ + 1) * (order_ + 2) / 2;
 			sqr_gauss_param_ = search_radius_ * search_radius_;
+
+			if (search_radius_ <= 0 || sqr_gauss_param_ <= 0)
+			{
+				THROW_EXCEPTION("Invalid search radius or Gaussian parameter");
+				return;
+			}
 		};
 
 		inline void setSearchMethod(const PTR(Acc<InPointNT>) &tree)
@@ -276,8 +284,8 @@ namespace RecRoom
 		double search_radius_; // brief The nearest neighbors search radius for each point.
 		double sqr_gauss_param_; // brief Parameter for distance based weighting of neighbors (search_radius_ * search_radius_ works fine)
 		bool compute_normals_; // brief Parameter that specifies whether the normals should be computed for the input cloud or not
-		UpsamplingMethod upsample_method_; // brief Parameter that specifies the upsampling method to be used 
-		MLSResult::ProjectionMethod projection_method_; // brief Parameter that specifies the projection method to be used.
+		MLSUpsamplingMethod upsample_method_; // brief Parameter that specifies the upsampling method to be used 
+		MLSProjectionMethod projection_method_; // brief Parameter that specifies the projection method to be used.
 		PointIndicesPtr corresponding_input_indices_; // brief Collects for each point in output the corrseponding point in the input.
 
 	protected:
@@ -289,7 +297,6 @@ namespace RecRoom
 		float voxel_size_; // brief Voxel size for the VOXEL_GRID_DILATION upsampling method 
 		int dilation_iteration_num_; // brief Number of dilation steps for the VOXEL_GRID_DILATION upsampling method
 
-		
 	protected:
 		inline int searchForNeighbors(int index, std::vector<int> &indices, std::vector<float> &sqr_distances) const
 		{
@@ -331,6 +338,8 @@ namespace RecRoom
 		void performUpsampling(Pc<OutPointNT>& output);
 
 	private:
+		boost::mt19937 rng_alg_;
+		boost::shared_ptr<boost::variate_generator<boost::mt19937&, boost::uniform_real<float> >> rng_uniform_distribution_;
 		std::string getClassName() const { return ("MovingLeastSquares"); }
 	};
 }

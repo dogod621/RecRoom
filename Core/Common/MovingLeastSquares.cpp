@@ -211,17 +211,17 @@ namespace RecRoom
 		return (result);
 	}
 
-	MLSProjectionResults MLSResult::projectPoint(const Eigen::Vector3d &pt, ProjectionMethod method, int required_neighbors) const
+	MLSProjectionResults MLSResult::projectPoint(const Eigen::Vector3d &pt, MLSProjectionMethod method, int required_neighbors) const
 	{
 		double u, v, w;
 		getMLSCoordinates(pt, u, v, w);
 
 		MLSProjectionResults proj;
-		if (order > 1 && num_neighbors >= required_neighbors && pcl_isfinite(c_vec[0]) && method != ProjectionMethod::ProjectionMethod_NONE)
+		if (order > 1 && num_neighbors >= required_neighbors && pcl_isfinite(c_vec[0]) && method != MLSProjectionMethod::MLSProjectionMethod_NONE)
 		{
-			if (method == ProjectionMethod::ORTHOGONAL)
+			if (method == MLSProjectionMethod::ORTHOGONAL)
 				proj = projectPointOrthogonalToPolynomialSurface(u, v, w);
-			else // ProjectionMethod::SIMPLE
+			else // MLSProjectionMethod::SIMPLE
 				proj = projectPointSimpleToPolynomialSurface(u, v);
 		}
 		else
@@ -232,18 +232,18 @@ namespace RecRoom
 		return  (proj);
 	}
 
-	MLSProjectionResults MLSResult::projectQueryPoint(ProjectionMethod method, int required_neighbors) const
+	MLSProjectionResults MLSResult::projectQueryPoint(MLSProjectionMethod method, int required_neighbors) const
 	{
 		MLSProjectionResults proj;
-		if (order > 1 && num_neighbors >= required_neighbors && pcl_isfinite(c_vec[0]) && method != ProjectionMethod::ProjectionMethod_NONE)
+		if (order > 1 && num_neighbors >= required_neighbors && pcl_isfinite(c_vec[0]) && method != MLSProjectionMethod::MLSProjectionMethod_NONE)
 		{
-			if (method == ProjectionMethod::ORTHOGONAL)
+			if (method == MLSProjectionMethod::ORTHOGONAL)
 			{
 				double u, v, w;
 				getMLSCoordinates(query_point, u, v, w);
 				proj = projectPointOrthogonalToPolynomialSurface(u, v, w);
 			}
-			else // ProjectionMethod::SIMPLE
+			else // MLSProjectionMethod::SIMPLE
 			{
 				// Projection onto MLS surface along Darboux normal to the height at (0,0)
 				proj.point = mean + (c_vec[0] * plane_normal);

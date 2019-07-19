@@ -174,17 +174,34 @@ namespace RecRoom
 		output.width = output.height = 0;
 		output.points.clear();
 
-		if (search_radius_ <= 0 || sqr_gauss_param_ <= 0)
+		// Check if distinct_cloud_ was set
+		if (upsample_method_ == MLSUpsamplingMethod::DISTINCT_CLOUD && !distinct_cloud_)
 		{
-			PCL_ERROR("[pcl::%s::process] Invalid search radius (%f) or Gaussian parameter (%f)!\n", getClassName().c_str(), search_radius_, sqr_gauss_param_);
+			THROW_EXCEPTION("Upsample method was set to DISTINCT_CLOUD, but no distinct cloud was specified.");
 			return;
 		}
 
-		// Check if distinct_cloud_ was set
-		if (upsample_method_ == UpsamplingMethod::DISTINCT_CLOUD && !distinct_cloud_)
+		switch (upsample_method_)
 		{
-			PCL_ERROR("[pcl::%s::process] Upsample method was set to DISTINCT_CLOUD, but no distinct cloud was specified.\n", getClassName().c_str());
-			return;
+			// Initialize random number generator if necessary
+		case (MLSUpsamplingMethod::RANDOM_UNIFORM_DENSITY):
+		{
+			rng_alg_.seed(static_cast<unsigned> (std::time(0)));
+			float tmp = static_cast<float> (search_radius_ / 2.0f);
+			boost::uniform_real<float> uniform_distrib(-tmp, tmp);
+			rng_uniform_distribution_.reset(new boost::variate_generator<boost::mt19937&, boost::uniform_real<float> >(rng_alg_, uniform_distrib));
+			break;
+		}
+		case (MLSUpsamplingMethod::VOXEL_GRID_DILATION):
+		case (MLSUpsamplingMethod::DISTINCT_CLOUD):
+		{
+			if (!cache_mls_results_)
+				PCL_WARN("The cache mls results is forced when using upsampling method VOXEL_GRID_DILATION or DISTINCT_CLOUD");
+			cache_mls_results_ = true;
+			break;
+		}
+		default:
+			break;
 		}
 
 		if (!initCompute())
@@ -203,31 +220,6 @@ namespace RecRoom
 
 		// Send the surface dataset to the spatial locator
 		tree_->setInputCloud(input_);
-
-		switch (upsample_method_)
-		{
-			// Initialize random number generator if necessary
-		case (UpsamplingMethod::RANDOM_UNIFORM_DENSITY):
-		{
-			rng_alg_.seed(static_cast<unsigned> (std::time(0)));
-			float tmp = static_cast<float> (search_radius_ / 2.0f);
-			boost::uniform_real<float> uniform_distrib(-tmp, tmp);
-			rng_uniform_distribution_.reset(new boost::variate_generator<boost::mt19937&, boost::uniform_real<float> >(rng_alg_, uniform_distrib));
-
-			break;
-		}
-		case (UpsamplingMethod::VOXEL_GRID_DILATION):
-		case (UpsamplingMethod::DISTINCT_CLOUD):
-		{
-			if (!cache_mls_results_)
-				PCL_WARN("The cache mls results is forced when using upsampling method VOXEL_GRID_DILATION or DISTINCT_CLOUD.\n");
-
-			cache_mls_results_ = true;
-			break;
-		}
-		default:
-			break;
-		}
 
 		if (cache_mls_results_)
 		{
@@ -255,14 +247,14 @@ namespace RecRoom
 
 		switch (upsample_method_)
 		{
-		case (UpsamplingMethod::UpsamplingMethod_NONE):
+		case (MLSUpsamplingMethod::MLSUpsamplingMethod_NONE):
 		{
 			MLSResult::MLSProjectionResults proj = mls_result.projectQueryPoint(projection_method_, nr_coeff_);
 			addProjectedPointNormal(index, proj.point, proj.normal, mls_result.curvature, projected_points, corresponding_input_indices);
 			break;
 		}
 
-		case (UpsamplingMethod::SAMPLE_LOCAL_PLANE):
+		case (MLSUpsamplingMethod::SAMPLE_LOCAL_PLANE):
 		{
 			// Uniformly sample a circle around the query point using the radius and step parameters
 			for (float u_disp = -static_cast<float> (upsampling_radius_); u_disp <= upsampling_radius_; u_disp += static_cast<float> (upsampling_step_))
@@ -275,7 +267,7 @@ namespace RecRoom
 			break;
 		}
 
-		case (UpsamplingMethod::RANDOM_UNIFORM_DENSITY):
+		case (MLSUpsamplingMethod::RANDOM_UNIFORM_DENSITY):
 		{
 			// Compute the local point density and add more samples if necessary
 			int num_points_to_add = static_cast<int> (floor(desired_num_points_in_radius_ / 2.0 / static_cast<double> (nn_indices.size())));
@@ -393,7 +385,7 @@ namespace RecRoom
 	template <typename InPointNT, typename OutPointNT>
 	void MovingLeastSquares<InPointNT, OutPointNT>::performUpsampling(Pc<OutPointNT>& output)
 	{
-		if (upsample_method_ == UpsamplingMethod::DISTINCT_CLOUD)
+		if (upsample_method_ == MLSUpsamplingMethod::DISTINCT_CLOUD)
 		{
 			corresponding_input_indices_.reset(new PointIndices);
 			for (size_t dp_i = 0; dp_i < distinct_cloud_->size(); ++dp_i) // dp_i = distinct_point_i
@@ -422,7 +414,7 @@ namespace RecRoom
 
 		// For the voxel grid upsampling method, generate the voxel grid and dilate it
 		// Then, project the newly obtained points to the MLS surface
-		if (upsample_method_ == UpsamplingMethod::VOXEL_GRID_DILATION)
+		if (upsample_method_ == MLSUpsamplingMethod::VOXEL_GRID_DILATION)
 		{
 			corresponding_input_indices_.reset(new PointIndices);
 

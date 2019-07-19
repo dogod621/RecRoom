@@ -18,10 +18,11 @@ namespace RecRoom
 			bool confidence = false,
 			bool outputPolygons = false,
 			bool manifold = true,
-			int degree = 2)
+			int degree = 2,
+			CONST_PTR(ResamplerPcMED) resampler = nullptr)
 			: depth(depth), minDepth(minDepth), pointWeight(pointWeight), scale(scale), solverDivide(solverDivide),
 			isoDivide(isoDivide), samplesPerNode(samplesPerNode), confidence(confidence), outputPolygons(outputPolygons),
-			manifold(manifold), degree(degree), MesherPc() {}
+			manifold(manifold), degree(degree), MesherPc(resampler) {}
 
 	protected:
 		virtual void ToMesh(PTR(Pc<pcl::PointNormal>)& inV, PTR(KDTree<pcl::PointNormal>)& tree, pcl::PolygonMesh& out) const;
