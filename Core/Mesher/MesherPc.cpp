@@ -11,14 +11,21 @@ namespace RecRoom
 		PTR(PcMED) inV2;
 		if (resampler)
 		{
+			PRINT_INFO("Resampling - Start");
+
 			inV2 = PTR(PcMED)(new PcMED);
 			resampler->Process(inV, *inV2);
+
+			std::stringstream ss;
+			ss << "Resampling - End - orgPcSize: " << inV->size() << ", pcSize: " << inV2->size();
+			PRINT_INFO(ss.str());
 		}
 		else
 		{
 			inV2 = inV;
 		}
 
+		
 		PTR(Pc<pcl::PointNormal>) pcNT(new Pc<pcl::PointNormal>);
 		PTR(PcREC) pcREC(new PcREC);
 		
@@ -43,8 +50,12 @@ namespace RecRoom
 		}
 
 		{
+			PRINT_INFO("Reconstruct - Start");
+
 			PTR(KDTree<pcl::PointNormal>) treeNT(new KDTree<pcl::PointNormal>);
 			ToMesh(pcNT, treeNT, out);
+
+			PRINT_INFO("Reconstruct - End");
 		}
 
 		{

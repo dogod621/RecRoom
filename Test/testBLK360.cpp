@@ -25,6 +25,7 @@
 #include "Mesher/MesherPcMC.h"
 #include "Mesher/MesherPcGP3.h"
 #include "Mesher/MesherPcGP.h"
+#include "Sampler/SamplerPcRemoveDuplicate.h"
 
 #define CMD_SPACE 25
 #define PRINT_HELP(prefix, cmd, parms, info) std::cout << prefix << std::left << "-" << std::setw (CMD_SPACE) << cmd \
@@ -348,9 +349,13 @@ int main(int argc, char *argv[])
 			reconstructorPC->setMesher(mesher);
 			*/
 
+			PTR(RecRoom::ResamplerPcMED)
+				mesherResampler(
+					new RecRoom::SamplerPcRemoveDuplicateMED(voxelSize, voxelSize/3.0f));
+
 			PTR(RecRoom::MesherPc)
 				mesher(
-					new RecRoom::MesherPcGP3(maxEdgeSize, mu, maxNumNei, minAngle, maxAngle, epsAngle));
+					new RecRoom::MesherPcGP3(maxEdgeSize, mu, maxNumNei, minAngle, maxAngle, epsAngle, false, true, mesherResampler));
 			reconstructorPC->setMesher(mesher);
 
 			/*PTR(RecRoom::MesherPc)
