@@ -38,6 +38,9 @@ namespace RecRoom
 	public:
 		ContainerPcRAW() {}
 
+		virtual Eigen::Vector3d getMinAABB() const = 0;
+		virtual Eigen::Vector3d getMaxAABB() const = 0;
+
 	public:
 		virtual void Merge(const CONST_PTR(PcRAW)& v) = 0;
 		virtual std::size_t Size() const = 0;

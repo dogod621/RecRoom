@@ -140,8 +140,7 @@ namespace RecRoom
 				cb.setMax(Eigen::Vector4f(cData.maxAABB.x(), cData.maxAABB.y(), cData.maxAABB.z(), 1.0));
 				cb.setInputCloud(data.pcRec);
 				cb.filter(*data.pcRecIdx);
-				std::sort(data.pcRecIdx->begin(), data.pcRecIdx->end());
-
+				
 				std::stringstream ss;
 				ss << "Extract indices - End - pcSize: " << data.pcRec->size() << ", idxSize: " << data.pcRecIdx->size();
 				PRINT_INFO(ss.str());
@@ -163,9 +162,10 @@ namespace RecRoom
 
 			PcIndex orIndices;
 			global.ptrReconstructorPcOC()->getOutlierRemover()->Process(data.pcRecAcc, data.pcRec, nullptr, orIndices);
-			std::sort(orIndices.begin(), orIndices.end());
-
+			
 			// Combine
+			std::sort(orIndices.begin(), orIndices.end());
+			std::sort(data.pcRecIdx->begin(), data.pcRecIdx->end());
 			PcIndex indices = *data.pcRecIdx;
 
 			data.pcRecIdx->resize(std::min(orIndices.size(), indices.size()));
@@ -235,6 +235,28 @@ namespace RecRoom
 
 		PRINT_INFO("Merge - End - pcSize: " + std::to_string(global.ptrReconstructorPcOC()->getPcMED()->size()));
 
+
+		// Som wired noise, debugging...
+		if (global.ptrReconstructorPcOC()->getDownSampler())
+		{
+			PTR(PcMED)pcMED2(new PcMED);
+			PTR(AccMED)pcMEDAcc(new KDTreeMED);
+			pcMEDAcc->setInputCloud(global.ptrReconstructorPcOC()->getPcMED());
+
+			{
+				PRINT_INFO("DownSampling - Start");
+
+				global.ptrReconstructorPcOC()->getDownSampler()->Process(pcMEDAcc, global.ptrReconstructorPcOC()->getPcMED(), nullptr, *pcMED2);
+
+				std::stringstream ss;
+				ss << "DownSampling - End - inSize: " << global.ptrReconstructorPcOC()->getPcMED()->size() << ", outSize:" << pcMED2->size();
+				PRINT_INFO(ss.str());
+			}
+
+			(*global.ptrReconstructorPcOC()->getPcMED()) = (*pcMED2);
+		}
+
+		//
 		return 0;
 	}
 

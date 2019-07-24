@@ -300,10 +300,26 @@ int main(int argc, char *argv[])
 						scannerPc, containerPcNDF));
 			reconstructorPC->setAsyncSize(async);
 
+			//
+			if (pcl::console::find_switch(argc, argv, "-printScannerInfo"))
+			{
+				std::cout << "Print scannerPc" << std::endl;
+				std::cout << (*scannerPc) << std::endl;
+			}
+
+			//
+			if (containerPcRAW->Size() == 0)
+			{
+				std::cout << "scannerPc->ShipPcRAW()" << std::endl;
+
+				scannerPc->DoShipPcRAW();
+			}
+
+			//
 			std::cout << "Create DownSampler" << std::endl;
 			PTR(RecRoom::ReconstructorPcOC::Sampler)
 				downSampler(
-					new RecRoom::SamplerPcGrid<RecRoom::PointMED>(voxelSize));
+					new RecRoom::SamplerPcGrid<RecRoom::PointMED>(voxelSize, containerPcRAW->getMinAABB(), containerPcRAW->getMaxAABB()));
 			reconstructorPC->setDownSampler(downSampler);
 
 			std::cout << "Create OutlierRemover" << std::endl;
@@ -356,20 +372,6 @@ int main(int argc, char *argv[])
 			reconstructorPC->setMesher(mesher);
 
 			//
-			if (pcl::console::find_switch(argc, argv, "-printScannerInfo"))
-			{
-				std::cout << "Print scannerPc" << std::endl;
-				std::cout << (*scannerPc) << std::endl;
-			}
-
-			//
-			if (containerPcRAW->Size() == 0)
-			{
-				std::cout << "scannerPc->ShipPcRAW()" << std::endl;
-
-				scannerPc->DoShipPcRAW();
-			}
-
 			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::POINT_CLOUD) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
 			{
 				std::cout << "reconstructorPC->DoRecPointCloud()" << std::endl;

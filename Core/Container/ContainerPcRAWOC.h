@@ -20,6 +20,22 @@ namespace RecRoom
 			const Eigen::Vector3d& max = Eigen::Vector3d(20.0, 20.0, 20.0),
 			const double res = 2, double overlap = 0.1);
 
+		virtual Eigen::Vector3d getMinAABB() const
+		{
+			Eigen::Vector3d min; 
+			Eigen::Vector3d max;
+			oct->getBoundingBox(min, max);
+			return min;
+		}
+
+		virtual Eigen::Vector3d getMaxAABB() const
+		{
+			Eigen::Vector3d min;
+			Eigen::Vector3d max;
+			oct->getBoundingBox(min, max);
+			return max;
+		}
+
 	public:
 		virtual void Merge(const CONST_PTR(PcRAW)& v);
 		virtual std::size_t Size() const { return metaSet.size(); };

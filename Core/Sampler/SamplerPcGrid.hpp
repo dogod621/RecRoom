@@ -6,6 +6,7 @@
 #include <pcl/filters/extract_indices.h>
 #include <pcl/filters/impl/extract_indices.hpp>
 
+#include "Common/VoxelGridFilter.h"
 #include "Filter/FilterPcRemoveDuplicate.h"
 #include "SamplerPcGrid.h"
 
@@ -22,8 +23,7 @@ namespace RecRoom
 		{
 			PRINT_INFO("VoxelGrid Sampling - Start");
 
-			pcl::VoxelGrid<PointType> vf;
-			vf.setLeafSize(voxelSize, voxelSize, voxelSize);
+			VoxelGridFilter<PointType> vf (Eigen::Vector3d(voxelSize, voxelSize, voxelSize), minAABB, maxAABB);
 			vf.setInputCloud(input);
 
 			if (filter)

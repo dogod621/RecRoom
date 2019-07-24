@@ -8,11 +8,11 @@ namespace RecRoom
 	class SamplerPcGrid : public SamplerPc<PointType>
 	{
 	public:
-		SamplerPcGrid(float voxelSize, float tooCloseRatio = 0.5f) 
-			: SamplerPc<PointType>(), voxelSize(voxelSize), tooCloseRatio(tooCloseRatio)
+		SamplerPcGrid(double voxelSize, const Eigen::Vector3d& minAABB, const Eigen::Vector3d& maxAABB, double tooCloseRatio = 0.5)
+			: SamplerPc<PointType>(), voxelSize(voxelSize), minAABB(minAABB), maxAABB(maxAABB), tooCloseRatio(tooCloseRatio)
 		{
-			if ((tooCloseRatio < 0.0f) or (tooCloseRatio >= 1.0f))
-				THROW_EXCEPTION("tooCloseRatio must >=0.0f and < 1.0f");
+			if ((tooCloseRatio < 0.0) or (tooCloseRatio >= 1.0))
+				THROW_EXCEPTION("tooCloseRatio must >=0.0 and < 1.0");
 		}
 
 	protected:
@@ -34,22 +34,29 @@ namespace RecRoom
 			Pc<PointType>& output) const;
 
 	public:
-		float getVoxelSize() const { return voxelSize; }
-		float getTooCloseRatio() const { return tooCloseRatio; }
-		void setVoxelSize(float v) { voxelSize = v; }
-		void setTooCloseRatio(float v) 
+		double getVoxelSize() const { return voxelSize; }
+		Eigen::Vector3d getMinAABB() const { return minAABB; }
+		Eigen::Vector3d getMaxAABB() const { return maxAABB; }
+		double getTooCloseRatio() const { return tooCloseRatio; }
+
+		void setVoxelSize(double v) { voxelSize = v; }
+		void setMinAABB(const Eigen::Vector3d& v ) { minAABB = v; }
+		void setMaxAABB(const Eigen::Vector3d& v ) { maxAABB = v; }
+		void setTooCloseRatio(double v)
 		{ 
-			if ((v < 0.0f) or (v >= 1.0f))
+			if ((v < 0.0) or (v >= 1.0))
 			{
-				THROW_EXCEPTION("tooCloseRatio must >=0.0f and < 1.0f");
+				THROW_EXCEPTION("tooCloseRatio must >=0.0 and < 1.0");
 			}
 			else
 				tooCloseRatio = v;
 		}
 
 	protected:
-		float voxelSize;
-		float tooCloseRatio;
+		Eigen::Vector3d minAABB;
+		Eigen::Vector3d maxAABB;
+		double voxelSize;
+		double tooCloseRatio;
 	};
 }
 
