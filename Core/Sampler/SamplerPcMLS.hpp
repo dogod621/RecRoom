@@ -5,15 +5,19 @@
 namespace RecRoom
 {
 	template<class PointType>
-	void SamplerPcMLS<PointType>::Process(
-		const PTR(Pc<PointType>) & inV,
-		Pc<PointType> & outV) const
+	void SamplerPcMLS<PointType>::ImplementProcess(
+		const CONST_PTR(Acc<PointType>)& searchSurface,
+		const CONST_PTR(Pc<PointType>)& input,
+		const CONST_PTR(PcIndex)& filter,
+		Pc<PointType> & output) const
 	{
-		PTR<KDTree<PointType>> tree(new KDTree<PointType>);
-
 		MovingLeastSquares<PointType, PointType> mls(searchRadius, order, projectionMethod, upsampleMethod, threads, computeNormals);
-		mls.setInputCloud(inV);
-		mls.setSearchMethod(tree);
-		mls.process(outV);
+
+		mls.setSearchMethod(boost::const_pointer_cast<Acc<PointType>>(searchSurface)); // trick, already ensure it won't be modified 
+
+		if (filter)
+			mls.setIndices(filter);
+
+		mls.process(output);
 	}
 }

@@ -2,12 +2,15 @@
 
  // PCL includes
 #include <pcl/pcl_base.h>
+#include <pcl/impl/pcl_base.hpp>
+
 #include <pcl/search/pcl_search.h>
 #include <pcl/common/common.h>
 
 #include <pcl/surface/boost.h>
 #include <pcl/surface/eigen.h>
 #include <pcl/surface/processing.h>
+
 #include <map>
 #include <boost/function.hpp>
 
@@ -128,13 +131,13 @@ namespace RecRoom
 
 	// brief A minimalistic implementation of a voxel grid, necessary for the point cloud upsampling
 	// note Used only in the case of VOXEL_GRID_DILATION upsampling
-	template <class InPointNT>
+	template <class InPointN>
 	class MLSVoxelGrid
 	{
 	public:
 		struct Leaf { Leaf() : valid(true) {} bool valid; };
 
-		MLSVoxelGrid(PTR(Pc<InPointNT>)& cloud, PTR(PcIndex)& indices, float voxel_size);
+		MLSVoxelGrid(PTR(Pc<InPointN>)& cloud, PTR(PcIndex)& indices, float voxel_size);
 
 		void dilate();
 
@@ -175,18 +178,18 @@ namespace RecRoom
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	};
 
-	template <class InPointNT, class OutPointNT>
-	class MovingLeastSquares : public pcl::CloudSurfaceProcessing<InPointNT, OutPointNT>
+	template <class InPointN, class OutPointN>
+	class MovingLeastSquares : public pcl::CloudSurfaceProcessing<InPointN, OutPointN>
 	{
 	public:
-		typedef boost::shared_ptr<MovingLeastSquares<InPointNT, OutPointNT> > Ptr;
-		typedef boost::shared_ptr<const MovingLeastSquares<InPointNT, OutPointNT> > ConstPtr;
+		typedef boost::shared_ptr<MovingLeastSquares<InPointN, OutPointN> > Ptr;
+		typedef boost::shared_ptr<const MovingLeastSquares<InPointN, OutPointN> > ConstPtr;
 
-		using pcl::PCLBase<InPointNT>::input_;
-		using pcl::PCLBase<InPointNT>::indices_;
-		using pcl::PCLBase<InPointNT>::fake_indices_;
-		using pcl::PCLBase<InPointNT>::initCompute;
-		using pcl::PCLBase<InPointNT>::deinitCompute;
+		using pcl::PCLBase<InPointN>::input_;
+		using pcl::PCLBase<InPointN>::indices_;
+		using pcl::PCLBase<InPointN>::fake_indices_;
+		using pcl::PCLBase<InPointN>::initCompute;
+		using pcl::PCLBase<InPointN>::deinitCompute;
 
 		typedef boost::function<int(int, double, std::vector<int> &, std::vector<float> &)> SearchMethod;
 
@@ -198,7 +201,7 @@ namespace RecRoom
 			unsigned int threads_ = 1,
 			bool compute_normals_ = true ) 
 			: 
-			pcl::CloudSurfaceProcessing<InPointNT, OutPointNT>(),
+			pcl::CloudSurfaceProcessing<InPointN, OutPointN>(),
 			search_method_(),
 			tree_(),
 
@@ -235,22 +238,22 @@ namespace RecRoom
 			}
 		};
 
-		inline void setSearchMethod(const PTR(Acc<InPointNT>) &tree)
+		inline void setSearchMethod(const PTR(Acc<InPointN>) &tree)
 		{
 			tree_ = tree;
 			// Declare the search locator definition
-			int (Acc<InPointNT>::*radiusSearch)(int index, double radius, std::vector<int> &k_indices, std::vector<float> &k_sqr_distances, unsigned int max_nn) const = &KdTree::radiusSearch;
+			int (Acc<InPointN>::*radiusSearch)(int index, double radius, std::vector<int> &k_indices, std::vector<float> &k_sqr_distances, unsigned int max_nn) const = &KdTree::radiusSearch;
 			search_method_ = boost::bind(radiusSearch, boost::ref(tree_), _1, _2, _3, _4, 0);
 		}
 
-		void process(Pc<OutPointNT>& output);
+		void process(Pc<OutPointN>& output);
 
 		// brief Get the set of indices with each point in output having the corresponding point in input 
 		inline PointIndicesPtr getCorrespondingIndices() const { return (corresponding_input_indices_); }
 
 	public:
-		inline void setDistinctCloud(CONST_PTR(Pc<InPointNT>) distinct_cloud) { distinct_cloud_ = distinct_cloud; }
-		inline CONST_PTR(Pc<InPointNT>) getDistinctCloud() const { return (distinct_cloud_); }
+		inline void setDistinctCloud(CONST_PTR(Pc<InPointN>) distinct_cloud) { distinct_cloud_ = distinct_cloud; }
+		inline CONST_PTR(Pc<InPointN>) getDistinctCloud() const { return (distinct_cloud_); }
 
 		inline void setUpsamplingRadius(double radius) { upsampling_radius_ = radius; }
 		inline double getUpsamplingRadius() const { return (upsampling_radius_); }
@@ -276,9 +279,9 @@ namespace RecRoom
 		unsigned int threads_; // brief The maximum number of threads the scheduler should use.
 
 	protected:
-		CONST_PTR(Pc<InPointNT>) distinct_cloud_; // brief The distinct point cloud that will be projected to the MLS surface.
+		CONST_PTR(Pc<InPointN>) distinct_cloud_; // brief The distinct point cloud that will be projected to the MLS surface.
 		SearchMethod search_method_; // brief The search method template for indices.
-		PTR(Acc<InPointNT>) tree_; // brief A pointer to the spatial search object.
+		PTR(Acc<InPointN>) tree_; // brief A pointer to the spatial search object.
 		int order_; // brief The order of the polynomial to be fit.
 		int nr_coeff_; // brief Number of coefficients, to be computed from the requested order.
 		double search_radius_; // brief The nearest neighbors search radius for each point.
@@ -303,12 +306,12 @@ namespace RecRoom
 			return (search_method_(index, search_radius_, indices, sqr_distances));
 		}
 
-		void computeMLSPointNormal(int index, const std::vector<int> &nn_indices, Pc<OutPointNT>& projected_points, pcl::PointIndices &corresponding_input_indices, MLSResult &mls_result) const;
+		void computeMLSPointNormal(int index, const std::vector<int> &nn_indices, Pc<OutPointN>& projected_points, pcl::PointIndices &corresponding_input_indices, MLSResult &mls_result) const;
 
 		inline void addProjectedPointNormal(int index, const Eigen::Vector3d &point, const Eigen::Vector3d &normal, double curvature, 
-			Pc<OutPointNT>& projected_points, pcl::PointIndices &corresponding_input_indices) const
+			Pc<OutPointN>& projected_points, pcl::PointIndices &corresponding_input_indices) const
 		{
-			OutPointNT aux;
+			OutPointN aux;
 			aux.x = static_cast<float> (point[0]);
 			aux.y = static_cast<float> (point[1]);
 			aux.z = static_cast<float> (point[2]);
@@ -325,17 +328,17 @@ namespace RecRoom
 			corresponding_input_indices.indices.push_back(index);
 		}
 		
-		inline void copyMissingFields(const InPointNT& point_in, OutPointNT& point_out) const
+		inline void copyMissingFields(const InPointN& point_in, OutPointN& point_out) const
 		{
-			OutPointNT temp = point_out;
+			OutPointN temp = point_out;
 			pcl::copyPoint(point_in, point_out);
 			point_out.x = temp.x;
 			point_out.y = temp.y;
 			point_out.z = temp.z;
 		}
 
-		virtual void performProcessing(Pc<OutPointNT>& output);
-		void performUpsampling(Pc<OutPointNT>& output);
+		virtual void performProcessing(Pc<OutPointN>& output);
+		void performUpsampling(Pc<OutPointN>& output);
 
 	private:
 		boost::mt19937 rng_alg_;

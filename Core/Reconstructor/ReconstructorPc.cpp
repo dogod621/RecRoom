@@ -6,6 +6,8 @@
 #include "nlohmann/json.hpp"
 
 #include "Common/PCLUtils.h"
+#include "Interpolator/InterpolatorPcNearest.h"
+
 #include "ReconstructorPc.h"
 
 namespace RecRoom
@@ -14,20 +16,28 @@ namespace RecRoom
 		boost::filesystem::path filePath_,
 		const CONST_PTR(ScannerPc)& scanner,
 		const PTR(ContainerPcNDF)& containerPcNDF)
-		: DumpAble("ReconstructorPc", filePath_), status(ReconstructStatus::ReconstructStatus_UNKNOWN), scanner(scanner), containerPcNDF(containerPcNDF), pcMED(new PcMED), mesh(new pcl::PolygonMesh)
+		: DumpAble("ReconstructorPc", filePath_), status(ReconstructStatus::ReconstructStatus_UNKNOWN), scanner(scanner), containerPcNDF(containerPcNDF), pcMED(new PcMED), mesh(new Mesh),
+		downSampler(nullptr),
+		interpolator(new InterpolatorPcNearest<PointMED, PointMED>),
+		outlierRemover(nullptr),
+		normalEstimator(nullptr),
+		ndfEstimator(nullptr),
+		albedoEstimator(nullptr),
+		segmenter(nullptr),
+		mesher(nullptr)
 	{
 		if (!scanner)
 			THROW_EXCEPTION("scanner is not set");
 		if (!containerPcNDF)
 			THROW_EXCEPTION("containerPcNDF is not set");
 
-		if (this->CheckExist())
+		if (CheckExist())
 		{
-			this->Load();
+			Load();
 		}
 		else
 		{
-			this->Dump();
+			Dump();
 		}
 
 		//
@@ -35,6 +45,8 @@ namespace RecRoom
 			THROW_EXCEPTION("pcMED is not created?")
 		if (!mesh)
 			THROW_EXCEPTION("mesh is not created?")
+		if(!interpolator)
+			THROW_EXCEPTION("interpolator is not created?")
 	}
 
 	void ReconstructorPc::DoRecPointCloud()
@@ -49,27 +61,28 @@ namespace RecRoom
 			pcMED->clear();
 			RecPointCloud();
 			status = (ReconstructStatus)(status | ReconstructStatus::POINT_CLOUD);
-			this->Dump();
+			PcMEDRemoveNotfinite();
+			Dump();
 		}
 	}
 
-	void ReconstructorPc::DoRecPcAlbedo()
+	void ReconstructorPc::DoRecPcMaterial()
 	{
-		if (status & ReconstructStatus::PC_ALBEDO)
+		if (status & ReconstructStatus::PC_MATERIAL)
 		{
 			PRINT_WARNING("Aready reconstructed, ignore.");
 		}
-		else if (!RAW_CAN_CONTAIN_LABEL)
+		else if (!WITH_INPUT_PERPOINT_INTENSITY)
 		{
-			PRINT_WARNING("!RAW_CAN_CONTAIN_LABEL, ignore. You must compile with POINT_RAW_WITH_LABEL to enable this feature.");
+			PRINT_WARNING("!WITH_INPUT_PERPOINT_INTENSITY, ignore. You must compile with INPUT_PERPOINT_INTENSITY to enable this feature.");
 		}
-		else if (!RAW_CAN_CONTAIN_INTENSITY)
+		else if (!WITH_PERPOINT_NORMAL)
 		{
-			PRINT_WARNING("!RAW_CAN_CONTAIN_INTENSITY, ignore. You must compile with POINT_RAW_WITH_INTENSITY to enable this feature.");
+			PRINT_WARNING("!WITH_PERPOINT_NORMAL, ignore. You must compile with INPUT_PERPOINT_NORMAL or OUTPUT_PERPOINT_NORMAL to enable this feature.");
 		}
-		else if (!MED_CAN_CONTAIN_NORMAL)
+		else if (!WITH_PERPOINT_SERIAL_NUMBER)
 		{
-			PRINT_WARNING("!MED_CAN_CONTAIN_NORMAL, ignore. You must compile with POINT_REC_WITH_NORMAL or POINT_RAW_WITH_NORMAL to enable this feature.");
+			PRINT_WARNING("!WITH_PERPOINT_SERIAL_NUMBER, ignore. You must compile with INPUT_PERPOINT_SERIAL_NUMBER to enable this feature.");
 		}
 		else if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 		{
@@ -79,15 +92,32 @@ namespace RecRoom
 		{
 			PRINT_WARNING("pcMED is empty, ignore.");
 		}
-		else if(albedoEstimator)
-		{
-			RecPcAlbedo();
-			status = (ReconstructStatus)(status | ReconstructStatus::PC_ALBEDO);
-			this->Dump();
-		}
 		else
 		{
-			PRINT_WARNING("albedoEstimater is not set, ignore it");
+			if (WITH_PERPOINT_SHARPNESS)
+			{
+				if (ndfEstimator)
+				{
+					RecPcMaterial_NDF();
+					status = (ReconstructStatus)(status | ReconstructStatus::PC_MATERIAL);
+					PcMEDRemoveNotfinite();
+					Dump();
+				}
+				else
+					PRINT_WARNING("ndfEstimator is not set, ignore it");
+			}
+			else
+			{
+				if (albedoEstimator)
+				{
+					RecPcMaterial_ALBEDO();
+					status = (ReconstructStatus)(status | ReconstructStatus::PC_MATERIAL);
+					PcMEDRemoveNotfinite();
+					Dump();
+				}
+				else
+					PRINT_WARNING("albedoEstimater is not set, ignore it");
+			}
 		}
 	}
 
@@ -97,9 +127,9 @@ namespace RecRoom
 		{
 			PRINT_WARNING("Aready reconstructed, ignore.");
 		}
-		else if (!REC_CAN_CONTAIN_LABEL)
+		else if (!WITH_PERPOINT_LABEL)
 		{
-			PRINT_WARNING("!REC_CAN_CONTAIN_LABEL, ignore. You must compile with POINT_REC_WITH_LABEL to enable this feature.");
+			PRINT_WARNING("!WITH_PERPOINT_LABEL, ignore. You must compile with OUTPUT_PERPOINT_LABEL to enable this feature.");
 		}
 		else if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 		{
@@ -113,7 +143,8 @@ namespace RecRoom
 		{
 			RecPcSegment();
 			status = (ReconstructStatus)(status | ReconstructStatus::PC_SEGMENT);
-			this->Dump();
+			PcMEDRemoveNotfinite();
+			Dump();
 		}
 		else
 		{
@@ -121,23 +152,27 @@ namespace RecRoom
 		}
 	}
 
-	void ReconstructorPc::DoRecSegNDF()
+	void ReconstructorPc::DoRecSegMaterial()
 	{
-		if (status & ReconstructStatus::SEG_NDF)
+		if (status & ReconstructStatus::SEG_MATERIAL)
 		{
 			PRINT_WARNING("Aready reconstructed, ignore.");
 		}
-		else if (!RAW_CAN_CONTAIN_LABEL)
+		else if (!WITH_INPUT_PERPOINT_INTENSITY)
 		{
-			PRINT_WARNING("!RAW_CAN_CONTAIN_LABEL, ignore. You must compile with POINT_RAW_WITH_LABEL to enable this feature.");
+			PRINT_WARNING("!WITH_INPUT_PERPOINT_INTENSITY, ignore. You must compile with INPUT_PERPOINT_INTENSITY to enable this feature.");
 		}
-		else if (!REC_CAN_CONTAIN_LABEL)
+		else if (!WITH_PERPOINT_NORMAL)
 		{
-			PRINT_WARNING("!REC_CAN_CONTAIN_LABEL, ignore. You must compile with POINT_REC_WITH_LABEL to enable this feature.");
+			PRINT_WARNING("!WITH_PERPOINT_NORMAL, ignore. You must compile with INPUT_PERPOINT_NORMAL or OUTPUT_PERPOINT_NORMAL to enable this feature.");
 		}
-		else if (!MED_CAN_CONTAIN_NORMAL)
+		else if (!WITH_PERPOINT_SERIAL_NUMBER)
 		{
-			PRINT_WARNING("!MED_CAN_CONTAIN_NORMAL, ignore. You must compile with POINT_REC_WITH_NORMAL or POINT_RAW_WITH_NORMAL to enable this feature.");
+			PRINT_WARNING("!WITH_PERPOINT_SERIAL_NUMBER, ignore. You must compile with INPUT_PERPOINT_SERIAL_NUMBER to enable this feature.");
+		}
+		else if (!WITH_PERPOINT_LABEL)
+		{
+			PRINT_WARNING("!WITH_PERPOINT_LABEL, ignore. You must compile with OUTPUT_PERPOINT_LABEL to enable this feature.");
 		}
 		else if (containerPcNDF->Size() != 0)
 		{
@@ -157,9 +192,9 @@ namespace RecRoom
 		}
 		else
 		{
-			RecSegNDF();
-			status = (ReconstructStatus)(status | ReconstructStatus::SEG_NDF);
-			this->Dump();
+			RecSegMaterial();
+			status = (ReconstructStatus)(status | ReconstructStatus::SEG_MATERIAL);
+			Dump();
 		}
 	}
 
@@ -169,9 +204,9 @@ namespace RecRoom
 		{
 			PRINT_WARNING("Aready reconstructed, ignore.");
 		}
-		else if (!MED_CAN_CONTAIN_NORMAL)
+		else if (!WITH_PERPOINT_NORMAL)
 		{
-			PRINT_WARNING("!MED_CAN_CONTAIN_NORMAL, ignore. You must compile with POINT_REC_WITH_NORMAL or POINT_RAW_WITH_NORMAL to enable this feature.");
+			PRINT_WARNING("!WITH_PERPOINT_NORMAL, ignore. You must compile with INPUT_PERPOINT_NORMAL or OUTPUT_PERPOINT_NORMAL to enable this feature.");
 		}
 		else if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 		{
@@ -185,7 +220,7 @@ namespace RecRoom
 		{
 			RecMesh();
 			status = (ReconstructStatus)(status | ReconstructStatus::MESH);
-			this->Dump();
+			Dump();
 		}
 		else
 		{
@@ -194,7 +229,7 @@ namespace RecRoom
 	}
 
 	//
-	void ReconstructorPc::VisualSegmentNDFs()
+	void ReconstructorPc::VisualSegNDFs()
 	{
 		if (!boost::filesystem::exists(filePath / boost::filesystem::path("VisualSegmentNDFs")))
 		{
@@ -303,15 +338,12 @@ namespace RecRoom
 			PRINT_INFO("Create directory: " + (filePath / boost::filesystem::path("VisualRecAtts")).string());
 		}
 
-
-		if (!upSampler)
-			THROW_EXCEPTION("upSampler is not set");
 		if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 			THROW_EXCEPTION("pcMED is not reconstructed yet.");
 		if (pcMED->empty())
 			THROW_EXCEPTION("pcMED is empty.");
 
-		PTR(KDTreeMED) accMED(new KDTreeMED);
+		PTR(AccMED) accMED(new KDTreeMED);
 		accMED->setInputCloud(pcMED);
 
 		//
@@ -351,7 +383,6 @@ namespace RecRoom
 				{
 					PcRAW pcRaw_;
 					scanner->LoadPcRAW(it->serialNumber, pcRaw_, false);
-
 					pcRaw->resize(pcRaw_.size());
 					for (std::size_t px = 0; px < pcRaw_.size(); ++px)
 						(*pcRaw)[px] = pcRaw_[px];
@@ -359,33 +390,7 @@ namespace RecRoom
 				}
 
 				// Upsampling
-				PcIndex upIdx;
-				upSampler->Process(accMED, pcMED, pcRec, upIdx);
-
-				for (std::size_t px = 0; px < upIdx.size(); ++px)
-				{
-					if (upIdx[px] >= 0)
-					{
-						PointMED& tarP = (*pcRec)[px];
-						PointMED& srcP = (*pcMED)[upIdx[px]];
-
-#ifdef POINT_REC_WITH_NORMAL
-						tarP.normal_x = srcP.normal_x;
-						tarP.normal_y = srcP.normal_y;
-						tarP.normal_z = srcP.normal_z;
-						tarP.curvature = srcP.curvature;
-#endif
-
-#ifdef POINT_REC_WITH_INTENSITY
-						tarP.intensity = srcP.intensity;
-#endif
-
-#ifdef POINT_REC_WITH_LABEL
-						tarP.segLabel = srcP.segLabel;
-						tarP.label = srcP.segLabel;
-#endif		
-					}
-				}
+				interpolator->ProcessInOut(accMED, pcRec, nullptr);
 			}
 
 			//
@@ -409,7 +414,6 @@ namespace RecRoom
 					pVisRaw.x += 1;
 					pVisRec.x += 1;
 
-					//
 					bool cloest = false;
 					if (!std::isfinite(pVisRaw.z))
 						cloest = true;
@@ -419,46 +423,48 @@ namespace RecRoom
 					{
 						pVisRaw.z = uvd.z();
 						pVisRec.z = uvd.z();
-#ifdef POINT_RAW_WITH_LABEL
-						pVisRaw.label = pRaw.label;
+#ifdef WITH_INPUT_PERPOINT_SERIAL_NUMBER
+						pVisRaw.label = pRaw.serialNumber;
 #endif
-#ifdef POINT_REC_WITH_LABEL
-						pVisRec.label = pRec.segLabel;
+#ifdef WITH_OUTPUT_PERPOINT_LABEL
+						pVisRec.label = pRec.label;
 #endif
 					}
 
-					//
-#ifdef POINT_RAW_WITH_NORMAL
+#ifdef WITH_INPUT_PERPOINT_RGB
+					pVisRawRGB.r += (float)pRaw.r;
+					pVisRawRGB.g += (float)pRaw.g;
+					pVisRawRGB.b += (float)pRaw.b;
+#endif
+#ifdef WITH_OUTPUT_PERPOINT_RGB
+					pVisRecRGB.r += (float)pRec.r;
+					pVisRecRGB.g += (float)pRec.g;
+					pVisRecRGB.b += (float)pRec.b;
+#endif
+
+#ifdef WITH_INPUT_PERPOINT_INTENSITY
+					pVisRaw.intensity += pRaw.intensity;
+#endif
+#ifdef WITH_OUTPUT_PERPOINT_INTENSITY
+					pVisRec.intensity += pRec.intensity;
+#endif
+
+#ifdef WITH_INPUT_PERPOINT_NORMAL
 					pVisRaw.normal_x += pRaw.normal_x;
 					pVisRaw.normal_y += pRaw.normal_y;
 					pVisRaw.normal_z += pRaw.normal_z;
 					pVisRaw.curvature += pRaw.curvature;
 #endif
-#ifdef POINT_REC_WITH_NORMAL
+
+#ifdef WITH_OUTPUT_PERPOINT_NORMAL
 					pVisRec.normal_x += pRec.normal_x;
 					pVisRec.normal_y += pRec.normal_y;
 					pVisRec.normal_z += pRec.normal_z;
 					pVisRec.curvature += pRec.curvature;
 #endif
 
-					//
-#ifdef POINT_RAW_WITH_RGB
-					pVisRawRGB.r += (float)pRaw.r;
-					pVisRawRGB.g += (float)pRaw.g;
-					pVisRawRGB.b += (float)pRaw.b;
-#endif
-#ifdef POINT_REC_WITH_RGB
-					pVisRecRGB.r += (float)pRec.r;
-					pVisRecRGB.g += (float)pRec.g;
-					pVisRecRGB.b += (float)pRec.b;
-#endif
-
-					//
-#ifdef POINT_RAW_WITH_INTENSITY
-					pVisRaw.intensity += pRaw.intensity;
-#endif
-#ifdef POINT_REC_WITH_INTENSITY
-					pVisRec.intensity += pRec.intensity;
+#ifdef WITH_OUTPUT_PERPOINT_SHARPNESS
+					pVisRec.sharpness += pRec.sharpness;
 #endif
 				}
 			}
@@ -472,39 +478,42 @@ namespace RecRoom
 
 				if (pVisRaw.x > 0)
 				{
-#ifdef POINT_RAW_WITH_NORMAL
+#ifdef WITH_INPUT_PERPOINT_RGB
+					pVisRaw.r = std::max(std::min(pVisRawRGB.r / pVisRaw.x, 255.0f), 0.0f);
+					pVisRaw.g = std::max(std::min(pVisRawRGB.g / pVisRaw.x, 255.0f), 0.0f);
+					pVisRaw.b = std::max(std::min(pVisRawRGB.b / pVisRaw.x, 255.0f), 0.0f);
+#endif
+
+#ifdef WITH_OUTPUT_PERPOINT_RGB
+					pVisRec.r = std::max(std::min(pVisRecRGB.r / pVisRec.x, 255.0f), 0.0f);
+					pVisRec.g = std::max(std::min(pVisRecRGB.g / pVisRec.x, 255.0f), 0.0f);
+					pVisRec.b = std::max(std::min(pVisRecRGB.b / pVisRec.x, 255.0f), 0.0f);
+#endif
+
+#ifdef WITH_INPUT_PERPOINT_INTENSITY
+					pVisRaw.intensity /= pVisRaw.x;
+#endif
+
+#ifdef WITH_OUTPUT_PERPOINT_INTENSITY
+					pVisRec.intensity /= pVisRec.x;
+#endif
+
+#ifdef WITH_INPUT_PERPOINT_NORMAL
 					pVisRaw.normal_x /= pVisRaw.x;
 					pVisRaw.normal_y /= pVisRaw.x;
 					pVisRaw.normal_z /= pVisRaw.x;
 					pVisRaw.curvature /= pVisRaw.x;
 #endif
 
-#ifdef POINT_REC_WITH_NORMAL
+#ifdef WITH_OUTPUT_PERPOINT_NORMAL
 					pVisRec.normal_x /= pVisRec.x;
 					pVisRec.normal_y /= pVisRec.x;
 					pVisRec.normal_z /= pVisRec.x;
 					pVisRec.curvature /= pVisRec.x;
 #endif
 
-
-#ifdef POINT_RAW_WITH_RGB
-					pVisRaw.r = std::max(std::min(pVisRawRGB.r / pVisRaw.x, 255.0f), 0.0f);
-					pVisRaw.g = std::max(std::min(pVisRawRGB.g / pVisRaw.x, 255.0f), 0.0f);
-					pVisRaw.b = std::max(std::min(pVisRawRGB.b / pVisRaw.x, 255.0f), 0.0f);
-#endif
-
-#ifdef POINT_REC_WITH_RGB
-					pVisRec.r = std::max(std::min(pVisRecRGB.r / pVisRec.x, 255.0f), 0.0f);
-					pVisRec.g = std::max(std::min(pVisRecRGB.g / pVisRec.x, 255.0f), 0.0f);
-					pVisRec.b = std::max(std::min(pVisRecRGB.b / pVisRec.x, 255.0f), 0.0f);
-#endif
-
-#ifdef POINT_RAW_WITH_INTENSITY
-					pVisRaw.intensity /= pVisRaw.x;
-#endif
-
-#ifdef POINT_REC_WITH_INTENSITY
-					pVisRec.intensity /= pVisRec.x;
+#ifdef WITH_OUTPUT_PERPOINT_SHARPNESS
+					pVisRec.sharpness /= pVisRec.x;
 #endif
 				}
 			}
@@ -536,7 +545,67 @@ namespace RecRoom
 				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
 
-#ifdef POINT_RAW_WITH_NORMAL
+#ifdef WITH_INPUT_PERPOINT_RGB
+			{
+				std::stringstream fileName;
+				fileName << it->serialNumber << "_raw_RGB.png";
+
+				pcl::PCLImage image;
+				pcl::io::PointCloudImageExtractorFromRGBField<PointMED> pcie;
+				pcie.setPaintNaNsWithBlack(true);
+				if (!pcie.extract(pcVisRaw, image))
+					THROW_EXCEPTION("Failed to extract an image from RGB field .");
+				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
+			}
+#endif
+
+#ifdef WITH_OUTPUT_PERPOINT_RGB
+			{
+				std::stringstream fileName;
+				fileName << it->serialNumber << "_rec_RGB.png";
+
+				pcl::PCLImage image;
+				pcl::io::PointCloudImageExtractorFromRGBField<PointMED> pcie;
+				pcie.setPaintNaNsWithBlack(true);
+				if (!pcie.extract(pcVisRec, image))
+					THROW_EXCEPTION("Failed to extract an image from RGB field .");
+				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
+			}
+#endif
+
+#ifdef WITH_INPUT_PERPOINT_INTENSITY
+			{
+				std::stringstream fileName;
+				fileName << it->serialNumber << "_raw_Intensity.png";
+
+				pcl::PCLImage image;
+				pcl::io::PointCloudImageExtractorFromIntensityField<PointMED> pcie;
+				pcie.setPaintNaNsWithBlack(true);
+				pcie.setScalingMethod(pcie.SCALING_FIXED_FACTOR);
+				pcie.setScalingFactor(255.f);
+				if (!pcie.extract(pcVisRaw, image))
+					THROW_EXCEPTION("Failed to extract an image from Intensity field .");
+				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
+			}
+#endif
+
+#ifdef WITH_OUTPUT_PERPOINT_INTENSITY
+			{
+				std::stringstream fileName;
+				fileName << it->serialNumber << "_rec_Intensity.png";
+
+				pcl::PCLImage image;
+				pcl::io::PointCloudImageExtractorFromIntensityField<PointMED> pcie;
+				pcie.setPaintNaNsWithBlack(true);
+				pcie.setScalingMethod(pcie.SCALING_FIXED_FACTOR);
+				pcie.setScalingFactor(255.f);
+				if (!pcie.extract(pcVisRec, image))
+					THROW_EXCEPTION("Failed to extract an image from Intensity field .");
+				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
+			}
+#endif
+
+#ifdef WITH_INPUT_PERPOINT_NORMAL
 			{
 				std::stringstream fileName;
 				fileName << it->serialNumber << "_raw_Normal.png";
@@ -562,7 +631,7 @@ namespace RecRoom
 			}
 #endif
 
-#ifdef POINT_REC_WITH_NORMAL
+#ifdef WITH_OUTPUT_PERPOINT_NORMAL
 			{
 				std::stringstream fileName;
 				fileName << it->serialNumber << "_rec_Normal.png";
@@ -588,71 +657,10 @@ namespace RecRoom
 			}
 #endif
 
-
-#ifdef POINT_RAW_WITH_RGB
+#ifdef WITH_INPUT_PERPOINT_SERIAL_NUMBER
 			{
 				std::stringstream fileName;
-				fileName << it->serialNumber << "_raw_RGB.png";
-
-				pcl::PCLImage image;
-				pcl::io::PointCloudImageExtractorFromRGBField<PointMED> pcie;
-				pcie.setPaintNaNsWithBlack(true);
-				if (!pcie.extract(pcVisRaw, image))
-					THROW_EXCEPTION("Failed to extract an image from RGB field .");
-				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
-			}
-#endif
-
-#ifdef POINT_REC_WITH_RGB
-			{
-				std::stringstream fileName;
-				fileName << it->serialNumber << "_rec_RGB.png";
-
-				pcl::PCLImage image;
-				pcl::io::PointCloudImageExtractorFromRGBField<PointMED> pcie;
-				pcie.setPaintNaNsWithBlack(true);
-				if (!pcie.extract(pcVisRec, image))
-					THROW_EXCEPTION("Failed to extract an image from RGB field .");
-				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
-			}
-#endif
-
-#ifdef POINT_RAW_WITH_INTENSITY
-			{
-				std::stringstream fileName;
-				fileName << it->serialNumber << "_raw_Intensity.png";
-
-				pcl::PCLImage image;
-				pcl::io::PointCloudImageExtractorFromIntensityField<PointMED> pcie;
-				pcie.setPaintNaNsWithBlack(true);
-				pcie.setScalingMethod(pcie.SCALING_FIXED_FACTOR);
-				pcie.setScalingFactor(255.f);
-				if (!pcie.extract(pcVisRaw, image))
-					THROW_EXCEPTION("Failed to extract an image from Intensity field .");
-				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
-			}
-#endif
-
-#ifdef POINT_REC_WITH_INTENSITY
-			{
-				std::stringstream fileName;
-				fileName << it->serialNumber << "_rec_Intensity.png";
-
-				pcl::PCLImage image;
-				pcl::io::PointCloudImageExtractorFromIntensityField<PointMED> pcie;
-				pcie.setPaintNaNsWithBlack(true);
-				pcie.setScalingMethod(pcie.SCALING_FIXED_FACTOR);
-				pcie.setScalingFactor(255.f);
-				if (!pcie.extract(pcVisRec, image))
-					THROW_EXCEPTION("Failed to extract an image from Intensity field .");
-				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
-			}
-#endif
-
-#ifdef POINT_RAW_WITH_LABEL
-			{
-				std::stringstream fileName;
-				fileName << it->serialNumber << "_raw_Label.png";
+				fileName << it->serialNumber << "_raw_SerialNumber.png";
 
 				pcl::PCLImage image;
 				pcl::io::PointCloudImageExtractorFromLabelField<PointMED> pcie;
@@ -664,7 +672,7 @@ namespace RecRoom
 			}
 #endif
 
-#ifdef POINT_REC_WITH_LABEL
+#ifdef WITH_OUTPUT_PERPOINT_LABEL
 			{
 				std::stringstream fileName;
 				fileName << it->serialNumber << "_rec_Label.png";
@@ -676,6 +684,30 @@ namespace RecRoom
 				pcie.setPaintNaNsWithBlack(true);
 				if (!pcie.extract(pcVisRec, image))
 					THROW_EXCEPTION("Failed to extract an image from Label field .");
+				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
+			}
+#endif
+
+			//
+#ifdef WITH_OUTPUT_PERPOINT_SHARPNESS
+			{
+				for (std::size_t px = 0; px < pcVisRaw.size(); ++px)
+				{
+					PointMED& pVisRec = pcVisRec[px];
+					pVisRec.z = pVisRec.sharpness;
+				}
+
+				std::stringstream fileName;
+				fileName << it->serialNumber << "_rec_Sharpness.png";
+
+
+				pcl::PCLImage image;
+				pcl::io::PointCloudImageExtractorFromZField<PointMED> pcie;
+				pcie.setPaintNaNsWithBlack(true);
+				pcie.setScalingMethod(pcie.SCALING_FIXED_FACTOR);
+				pcie.setScalingFactor(1.0);
+				if (!pcie.extract(pcVisRec, image))
+					THROW_EXCEPTION("Failed to extract an image from Sharpness field .");
 				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
 #endif
@@ -732,7 +764,9 @@ namespace RecRoom
 	{
 		PRINT_INFO("Segment - Start");
 
-		segmenter->Process(pcMED);
+		PTR(AccMED) accMED(new KDTreeMED);
+		accMED->setInputCloud(pcMED);
+		segmenter->ProcessInOut(accMED, pcMED, nullptr);
 
 		PRINT_INFO("Segment - End");
 	}
@@ -741,7 +775,14 @@ namespace RecRoom
 	{
 		PRINT_INFO("RecMesh - Start");
 
-		mesher->Process(pcMED, *mesh);
+		PTR(PcREC) pcREC(new PcREC);
+		pcREC->resize(pcMED->size());
+		for (std::size_t px = 0; px < pcMED->size(); ++px)
+			(*pcREC)[px] = (*pcMED)[px];
+
+		PTR(AccREC) accREC(new KDTreeREC);
+		accREC->setInputCloud(pcREC);
+		mesher->Process(accREC, pcREC, nullptr, *mesh);
 
 		PRINT_INFO("RecMesh - End");
 	}

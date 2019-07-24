@@ -18,7 +18,7 @@ namespace RecRoom
 		ContainerPcNDFOC(const boost::filesystem::path& filePath);
 
 	public:
-		virtual void Merge(const PTR(PcNDF)& v);
+		virtual void Merge(const CONST_PTR(PcNDF)& v);
 		virtual std::size_t Size() const { return size; }
 		virtual Data GetData(std::size_t i) const;
 

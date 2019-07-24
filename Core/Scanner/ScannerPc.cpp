@@ -6,11 +6,11 @@ namespace RecRoom
 	{
 		os << v.serialNumber << "-" << v.numPoints;
 		if (v.hasPointXYZ)
-			os << "-XYZ";
+			os << "-P";
 		if (v.hasPointNormal)
 			os << "-N";
 		if (v.hasPointRGB)
-			os << "-RGB";
+			os << "-C";
 		if (v.hasPointI)
 			os << "-I";
 		os << "-" << Convert<std::string, CoordSys>(v.rawDataCoordSys);
@@ -26,7 +26,7 @@ namespace RecRoom
 		}
 		else
 		{
-			this->ShipPcRAW();
+			ShipPcRAW();
 		}
 	}
 
@@ -38,7 +38,7 @@ namespace RecRoom
 		}
 		else
 		{
-			this->ShipPcLF();
+			ShipPcLF();
 		}
 	}
 }

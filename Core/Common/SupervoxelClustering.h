@@ -1,67 +1,187 @@
 #pragma once
 
 #include <pcl/pcl_base.h>
+#include <pcl/impl/pcl_base.hpp>
+
 #include <pcl/point_cloud.h>
+
 #include <pcl/octree/octree_search.h>
+#include <pcl/octree/impl/octree_search.hpp>
+
 #include <pcl/octree/octree_pointcloud_adjacency.h>
+
 #include <pcl/search/search.h>
+#include <pcl/search/impl/search.hpp>
+
 #include <pcl/segmentation/boost.h>
+#include <pcl/octree/octree_container.h>
 
 #include "Common.h"
 #include "Point.h"
 
 namespace RecRoom
 {
+	template<class PointCINS>
 	class Voxel;
+
+	template<class PointCINS>
 	class Supervoxel;
+
+	template<class PointCINS>
 	class SupervoxelClustering;
 
+	template<class PointCINS>
 	class Voxel
 	{
 	public:
 		Voxel()
 			: id(-1), parent(nullptr), distance(std::numeric_limits<float>::max()),
-			xyz(0.0f, 0.0f, 0.0f), normal(0.0f, 0.0f, 0.0f, 0.0f), curvature(0.0f), rgb(0.0f, 0.0f, 0.0f), intensity(0.0f) {}
+			xyz(0.0f, 0.0f, 0.0f), rgb(0.0f, 0.0f, 0.0f), intensity(0.0f), normal(0.0f, 0.0f, 0.0f, 0.0f), curvature(0.0f), sharpness(0.0f) {}
 
 	public:
-		operator PointMED() const;
-		Voxel& operator += (const Voxel& voxel);
-		Voxel& operator += (const PointMED& point);
-		Voxel& operator /= (const float& n);
+		operator PointCINS() const;
+		Voxel<PointCINS>& operator += (const Voxel<PointCINS>& voxel);
+		Voxel<PointCINS>& operator += (const PointCINS& point);
+		Voxel<PointCINS>& operator /= (const float& n);
 
 	public:
 		int id;
-		Supervoxel* parent;
+		Supervoxel<PointCINS>* parent;
 		float distance;
 		
 		Eigen::Vector3f xyz;
-		Eigen::Vector4f normal;
-		float curvature;
 		Eigen::Vector3f rgb;
 		float intensity;
+		Eigen::Vector4f normal;
+		float curvature;
+		float sharpness;
 
 	public:
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	};
 
-	using OATLeaf = pcl::octree::OctreePointCloudAdjacencyContainer<PointMED, Voxel>;
-	struct OATLeafCompare { bool operator() (OATLeaf* const &left, OATLeaf* const &right) const { return left->getData().id < right->getData().id; } };
-	using OATLeaves = std::set<OATLeaf*, OATLeafCompare>;
-	using OAT = pcl::octree::OctreePointCloudAdjacency<PointMED, OATLeaf>;
+	template<class PointCINS>
+	class OATLeaf : public pcl::octree::OctreeContainerBase
+	{
+		template<typename T, typename U, typename V>
+		friend class pcl::octree::OctreePointCloudAdjacency;
+
+	public:
+		typedef std::list<OATLeaf<PointCINS>*> NeighborListT;
+		typedef typename NeighborListT::const_iterator const_iterator;
+		inline const_iterator cbegin() const { return (neighbors_.begin()); }
+		inline const_iterator cend() const { return (neighbors_.end()); }
+		inline size_t size() const { return neighbors_.size(); }
+
+		OATLeaf() : pcl::octree::OctreeContainerBase()
+		{
+			this->reset();
+		}
+
+		std::size_t getNumNeighbors() const
+		{
+			return neighbors_.size();
+		}
+
+		int getPointCounter() const { return num_points_; }
+
+		Voxel<PointCINS>& getData() { return data_; }
+
+		void setData(const Voxel<PointCINS>& data_arg) { data_ = data_arg; }
+
+		virtual std::size_t getSize() const
+		{
+			return num_points_;
+		}
+
+	protected:
+		typedef typename NeighborListT::iterator iterator;
+		inline iterator begin() { return (neighbors_.begin()); }
+		inline iterator end() { return (neighbors_.end()); }
+
+		virtual OATLeaf<PointCINS>* deepCopy() const
+		{
+			OATLeaf<PointCINS> *new_container = new OATLeaf<PointCINS>;
+			new_container->setNeighbors(this->neighbors_);
+			new_container->setPointCounter(this->num_points_);
+			return new_container;
+		}
+
+		void addPoint(const PointCINS& point)
+		{
+			++num_points_;
+			data_ += point;
+		}
+
+		void computeData()
+		{
+			data_ /= (static_cast<float> (num_points_));
+		}
+
+		virtual void reset()
+		{
+			neighbors_.clear();
+			num_points_ = 0;
+			data_ = Voxel<PointCINS>();
+		}
+
+		void setPointCounter(int v) { num_points_ = v; }
+
+		void addNeighbor(OATLeaf<PointCINS>* neighbor)
+		{
+			neighbors_.push_back(neighbor);
+		}
+
+		void removeNeighbor(OATLeaf<PointCINS>* neighbor)
+		{
+			for (iterator neighb_it = neighbors_.begin(); neighb_it != neighbors_.end(); ++neighb_it)
+			{
+				if (*neighb_it == neighbor)
+				{
+					neighbors_.erase(neighb_it);
+					return;
+				}
+			}
+		}
+
+		void setNeighbors(const NeighborListT &neighbor_arg)
+		{
+			neighbors_ = neighbor_arg;
+		}
+
+	private:
+		int num_points_;
+		NeighborListT neighbors_;
+		Voxel<PointCINS> data_;
+	};
+
+	template<class PointCINS>
+	struct OATLeafCompare 
+	{ 
+		bool operator() (OATLeaf<PointCINS>* const &left, OATLeaf<PointCINS>* const &right) const 
+		{ return left->getData().id < right->getData().id; } 
+	};
 	
+	template<class PointCINS>
+	using OATLeaves = std::set<OATLeaf<PointCINS>*, OATLeafCompare<PointCINS>>;
+
+	template<class PointCINS>
+	using OAT = pcl::octree::OctreePointCloudAdjacency<PointCINS, OATLeaf<PointCINS>>;
+	
+	template<class PointCINS>
 	class Supervoxel
 	{
 	public:
-		Supervoxel(uint32_t label, SupervoxelClustering* parent)
+		Supervoxel(uint32_t label, SupervoxelClustering<PointCINS>* parent)
 			: label(label), parent(parent), centroid(), leaves() {}
 
-		void AddLeaf(OATLeaf* leaf)
+		void AddLeaf(OATLeaf<PointCINS>* leaf)
 		{
 			leaves.insert(leaf);
 			leaf->getData().parent = this;
 		}
 
-		void RemoveLeaf(OATLeaf* leaf)
+		void RemoveLeaf(OATLeaf<PointCINS>* leaf)
 		{
 			leaves.erase(leaf);
 		}
@@ -71,11 +191,12 @@ namespace RecRoom
 		void Update()
 		{
 			centroid.xyz = Eigen::Vector3f::Zero();
-			centroid.normal = Eigen::Vector4f::Zero();
-			centroid.curvature = 0.0f;
 			centroid.rgb = Eigen::Vector3f::Zero();
 			centroid.intensity = 0.f;
-			for (OATLeaves::iterator it = leaves.begin(); it != leaves.end(); ++it)
+			centroid.normal = Eigen::Vector4f::Zero();
+			centroid.curvature = 0.0f;
+			centroid.sharpness = 0.f;
+			for (OATLeaves<PointCINS>::iterator it = leaves.begin(); it != leaves.end(); ++it)
 				centroid += (*it)->getData();
 			centroid /= static_cast<float> (leaves.size());
 		}
@@ -84,38 +205,39 @@ namespace RecRoom
 
 	public:
 		uint32_t label;
-		SupervoxelClustering* parent;
-		Voxel centroid;
-		OATLeaves leaves;
+		SupervoxelClustering<PointCINS>* parent;
+		Voxel<PointCINS> centroid;
+		OATLeaves<PointCINS> leaves;
 
 	public:
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	};
 
-	class SupervoxelClustering : public pcl::PCLBase<PointMED>
+	template<class PointCINS>
+	class SupervoxelClustering : public pcl::PCLBase<PointCINS>
 	{
 	public:
-		friend class Supervoxel;
+		friend class Supervoxel<PointCINS>;
 
 	public:
-		using pcl::PCLBase<PointMED>::initCompute;
-		using pcl::PCLBase<PointMED>::deinitCompute;
-		using pcl::PCLBase<PointMED>::input_;
+		using pcl::PCLBase<PointCINS>::initCompute;
+		using pcl::PCLBase<PointCINS>::deinitCompute;
+		using pcl::PCLBase<PointCINS>::input_;
 
 	public:
 		SupervoxelClustering(float voxelResolution, float seedResolution,
-			float xyzImportance = 0.4f, float normalImportance = 1.0f, float rgbImportance = 0.4f, float intensityImportance = 5.0f)
+			float xyzImportance = 0.4f, float rgbImportance = 0.4f, float intensityImportance = 5.0f, float normalImportance = 1.0f, float sharpnessImportance = 5.0f)
 			: voxelResolution(voxelResolution), seedResolution(seedResolution),
-			xyzImportance(xyzImportance), normalImportance(normalImportance), rgbImportance(rgbImportance), intensityImportance(intensityImportance),
-			oat(new OAT(voxelResolution)), pcCentroid(), accCentroid(new pcl::search::KdTree<PointMED>) {}
+			xyzImportance(xyzImportance), rgbImportance(rgbImportance), intensityImportance(intensityImportance), normalImportance(normalImportance), sharpnessImportance(sharpnessImportance),
+			oat(new OAT<PointCINS>(voxelResolution)), pcCentroid(), accCentroid(new pcl::search::KdTree<PointCINS>) {}
 
-		virtual void setInputCloud(const CONST_PTR(PcMED)& cloud)
+		virtual void setInputCloud(const CONST_PTR(Pc<PointCINS>)& cloud)
 		{
 			input_ = cloud;
 			oat->setInputCloud(cloud);
 		}
 
-		virtual void Extract(PcMED& pcLabel);
+		virtual void Extract(Pc<PointCINS>& pcLabel);
 
 	public:
 		virtual bool PrepareForSegmentation()
@@ -125,14 +247,14 @@ namespace RecRoom
 			oat->addPointsFromInputCloud();
 
 			//
-			pcCentroid.reset(new PcMED);
+			pcCentroid.reset(new Pc<PointCINS>);
 			pcCentroid->resize(oat->getLeafCount());
 			{
-				std::vector<OATLeaf*>::iterator it = oat->begin();
-				PcMED::iterator jt = pcCentroid->begin();
+				std::vector<OATLeaf<PointCINS>*>::iterator it = oat->begin();
+				Pc<PointCINS>::iterator jt = pcCentroid->begin();
 				for (int idx = 0; it != oat->end(); ++it, ++jt, ++idx)
 				{
-					Voxel& voxel = (*it)->getData();
+					Voxel<PointCINS>& voxel = (*it)->getData();
 					voxel.id = idx;
 					(*jt) = voxel;
 				}
@@ -147,42 +269,36 @@ namespace RecRoom
 		void CreateSupervoxels(std::vector<int>& seeds);
 		void ExpandSupervoxels(int depth);
 
-		float Distance(const Voxel &v1, const Voxel &v2) const
+		float Distance(const Voxel<PointCINS> &v1, const Voxel<PointCINS> &v2) const
 		{
 			float dist = xyzImportance * (v1.xyz - v2.xyz).norm() / seedResolution;
 
-#ifdef POINT_MED_WITH_NORMAL
-			dist += normalImportance * (1.0f - std::abs(v1.normal.dot(v2.normal)));
-#endif
-
-#ifdef POINT_MED_WITH_RGB
 			dist += rgbImportance * ((v1.rgb / 255.0f) - (v2.rgb / 255.0f)).norm();
-#endif
-
-#ifdef POINT_MED_WITH_INTENSITY
 			dist += intensityImportance * std::abs(v1.intensity - v2.intensity) / 255.0f;
-#endif
+			dist += normalImportance * (1.0f - std::abs(v1.normal.dot(v2.normal)));
+			dist += sharpnessImportance * std::abs(v1.sharpness - v2.sharpness);
 
 			return  dist;
 		}
 
 	public:
-		typename OAT::Ptr oat;
-		PTR(PcMED) pcCentroid;
-		typename pcl::search::KdTree<PointMED>::Ptr accCentroid;
+		typename OAT<PointCINS>::Ptr oat;
+		PTR(Pc<PointCINS>) pcCentroid;
+		typename pcl::search::KdTree<PointCINS>::Ptr accCentroid;
 
 		float voxelResolution;
 		float seedResolution;
 
 		float xyzImportance;
-		float normalImportance;
 		float rgbImportance;
 		float intensityImportance;
+		float normalImportance;
+		float sharpnessImportance;
 
 		//Make boost::ptr_list can access the private class Supervoxel
-		friend void boost::checked_delete<>(const RecRoom::Supervoxel*);
+		friend void boost::checked_delete<>(const RecRoom::Supervoxel<PointCINS>*);
 
-		boost::ptr_list<Supervoxel> supervoxels;
+		boost::ptr_list<Supervoxel<PointCINS>> supervoxels;
 
 	public:
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW

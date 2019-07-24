@@ -83,12 +83,12 @@ namespace RecRoom
 						// E57 cannot contain normal
 						scanMeta.hasPointNormal = false;
 
-						if (proto.isDefined("colorRed") && proto.isDefined("colorGreen") && proto.isDefined("colorBlue") && RAW_CAN_CONTAIN_RGB)
+						if (proto.isDefined("colorRed") && proto.isDefined("colorGreen") && proto.isDefined("colorBlue") && WITH_INPUT_PERPOINT_RGB)
 						{
 							scanMeta.hasPointRGB = true;
 						}
 
-						if (proto.isDefined("intensity") && RAW_CAN_CONTAIN_INTENSITY)
+						if (proto.isDefined("intensity") && WITH_INPUT_PERPOINT_INTENSITY)
 						{
 							scanMeta.hasPointI = true;
 						}
@@ -252,7 +252,7 @@ namespace RecRoom
 					sp.z = xyz.z();
 				}
 
-#ifdef POINT_RAW_WITH_RGB
+#ifdef INPUT_PERPOINT_RGB
 				if (scanMeta.hasPointRGB)
 				{
 					sp.r = rBuffer[px];
@@ -267,17 +267,17 @@ namespace RecRoom
 				}
 #endif
 
-#ifdef POINT_RAW_WITH_INTENSITY
+#ifdef INPUT_PERPOINT_INTENSITY
 				if (scanMeta.hasPointI)
 				{
 					sp.intensity = iBuffer[px];
 				}
 #endif
 
-#ifdef POINT_RAW_WITH_LABEL
-				sp.label = (uint32_t)scanMeta.serialNumber;
+#ifdef INPUT_PERPOINT_SERIAL_NUMBER
+				sp.serialNumber = (uint32_t)scanMeta.serialNumber;
 #endif
-				if (this->Valid(sp))
+				if (Valid(sp))
 					pc.push_back(sp);
 			}
 		}
@@ -355,7 +355,10 @@ namespace RecRoom
 			PTR(PcRAW)temp(new PcRAW);
 			pcl::copyPointCloud(data, *temp);
 			data.clear();
-			global.ptrScannerPcE57()->getPreprocessor()->Process(nullptr, nullptr, temp, nullptr, data);
+
+			PTR(KDTreeRAW)tempAcc(new KDTreeRAW);
+			tempAcc->setInputCloud(temp);
+			global.ptrScannerPcE57()->getPreprocessor()->Process(tempAcc, temp, nullptr, data);
 
 			std::stringstream ss;
 			ss << "Preprocessing - End - orgPcSize: " << temp->size() << ", pcSize: " << data.size();

@@ -9,8 +9,8 @@
 
 namespace RecRoom
 {
-	template<class PointNT>
-	void MarchingCubesRBF<PointNT>::voxelizeData()
+	template<class PointN>
+	void MarchingCubesRBF<PointN>::voxelizeData()
 	{
 		// Initialize data structures
 		const unsigned int N = static_cast<unsigned int> (input_->size());

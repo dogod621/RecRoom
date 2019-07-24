@@ -9,12 +9,23 @@
 #include <vector>
 #include <exception>
 #include <Eigen/Core>
+
 #include <boost/filesystem.hpp>
 #include <boost/shared_ptr.hpp>
+
 #include <pcl/console/print.h>
 #include <pcl/point_cloud.h>
+
 #include <pcl/search/search.h>
+#include <pcl/search/impl/search.hpp>
+
+#include <pcl/search/organized.h>
+#include <pcl/search/impl/organized.hpp>
+
 #include <pcl/search/kdtree.h>
+#include <pcl/search/impl/kdtree.hpp>
+
+#include <pcl/PolygonMesh.h>
 
 #include "nlohmann/json.hpp"
 
@@ -61,10 +72,10 @@ namespace RecRoom
 	public:
 		static std::mutex gLock;
 		static double eps;
-		
+
 		static bool GenFrame(const Eigen::Vector3d& notmal, Eigen::Vector3d& tangent, Eigen::Vector3d& bitangent);
 		static bool IsUnitVector(const Eigen::Vector3d& v);
-	
+
 	protected:
 		static Eigen::Vector3d tempVec1;
 		static Eigen::Vector3d tempVec2;
@@ -96,19 +107,19 @@ namespace RecRoom
 	class exception : public std::exception
 	{
 	public:
-		exception(const char *file, int line, const char *func, const std::string &message_)
+		exception(const char* file, int line, const char* func, const std::string& message_)
 			: std::exception()
 		{
 			message = ERROR_MESSAGE(file, line, func, message_);
 		}
 		~exception() {}
-		const char *what() const { return message.c_str(); }
+		const char* what() const { return message.c_str(); }
 
 	protected:
 		std::string message;
 	};
 
-#define THROW_EXCEPTION(message) throw RecRoom::exception(__FILE__, __LINE__, __FUNCTION__, message);
+#define THROW_EXCEPTION(message) {throw RecRoom::exception(__FILE__, __LINE__, __FUNCTION__, message);}
 #define PRINT_ERROR(message) {std::lock_guard<std::mutex> guard(RecRoom::Common::gLock);std::cout << ERROR_MESSAGE(__FILE__, __LINE__, __FUNCTION__, message) << std::endl;}
 #define PRINT_WARNING(message) {std::lock_guard<std::mutex> guard(RecRoom::Common::gLock);std::cout << WARNING_MESSAGE(__FILE__, __LINE__, __FUNCTION__, message) << std::endl;}
 #define PRINT_INFO(message) {std::lock_guard<std::mutex> guard(RecRoom::Common::gLock);std::cerr << INFO_MESSAGE(__FILE__, __LINE__, __FUNCTION__, message) << std::endl;}
@@ -139,6 +150,8 @@ namespace RecRoom
 	template<class PointType>
 	using KDTree = pcl::search::KdTree<PointType>;
 
+	using Mesh = pcl::PolygonMesh;
+
 	class DumpAble
 	{
 	public:
@@ -164,7 +177,7 @@ namespace RecRoom
 	class AsyncAble
 	{
 	public:
-		AsyncAble(std::size_t asyncSize): asyncSize(asyncSize) {}
+		AsyncAble(std::size_t asyncSize) : asyncSize(asyncSize) {}
 
 	public:
 		std::size_t getAsyncSize() const { return asyncSize; }
@@ -173,6 +186,122 @@ namespace RecRoom
 
 	protected:
 		std::size_t asyncSize;
+	};
+
+	using PcIndex = std::vector<int>;
+
+	template<class SearchPointType, class InputPointType, class OutputType>
+	class ProcesserPc
+	{
+	public:
+		ProcesserPc() {}
+
+		void Process(
+			const CONST_PTR(Acc<SearchPointType>)& searchSurface,
+			const CONST_PTR(Pc<InputPointType>)& input,
+			const CONST_PTR(PcIndex)& filter,
+			OutputType& output) const
+		{
+			if (ImplementCheck(searchSurface, input, filter, output))
+				ImplementProcess(searchSurface, input, filter, output);
+			else
+				THROW_EXCEPTION("Not pass check");
+		}
+
+	protected:
+		virtual bool ImplementCheck(
+			const CONST_PTR(Acc<SearchPointType>)& searchSurface,
+			const CONST_PTR(Pc<InputPointType>)& input,
+			const CONST_PTR(PcIndex)& filter,
+			OutputType& output) const = 0;
+
+		virtual void ImplementProcess(
+			const CONST_PTR(Acc<SearchPointType>)& searchSurface,
+			const CONST_PTR(Pc<InputPointType>)& input,
+			const CONST_PTR(PcIndex)& filter,
+			OutputType& output) const = 0;
+	};
+
+	template<class SearchPointType, class InputPointType, class OutputPointType>
+	class ProcesserPc2Pc : public ProcesserPc<SearchPointType, InputPointType, Pc<OutputPointType>>
+	{
+	public:
+		ProcesserPc2Pc() : ProcesserPc<SearchPointType, InputPointType, Pc<OutputPointType>>() {}
+
+		void ProcessInOut(
+			const CONST_PTR(Acc<SearchPointType>)& searchSurface,
+			const PTR(Pc<InputPointType>)& inOut,
+			const CONST_PTR(PcIndex)& filter) const;
+	};
+
+	template<class InputPointType, class OutputType>
+	class SearchInputTypeProcesserPc : public ProcesserPc<InputPointType, InputPointType, OutputType>
+	{
+	public:
+		SearchInputTypeProcesserPc() : ProcesserPc<InputPointType, InputPointType, OutputType>() {}
+	};
+
+	template<class InputPointType, class OutputPointType>
+	class SearchInputTypeProcesserPc2Pc : public ProcesserPc2Pc<InputPointType, InputPointType, OutputPointType>
+	{
+	public:
+		SearchInputTypeProcesserPc2Pc() : ProcesserPc2Pc<InputPointType, InputPointType, OutputPointType>() {}
+	};
+
+	template<class InputPointType, class OutputType>
+	class SearchAnySurfaceProcesserPc : public SearchInputTypeProcesserPc<InputPointType, OutputType>
+	{
+	public:
+		SearchAnySurfaceProcesserPc() : SearchInputTypeProcesserPc<InputPointType, OutputType>() {}
+
+	protected:
+		virtual bool ImplementCheck(
+			const CONST_PTR(Acc<InputPointType>)& searchSurface,
+			const CONST_PTR(Pc<InputPointType>)& input,
+			const CONST_PTR(PcIndex)& filter,
+			OutputType& output) const;
+	};
+
+	template<class InputPointType, class OutputPointType>
+	class SearchAnySurfaceProcesserPc2Pc : public SearchInputTypeProcesserPc2Pc<InputPointType, OutputPointType>
+	{
+	public:
+		SearchAnySurfaceProcesserPc2Pc() : SearchInputTypeProcesserPc2Pc<InputPointType, OutputPointType>() {}
+
+	protected:
+		virtual bool ImplementCheck(
+			const CONST_PTR(Acc<InputPointType>)& searchSurface,
+			const CONST_PTR(Pc<InputPointType>)& input,
+			const CONST_PTR(PcIndex)& filter,
+			Pc<OutputPointType>& output) const;
+	};
+
+	template<class InputPointType, class OutputType>
+	class SearchInputSurfaceProcesserPc : public SearchInputTypeProcesserPc<InputPointType, OutputType>
+	{
+	public:
+		SearchInputSurfaceProcesserPc() : SearchInputTypeProcesserPc<InputPointType, OutputType>() {}
+
+	protected:
+		virtual bool ImplementCheck(
+			const CONST_PTR(Acc<InputPointType>)& searchSurface,
+			const CONST_PTR(Pc<InputPointType>)& input,
+			const CONST_PTR(PcIndex)& filter,
+			OutputType& output) const;
+	};
+
+	template<class InputPointType, class OutputPointType>
+	class SearchInputSurfaceProcesserPc2Pc : public SearchInputTypeProcesserPc2Pc<InputPointType, OutputPointType>
+	{
+	public:
+		SearchInputSurfaceProcesserPc2Pc() : SearchInputTypeProcesserPc2Pc<InputPointType, OutputPointType>() {}
+
+	protected:
+		virtual bool ImplementCheck(
+			const CONST_PTR(Acc<InputPointType>)& searchSurface,
+			const CONST_PTR(Pc<InputPointType>)& input,
+			const CONST_PTR(PcIndex)& filter,
+			Pc<OutputPointType>& output) const;
 	};
 }
 

@@ -4,20 +4,29 @@
 
 namespace RecRoom
 {
-	class MesherPcGP : public MesherPc
+	template<class PointType>
+	class MesherPcGP : public MesherPc<PointType>
 	{
+	public:
+		using Sampler = MesherPc<PointType>::Sampler;
+		using Filter = MesherPc<PointType>::Filter;
+		using Interpolator = MesherPc<PointType>::Interpolator;
+		using InterpolatorNearest = MesherPc<PointType>::InterpolatorNearest;
+
 	public:
 		MesherPcGP(
 			double resolution,
 			int maxBinarySearchLevel = 10,
 			int maxNumNei = 50,
 			int paddingSize = 3,
-			CONST_PTR(ResamplerPcMED) resampler = nullptr)
+			CONST_PTR(Sampler) preprocessSampler = nullptr,
+			CONST_PTR(Filter) preprocessFilter = nullptr,
+			CONST_PTR(Interpolator) fieldInterpolator = CONST_PTR(Interpolator)(new InterpolatorNearest))
 			: resolution(resolution), maxBinarySearchLevel(maxBinarySearchLevel), maxNumNei(maxNumNei), paddingSize(paddingSize),
-			MesherPc(resampler) {}
+			MesherPc<PointType>(preprocessSampler, preprocessFilter, fieldInterpolator) {}
 
 	protected:
-		virtual void ToMesh(PTR(Pc<pcl::PointNormal>)& inV, PTR(KDTree<pcl::PointNormal>)& tree, pcl::PolygonMesh& out) const;
+		virtual void ToMesh(PTR(Acc<PointType>)& searchSurface, PTR(Pc<PointType>)& input, Mesh& output) const;
 
 	public:
 		double getResolution() const { return resolution; }

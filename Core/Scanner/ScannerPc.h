@@ -66,8 +66,8 @@ namespace RecRoom
 		virtual Eigen::Vector3d ToScanImageUVDepth (const Eigen::Vector3d& worldXYZ) const { THROW_EXCEPTION("Interface is not implemented") };
 		bool ToScanLaser(const PointMED& scanPoint, ScanLaser& scanLaser) const
 		{
-#ifdef POINT_MED_WITH_NORMAL
-			return this->ToScanLaser(scanPoint, Eigen::Vector3d(scanPoint.normal_x, scanPoint.normal_y, scanPoint.normal_z), scanLaser);
+#ifdef PERPOINT_NORMAL
+			return ToScanLaser(scanPoint, Eigen::Vector3d(scanPoint.normal_x, scanPoint.normal_y, scanPoint.normal_z), scanLaser);
 #else
 			return false;
 #endif

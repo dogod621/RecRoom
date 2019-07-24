@@ -5,51 +5,66 @@
 #include <pcl/features/feature.h>
 #include <pcl/common/centroid.h>
 
-#include "Point.h"
+#include "Common.h"
 #include "Scanner/ScannerPc.h"
 
 namespace RecRoom
 {
-	class AlbedoEstimation : public pcl::Feature<PointMED, PointMED>
+	template<class InPointIN, class OutPointIN>
+	class AlbedoEstimation : public pcl::Feature<InPointIN, OutPointIN>
 	{
 	public:
-		typedef boost::shared_ptr<AlbedoEstimation> Ptr;
-		typedef boost::shared_ptr<const AlbedoEstimation> ConstPtr;
-		using pcl::Feature<PointMED, PointMED>::feature_name_;
-		using pcl::Feature<PointMED, PointMED>::getClassName;
-		using pcl::Feature<PointMED, PointMED>::indices_;
-		using pcl::Feature<PointMED, PointMED>::input_;
-		using pcl::Feature<PointMED, PointMED>::surface_;
-		using pcl::Feature<PointMED, PointMED>::k_;
-		using pcl::Feature<PointMED, PointMED>::search_radius_;
-		using pcl::Feature<PointMED, PointMED>::search_parameter_;
+		typedef boost::shared_ptr<AlbedoEstimation<InPointIN, OutPointIN>> Ptr;
+		typedef boost::shared_ptr<const AlbedoEstimation<InPointIN, OutPointIN>> ConstPtr;
+		using pcl::Feature<InPointIN, OutPointIN>::feature_name_;
+		using pcl::Feature<InPointIN, OutPointIN>::getClassName;
+		using pcl::Feature<InPointIN, OutPointIN>::indices_;
+		using pcl::Feature<InPointIN, OutPointIN>::input_;
+		using pcl::Feature<InPointIN, OutPointIN>::surface_;
+		using pcl::Feature<InPointIN, OutPointIN>::k_;
+		using pcl::Feature<InPointIN, OutPointIN>::search_radius_;
+		using pcl::Feature<InPointIN, OutPointIN>::search_parameter_;
 
-		typedef typename pcl::Feature<PointMED, PointMED>::PointCloudOut PointCloudOut;
-		typedef typename pcl::Feature<PointMED, PointMED>::PointCloudConstPtr PointCloudConstPtr;
+		typedef typename pcl::Feature<InPointIN, OutPointIN>::PointCloudOut PointCloudOut;
+		typedef typename pcl::Feature<InPointIN, OutPointIN>::PointCloudConstPtr PointCloudConstPtr;
 
 	public:
 		AlbedoEstimation(const CONST_PTR(ScannerPc)& scanner,
 			const LinearSolver linearSolver = LinearSolver::EIGEN_SVD, 
 			const double distInterParm = 10.0, const double angleInterParm = 20.0, const double cutFalloff = 0.33, 
-			const double cutGrazing = 0.86602540378)
+			const double cutGrazing = 0.86602540378,
+			unsigned int nr_threads = 0)
 			: scanner(scanner), linearSolver(linearSolver),
 			distInterParm(distInterParm), angleInterParm(angleInterParm), cutFalloff(cutFalloff), 
 			cutGrazing(cutGrazing)
 		{
-			feature_name_ = "AlbedoEstimation";
-		};
+			if (!scanner)
+				THROW_EXCEPTION("scanner is not set");
 
-		virtual ~AlbedoEstimation() {}
+			feature_name_ = "AlbedoEstimation";
+			SetNumberOfThreads(nr_threads);
+		};
 
 		virtual inline void setInputCloud(const PointCloudConstPtr &cloud)
 		{
 			input_ = cloud;
 		}
 
-		inline bool CollectScanLaserInfo(const pcl::PointCloud<PointMED>& cloud, const std::size_t k, const std::vector<int>& indices, const std::vector<float>& distance, const PointMED& inPoint, std::vector<ScanLaser>& scanLaser);
+		inline bool CollectScanLaserInfo(const Pc<InPointIN>& cloud, const std::size_t k, const std::vector<int>& indices, const std::vector<float>& distance, const InPointIN& inPoint, std::vector<ScanLaser>& scanLaserSet);
 
-		inline bool ComputePointAlbedo(const std::vector<ScanLaser>& scanLaser, const PointMED& inPoint, PointMED& outPoint);
+		inline bool ComputePointAlbedo(const std::vector<ScanLaser>& scanLaserSet, const InPointIN& inPoint, OutPointIN& outPoint);
 
+		void SetNumberOfThreads(unsigned int nr_threads = 0)
+		{
+			if (nr_threads == 0)
+#ifdef _OPENMP
+				threads_ = omp_get_num_procs();
+#else
+				threads_ = 1;
+#endif
+			else
+				threads_ = nr_threads;
+		}
 
 	protected:
 		LinearSolver linearSolver;
@@ -61,44 +76,11 @@ namespace RecRoom
 
 		void computeFeature(PointCloudOut &output);
 
+		unsigned int threads_;
+
 	public:
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	};
-
-	class AlbedoEstimationOMP : public AlbedoEstimation
-	{
-	public:
-		typedef boost::shared_ptr<AlbedoEstimationOMP> Ptr;
-		typedef boost::shared_ptr<const AlbedoEstimationOMP> ConstPtr;
-		using AlbedoEstimation::feature_name_;
-		using AlbedoEstimation::getClassName;
-		using AlbedoEstimation::indices_;
-		using AlbedoEstimation::input_;
-		using AlbedoEstimation::surface_;
-		using AlbedoEstimation::k_;
-		using AlbedoEstimation::search_radius_;
-		using AlbedoEstimation::search_parameter_;
-		
-		typedef typename AlbedoEstimation::PointCloudOut PointCloudOut;
-
-		AlbedoEstimationOMP(const CONST_PTR(ScannerPc)& scanner,
-			const LinearSolver linearSolver = LinearSolver::EIGEN_SVD, 
-			const double distInterParm = 10.0, const double angleInterParm = 20.0, const double cutFalloff = 0.33, 
-			const double cutGrazing = 0.86602540378,
-			unsigned int nr_threads = 0)
-			: AlbedoEstimation(scanner, linearSolver, distInterParm, angleInterParm, cutFalloff, cutGrazing)
-		{
-			feature_name_ = "AlbedoEstimationOMP";
-
-			SetNumberOfThreads(nr_threads);
-		}
-
-		void SetNumberOfThreads(unsigned int nr_threads = 0);
-
-	protected:
-		unsigned int threads_;
-
-	private:
-		void computeFeature(PointCloudOut &output);
-	};
 }
+
+#include "AlbedoEstimation.hpp"

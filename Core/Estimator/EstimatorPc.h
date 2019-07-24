@@ -1,33 +1,34 @@
 #pragma once
 
 #include "Common/Common.h"
-#include "Common/Point.h"
 
 namespace RecRoom
 {
-	class EstimatorPc
+	template<class InPointType, class OutPointType>
+	class EstimatorPc 
+		: public SearchAnySurfaceProcesserPc2Pc<InPointType, OutPointType>
 	{
 	public:
 		EstimatorPc(double searchRadius)
-			: searchRadius(searchRadius) {}
-
-	public:
-		virtual void Process(
-			const PTR(AccMED)& searchMethod,
-			const PTR(PcMED)& searchSurface,
-			const PTR(PcMED)& inV,
-			const PTR(PcIndex)& inIdx) const;
-
-		virtual void Process(
-			const PTR(AccMED)& searchMethod,
-			const PTR(PcMED)& searchSurface,
-			const PTR(PcMED)& inV,
-			const PTR(PcIndex)& inIdx,
-			PcMED& outV) const = 0;
+			: SearchAnySurfaceProcesserPc2Pc<InPointType, OutPointType>(),
+			searchRadius(searchRadius)
+		{
+			if (searchRadius <= 0.0)
+				THROW_EXCEPTION("searchRadius is not valid");
+		}
 
 	public:
 		double getSearchRadius() const { return searchRadius; }
-		void setSearchRadius(double v) { searchRadius = v; }
+
+		void setSearchRadius(double v) 
+		{ 
+			if (v <= 0.0)
+			{
+				THROW_EXCEPTION("searchRadius is not valid");
+			}
+			else
+				searchRadius = v; 
+		}
 
 	protected:
 		double searchRadius;

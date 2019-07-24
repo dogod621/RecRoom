@@ -7,6 +7,14 @@ namespace RecRoom
 	class ReconstructorPcOC : public ReconstructorPc, public AsyncAble
 	{
 	public:
+		using Estimator = ReconstructorPc::Estimator;
+		using Filter = ReconstructorPc::Filter;
+		using Interpolator = ReconstructorPc::Interpolator;
+		using Mesher = ReconstructorPc::Mesher;
+		using Sampler = ReconstructorPc::Sampler;
+		using Segmenter = ReconstructorPc::Segmenter;
+
+	public:
 		ReconstructorPcOC(
 			boost::filesystem::path filePath,
 			const CONST_PTR(ScannerPc)& scanner,
@@ -14,10 +22,10 @@ namespace RecRoom
 			: ReconstructorPc(filePath, scanner, containerPcNDF), AsyncAble(1) {}
 
 	protected:
-		//virtual void Process(pcl::PolygonMesh& out) const = 0;
 		virtual void RecPointCloud();
-		virtual void RecPcAlbedo();
-		virtual void RecSegNDF();
+		virtual void RecPcMaterial_NDF();
+		virtual void RecPcMaterial_ALBEDO();
+		virtual void RecSegMaterial();
 	};
 }
 

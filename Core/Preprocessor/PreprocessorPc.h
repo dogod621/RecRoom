@@ -5,26 +5,11 @@
 
 namespace RecRoom
 {
-	class PreprocessorPc
+	class PreprocessorPc : 
+		public SearchInputSurfaceProcesserPc2Pc<PointRAW, PointRAW>
 	{
 	public:
-		PreprocessorPc(double searchRadius)
-			: searchRadius(searchRadius) {}
-
-	public:
-		virtual void Process(
-			const PTR(AccRAW)& searchMethod,
-			const PTR(PcRAW)& searchSurface,
-			const PTR(PcRAW)& inV,
-			const PTR(PcIndex)& inIdx,
-			PcRAW& outV) const = 0;
-
-	public:
-		double getSearchRadius() const { return searchRadius; }
-		void setSearchRadius(double v) { searchRadius = v; }
-
-	protected:
-		double searchRadius;
+		PreprocessorPc() : SearchInputSurfaceProcesserPc2Pc<PointRAW, PointRAW>() {}
 	};
 }
 

@@ -39,7 +39,7 @@ namespace RecRoom
 		ContainerPcRAW() {}
 
 	public:
-		virtual void Merge(const PTR(PcRAW)& v) = 0;
+		virtual void Merge(const CONST_PTR(PcRAW)& v) = 0;
 		virtual std::size_t Size() const = 0;
 		virtual Meta GetMeta(std::size_t i) const = 0;
 		virtual Data GetData(std::size_t i) const = 0;

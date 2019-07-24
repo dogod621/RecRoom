@@ -4,18 +4,27 @@
 
 namespace RecRoom
 {
-	class MesherPcMC : public MesherPc
+	template<class PointType>
+	class MesherPcMC : public MesherPc<PointType>
 	{
+	public:
+		using Sampler = MesherPc<PointType>::Sampler;
+		using Filter = MesherPc<PointType>::Filter;
+		using Interpolator = MesherPc<PointType>::Interpolator;
+		using InterpolatorNearest = MesherPc<PointType>::InterpolatorNearest;
+
 	public:
 		MesherPcMC(
 			float percentageExtendGrid = 0.0f,
 			float isoLevel = 0.0f,
 			int gridRes = 50,
-			CONST_PTR(ResamplerPcMED) resampler = nullptr)
+			CONST_PTR(Sampler) preprocessSampler = nullptr,
+			CONST_PTR(Filter) preprocessFilter = nullptr,
+			CONST_PTR(Interpolator) fieldInterpolator = CONST_PTR(Interpolator)(new InterpolatorNearest))
 			: percentageExtendGrid(percentageExtendGrid),
 			isoLevel(isoLevel),
 			gridRes(gridRes),
-			MesherPc(resampler) {}
+			MesherPc<PointType>(preprocessSampler, preprocessFilter, fieldInterpolator) {}
 
 	public:
 		float getPercentageExtendGrid() const { return percentageExtendGrid; }
@@ -32,7 +41,8 @@ namespace RecRoom
 		int gridRes;
 	};
 
-	class MesherPcMCRBF : public MesherPcMC
+	template<class PointType>
+	class MesherPcMCRBF : public MesherPcMC<PointType>
 	{
 	public:
 		MesherPcMCRBF(
@@ -40,12 +50,14 @@ namespace RecRoom
 			float percentageExtendGrid = 0.0f,
 			float isoLevel = 0.0f,
 			int gridRes = 50,
-			CONST_PTR(ResamplerPcMED) resampler = nullptr)
+			CONST_PTR(Sampler) preprocessSampler = nullptr,
+			CONST_PTR(Filter) preprocessFilter = nullptr,
+			CONST_PTR(Interpolator) fieldInterpolator = CONST_PTR(Interpolator)(new InterpolatorNearest))
 			: offSurfaceEpsilon(offSurfaceEpsilon),
-			MesherPcMC(percentageExtendGrid, isoLevel, gridRes, resampler) {}
+			MesherPcMC<PointType>(percentageExtendGrid, isoLevel, gridRes, preprocessSampler, preprocessFilter, fieldInterpolator) {}
 
 	protected:
-		virtual void ToMesh(PTR(Pc<pcl::PointNormal>)& inV, PTR(KDTree<pcl::PointNormal>)& tree, pcl::PolygonMesh& out) const;
+		virtual void ToMesh(PTR(Acc<PointType>)& searchSurface, PTR(Pc<PointType>)& input, Mesh& output) const;
 
 	public:
 		float getOffSurfaceEpsilon() const { return offSurfaceEpsilon; }
@@ -56,7 +68,8 @@ namespace RecRoom
 		float offSurfaceEpsilon;
 	};
 
-	class MesherPcMCHoppe : public MesherPcMC
+	template<class PointType>
+	class MesherPcMCHoppe : public MesherPcMC<PointType>
 	{
 	public:
 		MesherPcMCHoppe(
@@ -64,12 +77,14 @@ namespace RecRoom
 			float percentageExtendGrid = 0.0f,
 			float isoLevel = 0.0f,
 			int gridRes = 50,
-			CONST_PTR(ResamplerPcMED) resampler = nullptr)
+			CONST_PTR(Sampler) preprocessSampler = nullptr,
+			CONST_PTR(Filter) preprocessFilter = nullptr,
+			CONST_PTR(Interpolator) fieldInterpolator = CONST_PTR(Interpolator)(new InterpolatorNearest))
 			: distIgnore(distIgnore),
-			MesherPcMC(percentageExtendGrid, isoLevel, gridRes, resampler) {}
+			MesherPcMC<PointType>(percentageExtendGrid, isoLevel, gridRes, preprocessSampler, preprocessFilter, fieldInterpolator) {}
 
 	protected:
-		virtual void ToMesh(PTR(Pc<pcl::PointNormal>)& inV, PTR(KDTree<pcl::PointNormal>)& tree, pcl::PolygonMesh& out) const;
+		virtual void ToMesh(PTR(Acc<PointType>)& searchSurface, PTR(Pc<PointType>)& input, Mesh& output) const;
 
 	public:
 		float getDistIgnore() const { return distIgnore; }

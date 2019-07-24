@@ -7,7 +7,7 @@
 namespace RecRoom
 {
 	template<class PointType>
-	class SamplerPcMLS : public ResamplerPc<PointType>
+	class SamplerPcMLS : public SamplerPc<PointType>
 	{
 	public:
 		SamplerPcMLS(
@@ -22,10 +22,12 @@ namespace RecRoom
 			threads(threads), computeNormals(computeNormals),
 			ResamplerPc<PointType>() {}
 
-	public:
-		virtual void Process(
-			const PTR(Pc<PointType>) & inV,
-			Pc<PointType> & outV) const;
+	protected:
+		virtual void ImplementProcess(
+			const CONST_PTR(Acc<PointType>)& searchSurface,
+			const CONST_PTR(Pc<PointType>)& input,
+			const CONST_PTR(PcIndex)& filter,
+			Pc<PointType>& output) const;
 
 	public:
 		double getSearchRadius() const { return searchRadius; }
@@ -50,10 +52,6 @@ namespace RecRoom
 		unsigned int threads;
 		bool computeNormals;
 	};
-
-	using SamplerPcMLSRAW = SamplerPcMLS<PointRAW>;
-	using SamplerPcMLSMED = SamplerPcMLS<PointMED>;
-	using SamplerPcMLSREC = SamplerPcMLS<PointREC>;
 }
 
 #include "SamplerPcMLS.hpp"

@@ -1,14 +1,15 @@
-#include "AlbedoEstimation.h"
+#pragma once
+
+#include "NDFEstimation.h"
 
 namespace RecRoom
 {
-	inline bool AlbedoEstimation::CollectScanLaserInfo(const pcl::PointCloud<PointMED>& cloud, const std::size_t k, const std::vector<int>& indices, const std::vector<float>& distance, const PointMED& inPoint, std::vector<ScanLaser>& scanLaserSet)
+	template<class InPointIN, class OutPointINS>
+	inline bool NDFEstimation<InPointIN, OutPointINS>::CollectScanLaserInfo(const Pc<InPointIN>& cloud, const std::size_t k, const std::vector<int>& indices, const std::vector<float>& distance, const InPointIN& inPoint, std::vector<ScanLaser>& scanLaserSet)
 	{
 		scanLaserSet.clear();
 		scanLaserSet.reserve(k);
-		double radius = search_radius_;
 
-#ifdef POINT_MED_WITH_NORMAL
 		Eigen::Vector3d inNormal(inPoint.normal_x, inPoint.normal_y, inPoint.normal_z);
 
 		if (!Common::IsUnitVector(inNormal))
@@ -19,17 +20,15 @@ namespace RecRoom
 			return false;
 		}
 
-#ifdef POINT_MED_WITH_LABEL
-#ifdef POINT_MED_WITH_INTENSITY
 		//
 		for (std::size_t idx = 0; idx < k; ++idx)
 		{
 			int px = indices[idx];
 			double d = std::sqrt((double)distance[idx]);
-			if (d > radius)
+			if (d > search_radius_)
 			{
 				std::stringstream ss;
-				ss << "distance is larger then radius, ignore: " << d;
+				ss << "distance is larger then search_radius_, ignore: " << d;
 				PRINT_WARNING(ss.str());
 			}
 			else
@@ -40,22 +39,19 @@ namespace RecRoom
 					double dotNN = scanLaser.hitNormal.dot(inNormal);
 					if ((dotNN > cutGrazing) && (scanLaser.beamFalloff > cutFalloff))
 					{
-						scanLaser.weight = std::pow((radius - d) / radius, distInterParm) * std::pow(dotNN, angleInterParm);
+						scanLaser.weight = std::pow((search_radius_ - d) / search_radius_, distInterParm) * std::pow(dotNN, angleInterParm);
 						scanLaserSet.push_back(scanLaser);
 					}
 				}
 			}
 		}
-#endif
-#endif
-#endif
+
 		return scanLaserSet.size() > 0;
 	}
 
-	inline bool AlbedoEstimation::ComputePointAlbedo(const std::vector<ScanLaser>& scanLaserSet, const PointMED& inPoint, PointMED& outPoint)
+	template<class InPointIN, class OutPointINS>
+	inline bool NDFEstimation<InPointIN, OutPointINS>::ComputePointAlbedo(const std::vector<ScanLaser>& scanLaserSet, const InPointIN& inPoint, OutPointINS& outPoint)
 	{
-#ifdef POINT_MED_WITH_NORMAL
-#ifdef POINT_MED_WITH_INTENSITY
 		Eigen::MatrixXf A;
 		Eigen::MatrixXf B;
 
@@ -134,110 +130,15 @@ namespace RecRoom
 			PRINT_WARNING("LinearSolver solve non finite value");
 			return false;
 		}
-#endif
-#endif
 		return true;
 	}
 
-	void AlbedoEstimation::computeFeature(PointCloudOut &output)
+	template<class InPointIN, class OutPointINS>
+	void NDFEstimation<InPointIN, OutPointINS>::computeFeature(PointCloudOut &output)
 	{
 		if (!(search_radius_ > 0.0))
 			THROW_EXCEPTION("search_radius_ is not set");
-#ifdef POINT_MED_WITH_NORMAL
-#ifdef POINT_MED_WITH_LABEL
-#ifdef POINT_MED_WITH_INTENSITY
-		std::vector<int> nn_indices(k_);
-		std::vector<float> nn_dists(k_);
 
-		output.is_dense = true;
-		if (input_->is_dense)
-		{
-			for (std::size_t idx = 0; idx < indices_->size(); ++idx)
-			{
-				const PointMED& inPoint = (*input_)[(*indices_)[idx]];
-				PointMED& outPoint = output.points[idx];
-
-				std::vector<ScanLaser> scanLaserSet;
-				if (CollectScanLaserInfo(*surface_,
-					this->searchForNeighbors((*indices_)[idx], search_parameter_, nn_indices, nn_dists),
-					nn_indices, nn_dists,
-					inPoint, scanLaserSet))
-				{
-					if (!ComputePointAlbedo(scanLaserSet, inPoint, outPoint))
-					{
-						PRINT_WARNING("ComputePointAlbedo failed");
-						outPoint.intensity = std::numeric_limits<float>::quiet_NaN();
-						output.is_dense = false;
-					}
-				}
-				else
-				{
-					PRINT_WARNING("CollectScanLaserInfo failed");
-					outPoint.intensity = std::numeric_limits<float>::quiet_NaN();
-					output.is_dense = false;
-				}
-			}
-		}
-		else
-		{
-			for (std::size_t idx = 0; idx < indices_->size(); ++idx)
-			{
-				const PointMED& inPoint = (*input_)[(*indices_)[idx]];
-				PointMED& outPoint = output.points[idx];
-				if (pcl::isFinite(inPoint))
-				{
-					std::vector<ScanLaser> scanLaserSet;
-					if (CollectScanLaserInfo(*surface_,
-						this->searchForNeighbors((*indices_)[idx], search_parameter_, nn_indices, nn_dists),
-						nn_indices, nn_dists,
-						inPoint, scanLaserSet))
-					{
-						if (!ComputePointAlbedo(scanLaserSet, inPoint, outPoint))
-						{
-							PRINT_WARNING("ComputePointAlbedo failed");
-							outPoint.intensity = std::numeric_limits<float>::quiet_NaN();
-							output.is_dense = false;
-						}
-					}
-					else
-					{
-						PRINT_WARNING("CollectScanLaserInfo failed");
-						outPoint.intensity = std::numeric_limits<float>::quiet_NaN();
-						output.is_dense = false;
-					}
-				}
-				else
-				{
-					PRINT_WARNING("Input point contain non finite value");
-					outPoint.intensity = std::numeric_limits<float>::quiet_NaN();
-					output.is_dense = false;
-				}
-			}
-		}
-#endif
-#endif
-#endif
-	}
-
-	void AlbedoEstimationOMP::SetNumberOfThreads(unsigned int nr_threads)
-	{
-		if (nr_threads == 0)
-#ifdef _OPENMP
-			threads_ = omp_get_num_procs();
-#else
-			threads_ = 1;
-#endif
-		else
-			threads_ = nr_threads;
-	}
-
-	void AlbedoEstimationOMP::computeFeature(PointCloudOut &output)
-	{
-		if (!(search_radius_ > 0.0))
-			THROW_EXCEPTION("search_radius_ is not set");
-#ifdef POINT_MED_WITH_NORMAL
-#ifdef POINT_MED_WITH_LABEL
-#ifdef POINT_MED_WITH_INTENSITY
 		std::vector<int> nn_indices(k_);
 		std::vector<float> nn_dists(k_);
 
@@ -254,13 +155,16 @@ namespace RecRoom
 
 				std::vector<ScanLaser> scanLaserSet;
 				if (CollectScanLaserInfo(*surface_,
-					this->searchForNeighbors((*indices_)[idx], search_parameter_, nn_indices, nn_dists),
+					searchForNeighbors((*indices_)[idx], search_parameter_, nn_indices, nn_dists),
 					nn_indices, nn_dists,
 					inPoint, scanLaserSet))
 				{
 					if (!ComputePointAlbedo(scanLaserSet, inPoint, outPoint))
 					{
 						PRINT_WARNING("ComputePointAlbedo failed");
+						outPoint.normal_x = inPoint.normal_x;
+						outPoint.normal_y = inPoint.normal_y;
+						outPoint.normal_z = inPoint.normal_z;
 						outPoint.intensity = std::numeric_limits<float>::quiet_NaN();
 						output.is_dense = false;
 					}
@@ -268,6 +172,9 @@ namespace RecRoom
 				else
 				{
 					PRINT_WARNING("CollectScanLaserInfo failed");
+					outPoint.normal_x = inPoint.normal_x;
+					outPoint.normal_y = inPoint.normal_y;
+					outPoint.normal_z = inPoint.normal_z;
 					outPoint.intensity = std::numeric_limits<float>::quiet_NaN();
 					output.is_dense = false;
 				}
@@ -286,13 +193,16 @@ namespace RecRoom
 				{
 					std::vector<ScanLaser> scanLaserSet;
 					if (CollectScanLaserInfo(*surface_,
-						this->searchForNeighbors((*indices_)[idx], search_parameter_, nn_indices, nn_dists),
+						searchForNeighbors((*indices_)[idx], search_parameter_, nn_indices, nn_dists),
 						nn_indices, nn_dists,
 						inPoint, scanLaserSet))
 					{
 						if (!ComputePointAlbedo(scanLaserSet, inPoint, outPoint))
 						{
 							PRINT_WARNING("ComputePointAlbedo failed");
+							outPoint.normal_x = inPoint.normal_x;
+							outPoint.normal_y = inPoint.normal_y;
+							outPoint.normal_z = inPoint.normal_z;
 							outPoint.intensity = std::numeric_limits<float>::quiet_NaN();
 							output.is_dense = false;
 						}
@@ -300,6 +210,9 @@ namespace RecRoom
 					else
 					{
 						PRINT_WARNING("CollectScanLaserInfo failed");
+						outPoint.normal_x = inPoint.normal_x;
+						outPoint.normal_y = inPoint.normal_y;
+						outPoint.normal_z = inPoint.normal_z;
 						outPoint.intensity = std::numeric_limits<float>::quiet_NaN();
 						output.is_dense = false;
 					}
@@ -307,13 +220,13 @@ namespace RecRoom
 				else
 				{
 					PRINT_WARNING("Input point contain non finite value");
+					outPoint.normal_x = inPoint.normal_x;
+					outPoint.normal_y = inPoint.normal_y;
+					outPoint.normal_z = inPoint.normal_z;
 					outPoint.intensity = std::numeric_limits<float>::quiet_NaN();
 					output.is_dense = false;
 				}
 			}
 		}
-#endif
-#endif
-#endif
 	}
 }

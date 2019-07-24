@@ -1,5 +1,5 @@
 # Create Project
-set(modules "Common" "Container" "Cropper" "Estimator" "Preprocessor" "Reconstructor" "Sampler" "Scanner" "Segmenter" "Mesher")
+set(modules "Common" "Container" "Estimator" "Filter" "Interpolator" "Mesher" "Preprocessor" "Reconstructor"  "Sampler" "Scanner" "Segmenter")
 set(modules_source)
 foreach(module ${modules})
 	set(module_dir "${CMAKE_CURRENT_SOURCE_DIR}/${module}/")

@@ -16,16 +16,15 @@
 #include "Scanner/ScannerPcBLK360.h"
 #include "Reconstructor/ReconstructorPcOC.h"
 
-#include "Sampler/SamplerPcGrid.h"
-#include "Sampler/SamplerPcNearest.h"
-#include "Cropper/CropperPcOutlier.h"
 #include "Estimator/EstimatorPcNormal.h"
 #include "Estimator/EstimatorPcAlbedo.h"
-#include "Segmenter/SegmenterPcSVC.h"
+#include "Estimator/EstimatorPcNDF.h"
+#include "Filter/FilterPcRemoveOutlier.h"
 #include "Mesher/MesherPcMC.h"
 #include "Mesher/MesherPcGP3.h"
 #include "Mesher/MesherPcGP.h"
-#include "Sampler/SamplerPcRemoveDuplicate.h"
+#include "Sampler/SamplerPcGrid.h"
+#include "Segmenter/SegmenterPcSVC.h"
 
 #define CMD_SPACE 25
 #define PRINT_HELP(prefix, cmd, parms, info) std::cout << prefix << std::left << "-" << std::setw (CMD_SPACE) << cmd \
@@ -45,7 +44,7 @@ void PrintHelp(int argc, char **argv)
 		PRINT_HELP("\t", "e57File", "sting \"\"", "Input e57 file path.");
 		PRINT_HELP("\t", "lfFile", "sting \"\"", "Input light field file path.");
 		PRINT_HELP("\t", "printScannerInfo", "", "Print scanner information.");
-		PRINT_HELP("\t", "visSegmentNDFs", "", "Plot segment NDFs after reconstruction.");
+		PRINT_HELP("\t", "visSegNDFs", "", "Plot segment NDFs after reconstruction.");
 		PRINT_HELP("\t", "visRecAtts", "", "Plot reconstruction result after reconstruction.");
 	}
 
@@ -67,7 +66,7 @@ void PrintHelp(int argc, char **argv)
 		PRINT_HELP("\t", "voxelSize", "float 0.05", "Gird unit size in meters.");
 	}
 
-	std::cout << "CropperPcOutlier Parmameters:=============================================================================================================================" << std::endl << std::endl;
+	std::cout << "FilterPcRemoveOutlier Parmameters:========================================================================================================================" << std::endl << std::endl;
 	{
 		PRINT_HELP("\t", "meanK", "int 50", "The number of points to use for mean distance estimation.");
 		PRINT_HELP("\t", "stdMul", "float 1.0", "The standard deviation multiplier for the distance threshold calculation.");
@@ -78,7 +77,7 @@ void PrintHelp(int argc, char **argv)
 		PRINT_HELP("\t", "searchRadius", "float ${overlap}", "The search radius at surface.");
 	}
 
-	std::cout << "EstimatorPcAlbedo Parmameters:============================================================================================================================" << std::endl << std::endl;
+	std::cout << "EstimatorPcAlbedo/NDF Parmameters:========================================================================================================================" << std::endl << std::endl;
 	{
 		PRINT_HELP("\t", "distInterParm", "float 10.0", "Interpolation parameter that is related to distance.");
 		PRINT_HELP("\t", "angleInterParm", "float 20.0", "Interpolation parameter that is related to orientation.");
@@ -181,13 +180,13 @@ int main(int argc, char *argv[])
 		pcl::console::parse_argument(argc, argv, "-voxelSize", voxelSize);
 		std::cout << "SamplerPcGrid Parmameters -voxelSize: " << voxelSize << std::endl;
 
-		// Parse CropperPcOutlier Parmameters
+		// Parse FilterPcRemoveOutlier Parmameters
 		int meanK = 50; 
 		double stdMul = 1.0;
 		pcl::console::parse_argument(argc, argv, "-meanK", meanK);
 		pcl::console::parse_argument(argc, argv, "-stdMul", stdMul);
-		std::cout << "CropperPcOutlier Parmameters -meanK: " << meanK << std::endl;
-		std::cout << "CropperPcOutlier Parmameters -stdMul: " << stdMul << std::endl;
+		std::cout << "FilterPcRemoveOutlier Parmameters -meanK: " << meanK << std::endl;
+		std::cout << "FilterPcRemoveOutlier Parmameters -stdMul: " << stdMul << std::endl;
 
 		// Parse EstimatorPc Parmameters
 		double searchRadius = overlap;
@@ -242,6 +241,7 @@ int main(int argc, char *argv[])
 		std::cout << "SegmenterPcSVC -percentageExtendGrid: " << percentageExtendGrid << std::endl;
 		std::cout << "SegmenterPcSVC -isoLevel: " << isoLevel << std::endl;
 		std::cout << "SegmenterPcSVC -gridRes: " << gridRes << std::endl;*/
+
 		double maxEdgeSize = overlap;
 		double mu = 2.5;
 		int maxNumNei = int(maxEdgeSize/voxelSize * maxEdgeSize/voxelSize * M_PI);
@@ -301,67 +301,59 @@ int main(int argc, char *argv[])
 			reconstructorPC->setAsyncSize(async);
 
 			std::cout << "Create DownSampler" << std::endl;
-			PTR(RecRoom::ResamplerPcMED)
+			PTR(RecRoom::ReconstructorPcOC::Sampler)
 				downSampler(
-					new RecRoom::SamplerPcGridMED(voxelSize));
+					new RecRoom::SamplerPcGrid<RecRoom::PointMED>(voxelSize));
 			reconstructorPC->setDownSampler(downSampler);
-
-			std::cout << "Create UpSampler" << std::endl;
-			PTR(RecRoom::SamplerPcMED)
-				upSampler(
-					new RecRoom::SamplerPcNearestMED());
-			reconstructorPC->setUpSampler(upSampler);
 
 			std::cout << "Create OutlierRemover" << std::endl;
 			std::cout << "Not used" << std::endl;
-			/*PTR(RecRoom::CropperPc)
+			/*PTR(RecRoom::ReconstructorPcOC::Filter)
 				outlierRemover(
-					new RecRoom::CropperPcOutlier(meanK, stdMul));
+					new RecRoom::FilterPcRemoveOutlier<RecRoom::PointMED>(meanK, stdMul));
 			reconstructorPC->setOutlierRemover(outlierRemover);*/
 
 			std::cout << "Create NormalEstimator" << std::endl;
-			PTR(RecRoom::EstimatorPc)
+			PTR(RecRoom::ReconstructorPcOC::Estimator)
 				normalEstimator(
-					new RecRoom::EstimatorPcNormal(searchRadius));
+					new RecRoom::EstimatorPcNormal<RecRoom::PointMED, RecRoom::PointMED>(searchRadius, scannerPc));
 			reconstructorPC->setNormalEstimator(normalEstimator);
 
 			std::cout << "Create AlbedoEstimator" << std::endl;
-			PTR(RecRoom::EstimatorPc)
+			PTR(RecRoom::ReconstructorPcOC::Estimator)
 				albedoEstimator(
-					new RecRoom::EstimatorPcAlbedo(
+					new RecRoom::EstimatorPcAlbedo<RecRoom::PointMED, RecRoom::PointMED>(
 						searchRadius, scannerPc, RecRoom::LinearSolver::EIGEN_SVD, 
 						distInterParm, angleInterParm, cutFalloff, cutGrazing));
 			reconstructorPC->setAlbedoEstimator(albedoEstimator);
 
+			std::cout << "Create NDFEstimator" << std::endl;
+			PTR(RecRoom::ReconstructorPcOC::Estimator)
+				ndfEstimator(
+					new RecRoom::EstimatorPcNDF<RecRoom::PointMED, RecRoom::PointMED>(
+						searchRadius, scannerPc, RecRoom::LinearSolver::EIGEN_SVD,
+						distInterParm, angleInterParm, cutFalloff, cutGrazing));
+			reconstructorPC->setNDFEstimator(ndfEstimator);
+
 			std::cout << "Create Segmenter" << std::endl;
-			PTR(RecRoom::SegmenterPc)
+			PTR(RecRoom::ReconstructorPcOC::Segmenter)
 				segmenter(
-					new RecRoom::SegmenterPcSVC(
+					new RecRoom::SegmenterPcSVC<RecRoom::PointMED>(
 						voxelResolution, seedResolution,
 						xyzImportance, normalImportance, rgbImportance, intensityImportance));
 			reconstructorPC->setSegmenter(segmenter);
 
 			std::cout << "Create Mesher" << std::endl;
-			/*
-			PTR(RecRoom::MesherPc)
+			
+			/*PTR(RecRoom::ReconstructorPcOC::Mesher)
 				mesher(
-					new RecRoom::MesherPcMCHoppe(distIgnore, percentageExtendGrid, isoLevel, gridRes));
-			reconstructorPC->setMesher(mesher);
-			*/
-
-			PTR(RecRoom::ResamplerPcMED)
-				mesherResampler(
-					new RecRoom::SamplerPcRemoveDuplicateMED(voxelSize, voxelSize/3.0f));
-
-			PTR(RecRoom::MesherPc)
-				mesher(
-					new RecRoom::MesherPcGP3(maxEdgeSize, mu, maxNumNei, minAngle, maxAngle, epsAngle, false, true, mesherResampler));
-			reconstructorPC->setMesher(mesher);
-
-			/*PTR(RecRoom::MesherPc)
-				mesher(
-					new RecRoom::MesherPcGP(voxelSize));
+					new RecRoom::MesherPcMCHoppe<RecRoom::PointREC>(distIgnore, percentageExtendGrid, isoLevel, gridRes));
 			reconstructorPC->setMesher(mesher);*/
+			
+			PTR(RecRoom::ReconstructorPcOC::Mesher)
+				mesher(
+					new RecRoom::MesherPcGP3<RecRoom::PointREC>(maxEdgeSize, mu, maxNumNei, minAngle, maxAngle, epsAngle, false, true));
+			reconstructorPC->setMesher(mesher);
 
 			//
 			if (pcl::console::find_switch(argc, argv, "-printScannerInfo"))
@@ -385,11 +377,11 @@ int main(int argc, char *argv[])
 				reconstructorPC->DoRecPointCloud();
 			}
 
-			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::PC_ALBEDO) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
+			/*if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::PC_MATERIAL) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
 			{
-				std::cout << "reconstructorPC->DoRecPcAlbedo()" << std::endl;
+				std::cout << "reconstructorPC->DoRecPcMaterial()" << std::endl;
 
-				reconstructorPC->DoRecPcAlbedo();
+				reconstructorPC->DoRecPcMaterial();
 			}
 
 			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::PC_SEGMENT) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
@@ -399,32 +391,32 @@ int main(int argc, char *argv[])
 				reconstructorPC->DoRecPcSegment();
 			}
 
-			/*if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::SEG_NDF) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
+			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::SEG_MATERIAL) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
 			{
-				std::cout << "reconstructorPC->DoRecSegNDF()" << std::endl;
+				std::cout << "reconstructorPC->DoRecSegMaterial()" << std::endl;
 
-				reconstructorPC->DoRecSegNDF();
-			}*/
+				reconstructorPC->DoRecSegMaterial();
+			}
 
 			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::MESH) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
 			{
 				std::cout << "reconstructorPC->DoRecMesh()" << std::endl;
 
 				reconstructorPC->DoRecMesh();
-			}
+			}*/
 
 			//
-			if (pcl::console::find_switch(argc, argv, "-visSegmentNDFs"))
+			/*if (pcl::console::find_switch(argc, argv, "-visSegNDFs"))
 			{
-				std::cout << "reconstructorPC->VisualSegmentNDFs()" << std::endl;
-				reconstructorPC->VisualSegmentNDFs();
+				std::cout << "reconstructorPC->VisualSegNDFs()" << std::endl;
+				reconstructorPC->VisualSegNDFs();
 			}
 
 			if (pcl::console::find_switch(argc, argv, "-visRecAtts"))
 			{
 				std::cout << "reconstructorPC->VisualRecAtts()" << std::endl;
 				reconstructorPC->VisualRecAtts();
-			}
+			}*/
 		}
 		catch (const RecRoom::exception& ex)
 		{

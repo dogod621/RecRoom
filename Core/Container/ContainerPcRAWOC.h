@@ -21,7 +21,7 @@ namespace RecRoom
 			const double res = 2, double overlap = 0.1);
 
 	public:
-		virtual void Merge(const PTR(PcRAW)& v);
+		virtual void Merge(const CONST_PTR(PcRAW)& v);
 		virtual std::size_t Size() const { return metaSet.size(); };
 		virtual Meta GetMeta(std::size_t i) const;
 		virtual Data GetData(std::size_t i) const;

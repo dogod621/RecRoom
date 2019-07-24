@@ -20,13 +20,13 @@ namespace RecRoom
 		unsigned char colorThresh)
 		: DumpAble("ScannerPcBLK360", filePath_), ScannerPcE57(e57FilePath, containerPcRAW), colorThresh(colorThresh)
 	{
-		if (this->CheckExist())
+		if (CheckExist())
 		{
-			this->Load();
+			Load();
 		}
 		else
 		{
-			this->Dump();
+			Dump();
 		}
 	}
 
@@ -40,16 +40,16 @@ namespace RecRoom
 			return false;
 		}
 
-#ifdef POINT_MED_WITH_LABEL
-		if (!scanPoint.HasLabel())
+#ifdef PERPOINT_SERIAL_NUMBER
+		if (!scanPoint.HasSerialNumber())
 		{
-			PRINT_WARNING("!scanPoint.HasLabel(), ignore");
+			PRINT_WARNING("!scanPoint.HasSerialNumber(), ignore");
 			return false;
 		}
 
-		const ScanMeta& scanMeta = getScanMeta(scanPoint.label);
+		const ScanMeta& scanMeta = getScanMeta(scanPoint.serialNumber);
 
-#	ifdef POINT_MED_WITH_NORMAL
+#	ifdef PERPOINT_NORMAL
 		scanLaser.hitNormal = Eigen::Vector3d(scanPoint.normal_x, scanPoint.normal_y, scanPoint.normal_z);
 		if (!Common::IsUnitVector(scanLaser.hitNormal))
 		{
@@ -59,7 +59,7 @@ namespace RecRoom
 			return false;
 		}
 
-#		ifdef POINT_MED_WITH_INTENSITY
+#		ifdef PERPOINT_INTENSITY
 
 		scanLaser.hitPosition = Eigen::Vector3d(scanPoint.x, scanPoint.y, scanPoint.z);
 		scanLaser.incidentDirection = scanMeta.position - scanLaser.hitPosition;

@@ -1,7 +1,10 @@
 #include <algorithm>
 
 #include <pcl/filters/extract_indices.h>
+#include <pcl/filters/impl/extract_indices.hpp>
+
 #include <pcl/filters/crop_box.h>
+#include <pcl/filters/impl/crop_box.hpp>
 
 #include "Common/AsyncProcess.h"
 
@@ -71,8 +74,8 @@ namespace RecRoom
 		PTR(PcMED) pcRec;
 		PTR(PcIndex) pcRawIdx;
 		PTR(PcIndex) pcRecIdx;
-		PTR(KDTreeMED) pcRawAcc;
-		PTR(KDTreeMED) pcRecAcc;
+		PTR(AccMED) pcRawAcc;
+		PTR(AccMED) pcRecAcc;
 		PTR(PcIndex) pcReturnIdx;
 
 		AsyncData_Rec() :
@@ -116,7 +119,7 @@ namespace RecRoom
 			{
 				PRINT_INFO("DownSampling - Start");
 
-				global.ptrReconstructorPcOC()->getDownSampler()->Process(data.pcRaw, *data.pcRec);
+				global.ptrReconstructorPcOC()->getDownSampler()->Process(data.pcRawAcc, data.pcRaw, nullptr, *data.pcRec);
 
 				std::stringstream ss;
 				ss << "DownSampling - End - inSize: " << data.pcRaw->size() << ", outSize:" << data.pcRec->size();
@@ -159,7 +162,7 @@ namespace RecRoom
 
 
 			PcIndex orIndices;
-			global.ptrReconstructorPcOC()->getOutlierRemover()->Process(data.pcRec, orIndices);
+			global.ptrReconstructorPcOC()->getOutlierRemover()->Process(data.pcRecAcc, data.pcRec, nullptr, orIndices);
 			std::sort(orIndices.begin(), orIndices.end());
 
 			// Combine
@@ -187,18 +190,16 @@ namespace RecRoom
 
 	int BStep_RecPointCloud(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
 	{
-#ifdef POINT_RAW_WITH_NORMAL
+#ifdef INPUT_PERPOINT_NORMAL
 		THROW_EXCEPTION("Not done, using scane normal is a feature in to-do list.");
 		return 1;
-#elif defined POINT_REC_WITH_NORMAL
+#elif defined OUTPUT_PERPOINT_NORMAL
 		if (global.ptrReconstructorPcOC()->getNormalEstimator())
 		{
 			PRINT_INFO("Estimat Normal - Start");
 
-			global.ptrReconstructorPcOC()->getNormalEstimator()->Process(
-				data.pcRecAcc, data.pcRec,
-				//data.pcRawAcc, data.pcRaw,
-				data.pcRec, data.pcRecIdx);
+			global.ptrReconstructorPcOC()->getNormalEstimator()->ProcessInOut(
+				data.pcRecAcc, data.pcRec, data.pcRecIdx);
 
 			PRINT_INFO("Estimat Normal - End");
 		}
@@ -208,7 +209,7 @@ namespace RecRoom
 		}
 		return 0;
 #else
-		PRINT_WARNING("None of POINT_RAW_WITH_NORMAL or POINT_REC_WITH_NORMAL is set, ignore it");
+		PRINT_WARNING("None of INPUT_PERPOINT_NORMAL or OUTPUT_PERPOINT_NORMAL is set, ignore it");
 		return 0;
 #endif
 	}
@@ -329,38 +330,12 @@ namespace RecRoom
 				return 1;
 		}
 
-		if (global.ptrReconstructorPcOC()->getUpSampler())
 		{
 			PRINT_INFO("Upsampling Attribute - Start");
 
-			PcIndex upIdx;
-			global.ptrReconstructorPcOC()->getUpSampler()->Process(data.pcRecAcc, data.pcRec, data.pcRaw, upIdx);
-
-			for (std::size_t px = 0; px < upIdx.size(); ++px)
-			{
-				if (upIdx[px] >= 0)
-				{
-					PointMED& tarP = (*data.pcRaw)[px];
-					PointMED& srcP = (*data.pcRec)[upIdx[px]];
-
-#ifdef POINT_REC_WITH_NORMAL
-					tarP.normal_x = srcP.normal_x;
-					tarP.normal_y = srcP.normal_y;
-					tarP.normal_z = srcP.normal_z;
-					tarP.curvature = srcP.curvature;
-#endif
-
-#ifdef POINT_REC_WITH_LABEL
-					tarP.segLabel = srcP.segLabel;
-#endif		
-				}
-			}
+			global.ptrReconstructorPcOC()->getInterpolator()->ProcessInOut(data.pcRecAcc, data.pcRaw, nullptr);
 
 			PRINT_INFO("Upsampling Attribute - End");
-		}
-		else
-		{
-			THROW_EXCEPTION("upSampler is not set");
 		}
 
 		return 0;
@@ -386,14 +361,26 @@ namespace RecRoom
 		return 0;
 	}
 
+	// Async Reconstruct Attribute - NDF
+	int BStep_RecPcAlbedo_NDF(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
+	{
+		PRINT_INFO("Estimat NDF - Start");
+
+		global.ptrReconstructorPcOC()->getNDFEstimator()->ProcessInOut(
+			data.pcRawAcc, data.pcRec, data.pcRecIdx);
+
+		PRINT_INFO("Estimat NDF - End");
+
+		return 0;
+	}
+
 	// Async Reconstruct Attribute - Albedo
-	int BStep_RecPcAlbedo(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
+	int BStep_RecPcAlbedo_ALBEDO(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
 	{
 		PRINT_INFO("Estimat Albedo - Start");
 
-		global.ptrReconstructorPcOC()->getAlbedoEstimator()->Process(
-			data.pcRawAcc, data.pcRaw,
-			data.pcRec, data.pcRecIdx);
+		global.ptrReconstructorPcOC()->getAlbedoEstimator()->ProcessInOut(
+			data.pcRawAcc, data.pcRec, data.pcRecIdx);
 
 		PRINT_INFO("Estimat Albedo - End");
 
@@ -401,24 +388,22 @@ namespace RecRoom
 	}
 
 	// Async Reconstruct Attribute - NDF
-	int BStep_RecPcNDF(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
+	int BStep_RecSegNDF(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
 	{
 		return 0;
 	}
 
-	int CStep_RecPcNDF(AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, const AsyncData_Rec& data)
+	int CStep_RecSegNDF(AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, const AsyncData_Rec& data)
 	{
 		const double cutFalloff = 0.33; // 
-#ifdef POINT_MED_WITH_NORMAL
-#ifdef POINT_MED_WITH_INTENSITY
-#ifdef POINT_MED_WITH_LABEL
-#ifdef POINT_MED_WITH_SEGLABEL
+
+#ifdef PERPOINT_LABEL
 		PTR(PcNDF) pcNDF (new PcNDF);
 		pcNDF->reserve(data.pcRawIdx->size());
 		for (PcIndex::const_iterator it = data.pcRawIdx->begin(); it != data.pcRawIdx->end(); ++it)
 		{
 			PointMED& pRaw = (*data.pcRaw)[*it];
-			if (pRaw.HasSegLabel())
+			if (pRaw.HasLabel())
 			{
 				ScanLaser scanLaser;
 				if (global.ptrReconstructorPcOC()->getScanner()->ToScanLaser(pRaw, scanLaser))
@@ -434,7 +419,7 @@ namespace RecRoom
 								scanLaser.hitTangent.dot(hafway),
 								scanLaser.hitBitangent.dot(hafway),
 								scanLaser.hitNormal.dot(hafway));
-							pcNDF->push_back(PointNDF(hafway.x(), hafway.y(), hafway.z(), pRaw.segLabel, scanLaser.intensity / scanLaser.beamFalloff));
+							pcNDF->push_back(PointNDF(hafway.x(), hafway.y(), hafway.z(), pRaw.label, scanLaser.intensity / scanLaser.beamFalloff));
 						}
 					}
 				}
@@ -444,13 +429,10 @@ namespace RecRoom
 		}
 		global.ptrReconstructorPcOC()->getContainerPcNDF()->Merge(pcNDF);
 #endif
-#endif
-#endif
-#endif
 		return 0;
 	}
 
-	void ReconstructorPcOC::RecPcAlbedo()
+	void ReconstructorPcOC::RecPcMaterial_NDF()
 	{
 		AsyncGlobal_Rec global(this);
 
@@ -460,11 +442,11 @@ namespace RecRoom
 
 		AsyncProcess<AsyncGlobal_Rec, AsyncQuery_Rec, AsyncData_Rec>(
 			global, queries,
-			AStep_RecPcAtt, BStep_RecPcAlbedo, CStep_RecPcAtt,
+			AStep_RecPcAtt, BStep_RecPcAlbedo_NDF, CStep_RecPcAtt,
 			asyncSize);
 	}
 
-	void ReconstructorPcOC::RecSegNDF()
+	void ReconstructorPcOC::RecPcMaterial_ALBEDO()
 	{
 		AsyncGlobal_Rec global(this);
 
@@ -474,8 +456,21 @@ namespace RecRoom
 
 		AsyncProcess<AsyncGlobal_Rec, AsyncQuery_Rec, AsyncData_Rec>(
 			global, queries,
-			AStep_RecPcAtt, BStep_RecPcNDF, CStep_RecPcNDF,
+			AStep_RecPcAtt, BStep_RecPcAlbedo_ALBEDO, CStep_RecPcAtt,
+			asyncSize);
+	}
+
+	void ReconstructorPcOC::RecSegMaterial()
+	{
+		AsyncGlobal_Rec global(this);
+
+		std::vector<AsyncQuery_Rec> queries(scanner->getContainerPcRAW()->Size());
+		for (std::size_t i = 0; i < queries.size(); ++i)
+			queries[i].index = i;
+
+		AsyncProcess<AsyncGlobal_Rec, AsyncQuery_Rec, AsyncData_Rec>(
+			global, queries,
+			AStep_RecPcAtt, BStep_RecSegNDF, CStep_RecSegNDF,
 			asyncSize);
 	}
 }
-

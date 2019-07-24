@@ -113,8 +113,8 @@ namespace RecRoom
 		}
 	}
 
-	template <class InPointNT>
-	MLSVoxelGrid<InPointNT>::MLSVoxelGrid(PTR(Pc<InPointNT>)& cloud, PTR(PcIndex)& indices, float voxel_size)
+	template <class InPointN>
+	MLSVoxelGrid<InPointN>::MLSVoxelGrid(PTR(Pc<InPointN>)& cloud, PTR(PcIndex)& indices, float voxel_size)
 		: voxel_grid_(), bounding_min_(), bounding_max_(), data_size_(), voxel_size_(voxel_size)
 	{
 		pcl::getMinMax3D(*cloud, *indices, bounding_min_, bounding_max_);
@@ -136,8 +136,8 @@ namespace RecRoom
 			}
 	}
 
-	template <class InPointNT>
-	void MLSVoxelGrid<InPointNT>::MLSVoxelGrid::dilate()
+	template <class InPointN>
+	void MLSVoxelGrid<InPointN>::MLSVoxelGrid::dilate()
 	{
 		HashMap new_voxel_grid = voxel_grid_;
 		for (typename MLSVoxelGrid::HashMap::iterator m_it = voxel_grid_.begin(); m_it != voxel_grid_.end(); ++m_it)
@@ -163,8 +163,8 @@ namespace RecRoom
 		voxel_grid_ = new_voxel_grid;
 	}
 
-	template <typename InPointNT, typename OutPointNT> 
-	void MovingLeastSquares<InPointNT, OutPointNT>::process(Pc<OutPointNT>& output)
+	template <typename InPointN, typename OutPointN> 
+	void MovingLeastSquares<InPointN, OutPointN>::process(Pc<OutPointN>& output)
 	{
 		// Reset or initialize the collection of indices
 		corresponding_input_indices_.reset(new pcl::PointIndices);
@@ -212,9 +212,9 @@ namespace RecRoom
 		{
 			KdTreePtr tree;
 			if (input_->isOrganized())
-				tree.reset(new pcl::search::OrganizedNeighbor<InPointNT>());
+				tree.reset(new pcl::search::OrganizedNeighbor<InPointN>());
 			else
-				tree.reset(new pcl::search::KdTree<InPointNT>(false));
+				tree.reset(new pcl::search::KdTree<InPointN>(false));
 			setSearchMethod(tree);
 		}
 
@@ -240,10 +240,10 @@ namespace RecRoom
 		deinitCompute();
 	}
 
-	template <typename InPointNT, typename OutPointNT>
-	void MovingLeastSquares<InPointNT, OutPointNT>::computeMLSPointNormal(int index, const std::vector<int> &nn_indices, Pc<OutPointNT>& projected_points, pcl::PointIndices &corresponding_input_indices, MLSResult &mls_result) const
+	template <typename InPointN, typename OutPointN>
+	void MovingLeastSquares<InPointN, OutPointN>::computeMLSPointNormal(int index, const std::vector<int> &nn_indices, Pc<OutPointN>& projected_points, pcl::PointIndices &corresponding_input_indices, MLSResult &mls_result) const
 	{
-		mls_result.computeMLSSurface<InPointNT>(*input_, index, nn_indices, search_radius_, order_);
+		mls_result.computeMLSSurface<InPointN>(*input_, index, nn_indices, search_radius_, order_);
 
 		switch (upsample_method_)
 		{
@@ -310,12 +310,12 @@ namespace RecRoom
 		}
 	}
 
-	template <typename InPointNT, typename OutPointNT>
-	void MovingLeastSquares<InPointNT, OutPointNT>::performProcessing(Pc<OutPointNT>& output)
+	template <typename InPointN, typename OutPointN>
+	void MovingLeastSquares<InPointN, OutPointN>::performProcessing(Pc<OutPointN>& output)
 	{
 #ifdef _OPENMP
 		// Create temporaries for each thread in order to avoid synchronization
-		typename Pc<OutPointNT>::CloudVectorType projected_points(threads_);
+		typename Pc<OutPointN>::CloudVectorType projected_points(threads_);
 		std::vector<pcl::PointIndices> corresponding_input_indices(threads_);
 #endif
 
@@ -382,8 +382,8 @@ namespace RecRoom
 		performUpsampling(output);
 	}
 
-	template <typename InPointNT, typename OutPointNT>
-	void MovingLeastSquares<InPointNT, OutPointNT>::performUpsampling(Pc<OutPointNT>& output)
+	template <typename InPointN, typename OutPointN>
+	void MovingLeastSquares<InPointN, OutPointN>::performUpsampling(Pc<OutPointN>& output)
 	{
 		if (upsample_method_ == MLSUpsamplingMethod::DISTINCT_CLOUD)
 		{
@@ -428,7 +428,7 @@ namespace RecRoom
 				Eigen::Vector3f pos;
 				voxel_grid.getPosition(m_it->first, pos);
 
-				InPointNT p;
+				InPointN p;
 				p.x = pos[0];
 				p.y = pos[1];
 				p.z = pos[2];

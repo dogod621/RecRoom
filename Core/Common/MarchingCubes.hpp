@@ -318,8 +318,8 @@ namespace RecRoom
 	  {-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1}
 	};
 
-	template<class PointNT>
-	void MarchingCubes<PointNT>::createSurface(const std::vector<float>& leaf_node, const Eigen::Vector3i& index_3d, Pc<PointNT>& cloud)
+	template<class PointN>
+	void MarchingCubes<PointN>::createSurface(const std::vector<float>& leaf_node, const Eigen::Vector3i& index_3d, Pc<PointN>& cloud)
 	{
 		int cubeindex = 0;
 		if (leaf_node[0] < iso_level_) cubeindex |= 1;
@@ -366,7 +366,7 @@ namespace RecRoom
 		// Create the triangle
 		for (int i = 0; triTable[cubeindex][i] != -1; i += 3)
 		{
-			PointNT p1, p2, p3;
+			PointN p1, p2, p3;
 			p1.getVector3fMap() = vertex_list[triTable[cubeindex][i]];
 			cloud.push_back(p1);
 			p2.getVector3fMap() = vertex_list[triTable[cubeindex][i + 1]];
@@ -376,8 +376,8 @@ namespace RecRoom
 		}
 	}
 
-	template<class PointNT>
-	void MarchingCubes<PointNT>::getNeighborList1D(std::vector<float> &leaf, Eigen::Vector3i &index3d)
+	template<class PointN>
+	void MarchingCubes<PointN>::getNeighborList1D(std::vector<float> &leaf, Eigen::Vector3i &index3d)
 	{
 		leaf.resize(8);
 
@@ -400,15 +400,15 @@ namespace RecRoom
 		}
 	}
 
-	template<class PointNT>
-	void MarchingCubes<PointNT>::performReconstruction(Pc<PointNT>& points, std::vector<pcl::Vertices> &polygons)
+	template<class PointN>
+	void MarchingCubes<PointN>::performReconstruction(Pc<PointN>& points, std::vector<pcl::Vertices> &polygons)
 	{
-		Pc<PointNT> intermediate_cloud;
+		Pc<PointN> intermediate_cloud;
 		grid_ = std::vector<float>(res_x_*res_y_*res_z_, NAN);
 
 		// Compute bounding box and voxel size
 		{
-			PointNT max_pt, min_pt;
+			PointN max_pt, min_pt;
 			pcl::getMinMax3D(*input_, min_pt, max_pt);
 
 			lower_boundary_ = min_pt.getArray3fMap();

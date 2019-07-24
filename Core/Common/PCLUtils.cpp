@@ -120,7 +120,7 @@ namespace RecRoom
 		return true;
 	}
 
-	int SaveAsPLY(const std::string &fileName, const pcl::PolygonMesh &mesh, unsigned precision, bool binary)
+	int SaveAsPLY(const std::string &fileName, const Mesh &mesh, unsigned precision, bool binary)
 	{
 		if (mesh.cloud.data.empty())
 		{
@@ -139,8 +139,9 @@ namespace RecRoom
 		int rgba_index = getFieldIndex(mesh.cloud, "rgba");
 		int rgb_index = getFieldIndex(mesh.cloud, "rgb");
 		int intensity_index = getFieldIndex(mesh.cloud, "intensity");
+		int sharpness_index = getFieldIndex(mesh.cloud, "sharpness");
 		int label_index = getFieldIndex(mesh.cloud, "label");
-
+		
 		std::vector<float> x;
 		std::vector<float> y;
 		std::vector<float> z;
@@ -150,6 +151,7 @@ namespace RecRoom
 		std::vector<float> curvature;
 		std::vector<uint32_t> rgba;
 		std::vector<float> intensity;
+		std::vector<float> sharpness;
 		std::vector<uint32_t> label;
 
 		// number of points
@@ -271,6 +273,14 @@ namespace RecRoom
 					return -2;
 			}
 
+			if (sharpness_index != -1)
+			{
+				file << "\nproperty float sharpness";
+				if (!Copy(numPoints, pointSize, mesh.cloud.data,
+					mesh.cloud.fields[sharpness_index], pcl::PCLPointField::FLOAT32, &sharpness))
+					return -2;
+			}
+
 			if (label_index != -1)
 			{
 				file << "\nproperty int material_index";
@@ -355,7 +365,9 @@ namespace RecRoom
 
 					if (intensity_index != -1) file.write(reinterpret_cast<const char*> (&intensity[i]), sizeof(float));
 
-					if (label_index != -1) file.write(reinterpret_cast<const char*> (&intensity[i]), sizeof(float));
+					if (sharpness_index != -1) file.write(reinterpret_cast<const char*> (&sharpness[i]), sizeof(float));
+					
+					if (label_index != -1) file.write(reinterpret_cast<const char*> (&label[i]), sizeof(float));
 
 					file << '\n';
 				}
@@ -414,6 +426,8 @@ namespace RecRoom
 					}
 
 					if (intensity_index != -1) file << intensity[i] << " ";
+
+					if (sharpness_index != -1) file << sharpness[i] << " ";
 
 					if (label_index != -1) file << label[i] << " ";
 

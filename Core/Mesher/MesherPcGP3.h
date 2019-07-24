@@ -4,8 +4,15 @@
 
 namespace RecRoom
 {
-	class MesherPcGP3 : public MesherPc
+	template<class PointType>
+	class MesherPcGP3 : public MesherPc<PointType>
 	{
+	public:
+		using Sampler = MesherPc<PointType>::Sampler;
+		using Filter = MesherPc<PointType>::Filter;
+		using Interpolator = MesherPc<PointType>::Interpolator;
+		using InterpolatorNearest = MesherPc<PointType>::InterpolatorNearest;
+
 	public:
 		MesherPcGP3(
 			double searchRadius,
@@ -16,13 +23,16 @@ namespace RecRoom
 			double epsAngle = M_PI / 4.0,
 			bool consistent = false,
 			bool consistentOrdering = true,
-			CONST_PTR(ResamplerPcMED) resampler = nullptr)
+			CONST_PTR(Sampler) preprocessSampler = nullptr,
+			CONST_PTR(Filter) preprocessFilter = nullptr,
+			CONST_PTR(Interpolator) fieldInterpolator = CONST_PTR(Interpolator)(new InterpolatorNearest))
 			: searchRadius(searchRadius), mu(mu), maxNumNei(maxNumNei), 
 			minAngle(minAngle), maxAngle(maxAngle), epsAngle(epsAngle), 
-			consistent(consistent), consistentOrdering(consistentOrdering), MesherPc(resampler) {}
+			consistent(consistent), consistentOrdering(consistentOrdering), 
+			MesherPc<PointType>(preprocessSampler, preprocessFilter, fieldInterpolator) {}
 
 	protected:
-		virtual void ToMesh(PTR(Pc<pcl::PointNormal>)& inV, PTR(KDTree<pcl::PointNormal>)& tree, pcl::PolygonMesh& out) const;
+		virtual void ToMesh(PTR(Acc<PointType>)& searchSurface, PTR(Pc<PointType>)& input, Mesh& output) const;
 
 	public:
 		double getSearchRadius() const { return searchRadius; }

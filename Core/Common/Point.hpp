@@ -8,58 +8,89 @@ namespace RecRoom
 	{
 		x = p.x; y = p.y; z = p.z; data[3] = 1.0f;
 
-#ifdef POINT_REC_WITH_NORMAL
-		RAW_COPY_NORMAL;
-#else
-		RAW_INIT_NORMAL;
-#endif
-
-#ifdef POINT_REC_WITH_RGB
+#ifdef OUTPUT_PERPOINT_RGB
 		RAW_COPY_RGB;
 #else
 		RAW_INIT_RGB;
 #endif
 
-#ifdef POINT_REC_WITH_INTENSITY
+#ifdef OUTPUT_PERPOINT_INTENSITY
 		RAW_COPY_INTENSITY;
 #else
 		RAW_INIT_INTENSITY;
 #endif
 
-		RAW_INIT_LABEL;
+#ifdef OUTPUT_PERPOINT_NORMAL
+		RAW_COPY_NORMAL;
+#else
+		RAW_INIT_NORMAL;
+#endif
+
+		RAW_INIT_SERIAL_NUMBER;
 	}
 
 	inline PointRAW::PointRAW(const PointMED& p)
 	{
 		x = p.x; y = p.y; z = p.z; data[3] = 1.0f;
-		RAW_COPY_NORMAL;
 		RAW_COPY_RGB;
 		RAW_COPY_INTENSITY;
-		RAW_COPY_LABEL;
+		RAW_COPY_NORMAL;
+		RAW_COPY_SERIAL_NUMBER;
+	}
+
+	inline PointRAW& PointRAW::operator = (const PointREC &p)
+	{
+		x = p.x; y = p.y; z = p.z; data[3] = 1.0f;
+
+#ifdef OUTPUT_PERPOINT_RGB
+		RAW_COPY_RGB;
+#endif
+
+#ifdef OUTPUT_PERPOINT_INTENSITY
+		RAW_COPY_INTENSITY;
+#endif
+
+#ifdef OUTPUT_PERPOINT_NORMAL
+		RAW_COPY_NORMAL;
+#endif
+
+		return *this;
+	}
+
+	inline PointRAW& PointRAW::operator = (const PointMED &p)
+	{
+		x = p.x; y = p.y; z = p.z; data[3] = 1.0f;
+		RAW_COPY_RGB;
+		RAW_COPY_INTENSITY;
+		RAW_COPY_NORMAL;
+		RAW_COPY_SERIAL_NUMBER;
+
+		return *this;
 	}
 
 	inline PointREC::PointREC(const PointRAW& p)
 	{
 		x = p.x; y = p.y; z = p.z; data[3] = 1.0f;
 
-#ifdef POINT_RAW_WITH_NORMAL
-		REC_COPY_NORMAL;
-#else
-		REC_INIT_NORMAL;
-#endif
-
-#ifdef POINT_RAW_WITH_RGB
+#ifdef INPUT_PERPOINT_RGB
 		REC_COPY_RGB;
 #else
 		REC_INIT_RGB;
 #endif
 
-#ifdef POINT_RAW_WITH_INTENSITY
+#ifdef INPUT_PERPOINT_INTENSITY
 		REC_COPY_INTENSITY;
 #else
 		REC_INIT_INTENSITY;
 #endif
 
+#ifdef INPUT_PERPOINT_NORMAL
+		REC_COPY_NORMAL;
+#else
+		REC_INIT_NORMAL;
+#endif
+
+		REC_INIT_SHARPNESS;
 		REC_INIT_LABEL;
 	}
 
@@ -67,101 +98,193 @@ namespace RecRoom
 	{
 		x = p.x; y = p.y; z = p.z; data[3] = 1.0f;
 
-		REC_COPY_NORMAL;
 		REC_COPY_RGB;
 		REC_COPY_INTENSITY;
+		REC_COPY_NORMAL;
+		REC_COPY_SHARPNESS;
+		REC_COPY_LABEL;
+	}
 
-#ifdef POINT_REC_WITH_LABEL
-		label = p.segLabel;
+	inline PointREC& PointREC::operator = (const PointRAW &p)
+	{
+		x = p.x; y = p.y; z = p.z; data[3] = 1.0f;
+
+#ifdef INPUT_PERPOINT_RGB
+		REC_COPY_RGB;
 #endif
+
+#ifdef INPUT_PERPOINT_INTENSITY
+		REC_COPY_INTENSITY;
+#endif
+
+#ifdef INPUT_PERPOINT_NORMAL
+		REC_COPY_NORMAL;
+#endif
+
+		return *this;
+	}
+
+	inline PointREC& PointREC::operator = (const PointMED &p)
+	{
+		x = p.x; y = p.y; z = p.z; data[3] = 1.0f;
+
+		REC_COPY_RGB;
+		REC_COPY_INTENSITY;
+		REC_COPY_NORMAL;
+		REC_COPY_SHARPNESS;
+		REC_COPY_LABEL;
+
+		return *this;
 	}
 
 	inline PointMED::PointMED(const PointRAW& p)
 	{
 		x = p.x; y = p.y; z = p.z; data[3] = 1.0f;
 
-#ifdef POINT_RAW_WITH_NORMAL
-		MED_COPY_NORMAL;
-#else
-		MED_INIT_NORMAL;
-#endif
-
-#ifdef POINT_RAW_WITH_RGB
+#ifdef INPUT_PERPOINT_RGB
 		MED_COPY_RGB;
 #else
 		MED_INIT_RGB;
 #endif
 
-#ifdef POINT_RAW_WITH_INTENSITY
+#ifdef INPUT_PERPOINT_INTENSITY
 		MED_COPY_INTENSITY;
 #else
 		MED_INIT_INTENSITY;
 #endif
 
-#ifdef POINT_RAW_WITH_LABEL
-		MED_COPY_LABEL;
+#ifdef INPUT_PERPOINT_NORMAL
+		MED_COPY_NORMAL;
 #else
-		MED_INIT_LABEL;
+		MED_INIT_NORMAL;
 #endif
-		MED_INIT_SEGLABEL;
+
+		MED_INIT_SHARPNESS;
+
+#ifdef INPUT_PERPOINT_SERIAL_NUMBER
+		MED_COPY_SERIAL_NUMBER;
+#else
+		MED_INIT_SERIAL_NUMBER;
+#endif
+
+		MED_INIT_LABEL;
 	}
 
 	inline PointMED::PointMED(const PointREC& p)
 	{
 		x = p.x; y = p.y; z = p.z; data[3] = 1.0f;
 
-#ifdef POINT_REC_WITH_NORMAL
-		MED_COPY_NORMAL;
-#else
-		MED_INIT_NORMAL;
-#endif
-
-#ifdef POINT_REC_WITH_RGB
+#ifdef OUTPUT_PERPOINT_RGB
 		MED_COPY_RGB;
 #else
 		MED_INIT_RGB;
 #endif
 
-#ifdef POINT_REC_WITH_INTENSITY
+#ifdef OUTPUT_PERPOINT_INTENSITY
 		MED_COPY_INTENSITY;
 #else
 		MED_INIT_INTENSITY;
 #endif
 
-		MED_INIT_LABEL;
-#ifdef POINT_REC_WITH_LABEL
-		segLabel = p.label;
+#ifdef OUTPUT_PERPOINT_NORMAL
+		MED_COPY_NORMAL;
 #else
-		MED_INIT_SEGLABEL;
+		MED_INIT_NORMAL;
 #endif
+
+#ifdef OUTPUT_PERPOINT_SHARPNESS
+		MED_COPY_SHARPNESS;
+#else
+		MED_INIT_SHARPNESS;
+#endif
+
+		MED_INIT_SERIAL_NUMBER;
+
+#ifdef OUTPUT_PERPOINT_LABEL
+		MED_COPY_LABEL;
+#else
+		MED_INIT_LABEL;
+#endif
+	}
+
+	inline PointMED& PointMED::operator = (const PointRAW &p)
+	{
+		x = p.x; y = p.y; z = p.z; data[3] = 1.0f;
+
+#ifdef INPUT_PERPOINT_RGB
+		MED_COPY_RGB;
+#endif
+
+#ifdef INPUT_PERPOINT_INTENSITY
+		MED_COPY_INTENSITY;
+#endif
+
+#ifdef INPUT_PERPOINT_NORMAL
+		MED_COPY_NORMAL;
+#endif
+
+#ifdef INPUT_PERPOINT_SERIAL_NUMBER
+		MED_COPY_SERIAL_NUMBER;
+#endif
+
+		return *this;
+	}
+
+	inline PointMED& PointMED::operator = (const PointREC &p)
+	{
+		x = p.x; y = p.y; z = p.z; data[3] = 1.0f;
+
+#ifdef OUTPUT_PERPOINT_RGB
+		MED_COPY_RGB;
+#endif
+
+#ifdef OUTPUT_PERPOINT_INTENSITY
+		MED_COPY_INTENSITY;
+#endif
+
+#ifdef OUTPUT_PERPOINT_NORMAL
+		MED_COPY_NORMAL;
+#endif
+
+#ifdef OUTPUT_PERPOINT_SHARPNESS
+		MED_COPY_SHARPNESS;
+#endif
+
+#ifdef OUTPUT_PERPOINT_LABEL
+		MED_COPY_LABEL;
+#endif
+
+		return *this;
 	}
 }
 
 template <> inline bool pcl::isFinite<RecRoom::PointRAW>(const RecRoom::PointRAW &p)
 {
 	return pcl_isfinite(p.x) && pcl_isfinite(p.y) && pcl_isfinite(p.z) \
-		RAW_ISFINITE_NORMAL \
 		RAW_ISFINITE_RGB \
 		RAW_ISFINITE_INTENSITY \
-		RAW_ISFINITE_LABEL;
+		RAW_ISFINITE_NORMAL \
+		RAW_ISFINITE_SERIAL_NUMBER;
 }
 
 template <> inline bool pcl::isFinite<RecRoom::PointREC>(const RecRoom::PointREC &p)
 {
 	return pcl_isfinite(p.x) && pcl_isfinite(p.y) && pcl_isfinite(p.z) \
-		REC_ISFINITE_NORMAL \
 		REC_ISFINITE_RGB \
 		REC_ISFINITE_INTENSITY \
+		REC_ISFINITE_NORMAL \
+		REC_ISFINITE_SHARPNESS \
 		REC_ISFINITE_LABEL;
 }
 
 template <> inline bool pcl::isFinite<RecRoom::PointMED>(const RecRoom::PointMED &p)
 {
 	return pcl_isfinite(p.x) && pcl_isfinite(p.y) && pcl_isfinite(p.z) \
-		MED_ISFINITE_NORMAL \
 		MED_ISFINITE_RGB \
 		MED_ISFINITE_INTENSITY \
-		MED_ISFINITE_LABEL \
-		MED_ISFINITE_SEGLABEL;
+		MED_ISFINITE_NORMAL \
+		MED_ISFINITE_SHARPNESS \
+		MED_ISFINITE_SERIAL_NUMBER \
+		MED_ISFINITE_LABEL;
 }
 

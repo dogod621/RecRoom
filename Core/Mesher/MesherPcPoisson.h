@@ -4,8 +4,15 @@
 
 namespace RecRoom
 {
-	class MesherPcPoisson : public MesherPc
+	template<class PointType>
+	class MesherPcPoisson : public MesherPc<PointType>
 	{
+	public:
+		using Sampler = MesherPc<PointType>::Sampler;
+		using Filter = MesherPc<PointType>::Filter;
+		using Interpolator = MesherPc<PointType>::Interpolator;
+		using InterpolatorNearest = MesherPc<PointType>::InterpolatorNearest;
+
 	public:
 		MesherPcPoisson(
 			int depth = 8,
@@ -19,13 +26,16 @@ namespace RecRoom
 			bool outputPolygons = false,
 			bool manifold = true,
 			int degree = 2,
-			CONST_PTR(ResamplerPcMED) resampler = nullptr)
+			CONST_PTR(Sampler) preprocessSampler = nullptr,
+			CONST_PTR(Filter) preprocessFilter = nullptr,
+			CONST_PTR(Interpolator) fieldInterpolator = CONST_PTR(Interpolator)(new InterpolatorNearest))
 			: depth(depth), minDepth(minDepth), pointWeight(pointWeight), scale(scale), solverDivide(solverDivide),
 			isoDivide(isoDivide), samplesPerNode(samplesPerNode), confidence(confidence), outputPolygons(outputPolygons),
-			manifold(manifold), degree(degree), MesherPc(resampler) {}
+			manifold(manifold), degree(degree), 
+			MesherPc<PointType>(preprocessSampler, preprocessFilter, fieldInterpolator) {}
 
 	protected:
-		virtual void ToMesh(PTR(Pc<pcl::PointNormal>)& inV, PTR(KDTree<pcl::PointNormal>)& tree, pcl::PolygonMesh& out) const;
+		virtual void ToMesh(PTR(Acc<PointType>)& searchSurface, PTR(Pc<PointType>)& input, Mesh& output) const;
 
 	public:
 		int getDepth() const { return depth; }

@@ -4,16 +4,32 @@
 
 namespace RecRoom
 {
-	class SegmenterPcSVC : public SegmenterPc
+	template<class PointType>
+	class SegmenterPcSVC : public SegmenterPc<PointType>
 	{
 	public:
 		SegmenterPcSVC(float voxelResolution, float seedResolution, 
 			float xyzImportance = 0.4f, float normalImportance = 1.0f, float rgbImportance = 0.4f, float intensityImportance = 5.0f)
-			: SegmenterPc(), voxelResolution(voxelResolution), seedResolution(seedResolution), 
+			: SegmenterPc<PointType>(), voxelResolution(voxelResolution), seedResolution(seedResolution),
 			xyzImportance(xyzImportance), normalImportance(normalImportance), rgbImportance(rgbImportance), intensityImportance(intensityImportance) {}
 
-	public:
-		virtual void Process(const PTR(PcMED)& pc) const;
+	protected:
+		virtual bool ImplementCheck(
+			const CONST_PTR(Acc<PointType>)& searchSurface,
+			const CONST_PTR(Pc<PointType>)& input,
+			const CONST_PTR(PcIndex)& filter,
+			Pc<PointType>& output) const
+		{
+			if (searchSurface)
+				PRINT_WARNING("searchSurface is not used");
+			return true;
+		}
+
+		virtual void ImplementProcess(
+			const CONST_PTR(Acc<PointType>)& searchSurface,
+			const CONST_PTR(Pc<PointType>)& input,
+			const CONST_PTR(PcIndex)& filter,
+			Pc<PointType>& output) const;
 
 	public:
 		float getVoxelResolution() const { return voxelResolution; }

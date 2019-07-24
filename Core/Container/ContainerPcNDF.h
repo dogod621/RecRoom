@@ -15,7 +15,7 @@ namespace RecRoom
 		ContainerPcNDF() {}
 
 	public:
-		virtual void Merge(const PTR(PcNDF)& v) = 0;
+		virtual void Merge(const CONST_PTR(PcNDF)& v) = 0;
 		virtual std::size_t Size() const = 0;
 		virtual Meta GetMeta(std::size_t i) const { return i; }
 		virtual Data GetData(std::size_t i) const = 0;
