@@ -237,7 +237,7 @@ namespace RecRoom
 
 
 		// Som wired noise, debugging...
-		if (global.ptrReconstructorPcOC()->getDownSampler())
+		/*if (global.ptrReconstructorPcOC()->getDownSampler())
 		{
 			PTR(PcMED)pcMED2(new PcMED);
 			PTR(AccMED)pcMEDAcc(new KDTreeMED);
@@ -254,7 +254,7 @@ namespace RecRoom
 			}
 
 			(*global.ptrReconstructorPcOC()->getPcMED()) = (*pcMED2);
-		}
+		}*/
 
 		//
 		return 0;
