@@ -24,8 +24,7 @@ namespace RecRoom
 			return Eigen::Vector3d(uv.x(), uv.y(), rae.x());
 		};
 
-		virtual bool ToScanLaser(const PointMED& scanPoint, const Eigen::Vector3d& macroNormal, ScanLaser& scanLaser) const;
-
+		virtual bool ToScanLaser(const PointRAW& scanPoint, ScanLaser& scanLaser) const;
 
 	protected:
 		virtual bool Valid(const PointRAW& pointRAW) const

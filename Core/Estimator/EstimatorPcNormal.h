@@ -8,8 +8,14 @@ namespace RecRoom
 	class EstimatorPcNormal : public EstimatorPc<InPointType, OutPointType>
 	{
 	public:
-		EstimatorPcNormal(double searchRadius, const CONST_PTR(ScannerPc)& scanner)
-			: EstimatorPc<InPointType, OutPointType>(searchRadius), scanner(scanner) 
+		EstimatorPcNormal(double searchRadius, 
+			const CONST_PTR(ScannerPc)& scanner,
+			const double distInterParm = 0.4,
+			const double cutFalloff = 0.33)
+			: EstimatorPc<InPointType, OutPointType>(searchRadius), 
+			scanner(scanner),
+			distInterParm(distInterParm), 
+			cutFalloff(cutFalloff)
 		{
 			if (!scanner)
 				THROW_EXCEPTION("scanner is not set");
@@ -23,9 +29,13 @@ namespace RecRoom
 			Pc<OutPointType>& output) const;
 
 	public:
+		double getDistInterParm() const { return distInterParm; }
+		double getCutFalloff() const { return cutFalloff; }
 		CONST_PTR(ScannerPc) getScanner() const { return scanner; }
 
-		void setScanner(CONST_PTR(ScannerPc) v) 
+		void setDistInterParm(double v) { distInterParm = v; }
+		void setCutFalloff(double v) { cutFalloff = v; }
+		void setScanner(CONST_PTR(ScannerPc) v)
 		{
 			if (!v)
 			{
@@ -38,6 +48,8 @@ namespace RecRoom
 		}
 
 	protected:
+		double distInterParm;
+		double cutFalloff;
 		CONST_PTR(ScannerPc) scanner;
 	};
 }

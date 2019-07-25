@@ -13,7 +13,7 @@ namespace RecRoom
 		const CONST_PTR(PcIndex)& filter,
 		Pc<OutPointType>& output) const
 	{
-		NormalEstimation<InPointType, OutPointType> ne (scanner);
+		NormalEstimation<InPointType, OutPointType> ne (scanner, distInterParm, cutFalloff);
 
 		ne.setInputCloud(input);
 

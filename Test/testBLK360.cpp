@@ -77,12 +77,12 @@ void PrintHelp(int argc, char **argv)
 		PRINT_HELP("\t", "searchRadius", "float ${overlap}", "The search radius at surface.");
 	}
 
-	std::cout << "EstimatorPcAlbedo/NDF Parmameters:========================================================================================================================" << std::endl << std::endl;
+	std::cout << "EstimatorPcNormal/Albedo/NDF Parmameters:=================================================================================================================" << std::endl << std::endl;
 	{
-		PRINT_HELP("\t", "distInterParm", "float 10.0", "Interpolation parameter that is related to distance.");
-		PRINT_HELP("\t", "angleInterParm", "float 20.0", "Interpolation parameter that is related to orientation.");
+		PRINT_HELP("\t", "distInterParm", "float 0.4", "Interpolation parameter that is related to distance.");
+		PRINT_HELP("\t", "angleInterParm", "float 0.6", "Interpolation parameter that is related to orientation.");
 		PRINT_HELP("\t", "cutFalloff", "float 0.33", "Cut-off threshold that is related to distance fall-off.");
-		PRINT_HELP("\t", "cutGrazing", "float cos(pi/6)", "Cut-off threshold that is related to grazing level.");
+		PRINT_HELP("\t", "cutGrazing", "float 1.3", "Cut-off threshold that is related to grazing level.");
 	}
 
 	std::cout << "==========================================================================================================================================================" << std::endl << std::endl;
@@ -195,10 +195,10 @@ int main(int argc, char *argv[])
 		std::cout << "EstimatorPcAlbedo -searchRadius: " << searchRadius << std::endl;
 
 		// Parse EstimatorPcAlbedo Parmameters
-		double distInterParm = 10.0;
-		double angleInterParm = 20.0;
+		double distInterParm = 0.4;
+		double angleInterParm = 0.6;
 		double cutFalloff = 0.33;
-		double cutGrazing = 0.86602540378;
+		double cutGrazing = 1.3;
 		pcl::console::parse_argument(argc, argv, "-distInterParm", distInterParm);
 		pcl::console::parse_argument(argc, argv, "-angleInterParm", angleInterParm);
 		pcl::console::parse_argument(argc, argv, "-cutFalloff", cutFalloff);
@@ -332,7 +332,9 @@ int main(int argc, char *argv[])
 			std::cout << "Create NormalEstimator" << std::endl;
 			PTR(RecRoom::ReconstructorPcOC::Estimator)
 				normalEstimator(
-					new RecRoom::EstimatorPcNormal<RecRoom::PointMED, RecRoom::PointMED>(searchRadius, scannerPc));
+					new RecRoom::EstimatorPcNormal<RecRoom::PointMED, RecRoom::PointMED>(
+						searchRadius, scannerPc,
+						distInterParm, cutFalloff));
 			reconstructorPC->setNormalEstimator(normalEstimator);
 
 			std::cout << "Create AlbedoEstimator" << std::endl;
@@ -399,13 +401,14 @@ int main(int argc, char *argv[])
 
 				reconstructorPC->DoRecSegMaterial();
 			}
+			*/
 
 			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::MESH) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
 			{
 				std::cout << "reconstructorPC->DoRecMesh()" << std::endl;
 
 				reconstructorPC->DoRecMesh();
-			}*/
+			}
 
 			//
 			/*if (pcl::console::find_switch(argc, argv, "-visSegNDFs"))

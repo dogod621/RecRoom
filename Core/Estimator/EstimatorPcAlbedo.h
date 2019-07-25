@@ -12,12 +12,12 @@ namespace RecRoom
 		EstimatorPcAlbedo(double searchRadius,
 			const CONST_PTR(ScannerPc)& scanner,
 			const LinearSolver linearSolver = LinearSolver::EIGEN_SVD,
-			const double distInterParm = 10.0, const double angleInterParm = 20.0, const double cutFalloff = 0.33,
-			const double cutGrazing = 0.86602540378)
+			const double distInterParm = 0.4, const double angleInterParm = 0.6, 
+			const double cutFalloff = 0.33, const double cutGrazing = 1.3)
 			: EstimatorPc<InPointType, OutPointType>(searchRadius),
 			scanner(scanner), linearSolver(linearSolver),
-			distInterParm(distInterParm), angleInterParm(angleInterParm), cutFalloff(cutFalloff),
-			cutGrazing(cutGrazing) 
+			distInterParm(distInterParm), angleInterParm(angleInterParm), 
+			cutFalloff(cutFalloff), cutGrazing(cutGrazing) 
 		{
 			if(!scanner)
 				THROW_EXCEPTION("scanner is not set");
@@ -43,7 +43,17 @@ namespace RecRoom
 		void setAngleInterParm(double v) { angleInterParm = v; }
 		void setCutFalloff(double v) { cutFalloff = v; }
 		void setCutGrazing(double v) { cutGrazing = v; }
-		void setScanner(CONST_PTR(ScannerPc) v) { scanner = v; if (!scanner) THROW_EXCEPTION("scanner is not set"); }
+		void setScanner(CONST_PTR(ScannerPc) v)
+		{
+			if (!v)
+			{
+				THROW_EXCEPTION("scanner is not set");
+			}
+			else
+			{
+				scanner = v;
+			}
+		}
 
 	protected:
 		LinearSolver linearSolver;

@@ -31,17 +31,14 @@ namespace RecRoom
 	struct ScanLaser
 	{
 		Eigen::Vector3d incidentDirection;
-		Eigen::Vector3d reflectedDirection;
-		double intensity;
 		Eigen::Vector3d hitPosition;
-		Eigen::Vector3d hitNormal;
-		Eigen::Vector3d hitTangent;
-		Eigen::Vector3d hitBitangent;
+		double intensity;
+
+		Eigen::Vector3d reflectedDirection;
 		double hitDistance;
 		double beamFalloff;
-		double weight;
 
-		ScanLaser(): intensity(0.0), hitDistance(0.0), beamFalloff(0.0), weight(0.0) {}
+		ScanLaser(): intensity(0.0), hitDistance(0.0), beamFalloff(0.0) {}
 	};
 
 	std::ostream& operator << (std::ostream& os, const ScanMeta& v);
@@ -64,15 +61,8 @@ namespace RecRoom
 		virtual std::size_t ScanImageWidth () const { THROW_EXCEPTION("Interface is not implemented") };
 		virtual std::size_t ScanImageHeight () const { THROW_EXCEPTION("Interface is not implemented") };
 		virtual Eigen::Vector3d ToScanImageUVDepth (const Eigen::Vector3d& worldXYZ) const { THROW_EXCEPTION("Interface is not implemented") };
-		bool ToScanLaser(const PointMED& scanPoint, ScanLaser& scanLaser) const
-		{
-#ifdef PERPOINT_NORMAL
-			return ToScanLaser(scanPoint, Eigen::Vector3d(scanPoint.normal_x, scanPoint.normal_y, scanPoint.normal_z), scanLaser);
-#else
-			return false;
-#endif
-		}
-		virtual bool ToScanLaser (const PointMED& scanPoint, const Eigen::Vector3d& macroNormal, ScanLaser& scanLaser) const { THROW_EXCEPTION("Interface is not implemented") };
+
+		virtual bool ToScanLaser (const PointRAW& scanPoint, ScanLaser& scanLaser) const = 0;
 
 	protected:
 		virtual void ShipPcRAW() const = 0;

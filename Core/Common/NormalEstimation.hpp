@@ -1,80 +1,77 @@
 #pragma once
 
+#pragma once
+
 #include "NormalEstimation.h"
 
 namespace RecRoom
 {
-	template<class InPointN, class OutPointN>
-	void NormalEstimation<InPointN, OutPointN>::computeFeature(PointCloudOut &output)
+	template<class InPointType, class OutPointType>
+	inline bool NormalEstimation<InPointType, OutPointType>::ComputeAttribute(
+		const Pc<InPointType>& cloud,
+		const InPointType& center, const std::vector<ScanData>& scanDataSet, OutPointType& outPoint) const
 	{
-		if (!(search_radius_ > 0.0))
-			THROW_EXCEPTION("search_radius_ is not set");
+		Eigen::Matrix<float, 1, 9, Eigen::RowMajor> accu = Eigen::Matrix<float, 1, 9, Eigen::RowMajor>::Zero();
+		EIGEN_ALIGN16 Eigen::Matrix3f covarianceMatrix;
+		Eigen::Vector4f centroid;
 
-		std::vector<int> nn_indices(k_);
-		std::vector<float> nn_dists(k_);
-
-		output.is_dense = true;
-		if (input_->is_dense)
+		float sumWeight = 0.0;
+		for (std::vector<ScanData>::const_iterator it = scanDataSet.begin(); it != scanDataSet.end(); ++it)
 		{
-#ifdef _OPENMP
-#pragma omp parallel for shared (output) private (nn_indices, nn_dists) num_threads(threads_)
-#endif
-			for (int idx = 0; idx < static_cast<int> (indices_->size()); ++idx)
-			{
-				const PointMED& inPoint = (*input_)[(*indices_)[idx]];
-				PointMED& outPoint = output.points[idx];
+			const InPointType& hitPoint = cloud[it->index];
+			float weight = std::pow((search_radius_ - it->distance2Center) / search_radius_, distInterParm);
+			sumWeight += weight;
 
-				if (searchForNeighbors((*indices_)[idx], search_parameter_, nn_indices, nn_dists) > 0)
-				{
-					if(!ComputePointNormal(*surface_, nn_indices, outPoint.normal[0], outPoint.normal[1], outPoint.normal[2], outPoint.curvature))
-					{
-						PRINT_WARNING("ComputePointNormal failed");
-						outPoint.normal[0] = outPoint.normal[1] = outPoint.normal[2] = outPoint.curvature = std::numeric_limits<float>::quiet_NaN();
-						output.is_dense = false;
-					}
-				}
-				else
-				{
-					PRINT_WARNING("searchForNeighbors failed");
-					outPoint.normal[0] = outPoint.normal[1] = outPoint.normal[2] = outPoint.curvature = std::numeric_limits<float>::quiet_NaN();
-					output.is_dense = false;
-				}
-			}
+			accu[0] += weight * hitPoint.x * hitPoint.x;
+			accu[1] += weight * hitPoint.x * hitPoint.y;
+			accu[2] += weight * hitPoint.x * hitPoint.z;
+			accu[3] += weight * hitPoint.y * hitPoint.y;
+			accu[4] += weight * hitPoint.y * hitPoint.z;
+			accu[5] += weight * hitPoint.z * hitPoint.z;
+			accu[6] += weight * hitPoint.x;
+			accu[7] += weight * hitPoint.y;
+			accu[8] += weight * hitPoint.z;
 		}
-		else
+
+		accu /= sumWeight;
+		centroid[0] = accu[6]; centroid[1] = accu[7]; centroid[2] = accu[8]; centroid[3] = 1;
+		covarianceMatrix.coeffRef(0) = accu[0] - accu[6] * accu[6];
+		covarianceMatrix.coeffRef(1) = accu[1] - accu[6] * accu[7];
+		covarianceMatrix.coeffRef(2) = accu[2] - accu[6] * accu[8];
+		covarianceMatrix.coeffRef(4) = accu[3] - accu[7] * accu[7];
+		covarianceMatrix.coeffRef(5) = accu[4] - accu[7] * accu[8];
+		covarianceMatrix.coeffRef(8) = accu[5] - accu[8] * accu[8];
+		covarianceMatrix.coeffRef(3) = covarianceMatrix.coeff(1);
+		covarianceMatrix.coeffRef(6) = covarianceMatrix.coeff(2);
+		covarianceMatrix.coeffRef(7) = covarianceMatrix.coeff(5);
+
+		// Get the plane normal and surface curvature
+		pcl::solvePlaneParameters(covarianceMatrix, outPoint.normal_x, outPoint.normal_y, outPoint.normal_z, outPoint.curvature);
+
+		//
+		float norm = std::sqrt(outPoint.normal_x*outPoint.normal_x + outPoint.normal_y*outPoint.normal_y + outPoint.normal_z*outPoint.normal_z);
+		if (norm > 0.1)
 		{
-#ifdef _OPENMP
-#pragma omp parallel for shared (output) private (nn_indices, nn_dists) num_threads(threads_)
-#endif
-			for (int idx = 0; idx < static_cast<int> (indices_->size()); ++idx)
+			// Flip
+			double pScore = 0;
+			double nScore = 0;
+			for (std::vector<ScanData>::const_iterator it = scanDataSet.begin(); it != scanDataSet.end(); ++it)
 			{
-				const PointMED& inPoint = (*input_)[(*indices_)[idx]];
-				PointMED& outPoint = output.points[idx];
-				if (pcl::isFinite(inPoint))
-				{
-					if (searchForNeighbors((*indices_)[idx], search_parameter_, nn_indices, nn_dists) > 0)
-					{
-						if (!ComputePointNormal(*surface_, nn_indices, outPoint.normal[0], outPoint.normal[1], outPoint.normal[2], outPoint.curvature))
-						{
-							PRINT_WARNING("ComputePointNormal failed");
-							outPoint.normal[0] = outPoint.normal[1] = outPoint.normal[2] = outPoint.curvature = std::numeric_limits<float>::quiet_NaN();
-							output.is_dense = false;
-						}
-					}
-					else
-					{
-						PRINT_WARNING("searchForNeighbors failed");
-						outPoint.normal[0] = outPoint.normal[1] = outPoint.normal[2] = outPoint.curvature = std::numeric_limits<float>::quiet_NaN();
-						output.is_dense = false;
-					}
-				}
-				else
-				{
-					PRINT_WARNING("Input point contain non finite value");
-					outPoint.normal[0] = outPoint.normal[1] = outPoint.normal[2] = outPoint.curvature = std::numeric_limits<float>::quiet_NaN();
-					output.is_dense = false;
-				}
+				const InPointType& hitPoint = cloud[it->index];
+				Eigen::Vector3d pNormal(hitPoint.normal_x, hitPoint.normal_y, hitPoint.normal_z);
+				Eigen::Vector3d nNormal(-hitPoint.normal_x, -hitPoint.normal_y, -hitPoint.normal_z);
+
+				pScore += pNormal.dot(it->laser.incidentDirection);
+				nScore += nNormal.dot(it->laser.incidentDirection);
 			}
+			if (nScore > pScore)
+				norm = -norm;
+			
+			outPoint.normal_x /= norm;
+			outPoint.normal_y /= norm;
+			outPoint.normal_z /= norm;
+			return true;
 		}
+		return false;
 	}
 }
