@@ -17,7 +17,7 @@ namespace RecRoom
 		A = Eigen::MatrixXf(scanDataSet.size() * 3, 3);
 		B = Eigen::MatrixXf(scanDataSet.size() * 3, 1);
 
-		std::size_t shifter = 0;
+		int shifter = 0;
 		for (std::vector<ScanData>::const_iterator it = scanDataSet.begin(); it != scanDataSet.end(); ++it)
 		{
 			const InPointType& hitPoint = cloud[it->index];

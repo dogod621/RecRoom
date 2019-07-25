@@ -6,14 +6,14 @@ namespace RecRoom
 {
 	template<class InPointType, class OutPointType>
 	inline bool SurfaceEstimation<InPointType, OutPointType>::CollectScanData(
-		const Pc<InPointType>& cloud, const std::size_t k, const std::vector<int>& indices, const std::vector<float>& distance,
+		const Pc<InPointType>& cloud, int k, const std::vector<int>& indices, const std::vector<float>& distance,
 		const InPointType& center, std::vector<ScanData>& scanDataSet) const
 	{
 		scanDataSet.clear();
 		scanDataSet.reserve(k);
 		
 		//
-		for (std::size_t idx = 0; idx < k; ++idx)
+		for (int idx = 0; idx < k; ++idx)
 		{
 			int px = indices[idx];
 			ScanLaser laser;
@@ -24,7 +24,7 @@ namespace RecRoom
 			}
 		}
 
-		return scanDataSet.size() >= minRequireNumData;
+		return static_cast<int>(scanDataSet.size()) >= minRequireNumData;
 	}
 
 	template<class InPointType, class OutPointType>
@@ -121,14 +121,14 @@ namespace RecRoom
 
 	template<class InPointType, class OutPointType>
 	inline bool AttributeEstimation<InPointType, OutPointType>::CollectScanData(
-		const Pc<InPointType>& cloud, const std::size_t k, const std::vector<int>& indices, const std::vector<float>& distance,
+		const Pc<InPointType>& cloud, const int k, const std::vector<int>& indices, const std::vector<float>& distance,
 		const InPointType& center, std::vector<ScanData>& scanDataSet) const
 	{
 		scanDataSet.clear();
 		scanDataSet.reserve(k);
 
 		//
-		for (std::size_t idx = 0; idx < k; ++idx)
+		for (int idx = 0; idx < k; ++idx)
 		{
 			int px = indices[idx];
 			ScanLaser laser;
@@ -140,6 +140,6 @@ namespace RecRoom
 			}
 		}
 
-		return scanDataSet.size() >= minRequireNumData;
+		return static_cast<int>(scanDataSet.size()) >= minRequireNumData;
 	}
 }

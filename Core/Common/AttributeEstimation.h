@@ -38,7 +38,7 @@ namespace RecRoom
 	public:
 		SurfaceEstimation(const CONST_PTR(ScannerPc)& scanner,
 			const float cutFalloff = 0.33f, // cut attinuation less than 1/3
-			const std::size_t minRequireNumData = 1,
+			const int minRequireNumData = 1,
 			unsigned int numThreads = 0)
 			: scanner(scanner), cutFalloff(cutFalloff), minRequireNumData(minRequireNumData)
 		{
@@ -47,8 +47,8 @@ namespace RecRoom
 			if (!scanner)
 				THROW_EXCEPTION("scanner is not set");
 
-			if(minRequireNumData == 0)
-				THROW_EXCEPTION("minRequireNumData == 0");
+			if(minRequireNumData < 1)
+				THROW_EXCEPTION("minRequireNumData < 1");
 
 			SetNumberOfThreads(numThreads);
 		};
@@ -72,7 +72,7 @@ namespace RecRoom
 
 	protected:
 		inline virtual bool CollectScanData(
-			const Pc<InPointType>& cloud, const std::size_t k, const std::vector<int>& indices, const std::vector<float>& distance,
+			const Pc<InPointType>& cloud, const int k, const std::vector<int>& indices, const std::vector<float>& distance,
 			const InPointType& center, std::vector<ScanData>& scanDataSet) const;
 
 		inline virtual bool ComputeAttribute(
@@ -88,7 +88,7 @@ namespace RecRoom
 
 		float cutFalloff;
 
-		std::size_t minRequireNumData;
+		int minRequireNumData;
 
 		unsigned int threads_;
 
@@ -103,7 +103,7 @@ namespace RecRoom
 		AttributeEstimation(const CONST_PTR(ScannerPc)& scanner,
 			const float cutFalloff = 0.33f, // cut attinuation less than 1/3
 			const float cutGrazing = 1.3f, // cut icident agngle larger than 75 degrees
-			const std::size_t minRequireNumData = 1,
+			const int minRequireNumData = 1,
 			unsigned int numThreads = 0)
 			: SurfaceEstimation<InPointType, OutPointType>(scanner, cutFalloff, minRequireNumData, numThreads), cutGrazing(cutGrazing)
 		{
@@ -112,7 +112,7 @@ namespace RecRoom
 
 	protected:
 		inline virtual bool CollectScanData(
-			const Pc<InPointType>& cloud, const std::size_t k, const std::vector<int>& indices, const std::vector<float>& distance, 
+			const Pc<InPointType>& cloud, const int k, const std::vector<int>& indices, const std::vector<float>& distance,
 			const InPointType& center, std::vector<ScanData>& scanDataSet) const;
 
 	protected:
