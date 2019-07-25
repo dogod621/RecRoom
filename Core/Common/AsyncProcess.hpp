@@ -100,106 +100,133 @@ namespace RecRoom
 	}
 
 	template<class GlobalT, class QueryT, class DataT>
-	AsyncProcess<GlobalT, QueryT, DataT>::AsyncProcess(GlobalT& globalData, std::vector<QueryT>& queries, AStep a, BStep b, CStep c, std::size_t size_)
-		: doubleBuffer(2), a_bufferPointer(false), size(size_)
+	AsyncProcess<GlobalT, QueryT, DataT>::AsyncProcess(GlobalT& globalData, std::vector<QueryT>& queries, AStep a, BStep b, CStep c, std::size_t size_, bool sync_)
+		: doubleBuffer(2), a_bufferPointer(false), size(size_), sync(sync_)
 	{
-		if (size < 1)
-			THROW_EXCEPTION("AsyncProcess size must at least 1");
-
-		PRINT_INFO("AsyncProcess - Start - size: " + std::to_string(size));
-
-		doubleBuffer[a_bufferPointer].resize(size);
-		doubleBuffer[!a_bufferPointer].resize(size);
-
-		std::size_t a_gIdx = 0;
-		std::size_t b_gIdx = 0;
+		if (sync)
 		{
-			std::size_t a_perGIdx = a_gIdx;
-			std::vector<BufferT>& a_buffer = doubleBuffer[!a_bufferPointer];
-			for (std::size_t a_locIdx = 0; (a_locIdx < size) && (a_gIdx < queries.size()); ++a_locIdx)
+			for (std::size_t idx = 0; idx < queries.size(); ++idx)
 			{
-				PRINT_INFO("Launch sync A - Start - ID: " + std::to_string(a_gIdx) + "/" + std::to_string(queries.size()-1));
-				{
-					int a_status = WarpAStep(a, &globalData, &queries[a_gIdx], &a_buffer[a_locIdx].data);
-					if (a_status != 0)
-						THROW_EXCEPTION("A failed: " + std::to_string(a_status));
-				}
-				PRINT_INFO("Launch sync A - End - ID: " + std::to_string(a_gIdx) + "/" + std::to_string(queries.size()-1));
+				PRINT_INFO("Launch sync - Start - ID: " + std::to_string(idx) + "/" + std::to_string(queries.size() - 1));
+				PTR(DataT) data(new DataT);
 
-				a_gIdx++;
+				int a_status = WarpAStep(a, &globalData, &queries[idx], &data);
+				if (a_status != 0)
+					THROW_EXCEPTION("A failed: " + std::to_string(a_status));
+
+				int b_status = WarpBStep(b, &globalData, &queries[idx], &data);
+				if (b_status != 0)
+					THROW_EXCEPTION("B failed: " + std::to_string(b_status));
+
+				int c_status = WarpCStep(c, &globalData, &queries[idx], &data);
+				if (c_status != 0)
+					THROW_EXCEPTION("C failed: " + std::to_string(c_status));
 			}
 		}
-
-		for (; b_gIdx < queries.size();)
+		else
 		{
-			// Send queries
-			std::size_t b_perGIdx = b_gIdx;
-			std::vector<BufferT>& b_buffer = doubleBuffer[!a_bufferPointer];
-			for (std::size_t b_locIdx = 0; (b_locIdx < size) && (b_gIdx < queries.size()); ++b_locIdx)
+			if (size < 1)
+				THROW_EXCEPTION("AsyncProcess size must at least 1");
+
+			PRINT_INFO("AsyncProcess - Start - size: " + std::to_string(size));
+
+			doubleBuffer[a_bufferPointer].resize(size);
+			doubleBuffer[!a_bufferPointer].resize(size);
+
+			std::size_t a_gIdx = 0;
+			std::size_t b_gIdx = 0;
 			{
-				PRINT_INFO("Launch async B - Start - ID: " + std::to_string(b_gIdx) + "/" + std::to_string(queries.size()-1));
+				PRINT_INFO("Launch sync - Start - ID: (" + std::to_string(a_gIdx) + ", -1)/" + std::to_string(queries.size() - 1));
+
+				std::size_t a_perGIdx = a_gIdx;
+				std::vector<BufferT>& a_buffer = doubleBuffer[!a_bufferPointer];
+				for (std::size_t a_locIdx = 0; (a_locIdx < size) && (a_gIdx < queries.size()); ++a_locIdx)
 				{
-					b_buffer[b_locIdx].b_future = std::async(std::launch::async, AsyncProcess::WarpBStep, b, &globalData, &queries[b_gIdx], &b_buffer[b_locIdx].data);
+					//PRINT_INFO("Launch sync A - Start - ID: " + std::to_string(a_gIdx) + "/" + std::to_string(queries.size()-1));
+					{
+						int a_status = WarpAStep(a, &globalData, &queries[a_gIdx], &a_buffer[a_locIdx].data);
+						if (a_status != 0)
+							THROW_EXCEPTION("A failed: " + std::to_string(a_status));
+					}
+					//PRINT_INFO("Launch sync A - End - ID: " + std::to_string(a_gIdx) + "/" + std::to_string(queries.size()-1));
+
+					a_gIdx++;
 				}
-				PRINT_INFO("Launch async B - End - ID: " + std::to_string(b_gIdx) + "/" + std::to_string(queries.size()-1));
-				b_gIdx++;
 			}
 
-			std::size_t a_perGIdx = a_gIdx;
-			std::vector<BufferT>& a_buffer = doubleBuffer[a_bufferPointer];
-			for (std::size_t a_locIdx = 0; (a_locIdx < size) && (a_gIdx < queries.size()); ++a_locIdx)
+			for (; b_gIdx < queries.size();)
 			{
-				PRINT_INFO("Launch async A - Start - ID: " + std::to_string(a_gIdx) + "/" + std::to_string(queries.size()-1));
-				{
-					a_buffer[a_locIdx].a_future = std::async(std::launch::async, AsyncProcess::WarpAStep, a, &globalData, &queries[a_gIdx], &a_buffer[a_locIdx].data);
-				}
-				PRINT_INFO("Launch async A - End - ID: " + std::to_string(a_gIdx) + "/" + std::to_string(queries.size()-1));
-				a_gIdx++;
-			}
+				PRINT_INFO("Launch sync - Start - ID: (" + std::to_string(a_gIdx) + ", " + std::to_string(b_gIdx) + ")/" + std::to_string(queries.size() - 1));
 
-			// Wait done
-			b_gIdx = b_perGIdx;
-			for (std::size_t b_locIdx = 0; (b_locIdx < size) && (b_gIdx < queries.size()); ++b_locIdx)
-			{
+				// Send queries
+				std::size_t b_perGIdx = b_gIdx;
+				std::vector<BufferT>& b_buffer = doubleBuffer[!a_bufferPointer];
+				for (std::size_t b_locIdx = 0; (b_locIdx < size) && (b_gIdx < queries.size()); ++b_locIdx)
+				{
+					//PRINT_INFO("Launch async B - Start - ID: " + std::to_string(b_gIdx) + "/" + std::to_string(queries.size()-1));
+					{
+						b_buffer[b_locIdx].b_future = std::async(std::launch::async, AsyncProcess::WarpBStep, b, &globalData, &queries[b_gIdx], &b_buffer[b_locIdx].data);
+					}
+					//PRINT_INFO("Launch async B - End - ID: " + std::to_string(b_gIdx) + "/" + std::to_string(queries.size()-1));
+					b_gIdx++;
+				}
+
+				std::size_t a_perGIdx = a_gIdx;
+				std::vector<BufferT>& a_buffer = doubleBuffer[a_bufferPointer];
+				for (std::size_t a_locIdx = 0; (a_locIdx < size) && (a_gIdx < queries.size()); ++a_locIdx)
+				{
+					//PRINT_INFO("Launch async A - Start - ID: " + std::to_string(a_gIdx) + "/" + std::to_string(queries.size()-1));
+					{
+						a_buffer[a_locIdx].a_future = std::async(std::launch::async, AsyncProcess::WarpAStep, a, &globalData, &queries[a_gIdx], &a_buffer[a_locIdx].data);
+					}
+					//PRINT_INFO("Launch async A - End - ID: " + std::to_string(a_gIdx) + "/" + std::to_string(queries.size()-1));
+					a_gIdx++;
+				}
+
+				// Wait done
+				b_gIdx = b_perGIdx;
+				for (std::size_t b_locIdx = 0; (b_locIdx < size) && (b_gIdx < queries.size()); ++b_locIdx)
+				{
+					//
+					//PRINT_INFO("Get async B - Start - ID: " + std::to_string(b_gIdx) + "/" + std::to_string(queries.size()-1));
+					{
+						int b_status = b_buffer[b_locIdx].b_future.get();
+						if (b_status != 0)
+							THROW_EXCEPTION("B failed: " + std::to_string(b_status));
+					}
+					//PRINT_INFO("Get async B - End - ID: " + std::to_string(b_gIdx) + "/" + std::to_string(queries.size()-1));
+
+
+					//
+					//PRINT_INFO("Launch sync C - Start - ID: " + std::to_string(b_gIdx) + "/" + std::to_string(queries.size()-1));
+					{
+						int c_status = WarpCStep(c, &globalData, &queries[b_perGIdx + b_locIdx], &b_buffer[b_locIdx].data);
+						if (c_status != 0)
+							THROW_EXCEPTION("C failed: " + std::to_string(c_status));
+					}
+					//PRINT_INFO("Launch sync C - End - ID: " + std::to_string(b_gIdx) + "/" + std::to_string(queries.size()-1));
+
+					//
+					b_gIdx++;
+				}
+
+				a_gIdx = a_perGIdx;
+				for (std::size_t a_locIdx = 0; (a_locIdx < size) && (a_gIdx < queries.size()); ++a_locIdx)
+				{
+					//PRINT_INFO("Get async A - Start - ID: " + std::to_string(a_gIdx) + "/" + std::to_string(queries.size()-1));
+					{
+						int a_status = a_buffer[a_locIdx].a_future.get();
+						if (a_status != 0)
+							THROW_EXCEPTION("A failed: " + std::to_string(a_status));
+					}
+					//PRINT_INFO("Get async A - End - ID: " + std::to_string(a_gIdx) + "/" + std::to_string(queries.size()-1));
+
+					a_gIdx++;
+				}
+
 				//
-				PRINT_INFO("Get async B - Start - ID: " + std::to_string(b_gIdx) + "/" + std::to_string(queries.size()-1));
-				{
-					int b_status = b_buffer[b_locIdx].b_future.get();
-					if (b_status != 0)
-						THROW_EXCEPTION("B failed: " + std::to_string(b_status));
-				}
-				PRINT_INFO("Get async B - End - ID: " + std::to_string(b_gIdx) + "/" + std::to_string(queries.size()-1));
-
-
-				//
-				PRINT_INFO("Launch sync C - Start - ID: " + std::to_string(b_gIdx) + "/" + std::to_string(queries.size()-1));
-				{
-					int c_status = WarpCStep(c, &globalData, &queries[b_perGIdx + b_locIdx], &b_buffer[b_locIdx].data);
-					if (c_status != 0)
-						THROW_EXCEPTION("C failed: " + std::to_string(c_status));
-				}
-				PRINT_INFO("Launch sync C - End - ID: " + std::to_string(b_gIdx) + "/" + std::to_string(queries.size()-1));
-
-				//
-				b_gIdx++;
+				a_bufferPointer = !a_bufferPointer;
 			}
-
-			a_gIdx = a_perGIdx;
-			for (std::size_t a_locIdx = 0; (a_locIdx < size) && (a_gIdx < queries.size()); ++a_locIdx)
-			{
-				PRINT_INFO("Get async A - Start - ID: " + std::to_string(a_gIdx) + "/" + std::to_string(queries.size()-1));
-				{
-					int a_status = a_buffer[a_locIdx].a_future.get();
-					if (a_status != 0)
-						THROW_EXCEPTION("A failed: " + std::to_string(a_status));
-				}
-				PRINT_INFO("Get async A - End - ID: " + std::to_string(a_gIdx) + "/" + std::to_string(queries.size()-1));
-
-				a_gIdx++;
-			}
-
-			//
-			a_bufferPointer = !a_bufferPointer;
 		}
 	}
 }

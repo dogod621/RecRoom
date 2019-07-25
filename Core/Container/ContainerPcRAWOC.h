@@ -56,6 +56,9 @@ namespace RecRoom
 		virtual void Load(const nlohmann::json& j);
 		virtual void Dump(nlohmann::json& j) const;
 		virtual bool CheckExist() const;
+
+	public:
+		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	};
 }
 

@@ -11,9 +11,11 @@ namespace RecRoom
 		const Pc<InPointType>& cloud,
 		const InPointType& center, const std::vector<ScanData>& scanDataSet, OutPointType& outPoint) const
 	{
-		Eigen::Matrix<float, 1, 9, Eigen::RowMajor> accu = Eigen::Matrix<float, 1, 9, Eigen::RowMajor>::Zero();
-		EIGEN_ALIGN16 Eigen::Matrix3f covarianceMatrix;
-		Eigen::Vector4f centroid;
+		//Eigen::Matrix<float, 1, 9, Eigen::RowMajor> accu = Eigen::Matrix<float, 1, 9, Eigen::RowMajor>::Zero();
+		float accu[9] = {
+			0.0f, 0.0f, 0.0f, 
+			0.0f, 0.0f, 0.0f, 
+			0.0f, 0.0f, 0.0f };
 
 		float sumWeight = 0.0f;
 		for (std::vector<ScanData>::const_iterator it = scanDataSet.begin(); it != scanDataSet.end(); ++it)
@@ -33,8 +35,19 @@ namespace RecRoom
 			accu[8] += weight * hitPoint.z;
 		}
 
-		accu /= sumWeight;
-		centroid[0] = accu[6]; centroid[1] = accu[7]; centroid[2] = accu[8]; centroid[3] = 1;
+		accu[0] /= sumWeight;
+		accu[1] /= sumWeight;
+		accu[2] /= sumWeight;
+		accu[3] /= sumWeight;
+		accu[4] /= sumWeight;
+		accu[5] /= sumWeight;
+		accu[6] /= sumWeight;
+		accu[7] /= sumWeight;
+		accu[8] /= sumWeight;
+
+		//Eigen::Vector4f centroid;
+		//centroid[0] = accu[6]; centroid[1] = accu[7]; centroid[2] = accu[8]; centroid[3] = 1;
+		EIGEN_ALIGN16 Eigen::Matrix3f covarianceMatrix;
 		covarianceMatrix.coeffRef(0) = accu[0] - accu[6] * accu[6];
 		covarianceMatrix.coeffRef(1) = accu[1] - accu[6] * accu[7];
 		covarianceMatrix.coeffRef(2) = accu[2] - accu[6] * accu[8];

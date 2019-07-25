@@ -53,6 +53,9 @@ namespace RecRoom
 		std::size_t minPointsPerVoxel;
 
 		void applyFilter(PointCloud& output);
+
+	public:
+		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	};
 }
 

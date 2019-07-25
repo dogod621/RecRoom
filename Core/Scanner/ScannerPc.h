@@ -26,6 +26,8 @@ namespace RecRoom
 			numPoints(0), serialNumber(-1),
 			hasPointXYZ(false), hasPointNormal(false), hasPointRGB(false), hasPointI(false),
 			rawDataCoordSys(CoordSys::CoordSys_UNKNOWN) {}
+
+		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	};
 
 	struct ScanLaser
@@ -37,6 +39,8 @@ namespace RecRoom
 		float beamFalloff;
 
 		ScanLaser(): intensity(0.0f), beamFalloff(0.0f) {}
+
+		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	};
 
 	std::ostream& operator << (std::ostream& os, const ScanMeta& v);

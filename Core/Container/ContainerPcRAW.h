@@ -23,6 +23,8 @@ namespace RecRoom
 				const Eigen::Vector3d& extMaxAABB = Eigen::Vector3d(0.0, 0.0, 0.0),
 				std::size_t depth = 0)
 				: minAABB(minAABB), maxAABB(maxAABB), extMinAABB(extMinAABB), extMaxAABB(extMaxAABB), depth(depth) {}
+
+			EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 		};
 
 		struct Data : public Meta

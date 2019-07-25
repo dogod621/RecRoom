@@ -10,18 +10,29 @@
 
 namespace RecRoom
 {
-	struct ScanData
+	struct ScanData 
 	{
 		ScanLaser laser;
 		int index;
 		float distance2Center;
 
 		ScanData(const ScanLaser& laser = ScanLaser(), int index = -1, float distance2Center = 0.0f): laser(laser), index(index), distance2Center(distance2Center) {}
+
+		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	};
+
+	template<class InPointType, class OutPointType>
+	class SurfaceEstimation;
+
+	template<class InPointType, class OutPointType>
+	void EstimationTask(int id, SurfaceEstimation<InPointType, OutPointType>* self, Pc<OutPointType>* output);
 
 	template<class InPointType, class OutPointType>
 	class SurfaceEstimation : public pcl::Feature<InPointType, OutPointType>
 	{
+	public:
+		friend void EstimationTask<InPointType, OutPointType> (int id, SurfaceEstimation<InPointType, OutPointType>* self, Pc<OutPointType>* output);
+
 	public:
 		using pcl::Feature<InPointType, OutPointType>::feature_name_;
 		using pcl::Feature<InPointType, OutPointType>::getClassName;
@@ -58,17 +69,7 @@ namespace RecRoom
 			input_ = cloud;
 		}
 
-		void SetNumberOfThreads(unsigned int numThreads = 0)
-		{
-			if (numThreads == 0)
-#ifdef _OPENMP
-				threads_ = omp_get_num_procs();
-#else
-				threads_ = 1;
-#endif
-			else
-				threads_ = numThreads;
-		}
+		void SetNumberOfThreads(unsigned int numThreads = 0);
 
 	protected:
 		inline virtual bool CollectScanData(

@@ -52,12 +52,14 @@ namespace RecRoom
 			AStep a = AsyncProcess::Default_AStep, 
 			BStep b = AsyncProcess::Default_BStep,
 			CStep c = AsyncProcess::Default_CStep,
-			std::size_t size = 1 );
+			std::size_t size = 1,
+			bool sync = true);
 
 	protected:
 		std::vector<std::vector<BufferT>> doubleBuffer;
 		bool a_bufferPointer;
 		std::size_t size;
+		bool sync;
 	};
 }
 

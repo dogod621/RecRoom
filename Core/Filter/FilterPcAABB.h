@@ -40,6 +40,9 @@ namespace RecRoom
 	protected:
 		Eigen::Vector3d minAABB;
 		Eigen::Vector3d maxAABB;
+
+	public:
+		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	};
 }
 
