@@ -82,6 +82,10 @@ namespace RecRoom
 			outPoint.curvature = cv;
 			return true;
 		}
-		return false;
+		else
+		{
+			PRINT_WARNING("Generate normal failed, ignore");
+			return false;
+		}
 	}
 }

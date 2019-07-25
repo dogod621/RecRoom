@@ -13,7 +13,7 @@ namespace RecRoom
 			const CONST_PTR(ScannerPc)& scanner,
 			const LinearSolver linearSolver = LinearSolver::EIGEN_SVD,
 			const float distInterParm = 0.4f, const float angleInterParm = 0.6f,
-			const float cutFalloff = 0.33f, const float cutGrazing = 1.3f)
+			const float cutFalloff = 0.33f, const float cutGrazing = 0.26f)
 			: EstimatorPc<InPointType, OutPointType>(searchRadius),
 			scanner(scanner), linearSolver(linearSolver),
 			distInterParm(distInterParm), angleInterParm(angleInterParm), 

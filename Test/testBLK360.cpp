@@ -82,7 +82,7 @@ void PrintHelp(int argc, char **argv)
 		PRINT_HELP("\t", "distInterParm", "float 0.4", "Interpolation parameter that is related to distance.");
 		PRINT_HELP("\t", "angleInterParm", "float 0.6", "Interpolation parameter that is related to orientation.");
 		PRINT_HELP("\t", "cutFalloff", "float 0.33", "Cut-off threshold that is related to distance fall-off.");
-		PRINT_HELP("\t", "cutGrazing", "float 1.3", "Cut-off threshold that is related to grazing level.");
+		PRINT_HELP("\t", "cutGrazing", "float 0.26", "Cut-off threshold that is related to grazing level.");
 	}
 
 	std::cout << "==========================================================================================================================================================" << std::endl << std::endl;
@@ -198,7 +198,7 @@ int main(int argc, char *argv[])
 		float distInterParm = 0.4f;
 		float angleInterParm = 0.6f;
 		float cutFalloff = 0.33f;
-		float cutGrazing = 1.3f;
+		float cutGrazing = 0.26f;
 		pcl::console::parse_argument(argc, argv, "-distInterParm", distInterParm);
 		pcl::console::parse_argument(argc, argv, "-angleInterParm", angleInterParm);
 		pcl::console::parse_argument(argc, argv, "-cutFalloff", cutFalloff);

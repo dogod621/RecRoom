@@ -245,4 +245,4 @@ namespace RecRoom
 
 		return static_cast<int>(scanDataSet.size()) >= minRequireNumData;
 	}
-	}
+}

@@ -15,7 +15,7 @@ namespace RecRoom
 			const LinearSolver linearSolver = LinearSolver::EIGEN_SVD,
 			const float distInterParm = 0.4f, const float angleInterParm = 0.6f,
 			const float cutFalloff = 0.33f, // cut attinuation less than 1/3
-			const float cutGrazing = 1.3f, // cut icident agngle larger than 75 degrees
+			const float cutGrazing = 0.26f, // cut incident agngle larger than 75 degrees
 			unsigned int numThreads = 0)
 			: AttributeEstimation<InPointType, OutPointType>(scanner, cutFalloff, cutGrazing, 4, numThreads),
 			distInterParm(distInterParm), angleInterParm(angleInterParm), linearSolver(linearSolver)

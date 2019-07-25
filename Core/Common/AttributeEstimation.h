@@ -103,7 +103,7 @@ namespace RecRoom
 	public:
 		AttributeEstimation(const CONST_PTR(ScannerPc)& scanner,
 			const float cutFalloff = 0.33f, // cut attinuation less than 1/3
-			const float cutGrazing = 1.3f, // cut icident agngle larger than 75 degrees
+			const float cutGrazing = 0.26f, // cut incident agngle larger than 75 degrees
 			const int minRequireNumData = 1,
 			unsigned int numThreads = 0)
 			: SurfaceEstimation<InPointType, OutPointType>(scanner, cutFalloff, minRequireNumData, numThreads), cutGrazing(cutGrazing)
