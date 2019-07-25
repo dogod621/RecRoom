@@ -204,15 +204,15 @@ namespace RecRoom
 						SetAttributeNAN(outPoint);
 						output.is_dense = false;
 					}
-		}
+				}
 				else
 				{
 					PRINT_WARNING("Input point contain non finite value");
 					SetAttributeNAN(outPoint);
 					output.is_dense = false;
 				}
-	}
-}
+			}
+		}
 #else
 		std::vector<std::thread> threads;
 		for (int i = 0; i < threads_; i++)
