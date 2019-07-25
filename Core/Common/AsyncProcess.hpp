@@ -44,22 +44,22 @@ namespace RecRoom
 
 		//
 		if (!globalData) r = -1;
-		if (r != 0) { PRINT_INFO("Async A Step - End - " + std::to_string(r)); return r; }
+		if (r != 0) { PRINT_INFO("Async B Step - End - " + std::to_string(r)); return r; }
 
 		if (!query) r = -2;
-		if (r != 0) { PRINT_INFO("Async A Step - End - " + std::to_string(r)); return r; }
+		if (r != 0) { PRINT_INFO("Async B Step - End - " + std::to_string(r)); return r; }
 
 		if (!bufferData) r = -3;
-		if (r != 0) { PRINT_INFO("Async A Step - End - " + std::to_string(r)); return r; }
+		if (r != 0) { PRINT_INFO("Async B Step - End - " + std::to_string(r)); return r; }
 
 		if (!(*bufferData)) r = -4;
-		if (r != 0) { PRINT_INFO("Async A Step - End - " + std::to_string(r)); return r; }
+		if (r != 0) { PRINT_INFO("Async B Step - End - " + std::to_string(r)); return r; }
 
 		r = globalData->Check();
-		if (r != 0) { PRINT_INFO("Async A Step - End - " + std::to_string(r)); return r; }
+		if (r != 0) { PRINT_INFO("Async B Step - End - " + std::to_string(r)); return r; }
 
 		r = query->Check(*globalData);
-		if (r != 0) { PRINT_INFO("Async A Step - End - " + std::to_string(r)); return r; }
+		if (r != 0) { PRINT_INFO("Async B Step - End - " + std::to_string(r)); return r; }
 
 		r = b(*globalData, *query, *(*bufferData));
 		PRINT_INFO("Async B Step - End - " + std::to_string(r));
@@ -76,22 +76,22 @@ namespace RecRoom
 
 		//
 		if (!globalData) r = -1;
-		if (r != 0) { PRINT_INFO("Async A Step - End - " + std::to_string(r)); return r; }
+		if (r != 0) { PRINT_INFO("Async C Step - End - " + std::to_string(r)); return r; }
 
 		if (!query) r = -2;
-		if (r != 0) { PRINT_INFO("Async A Step - End - " + std::to_string(r)); return r; }
+		if (r != 0) { PRINT_INFO("Async C Step - End - " + std::to_string(r)); return r; }
 
 		if (!bufferData) r = -3;
-		if (r != 0) { PRINT_INFO("Async A Step - End - " + std::to_string(r)); return r; }
+		if (r != 0) { PRINT_INFO("Async C Step - End - " + std::to_string(r)); return r; }
 
 		if (!(*bufferData)) r = -4;
-		if (r != 0) { PRINT_INFO("Async A Step - End - " + std::to_string(r)); return r; }
+		if (r != 0) { PRINT_INFO("Async C Step - End - " + std::to_string(r)); return r; }
 
 		r = globalData->Check();
-		if (r != 0) { PRINT_INFO("Async A Step - End - " + std::to_string(r)); return r; }
+		if (r != 0) { PRINT_INFO("Async C Step - End - " + std::to_string(r)); return r; }
 
 		r = query->Check(*globalData);
-		if (r != 0) { PRINT_INFO("Async A Step - End - " + std::to_string(r)); return r; }
+		if (r != 0) { PRINT_INFO("Async C Step - End - " + std::to_string(r)); return r; }
 
 		//
 		r = c(*globalData, *query, *(*bufferData));
