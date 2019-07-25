@@ -43,7 +43,7 @@ namespace RecRoom
 
 #		ifdef INPUT_PERPOINT_INTENSITY
 
-		scanLaser.incidentDirection = scanMeta.position - Eigen::Vector3f(scanPoint.x, scanPoint.y, scanPoint.z);
+		scanLaser.incidentDirection = Eigen::Vector3f(scanMeta.position.x(), scanMeta.position.y(), scanMeta.position.z()) - Eigen::Vector3f(scanPoint.x, scanPoint.y, scanPoint.z);
 		float hitDistance = scanLaser.incidentDirection.norm();
 		scanLaser.incidentDirection /= hitDistance;
 		scanLaser.reflectedDirection = scanLaser.incidentDirection;

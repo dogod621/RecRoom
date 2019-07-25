@@ -40,8 +40,8 @@ namespace RecRoom
 #endif
 			for (int idx = 0; idx < static_cast<int> (indices_->size()); ++idx)
 			{
-				const PointMED& inPoint = (*input_)[(*indices_)[idx]];
-				PointMED& outPoint = output.points[idx];
+				const InPointType& inPoint = (*input_)[(*indices_)[idx]];
+				OutPointType& outPoint = output.points[idx];
 
 				//
 				std::vector<int> nnIndices(k_);
@@ -78,8 +78,8 @@ namespace RecRoom
 #endif
 			for (int idx = 0; idx < static_cast<int> (indices_->size()); ++idx)
 			{
-				const PointMED& inPoint = (*input_)[(*indices_)[idx]];
-				PointMED& outPoint = output.points[idx];
+				const InPointType& inPoint = (*input_)[(*indices_)[idx]];
+				OutPointType& outPoint = output.points[idx];
 
 				if (pcl::isFinite(inPoint))
 				{
