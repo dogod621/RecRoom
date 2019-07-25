@@ -30,15 +30,13 @@ namespace RecRoom
 
 	struct ScanLaser
 	{
-		Eigen::Vector3d incidentDirection;
-		Eigen::Vector3d hitPosition;
-		double intensity;
+		Eigen::Vector3f incidentDirection;
+		float intensity;
 
-		Eigen::Vector3d reflectedDirection;
-		double hitDistance;
-		double beamFalloff;
+		Eigen::Vector3f reflectedDirection;
+		float beamFalloff;
 
-		ScanLaser(): intensity(0.0), hitDistance(0.0), beamFalloff(0.0) {}
+		ScanLaser(): intensity(0.0f), beamFalloff(0.0f) {}
 	};
 
 	std::ostream& operator << (std::ostream& os, const ScanMeta& v);

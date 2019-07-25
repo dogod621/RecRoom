@@ -12,8 +12,8 @@ namespace RecRoom
 		EstimatorPcAlbedo(double searchRadius,
 			const CONST_PTR(ScannerPc)& scanner,
 			const LinearSolver linearSolver = LinearSolver::EIGEN_SVD,
-			const double distInterParm = 0.4, const double angleInterParm = 0.6, 
-			const double cutFalloff = 0.33, const double cutGrazing = 1.3)
+			const float distInterParm = 0.4f, const float angleInterParm = 0.6f,
+			const float cutFalloff = 0.33f, const float cutGrazing = 1.3f)
 			: EstimatorPc<InPointType, OutPointType>(searchRadius),
 			scanner(scanner), linearSolver(linearSolver),
 			distInterParm(distInterParm), angleInterParm(angleInterParm), 
@@ -32,17 +32,17 @@ namespace RecRoom
 
 	public:
 		LinearSolver getLinearSolver() const { return linearSolver;  }
-		double getDistInterParm() const { return distInterParm; }
-		double getAngleInterParm() const { return angleInterParm; }
-		double getCutFalloff() const { return cutFalloff; }
-		double getCutGrazing() const { return cutGrazing; }
+		float getDistInterParm() const { return distInterParm; }
+		float getAngleInterParm() const { return angleInterParm; }
+		float getCutFalloff() const { return cutFalloff; }
+		float getCutGrazing() const { return cutGrazing; }
 		CONST_PTR(ScannerPc) getScanner() const { return scanner; }
 
 		void setLinearSolver(LinearSolver v) { linearSolver = v; }
-		void setDistInterParm(double v) { distInterParm = v; }
-		void setAngleInterParm(double v) { angleInterParm = v; }
-		void setCutFalloff(double v) { cutFalloff = v; }
-		void setCutGrazing(double v) { cutGrazing = v; }
+		void setDistInterParm(float v) { distInterParm = v; }
+		void setAngleInterParm(float v) { angleInterParm = v; }
+		void setCutFalloff(float v) { cutFalloff = v; }
+		void setCutGrazing(float v) { cutGrazing = v; }
 		void setScanner(CONST_PTR(ScannerPc) v)
 		{
 			if (!v)
@@ -57,10 +57,10 @@ namespace RecRoom
 
 	protected:
 		LinearSolver linearSolver;
-		double distInterParm;
-		double angleInterParm;
-		double cutFalloff;
-		double cutGrazing;
+		float distInterParm;
+		float angleInterParm;
+		float cutFalloff;
+		float cutGrazing;
 		CONST_PTR(ScannerPc) scanner;
 	};
 }

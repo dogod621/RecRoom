@@ -11,16 +11,16 @@ namespace RecRoom
 	{
 	public:
 		NDFEstimation(
-			const CONST_PTR(ScannerPc) & scanner,
+			const CONST_PTR(ScannerPc)& scanner,
 			const LinearSolver linearSolver = LinearSolver::EIGEN_SVD,
-			const double distInterParm = 0.4, const double angleInterParm = 0.6, 
-			const double cutFalloff = 0.33, // cut attinuation less than 1/3
-			const double cutGrazing = 1.3, // cut icident agngle larger than 75 degrees
+			const float distInterParm = 0.4f, const float angleInterParm = 0.6f,
+			const float cutFalloff = 0.33f, // cut attinuation less than 1/3
+			const float cutGrazing = 1.3f, // cut icident agngle larger than 75 degrees
 			unsigned int numThreads = 0)
-			: AttributeEstimation<InPointType, OutPointType>(scanner, cutFalloff, cutGrazing, 8, numThreads),
+			: AttributeEstimation<InPointType, OutPointType>(scanner, cutFalloff, cutGrazing, 4, numThreads),
 			distInterParm(distInterParm), angleInterParm(angleInterParm), linearSolver(linearSolver)
 		{
-			feature_name_ = "NDFEstimation";
+			feature_name_ = "AlbedoEstimation";
 		};
 
 	protected:
@@ -34,12 +34,13 @@ namespace RecRoom
 			p.normal_x = std::numeric_limits<float>::quiet_NaN();
 			p.normal_y = std::numeric_limits<float>::quiet_NaN();
 			p.normal_z = std::numeric_limits<float>::quiet_NaN();
-			p.sharpness = std::numeric_limits<float>::quiet_NaN();	
+			p.curvature = std::numeric_limits<float>::quiet_NaN();
+			p.sharpness = std::numeric_limits<float>::quiet_NaN();
 		}
 
 	protected:
-		double distInterParm;
-		double angleInterParm;
+		float distInterParm;
+		float angleInterParm;
 		LinearSolver linearSolver;
 
 	public:

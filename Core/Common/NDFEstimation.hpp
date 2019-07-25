@@ -9,7 +9,7 @@ namespace RecRoom
 		const Pc<InPointType>& cloud,
 		const InPointType& center, const std::vector<ScanData>& scanDataSet, OutPointType& outPoint) const
 	{
-		Eigen::Vector3d macroNormal(center.normal_x, center.normal_y, center.normal_z);
+		Eigen::Vector3f macroNormal(center.normal_x, center.normal_y, center.normal_z);
 
 		Eigen::MatrixXf A;
 		Eigen::MatrixXf B;
@@ -21,17 +21,17 @@ namespace RecRoom
 		for (std::vector<ScanData>::const_iterator it = scanDataSet.begin(); it != scanDataSet.end(); ++it)
 		{
 			const InPointType& hitPoint = cloud[it->index];
-			Eigen::Vector3d hitNormal(hitPoint.normal_x, hitPoint.normal_y, hitPoint.normal_z);
-			Eigen::Vector3d hitTangent;
-			Eigen::Vector3d hitBitangent;
+			Eigen::Vector3f hitNormal(hitPoint.normal_x, hitPoint.normal_y, hitPoint.normal_z);
+			Eigen::Vector3f hitTangent;
+			Eigen::Vector3f hitBitangent;
 			if (!Common::GenFrame(hitNormal, hitTangent, hitBitangent))
 			{
 				PRINT_WARNING("GenFrame failed, ignore");
 				return false;
 			}
 
-			double dotNN = hitNormal.dot(macroNormal);
-			double weight = std::pow((search_radius_ - it->distance2Center) / search_radius_, distInterParm) * std::pow(dotNN, angleInterParm);
+			float dotNN = hitNormal.dot(macroNormal);
+			float weight = std::pow((search_radius_ - it->distance2Center) / search_radius_, distInterParm) * std::pow(dotNN, angleInterParm);
 
 			A(shifter, 0) = weight * it->laser.incidentDirection.x();
 			A(shifter, 1) = weight * it->laser.incidentDirection.y();
@@ -41,12 +41,12 @@ namespace RecRoom
 			A(shifter + 1, 0) = weight * hitTangent.x();
 			A(shifter + 1, 1) = weight * hitTangent.y();
 			A(shifter + 1, 2) = weight * hitTangent.z();
-			B(shifter + 1, 0) = 0.0;
+			B(shifter + 1, 0) = 0.0f;
 
 			A(shifter + 2, 0) = weight * hitBitangent.x();
 			A(shifter + 2, 1) = weight * hitBitangent.y();
 			A(shifter + 2, 2) = weight * hitBitangent.z();
-			B(shifter + 2, 0) = 0.0;
+			B(shifter + 2, 0) = 0.0f;
 
 			shifter += 3;
 		}
@@ -78,11 +78,11 @@ namespace RecRoom
 		}
 
 		//
-		Eigen::Vector3d xVec(X(0, 0), X(1, 0), X(2, 0));
+		Eigen::Vector3f xVec(X(0, 0), X(1, 0), X(2, 0));
 		if (std::isfinite(xVec.x()) && std::isfinite(xVec.y()) && std::isfinite(xVec.z()))
 		{
-			double xVecNorm = xVec.norm();
-			if (xVecNorm > Common::eps)
+			float xVecNorm = xVec.norm();
+			if (xVecNorm > std::numeric_limits<float>::epsilon())
 			{
 				outPoint.intensity = xVecNorm;
 				xVec /= xVecNorm;

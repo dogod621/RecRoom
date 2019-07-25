@@ -71,16 +71,20 @@ namespace RecRoom
 	{
 	public:
 		static std::mutex gLock;
-		static double eps;
 
 		static bool GenFrame(const Eigen::Vector3d& notmal, Eigen::Vector3d& tangent, Eigen::Vector3d& bitangent);
-		static bool IsUnitVector(const Eigen::Vector3d& v);
+		static bool GenFrame(const Eigen::Vector3f& notmal, Eigen::Vector3f& tangent, Eigen::Vector3f& bitangent);
 
 	protected:
-		static Eigen::Vector3d tempVec1;
-		static Eigen::Vector3d tempVec2;
-		static Eigen::Vector3d tempVec3;
-		static Eigen::Vector3d tempVec4;
+		static Eigen::Vector3d tempVec1_d;
+		static Eigen::Vector3d tempVec2_d;
+		static Eigen::Vector3d tempVec3_d;
+		static Eigen::Vector3d tempVec4_d;
+
+		static Eigen::Vector3f tempVec1_f;
+		static Eigen::Vector3f tempVec2_f;
+		static Eigen::Vector3f tempVec3_f;
+		static Eigen::Vector3f tempVec4_f;
 	};
 
 #define FG_R std::string("\033[31m") // red

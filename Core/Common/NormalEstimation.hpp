@@ -15,7 +15,7 @@ namespace RecRoom
 		EIGEN_ALIGN16 Eigen::Matrix3f covarianceMatrix;
 		Eigen::Vector4f centroid;
 
-		float sumWeight = 0.0;
+		float sumWeight = 0.0f;
 		for (std::vector<ScanData>::const_iterator it = scanDataSet.begin(); it != scanDataSet.end(); ++it)
 		{
 			const InPointType& hitPoint = cloud[it->index];
@@ -46,30 +46,27 @@ namespace RecRoom
 		covarianceMatrix.coeffRef(7) = covarianceMatrix.coeff(5);
 
 		// Get the plane normal and surface curvature
-		pcl::solvePlaneParameters(covarianceMatrix, outPoint.normal_x, outPoint.normal_y, outPoint.normal_z, outPoint.curvature);
+		float nx, ny, nz, cv;
+		pcl::solvePlaneParameters(covarianceMatrix, nx, ny, nz, cv);
 
 		//
-		float norm = std::sqrt(outPoint.normal_x*outPoint.normal_x + outPoint.normal_y*outPoint.normal_y + outPoint.normal_z*outPoint.normal_z);
-		if (norm > 0.1)
+		float norm = nx * nx + ny * ny + nz * nz;
+		if (norm > 0.1f)
 		{
-			// Flip
-			double pScore = 0;
-			double nScore = 0;
-			for (std::vector<ScanData>::const_iterator it = scanDataSet.begin(); it != scanDataSet.end(); ++it)
-			{
-				const InPointType& hitPoint = cloud[it->index];
-				Eigen::Vector3d pNormal(hitPoint.normal_x, hitPoint.normal_y, hitPoint.normal_z);
-				Eigen::Vector3d nNormal(-hitPoint.normal_x, -hitPoint.normal_y, -hitPoint.normal_z);
+			float invNorm = 1.0f / std::sqrt(norm);
 
-				pScore += pNormal.dot(it->laser.incidentDirection);
-				nScore += nNormal.dot(it->laser.incidentDirection);
-			}
-			if (nScore > pScore)
-				norm = -norm;
+			// Flip
+			float score = 0.0f;
+			for (std::vector<ScanData>::const_iterator it = scanDataSet.begin(); it != scanDataSet.end(); ++it)
+				score += it->laser.incidentDirection.x() * nx + it->laser.incidentDirection.y() * ny + it->laser.incidentDirection.z() * nz;
+
+			if (score < 0.0f)
+				invNorm *= -1.0f;
 			
-			outPoint.normal_x /= norm;
-			outPoint.normal_y /= norm;
-			outPoint.normal_z /= norm;
+			outPoint.normal_x = nx * invNorm;
+			outPoint.normal_y = ny * invNorm;
+			outPoint.normal_z = nz * invNorm;
+			outPoint.curvature = cv;
 			return true;
 		}
 		return false;

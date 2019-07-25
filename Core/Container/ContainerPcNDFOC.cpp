@@ -23,7 +23,7 @@ namespace RecRoom
 
 			if (oct->getTreeDepth() != 16)
 				THROW_EXCEPTION("treeDepth is not 16");
-			if (std::abs(oct->getVoxelSideLength() - 1.0) > Common::eps)
+			if (std::abs(oct->getVoxelSideLength() - 1.0) > std::numeric_limits<float>::epsilon())
 				THROW_EXCEPTION("voxelSideLength is not 1: " + std::to_string(oct->getVoxelSideLength()));
 
 			Dump();

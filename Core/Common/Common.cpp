@@ -3,17 +3,22 @@
 namespace RecRoom
 {
 	std::mutex Common::gLock;
-	double Common::eps = std::numeric_limits<float>::epsilon();
-	Eigen::Vector3d Common::tempVec1 = Eigen::Vector3d(1.0 / std::sqrt(3.0), 1.0 / std::sqrt(3.0), 1.0 / std::sqrt(3.0));
-	Eigen::Vector3d Common::tempVec2 = Eigen::Vector3d(1.0 / std::sqrt(2.0), 1.0 / std::sqrt(2.0), 0.0);
-	Eigen::Vector3d Common::tempVec3 = Eigen::Vector3d(1.0 / std::sqrt(2.0), 0.0, 1.0 / std::sqrt(2.0));
-	Eigen::Vector3d Common::tempVec4 = Eigen::Vector3d(0.0, 1.0 / std::sqrt(2.0), 1.0 / std::sqrt(2.0));
+
+	Eigen::Vector3d Common::tempVec1_d = Eigen::Vector3d(1.0 / std::sqrt(3.0), 1.0 / std::sqrt(3.0), 1.0 / std::sqrt(3.0));
+	Eigen::Vector3d Common::tempVec2_d = Eigen::Vector3d(1.0 / std::sqrt(2.0), 1.0 / std::sqrt(2.0), 0.0);
+	Eigen::Vector3d Common::tempVec3_d = Eigen::Vector3d(1.0 / std::sqrt(2.0), 0.0, 1.0 / std::sqrt(2.0));
+	Eigen::Vector3d Common::tempVec4_d = Eigen::Vector3d(0.0, 1.0 / std::sqrt(2.0), 1.0 / std::sqrt(2.0));
+
+	Eigen::Vector3f Common::tempVec1_f = Eigen::Vector3f(1.0f / std::sqrt(3.0f), 1.0f / std::sqrt(3.0f), 1.0f / std::sqrt(3.0f));
+	Eigen::Vector3f Common::tempVec2_f = Eigen::Vector3f(1.0f / std::sqrt(2.0f), 1.0f / std::sqrt(2.0f), 0.0f);
+	Eigen::Vector3f Common::tempVec3_f = Eigen::Vector3f(1.0f / std::sqrt(2.0f), 0.0f, 1.0f / std::sqrt(2.0f));
+	Eigen::Vector3f Common::tempVec4_f = Eigen::Vector3f(0.0f, 1.0f / std::sqrt(2.0f), 1.0f / std::sqrt(2.0f));
 
 	bool Common::GenFrame(const Eigen::Vector3d& notmal, Eigen::Vector3d& tangent, Eigen::Vector3d& bitangent)
 	{
-		tangent = notmal.cross(Common::tempVec1);
+		tangent = notmal.cross(Common::tempVec1_d);
 		double tangentNorm = tangent.norm();
-		if (tangentNorm > Common::eps)
+		if (tangentNorm > std::numeric_limits<float>::epsilon())
 		{
 			tangent /= tangentNorm;
 			bitangent = notmal.cross(tangent);
@@ -22,9 +27,9 @@ namespace RecRoom
 		}
 		else
 		{
-			tangent = notmal.cross(Common::tempVec2);
+			tangent = notmal.cross(Common::tempVec2_d);
 			tangentNorm = tangent.norm();
-			if (tangentNorm > Common::eps)
+			if (tangentNorm > std::numeric_limits<float>::epsilon())
 			{
 				tangent /= tangentNorm;
 				bitangent = notmal.cross(tangent);
@@ -33,9 +38,9 @@ namespace RecRoom
 			}
 			else
 			{
-				tangent = notmal.cross(Common::tempVec3);
+				tangent = notmal.cross(Common::tempVec3_d);
 				tangentNorm = tangent.norm();
-				if (tangentNorm > Common::eps)
+				if (tangentNorm > std::numeric_limits<float>::epsilon())
 				{
 					tangent /= tangentNorm;
 					bitangent = notmal.cross(tangent);
@@ -44,9 +49,9 @@ namespace RecRoom
 				}
 				else
 				{
-					tangent = notmal.cross(Common::tempVec4);
+					tangent = notmal.cross(Common::tempVec4_d);
 					tangentNorm = tangent.norm();
-					if (tangentNorm > Common::eps)
+					if (tangentNorm > std::numeric_limits<float>::epsilon())
 					{
 						tangent /= tangentNorm;
 						bitangent = notmal.cross(tangent);
@@ -59,9 +64,54 @@ namespace RecRoom
 		return false;
 	}
 
-	bool Common::IsUnitVector(const Eigen::Vector3d& v)
+	bool Common::GenFrame(const Eigen::Vector3f& notmal, Eigen::Vector3f& tangent, Eigen::Vector3f& bitangent)
 	{
-		return std::abs(v.norm() - 1.0f) < 0.001;
+		tangent = notmal.cross(Common::tempVec1_f);
+		float tangentNorm = tangent.norm();
+		if (tangentNorm > std::numeric_limits<float>::epsilon())
+		{
+			tangent /= tangentNorm;
+			bitangent = notmal.cross(tangent);
+			bitangent /= bitangent.norm();
+			return true;
+		}
+		else
+		{
+			tangent = notmal.cross(Common::tempVec2_f);
+			tangentNorm = tangent.norm();
+			if (tangentNorm > std::numeric_limits<float>::epsilon())
+			{
+				tangent /= tangentNorm;
+				bitangent = notmal.cross(tangent);
+				bitangent /= bitangent.norm();
+				return true;
+			}
+			else
+			{
+				tangent = notmal.cross(Common::tempVec3_f);
+				tangentNorm = tangent.norm();
+				if (tangentNorm > std::numeric_limits<float>::epsilon())
+				{
+					tangent /= tangentNorm;
+					bitangent = notmal.cross(tangent);
+					bitangent /= bitangent.norm();
+					return true;
+				}
+				else
+				{
+					tangent = notmal.cross(Common::tempVec4_f);
+					tangentNorm = tangent.norm();
+					if (tangentNorm > std::numeric_limits<float>::epsilon())
+					{
+						tangent /= tangentNorm;
+						bitangent = notmal.cross(tangent);
+						bitangent /= bitangent.norm();
+						return true;
+					}
+				}
+			}
+		}
+		return false;
 	}
 
 	DumpAble::DumpAble(const std::string& className, const boost::filesystem::path& filePath)

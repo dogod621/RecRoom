@@ -430,7 +430,7 @@ namespace RecRoom
 
 	int CStep_RecSegNDF(AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, const AsyncData_Rec& data)
 	{
-		const double cutFalloff = 0.33; // 
+		const float cutFalloff = 0.33f; // 
 
 #ifdef PERPOINT_NORMAL
 #ifdef PERPOINT_LABEL
@@ -441,22 +441,22 @@ namespace RecRoom
 			PointMED& pRaw = (*data.pcRaw)[*it];
 			if (pRaw.HasLabel())
 			{
-				Eigen::Vector3d hitNormal(pRaw.normal_x, pRaw.normal_y, pRaw.normal_z);
-				Eigen::Vector3d hitTangent;
-				Eigen::Vector3d hitBitangent;
+				Eigen::Vector3f hitNormal(pRaw.normal_x, pRaw.normal_y, pRaw.normal_z);
+				Eigen::Vector3f hitTangent;
+				Eigen::Vector3f hitBitangent;
 				if (Common::GenFrame(hitNormal, hitTangent, hitBitangent))
 				{
 					ScanLaser scanLaser;
 					if (global.ptrReconstructorPcOC()->getScanner()->ToScanLaser(pRaw, scanLaser))
 					{
-						Eigen::Vector3d hafway = scanLaser.incidentDirection + scanLaser.reflectedDirection;
-						double hafwayNorm = hafway.norm();
-						if (hafwayNorm > Common::eps)
+						Eigen::Vector3f hafway = scanLaser.incidentDirection + scanLaser.reflectedDirection;
+						float hafwayNorm = hafway.norm();
+						if (hafwayNorm > std::numeric_limits<float>::epsilon())
 						{
 							hafway /= hafwayNorm;
 							if (scanLaser.beamFalloff > cutFalloff)
 							{
-								Eigen::Vector3d tanHafway(
+								Eigen::Vector3f tanHafway(
 									hitTangent.dot(hafway),
 									hitBitangent.dot(hafway),
 									hitNormal.dot(hafway));

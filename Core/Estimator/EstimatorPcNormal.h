@@ -10,8 +10,8 @@ namespace RecRoom
 	public:
 		EstimatorPcNormal(double searchRadius, 
 			const CONST_PTR(ScannerPc)& scanner,
-			const double distInterParm = 0.4,
-			const double cutFalloff = 0.33)
+			const float distInterParm = 0.4f,
+			const float cutFalloff = 0.33f)
 			: EstimatorPc<InPointType, OutPointType>(searchRadius), 
 			scanner(scanner),
 			distInterParm(distInterParm), 
@@ -29,12 +29,12 @@ namespace RecRoom
 			Pc<OutPointType>& output) const;
 
 	public:
-		double getDistInterParm() const { return distInterParm; }
-		double getCutFalloff() const { return cutFalloff; }
+		float getDistInterParm() const { return distInterParm; }
+		float getCutFalloff() const { return cutFalloff; }
 		CONST_PTR(ScannerPc) getScanner() const { return scanner; }
 
-		void setDistInterParm(double v) { distInterParm = v; }
-		void setCutFalloff(double v) { cutFalloff = v; }
+		void setDistInterParm(float v) { distInterParm = v; }
+		void setCutFalloff(float v) { cutFalloff = v; }
 		void setScanner(CONST_PTR(ScannerPc) v)
 		{
 			if (!v)
@@ -48,8 +48,8 @@ namespace RecRoom
 		}
 
 	protected:
-		double distInterParm;
-		double cutFalloff;
+		float distInterParm;
+		float cutFalloff;
 		CONST_PTR(ScannerPc) scanner;
 	};
 }

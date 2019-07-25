@@ -195,10 +195,10 @@ int main(int argc, char *argv[])
 		std::cout << "EstimatorPcAlbedo -searchRadius: " << searchRadius << std::endl;
 
 		// Parse EstimatorPcAlbedo Parmameters
-		double distInterParm = 0.4;
-		double angleInterParm = 0.6;
-		double cutFalloff = 0.33;
-		double cutGrazing = 1.3;
+		float distInterParm = 0.4f;
+		float angleInterParm = 0.6f;
+		float cutFalloff = 0.33f;
+		float cutGrazing = 1.3f;
 		pcl::console::parse_argument(argc, argv, "-distInterParm", distInterParm);
 		pcl::console::parse_argument(argc, argv, "-angleInterParm", angleInterParm);
 		pcl::console::parse_argument(argc, argv, "-cutFalloff", cutFalloff);

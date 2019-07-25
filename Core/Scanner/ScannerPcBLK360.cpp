@@ -43,18 +43,17 @@ namespace RecRoom
 
 #		ifdef INPUT_PERPOINT_INTENSITY
 
-		scanLaser.hitPosition = Eigen::Vector3d(scanPoint.x, scanPoint.y, scanPoint.z);
-		scanLaser.incidentDirection = scanMeta.position - scanLaser.hitPosition;
-		scanLaser.hitDistance = scanLaser.incidentDirection.norm();
-		scanLaser.incidentDirection /= scanLaser.hitDistance;
+		scanLaser.incidentDirection = scanMeta.position - Eigen::Vector3f(scanPoint.x, scanPoint.y, scanPoint.z);
+		float hitDistance = scanLaser.incidentDirection.norm();
+		scanLaser.incidentDirection /= hitDistance;
 		scanLaser.reflectedDirection = scanLaser.incidentDirection;
 
 		// Ref - BLK 360 Spec - laser wavelength & Beam divergence : https://lasers.leica-geosystems.com/global/sites/lasers.leica-geosystems.com.global/files/leica_media/product_documents/blk/853811_leica_blk360_um_v2.0.0_en.pdf
 		// Ref - Gaussian beam : https://en.wikipedia.org/wiki/Gaussian_beam
 		// Ref - Beam divergence to Beam waist(w0) : http://www2.nsysu.edu.tw/optics/laser/angle.htm
-		double temp = scanLaser.hitDistance / 26.2854504782;
-		scanLaser.beamFalloff = 1.0f / (1 + temp * temp);
-		scanLaser.intensity = (double)scanPoint.intensity;
+		float temp = hitDistance / 26.2854504782f;
+		scanLaser.beamFalloff = 1.0f / (1.0f + temp * temp);
+		scanLaser.intensity = scanPoint.intensity;
 		return true;
 
 #		else

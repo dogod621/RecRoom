@@ -14,9 +14,9 @@ namespace RecRoom
 	{
 		ScanLaser laser;
 		int index;
-		double distance2Center;
+		float distance2Center;
 
-		ScanData(const ScanLaser& laser = ScanLaser(), int index = -1, double distance2Center = 0.0): laser(laser), index(index), distance2Center(distance2Center) {}
+		ScanData(const ScanLaser& laser = ScanLaser(), int index = -1, float distance2Center = 0.0f): laser(laser), index(index), distance2Center(distance2Center) {}
 	};
 
 	template<class InPointType, class OutPointType>
@@ -37,7 +37,7 @@ namespace RecRoom
 
 	public:
 		SurfaceEstimation(const CONST_PTR(ScannerPc)& scanner,
-			const double cutFalloff = 0.33, // cut attinuation less than 1/3
+			const float cutFalloff = 0.33f, // cut attinuation less than 1/3
 			const std::size_t minRequireNumData = 1,
 			unsigned int numThreads = 0)
 			: scanner(scanner), cutFalloff(cutFalloff), minRequireNumData(minRequireNumData)
@@ -86,7 +86,7 @@ namespace RecRoom
 	protected:
 		CONST_PTR(ScannerPc) scanner;
 
-		double cutFalloff;
+		float cutFalloff;
 
 		std::size_t minRequireNumData;
 
@@ -101,8 +101,8 @@ namespace RecRoom
 	{
 	public:
 		AttributeEstimation(const CONST_PTR(ScannerPc)& scanner,
-			const double cutFalloff = 0.33, // cut attinuation less than 1/3
-			const double cutGrazing = 1.3, // cut icident agngle larger than 75 degrees
+			const float cutFalloff = 0.33f, // cut attinuation less than 1/3
+			const float cutGrazing = 1.3f, // cut icident agngle larger than 75 degrees
 			const std::size_t minRequireNumData = 1,
 			unsigned int numThreads = 0)
 			: SurfaceEstimation<InPointType, OutPointType>(scanner, cutFalloff, minRequireNumData, numThreads), cutGrazing(cutGrazing)
@@ -116,7 +116,7 @@ namespace RecRoom
 			const InPointType& center, std::vector<ScanData>& scanDataSet) const;
 
 	protected:
-		double cutGrazing;
+		float cutGrazing;
 
 	public:
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
