@@ -136,7 +136,7 @@ namespace RecRoom
 			std::size_t a_gIdx = 0;
 			std::size_t b_gIdx = 0;
 			{
-				PRINT_INFO("Launch sync - Start - ID: (" + std::to_string(a_gIdx) + ", -1)/" + std::to_string(queries.size() - 1));
+				PRINT_INFO("Launch async - Start - ID: (" + std::to_string(a_gIdx) + ", -1)/" + std::to_string(queries.size() - 1));
 
 				std::size_t a_perGIdx = a_gIdx;
 				std::vector<BufferT>& a_buffer = doubleBuffer[!a_bufferPointer];
@@ -156,7 +156,7 @@ namespace RecRoom
 
 			for (; b_gIdx < queries.size();)
 			{
-				PRINT_INFO("Launch sync - Start - ID: (" + std::to_string(a_gIdx) + ", " + std::to_string(b_gIdx) + ")/" + std::to_string(queries.size() - 1));
+				PRINT_INFO("Launch async - Start - ID: (" + std::to_string(a_gIdx) + ", " + std::to_string(b_gIdx) + ")/" + std::to_string(queries.size() - 1));
 
 				// Send queries
 				std::size_t b_perGIdx = b_gIdx;
