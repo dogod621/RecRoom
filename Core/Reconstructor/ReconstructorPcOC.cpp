@@ -280,7 +280,16 @@ namespace RecRoom
 		}
 
 		{
-			PRINT_INFO("Build pcRawAcc - Start");
+			PRINT_INFO("Build pcRawAcc - Start - vnn:" + std::to_string(global.ptrReconstructorPcOC()->getUseVNN()));
+			if (global.ptrReconstructorPcOC()->getUseVNN())
+			{
+				float res = global.ptrReconstructorPcOC()->getRes();
+				data.pcRawAcc = PTR(VNN<PointMED>)(new VNN<PointMED>(Eigen::Vector3d(res, res, res), cData.minAABB, cData.maxAABB));
+			}
+			else
+			{
+				data.pcRawAcc = PTR(AccMED)(new KDTreeMED);
+			}
 			data.pcRawAcc->setInputCloud(data.pcRaw);
 			PRINT_INFO("Build pcRawAcc - End");
 		}

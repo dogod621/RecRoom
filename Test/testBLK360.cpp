@@ -109,7 +109,7 @@ void PrintHelp(int argc, char **argv)
 	{
 		PRINT_HELP("\t", "maxEdgeSize", "float ${voxelSize*0.33}", "The nearest neighbors search radius for each point and the maximum edge length.");
 		PRINT_HELP("\t", "mu", "float 2.5", "The nearest neighbor distance multiplier to obtain the final search radius.");
-		PRINT_HELP("\t", "maxNumNei", "int ${(maxEdgeSize/voxelSize)^3*4/3*M_PI}", "The maximum number of nearest neighbors accepted by searching.");
+		PRINT_HELP("\t", "maxNumNei", "int ${(maxEdgeSize/voxelSize)^3*4*M_PI}", "The maximum number of nearest neighbors accepted by searching.");
 		PRINT_HELP("\t", "minAngle", "float 15.0", "The preferred minimum angle in degrees for the triangles.");
 		PRINT_HELP("\t", "maxAngle", "float 120.0", "The maximum angle in degrees for the triangles.");
 		PRINT_HELP("\t", "epsAngle", "float 45.0", "Maximum surface angle in degrees.");
@@ -250,7 +250,7 @@ int main(int argc, char *argv[])
 
 		pcl::console::parse_argument(argc, argv, "-maxEdgeSize", maxEdgeSize);
 		pcl::console::parse_argument(argc, argv, "-mu", mu);
-		int maxNumNei = int(maxEdgeSize / voxelSize * maxEdgeSize / voxelSize * maxEdgeSize / voxelSize * (4.0 / 3.0) * M_PI);
+		int maxNumNei = int(maxEdgeSize / voxelSize * maxEdgeSize / voxelSize * maxEdgeSize / voxelSize * 4.0 * M_PI);
 		pcl::console::parse_argument(argc, argv, "-maxNumNei", maxNumNei);
 		pcl::console::parse_argument(argc, argv, "-minAngle", minAngle);
 		pcl::console::parse_argument(argc, argv, "-maxAngle", maxAngle);
@@ -391,14 +391,14 @@ int main(int argc, char *argv[])
 				reconstructorPC->DoRecPointCloud();
 			}
 
-			/*if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::PC_MATERIAL) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
+			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::PC_MATERIAL) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
 			{
 				std::cout << "reconstructorPC->DoRecPcMaterial()" << std::endl;
 
 				reconstructorPC->DoRecPcMaterial();
 			}
 
-			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::PC_SEGMENT) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
+			/*if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::PC_SEGMENT) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
 			{
 				std::cout << "reconstructorPC->DoRecPcSegment()" << std::endl;
 
