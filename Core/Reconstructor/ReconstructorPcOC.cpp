@@ -277,6 +277,7 @@ namespace RecRoom
 				tarP.normal_y = srcP.normal_y;
 				tarP.normal_z = srcP.normal_z;
 				tarP.curvature = srcP.curvature;
+				tarP.label = srcP.label;
 			}
 		}
 
