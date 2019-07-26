@@ -253,9 +253,13 @@ namespace RecRoom
 
 			FilterPcAABB<PointMED> cb(cData.minAABB, cData.maxAABB);
 			cb.Process(nullptr, data.pcRec, nullptr, *data.pcRecIdx);
-		
+
+			PTR(PcIndex) cbIdxEXT (new PcIndex);
+			FilterPcAABB<PointMED> cbEXT (cData.extMinAABB, cData.extMaxAABB);
+			cbEXT.Process(nullptr, data.pcRec, nullptr, *cbIdxEXT);
+
 			PRINT_INFO("Build pcRecAcc - Start");
-			data.pcRecAcc->setInputCloud(data.pcRec, data.pcRecIdx);
+			data.pcRecAcc->setInputCloud(data.pcRec, cbIdxEXT);
 			PRINT_INFO("Build pcRecAcc - End");
 		}
 

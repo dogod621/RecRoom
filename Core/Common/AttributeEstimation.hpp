@@ -31,11 +31,14 @@ namespace RecRoom
 		for (int idx = 0; idx < k; ++idx)
 		{
 			int px = indices[idx];
-			ScanLaser laser;
-			if (scanner->ToScanLaser(cloud[px], laser))
+			if (pcl::isFinite(cloud[px]))
 			{
-				if (laser.beamFalloff > cutFalloff)
-					scanDataSet.push_back(ScanData(laser, px, std::sqrt(distance[idx])));
+				ScanLaser laser;
+				if (scanner->ToScanLaser(cloud[px], laser))
+				{
+					if (laser.beamFalloff > cutFalloff)
+						scanDataSet.push_back(ScanData(laser, px, std::sqrt(distance[idx])));
+				}
 			}
 		}
 
