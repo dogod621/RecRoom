@@ -1,8 +1,7 @@
 #pragma once
 
-#include <pcl/PolygonMesh.h>
-
 #include "Common/Common.h"
+#include "Common/Processor.h"
 #include "Common/Point.h"
 #include "Sampler/SamplerPc.h"
 #include "Filter/FilterPc.h"
@@ -11,7 +10,7 @@
 namespace RecRoom
 {
 	template<class PointType>
-	class MesherPc : public SearchInputSurfaceProcesserPc<PointType, Mesh>
+	class MesherPc : public SearchInputSurfaceProcessorPc<PointType, Mesh>
 	{
 	public:
 		using Sampler = SamplerPc<PointType>;
@@ -24,7 +23,7 @@ namespace RecRoom
 			CONST_PTR(Sampler) preprocessSampler = nullptr,
 			CONST_PTR(Filter) preprocessFilter = nullptr,
 			CONST_PTR(Interpolator) fieldInterpolator = CONST_PTR(Interpolator)(new InterpolatorNearest))
-			: SearchInputSurfaceProcesserPc<PointType, Mesh>(),
+			: SearchInputSurfaceProcessorPc<PointType, Mesh>(),
 			preprocessSampler(preprocessSampler), preprocessFilter(preprocessFilter), fieldInterpolator(fieldInterpolator) 
 		{
 			if (!fieldInterpolator)
@@ -50,7 +49,7 @@ namespace RecRoom
 	protected:
 		virtual void ToMesh(PTR(Acc<PointType>)& searchSurface, PTR(Pc<PointType>)& input, Mesh& output) const = 0;
 
-	protected:
+	public:
 		CONST_PTR(Sampler) getPreprocessSampler() const { return preprocessSampler; };
 		CONST_PTR(Filter) getPreprocessFilter() const { return preprocessFilter; };
 		CONST_PTR(Interpolator) getFieldInterpolator() const { return fieldInterpolator; };

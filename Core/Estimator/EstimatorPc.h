@@ -1,16 +1,17 @@
 #pragma once
 
 #include "Common/Common.h"
+#include "Common/Processor.h"
 
 namespace RecRoom
 {
 	template<class InPointType, class OutPointType>
 	class EstimatorPc 
-		: public SearchAnySurfaceProcesserPc2Pc<InPointType, OutPointType>
+		: public SearchAnySurfaceProcessorPc2Pc<InPointType, OutPointType>
 	{
 	public:
 		EstimatorPc(double searchRadius)
-			: SearchAnySurfaceProcesserPc2Pc<InPointType, OutPointType>(),
+			: SearchAnySurfaceProcessorPc2Pc<InPointType, OutPointType>(),
 			searchRadius(searchRadius)
 		{
 			if (searchRadius <= 0.0)

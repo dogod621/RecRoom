@@ -8,12 +8,9 @@ namespace RecRoom
 	class FilterPcRemoveDuplicate : public FilterPc<PointType>
 	{
 	public:
-		FilterPcRemoveDuplicate(double searchRadius, float minDistance)
-			: FilterPc<PointType>(), searchRadius(searchRadius), minDistance(minDistance), sqrMinDistance(minDistance * minDistance)
-		{
-			if (searchRadius <= minDistance)
-				THROW_EXCEPTION("searchRadius <= minDistance");
-		}
+		FilterPcRemoveDuplicate(float minDistance)
+			: FilterPc<PointType>(),  minDistance(minDistance)
+		{}
 
 	public:
 		virtual void ImplementProcess(
@@ -23,32 +20,11 @@ namespace RecRoom
 			PcIndex& output) const;
 
 	public:
-		double getSearchRadius() const { return searchRadius; }
 		float getMinDistance() const { return minDistance; }
-
-		void setSearchRadius(double v) 
-		{
-			if (v <= minDistance)
-				PRINT_WARNING("v <= minDistance, ignore"); 
-			else
-				searchRadius = v; 
-		}
-
-		void setMinDistance(float v) 
-		{ 
-			if (v > searchRadius)
-				PRINT_WARNING("v > searchRadius, ignore");
-			else
-			{
-				minDistance = v;
-				sqrMinDistance = v * v;
-			}
-		}
+		void setMinDistance(float v) { minDistance = v; }
 		
 	protected:
-		double searchRadius;
 		float minDistance;
-		float sqrMinDistance;
 	};
 }
 

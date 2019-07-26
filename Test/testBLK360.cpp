@@ -53,7 +53,7 @@ void PrintHelp(int argc, char **argv)
 		PRINT_HELP("\t", "res", "float 4", "Gird unit size in meters.");
 		PRINT_HELP("\t", "min", "float[3] -100 -100 -100", "Min AABB corner in meters. For example: -min \"-100 -100 -100\".");
 		PRINT_HELP("\t", "max", "float[3] 100 100 100", "Max AABB corner in meters. For example: -max \"100 100 100\".");
-		PRINT_HELP("\t", "overlap", "float 0.1", "Overlap size in meters when doing out-of-core.");
+		PRINT_HELP("\t", "overlap", "float 0.05", "Overlap size in meters when doing out-of-core.");
 	}
 
 	std::cout << "ScannerPcBLK360 Parmameters:==============================================================================================================================" << std::endl << std::endl;
@@ -165,7 +165,7 @@ int main(int argc, char *argv[])
 		std::cout << "ContainerPcRAWOC Parmameters -min: " << min << std::endl;
 		std::cout << "ContainerPcRAWOC Parmameters -max: " << max << std::endl;
 
-		double overlap = 0.1;
+		double overlap = 0.05;
 		pcl::console::parse_argument(argc, argv, "-overlap", overlap);
 		std::cout << "ContainerPcRAWOC Parmameters -overlap: " << overlap << std::endl;
 
@@ -242,12 +242,13 @@ int main(int argc, char *argv[])
 		std::cout << "SegmenterPcSVC -isoLevel: " << isoLevel << std::endl;
 		std::cout << "SegmenterPcSVC -gridRes: " << gridRes << std::endl;*/
 
-		double maxEdgeSize = overlap;
+		double maxEdgeSize = voxelSize*4.5;
 		double mu = 2.5;
-		int maxNumNei = int(maxEdgeSize/voxelSize * maxEdgeSize/voxelSize * M_PI);
+		int maxNumNei = int(maxEdgeSize/voxelSize * maxEdgeSize/voxelSize * maxEdgeSize / voxelSize * (4.0/3.0) * M_PI);
 		double minAngle = 10.0;
-		double maxAngle = 120.0;
+		double maxAngle = 160.0;
 		double epsAngle = 45.0;
+
 		pcl::console::parse_argument(argc, argv, "-maxEdgeSize", maxEdgeSize);
 		pcl::console::parse_argument(argc, argv, "-mu", mu);
 		pcl::console::parse_argument(argc, argv, "-maxNumNei", maxNumNei);
@@ -297,7 +298,7 @@ int main(int argc, char *argv[])
 				reconstructorPC(
 					new RecRoom::ReconstructorPcOC(
 						wd / boost::filesystem::path("ReconstructorPc"),
-						scannerPc, containerPcNDF));
+						scannerPc, containerPcNDF, 0.01f));
 			reconstructorPC->setAsyncSize(async);
 
 			//
@@ -371,6 +372,15 @@ int main(int argc, char *argv[])
 			PTR(RecRoom::ReconstructorPcOC::Mesher)
 				mesher(
 					new RecRoom::MesherPcGP3<RecRoom::PointREC>(maxEdgeSize, mu, maxNumNei, minAngle, maxAngle, epsAngle, false, true));
+
+			/*PTR(RecRoom::FilterPc<RecRoom::PointREC>)
+				mesherFilter(
+					new RecRoom::FilterPcRemoveDuplicate<RecRoom::PointREC>(voxelSize));
+			mesher->setPreprocessFilter(mesherFilter);*/
+			/*PTR(RecRoom::SamplerPc<RecRoom::PointREC>)
+				mesherSampler(
+					new RecRoom::SamplerPcGrid<RecRoom::PointREC>(voxelSize, containerPcRAW->getMinAABB(), containerPcRAW->getMaxAABB(), 0.75));
+			mesher->setPreprocessSampler(mesherSampler);*/
 			reconstructorPC->setMesher(mesher);
 
 			//

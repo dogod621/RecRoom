@@ -288,3 +288,34 @@ template <> inline bool pcl::isFinite<RecRoom::PointMED>(const RecRoom::PointMED
 		MED_ISFINITE_LABEL;
 }
 
+template <> inline bool pcl::isFinite<RecRoom::PointVNN>(const RecRoom::PointVNN& p)
+{
+	if (p.k > 0)
+	{
+		if (p.indices)
+			return pcl_isfinite(p.x) && pcl_isfinite(p.y) && pcl_isfinite(p.z);
+		else
+			return false;
+	}
+	else
+	{
+		return pcl_isfinite(p.x) && pcl_isfinite(p.y) && pcl_isfinite(p.z);
+	}
+}
+
+template <> inline bool pcl::isFinite<RecRoom::PointNDF>(const RecRoom::PointNDF& p)
+{
+	return pcl_isfinite(p.x) && pcl_isfinite(p.y) && pcl_isfinite(p.z) &&
+		pcl_isfinite(p.normal_x) && pcl_isfinite(p.normal_y) && pcl_isfinite(p.normal_z) &&
+		pcl_isfinite(p.intensity);
+}
+
+template <> inline bool pcl::isFinite<RecRoom::PointLF>(const RecRoom::PointLF& p)
+{
+	return pcl_isfinite(p.x) && pcl_isfinite(p.y) && pcl_isfinite(p.z) &&
+		pcl_isfinite(p.normal_x) && pcl_isfinite(p.normal_y) && pcl_isfinite(p.normal_z) &&
+		pcl_isfinite(p.intensity);
+}
+
+
+

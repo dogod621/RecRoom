@@ -38,7 +38,8 @@ namespace RecRoom
 		ReconstructorPc(
 			boost::filesystem::path filePath,
 			const CONST_PTR(ScannerPc)& scanner,
-			const PTR(ContainerPcNDF)& containerPcNDF);
+			const PTR(ContainerPcNDF)& containerPcNDF,
+			float res = 0.01f);
 
 	public:
 		void DoRecPointCloud();
@@ -58,6 +59,7 @@ namespace RecRoom
 		virtual void RecMesh();
 
 	public:
+		float getRes() const { return res; }
 		ReconstructStatus getStatus() const { return status; }
 		PTR(PcMED) getPcMED() const { return pcMED; }
 
@@ -93,6 +95,7 @@ namespace RecRoom
 		void setMesher(const CONST_PTR(Mesher)& v) { mesher = v;}
 		
 	protected:
+		float res;
 		ReconstructStatus status;
 		PTR(PcMED) pcMED;
 		PTR(Mesh) mesh;
@@ -115,17 +118,9 @@ namespace RecRoom
 		virtual void Dump(nlohmann::json& j) const;
 		virtual bool CheckExist() const;
 
-		void PcMEDRemoveNotfinite()
-		{
-			PTR(PcMED)temp(new PcMED);
-			temp->reserve(pcMED->size());
-			for (PcMED::const_iterator it = pcMED->begin(); it != pcMED->end(); ++it)
-			{
-				if (pcl::isFinite(*it))
-					temp->push_back(*it);
-			}
-			pcMED = temp;
-		}
+		void PcMEDRemoveNonFinite();
+
+		void PcMEDRemoveDuplicate();
 	};
 }
 

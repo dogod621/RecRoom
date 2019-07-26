@@ -1,15 +1,16 @@
 #pragma once
 
 #include "Common/Common.h"
+#include "Common/Processor.h"
 #include "Common/Point.h"
 
 namespace RecRoom
 {
 	class PreprocessorPc : 
-		public SearchInputSurfaceProcesserPc2Pc<PointRAW, PointRAW>
+		public SearchInputSurfaceProcessorPc2Pc<PointRAW, PointRAW>
 	{
 	public:
-		PreprocessorPc() : SearchInputSurfaceProcesserPc2Pc<PointRAW, PointRAW>() {}
+		PreprocessorPc() : SearchInputSurfaceProcessorPc2Pc<PointRAW, PointRAW>() {}
 	};
 }
 

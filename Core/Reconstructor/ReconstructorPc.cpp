@@ -6,6 +6,7 @@
 #include "nlohmann/json.hpp"
 
 #include "Common/PCLUtils.h"
+#include "Filter/FilterPcRemoveDuplicate.h"
 #include "Interpolator/InterpolatorPcNearest.h"
 
 #include "ReconstructorPc.h"
@@ -15,8 +16,10 @@ namespace RecRoom
 	ReconstructorPc::ReconstructorPc(
 		boost::filesystem::path filePath_,
 		const CONST_PTR(ScannerPc)& scanner,
-		const PTR(ContainerPcNDF)& containerPcNDF)
-		: DumpAble("ReconstructorPc", filePath_), status(ReconstructStatus::ReconstructStatus_UNKNOWN), scanner(scanner), containerPcNDF(containerPcNDF), pcMED(new PcMED), mesh(new Mesh),
+		const PTR(ContainerPcNDF)& containerPcNDF,
+		float res)
+		: DumpAble("ReconstructorPc", filePath_), status(ReconstructStatus::ReconstructStatus_UNKNOWN), scanner(scanner), containerPcNDF(containerPcNDF), res(res),
+		pcMED(new PcMED), mesh(new Mesh),
 		downSampler(nullptr),
 		interpolator(new InterpolatorPcNearest<PointMED, PointMED>),
 		outlierRemover(nullptr),
@@ -61,7 +64,8 @@ namespace RecRoom
 			pcMED->clear();
 			RecPointCloud();
 			status = (ReconstructStatus)(status | ReconstructStatus::POINT_CLOUD);
-			PcMEDRemoveNotfinite();
+			PcMEDRemoveNonFinite();
+			PcMEDRemoveDuplicate();
 			Dump();
 		}
 	}
@@ -100,7 +104,7 @@ namespace RecRoom
 				{
 					RecPcMaterial_NDF();
 					status = (ReconstructStatus)(status | ReconstructStatus::PC_MATERIAL);
-					PcMEDRemoveNotfinite();
+					PcMEDRemoveNonFinite();
 					Dump();
 				}
 				else
@@ -112,7 +116,7 @@ namespace RecRoom
 				{
 					RecPcMaterial_ALBEDO();
 					status = (ReconstructStatus)(status | ReconstructStatus::PC_MATERIAL);
-					PcMEDRemoveNotfinite();
+					PcMEDRemoveNonFinite();
 					Dump();
 				}
 				else
@@ -143,7 +147,7 @@ namespace RecRoom
 		{
 			RecPcSegment();
 			status = (ReconstructStatus)(status | ReconstructStatus::PC_SEGMENT);
-			PcMEDRemoveNotfinite();
+			PcMEDRemoveNonFinite();
 			Dump();
 		}
 		else
@@ -742,6 +746,10 @@ namespace RecRoom
 
 	void ReconstructorPc::Load(const nlohmann::json& j)
 	{
+		if (j.find("res") == j.end())
+			THROW_EXCEPTION("File is not valid: missing \"res\"");
+		res = j["res"];
+
 		if (j.find("status") == j.end())
 			THROW_EXCEPTION("File is not valid: missing \"status\"");
 		status = Convert<ReconstructStatus, nlohmann::json>(j["status"]);
@@ -749,6 +757,7 @@ namespace RecRoom
 
 	void ReconstructorPc::Dump(nlohmann::json& j) const
 	{
+		j["res"] = res;
 		j["status"] = Convert<nlohmann::json, ReconstructStatus>(status);
 	}
 
@@ -785,6 +794,52 @@ namespace RecRoom
 		mesher->Process(accREC, pcREC, nullptr, *mesh);
 
 		PRINT_INFO("RecMesh - End");
+	}
+
+	void ReconstructorPc::PcMEDRemoveNonFinite()
+	{
+		PRINT_INFO("Removing NonFinite - Start");
+
+		PTR(PcMED)temp(new PcMED);
+		temp->reserve(pcMED->size());
+		for (PcMED::const_iterator it = pcMED->begin(); it != pcMED->end(); ++it)
+		{
+			if (pcl::isFinite(*it))
+				temp->push_back(*it);
+		}
+
+		std::stringstream ss;
+		ss << "Removing NonFinite - End - inSize: " << pcMED->size() << ", outSize: " << temp->size();
+		PRINT_INFO(ss.str());
+
+		pcMED = temp;
+	}
+
+	void ReconstructorPc::PcMEDRemoveDuplicate()
+	{
+		PRINT_INFO("Removing Duplicate - Start");
+
+		PTR(AccMED) accMED = PTR(AccMED)(new KDTreeMED);
+		accMED->setInputCloud(pcMED);
+		PTR(PcIndex) filter (new PcIndex);
+		
+		PRINT_INFO("Removing Duplicate - Start");
+
+		FilterPcRemoveDuplicate<PointMED> fd(res);
+		fd.Process(accMED, pcMED, nullptr, *filter);
+
+		PTR(PcMED) temp(new PcMED);
+		pcl::ExtractIndices<PointMED> extract;
+		extract.setInputCloud(pcMED);
+		extract.setIndices(filter);
+		extract.setNegative(false);
+		extract.filter(*temp);
+
+		std::stringstream ss;
+		ss << "Removing Duplicate - End - inSize: " << pcMED->size() << ", outSize: " << temp->size();
+		PRINT_INFO(ss.str());
+
+		pcMED = temp;
 	}
 }
 

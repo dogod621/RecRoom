@@ -1,16 +1,17 @@
 #pragma once
 
 #include "Common/Common.h"
+#include "Common/Processor.h"
 
 namespace RecRoom
 {
 	template<class InPointType, class OutPointType>
 	class InterpolatorPc 
-		: public SearchAnySurfaceProcesserPc2Pc<InPointType, OutPointType>
+		: public SearchAnySurfaceProcessorPc2Pc<InPointType, OutPointType>
 	{
 	public:
 		InterpolatorPc() 
-			: SearchAnySurfaceProcesserPc2Pc<InPointType, OutPointType>() {}
+			: SearchAnySurfaceProcessorPc2Pc<InPointType, OutPointType>() {}
 	};
 }
 

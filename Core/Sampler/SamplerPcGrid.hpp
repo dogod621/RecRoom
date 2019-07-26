@@ -6,7 +6,7 @@
 #include <pcl/filters/extract_indices.h>
 #include <pcl/filters/impl/extract_indices.hpp>
 
-#include "Common/VoxelGridFilter.h"
+#include "Common/VoxelGrid.h"
 #include "Filter/FilterPcRemoveDuplicate.h"
 #include "SamplerPcGrid.h"
 
@@ -42,12 +42,12 @@ namespace RecRoom
 			PTR(PcIndex) vi(new PcIndex);
 			(*vp) = output;
 			output.clear();
-			PTR(AccMED) vs = PTR(AccMED)(new KDTreeMED);
+			PTR(Acc<PointType>) vs = PTR(Acc<PointType>)(new KDTree<PointType>);
 			vs->setInputCloud(vp);
 
 			PRINT_INFO("Removing Duplicate - Start");
 
-			FilterPcRemoveDuplicate<PointType> fd (voxelSize*1.5f, voxelSize*tooCloseRatio);
+			FilterPcRemoveDuplicate<PointType> fd (voxelSize*tooCloseRatio);
 			fd.Process(vs, vp, nullptr, *vi);
 
 			std::stringstream ss;

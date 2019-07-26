@@ -269,6 +269,14 @@ namespace RecRoom
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	};
 
+	struct EIGEN_ALIGN16 _PointVNN
+	{
+		PCL_ADD_POINT4D;
+		uint32_t k;
+		uint32_t* indices;
+		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+	};
+
 	struct EIGEN_ALIGN16 _PointNDF
 	{
 		PCL_ADD_POINT4D;
@@ -384,6 +392,31 @@ namespace RecRoom
 		MED_HAS_LABEL;
 	};
 
+	struct PointVNN : public _PointVNN
+	{
+		inline PointVNN()
+		{
+			x = y = z = 0.0f; data[3] = 1.f;
+			k = 0;
+			indices = nullptr;
+		}
+
+		inline PointVNN(const PointVNN& p)
+		{
+			x = p.x; y = p.y; z = p.z; data[3] = 1.0f;
+			k = p.k;
+			indices = p.indices;
+		}
+
+		template<class PointType>
+		inline PointVNN(const PointType& p)
+		{
+			x = p.x; y = p.y; z = p.z; data[3] = 1.0f;
+			k = 0;
+			indices = nullptr;
+		}
+	};
+
 	struct PointNDF : public _PointNDF
 	{
 		inline PointNDF()
@@ -428,18 +461,21 @@ namespace RecRoom
 	using PcRAW = Pc<PointRAW>;
 	using PcMED = Pc<PointMED>;
 	using PcREC = Pc<PointREC>;
+	using PcVNN = Pc<PointVNN>;
 	using PcNDF = Pc<PointNDF>;
 	using PcLF = Pc<PointLF>;
 
 	using AccRAW = Acc<PointRAW>;
 	using AccMED = Acc<PointMED>;
 	using AccREC = Acc<PointREC>;
+	using AccVNN = Acc<PointVNN>;
 	using AccNDF = Acc<PointNDF>;
 	using AccLF = Acc<PointLF>;
 
 	using KDTreeRAW = KDTree<PointRAW>;
 	using KDTreeMED = KDTree<PointMED>;
 	using KDTreeREC = KDTree<PointREC>;
+	using KDTreeVNN = KDTree<PointVNN>;
 	using KDTreeNDF = KDTree<PointNDF>;
 	using KDTreeLF = KDTree<PointLF>;
 }
@@ -474,6 +510,11 @@ MED_REGISTER_SERIAL_NUMBER
 MED_REGISTER_LABEL
 )
 POINT_CLOUD_REGISTER_POINT_WRAPPER(RecRoom::PointMED, RecRoom::PointMED)
+
+POINT_CLOUD_REGISTER_POINT_STRUCT(RecRoom::PointVNN,
+(float, x, x) (float, y, y) (float, z, z)
+)
+POINT_CLOUD_REGISTER_POINT_WRAPPER(RecRoom::PointVNN, RecRoom::PointVNN)
 
 POINT_CLOUD_REGISTER_POINT_STRUCT(RecRoom::PointNDF,
 (float, x, x) (float, y, y) (float, z, z)

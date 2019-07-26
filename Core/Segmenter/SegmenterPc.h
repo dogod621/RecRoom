@@ -1,16 +1,17 @@
 #pragma once
 
 #include "Common/Common.h"
+#include "Common/Processor.h"
 
 namespace RecRoom
 {
 	template<class PointType>
 	class SegmenterPc 
-		: public SearchInputSurfaceProcesserPc2Pc<PointType, PointType>
+		: public SearchInputSurfaceProcessorPc2Pc<PointType, PointType>
 	{
 	public:
 		SegmenterPc() 
-			: SearchInputSurfaceProcesserPc2Pc<PointType, PointType>() {}
+			: SearchInputSurfaceProcessorPc2Pc<PointType, PointType>() {}
 	};
 }
 

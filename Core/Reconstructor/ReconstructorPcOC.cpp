@@ -7,6 +7,7 @@
 #include <pcl/filters/impl/crop_box.hpp>
 
 #include "Common/AsyncProcess.h"
+#include "Common/VoxelGrid.h"
 
 #include "ReconstructorPcOC.h"
 
@@ -83,7 +84,7 @@ namespace RecRoom
 			pcRec(new PcMED),
 			pcRawIdx(new PcIndex),
 			pcRecIdx(new PcIndex),
-			pcRawAcc(new KDTreeMED),
+			pcRawAcc(nullptr),
 			pcRecAcc(new KDTreeMED),
 			pcReturnIdx(new PcIndex)
 		{
@@ -108,7 +109,16 @@ namespace RecRoom
 		}
 
 		{
-			PRINT_INFO("Build pcRawAcc - Start");
+			PRINT_INFO("Build pcRawAcc - Start - vnn:" + std::to_string(global.ptrReconstructorPcOC()->getUseVNN()));
+			if (global.ptrReconstructorPcOC()->getUseVNN())
+			{
+				float res = global.ptrReconstructorPcOC()->getRes();
+				data.pcRawAcc = PTR(VNN<PointMED>)(new VNN<PointMED> (Eigen::Vector3d(res, res, res), cData.minAABB, cData.maxAABB));
+			}
+			else
+			{
+				data.pcRawAcc = PTR(AccMED)(new KDTreeMED);
+			}
 			data.pcRawAcc->setInputCloud(data.pcRaw);
 			PRINT_INFO("Build pcRawAcc - End");
 		}
@@ -235,28 +245,6 @@ namespace RecRoom
 
 		PRINT_INFO("Merge - End - pcSize: " + std::to_string(global.ptrReconstructorPcOC()->getPcMED()->size()));
 
-
-		// Som wired noise, debugging...
-		/*if (global.ptrReconstructorPcOC()->getDownSampler())
-		{
-			PTR(PcMED)pcMED2(new PcMED);
-			PTR(AccMED)pcMEDAcc(new KDTreeMED);
-			pcMEDAcc->setInputCloud(global.ptrReconstructorPcOC()->getPcMED());
-
-			{
-				PRINT_INFO("DownSampling - Start");
-
-				global.ptrReconstructorPcOC()->getDownSampler()->Process(pcMEDAcc, global.ptrReconstructorPcOC()->getPcMED(), nullptr, *pcMED2);
-
-				std::stringstream ss;
-				ss << "DownSampling - End - inSize: " << global.ptrReconstructorPcOC()->getPcMED()->size() << ", outSize:" << pcMED2->size();
-				PRINT_INFO(ss.str());
-			}
-
-			(*global.ptrReconstructorPcOC()->getPcMED()) = (*pcMED2);
-		}*/
-
-		//
 		return 0;
 	}
 

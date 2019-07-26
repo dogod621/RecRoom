@@ -12,9 +12,9 @@ namespace RecRoom
 		Mesh& output) const
 	{
 		//
-		PTR(Pc<PointType>) pcVertex (new Pc<PointType>);
+		PTR(Pc<PointType>) pcVertex(new Pc<PointType>);
 		{
-			PTR(Acc<PointType>) searchSurface2; 
+			PTR(Acc<PointType>) searchSurface2;
 			PTR(Pc<PointType>) input2;
 			PTR(PcIndex) filter2;
 			if (preprocessSampler)
@@ -24,7 +24,7 @@ namespace RecRoom
 				searchSurface2 = PTR(Acc<PointType>)(new KDTree<PointType>);
 				input2 = PTR(Pc<PointType>)(new Pc<PointType>);
 				filter2 = nullptr;
-				
+
 				preprocessSampler->Process(searchSurface, input, filter, *input2);
 
 				searchSurface2->setInputCloud(input2);
@@ -70,20 +70,17 @@ namespace RecRoom
 				pcVertex->reserve(filter3->size());
 				for (PcIndex::const_iterator it = filter3->begin(); it != filter3->end(); ++it)
 				{
-					if ((*it) >= 0)
-					{
-						PointType srcP = (*input2)[*it];
+					PointType srcP = (*input2)[*it];
 
-						if (pcl::isFinite(srcP))
-							pcVertex->push_back(srcP);
-					}
+					if (pcl::isFinite(srcP))
+						pcVertex->push_back(srcP);
 				}
 			}
 			else
 			{
 				pcVertex->reserve(input2->size());
 
-				for (std::size_t px = 0; px < input2->size() ; ++px)
+				for (std::size_t px = 0; px < input2->size(); ++px)
 				{
 					PointType srcP = (*input2)[px];
 
@@ -114,7 +111,7 @@ namespace RecRoom
 			PRINT_INFO("Interpolation Field - Start");
 
 			fieldInterpolator->ProcessInOut(treeVertex, pcVertex2, nullptr);
-			
+
 			PRINT_INFO("Interpolation Field - End");
 
 			pcl::toPCLPointCloud2(*pcVertex2, output.cloud);
