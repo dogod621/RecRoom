@@ -11,6 +11,8 @@ namespace RecRoom
 		const CONST_PTR(PcIndex)& filter,
 		Pc<OutPointType>& output) const
 	{
+		output.clear();
+
 		if (filter)
 		{
 			output.resize(filter->size());

@@ -48,15 +48,16 @@ namespace RecRoom
 		std::vector<int> nnIndices(self->k_);
 		std::vector<float> nnDists(self->k_);
 		std::vector<ScanData> scanDataSet(self->k_);
-		if (self->input_->is_dense)
+		for (int idx = 0; idx < static_cast<int> (self->indices_->size()); ++idx)
 		{
-			for (int idx = 0; idx < static_cast<int> (self->indices_->size()); ++idx)
+			if (id % self->threads_ == id)
 			{
-				if (id % self->threads_ == id)
-				{
-					const InPointType& inPoint = (*self->input_)[(*self->indices_)[idx]];
-					OutPointType& outPoint = output->points[idx];
+				const InPointType& inPoint = (*self->input_)[(*self->indices_)[idx]];
+				OutPointType& outPoint = output->points[idx];
 
+				//
+				if (pcl::isFinite(inPoint))
+				{
 					int k = self->searchForNeighbors((*self->indices_)[idx], self->search_parameter_, nnIndices, nnDists);
 
 					//
@@ -80,49 +81,11 @@ namespace RecRoom
 						output->is_dense = false;
 					}
 				}
-			}
-		}
-		else
-		{
-			for (int idx = 0; idx < static_cast<int> (self->indices_->size()); ++idx)
-			{
-				if (id % self->threads_ == id)
+				else
 				{
-					const InPointType& inPoint = (*self->input_)[(*self->indices_)[idx]];
-					OutPointType& outPoint = output->points[idx];
-
-					//
-					if (pcl::isFinite(inPoint))
-					{
-						int k = self->searchForNeighbors((*self->indices_)[idx], self->search_parameter_, nnIndices, nnDists);
-
-						//
-						if (self->CollectScanData(
-							*self->surface_, k, nnIndices, nnDists,
-							inPoint, scanDataSet))
-						{
-							if (!self->ComputeAttribute(
-								*self->surface_,
-								inPoint, scanDataSet, outPoint))
-							{
-								PRINT_WARNING("ComputeAttribute failed");
-								self->SetAttributeNAN(outPoint);
-								output->is_dense = false;
-							}
-						}
-						else
-						{
-							//PRINT_WARNING("CollectScanData failed");
-							self->SetAttributeNAN(outPoint);
-							output->is_dense = false;
-						}
-					}
-					else
-					{
-						PRINT_WARNING("Input point contain non finite value");
-						self->SetAttributeNAN(outPoint);
-						output->is_dense = false;
-					}
+					//PRINT_WARNING("Input point contain non finite value");
+					self->SetAttributeNAN(outPoint);
+					output->is_dense = false;
 				}
 			}
 		}
@@ -139,15 +102,15 @@ namespace RecRoom
 		std::vector<int> nnIndices(k_);
 		std::vector<float> nnDists(k_);
 		std::vector<ScanData> scanDataSet(k_);
-		if (input_->is_dense)
-		{
-#pragma omp parallel for shared (output) private (nnIndices, nnDists, scanDataSet) num_threads(threads_)
-			for (int idx = 0; idx < static_cast<int> (indices_->size()); ++idx)
-			{
-				const InPointType& inPoint = (*input_)[(*indices_)[idx]];
-				OutPointType& outPoint = output.points[idx];
 
-				//
+#pragma omp parallel for shared (output) private (nnIndices, nnDists, scanDataSet) num_threads(threads_)
+		for (int idx = 0; idx < static_cast<int> (indices_->size()); ++idx)
+		{
+			const InPointType& inPoint = (*input_)[(*indices_)[idx]];
+			OutPointType& outPoint = output.points[idx];
+
+			if (pcl::isFinite(inPoint))
+			{
 				int k = searchForNeighbors((*indices_)[idx], search_parameter_, nnIndices, nnDists);
 
 				//
@@ -171,46 +134,11 @@ namespace RecRoom
 					output.is_dense = false;
 				}
 			}
-		}
-		else
-		{
-#pragma omp parallel for shared (output) private (nnIndices, nnDists, scanDataSet) num_threads(threads_)
-			for (int idx = 0; idx < static_cast<int> (indices_->size()); ++idx)
+			else
 			{
-				const InPointType& inPoint = (*input_)[(*indices_)[idx]];
-				OutPointType& outPoint = output.points[idx];
-
-				if (pcl::isFinite(inPoint))
-				{
-					int k = searchForNeighbors((*indices_)[idx], search_parameter_, nnIndices, nnDists);
-
-					//
-					if (CollectScanData(
-						*surface_, k, nnIndices, nnDists,
-						inPoint, scanDataSet))
-					{
-						if (!ComputeAttribute(
-							*surface_,
-							inPoint, scanDataSet, outPoint))
-						{
-							PRINT_WARNING("ComputeAttribute failed");
-							SetAttributeNAN(outPoint);
-							output.is_dense = false;
-						}
-					}
-					else
-					{
-						//PRINT_WARNING("CollectScanData failed");
-						SetAttributeNAN(outPoint);
-						output.is_dense = false;
-					}
-				}
-				else
-				{
-					PRINT_WARNING("Input point contain non finite value");
-					SetAttributeNAN(outPoint);
-					output.is_dense = false;
-				}
+				//PRINT_WARNING("Input point contain non finite value");
+				SetAttributeNAN(outPoint);
+				output.is_dense = false;
 			}
 		}
 #else

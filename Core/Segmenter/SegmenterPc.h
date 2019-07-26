@@ -11,7 +11,10 @@ namespace RecRoom
 	{
 	public:
 		SegmenterPc() 
-			: SearchInputSurfaceProcessorPc2Pc<PointType, PointType>() {}
+			: SearchInputSurfaceProcessorPc2Pc<PointType, PointType>() 
+		{
+			name = "SegmenterPc";
+		}
 	};
 }
 

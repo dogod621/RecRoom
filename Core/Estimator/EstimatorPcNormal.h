@@ -17,6 +17,8 @@ namespace RecRoom
 			distInterParm(distInterParm), 
 			cutFalloff(cutFalloff)
 		{
+			name = "EstimatorPcNormal";
+
 			if (!scanner)
 				THROW_EXCEPTION("scanner is not set");
 		}

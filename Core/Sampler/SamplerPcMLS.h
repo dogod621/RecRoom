@@ -20,7 +20,10 @@ namespace RecRoom
 			: searchRadius(searchRadius), order(order),
 			projectionMethod(projectionMethod), upsampleMethod(upsampleMethod),
 			threads(threads), computeNormals(computeNormals),
-			ResamplerPc<PointType>() {}
+			ResamplerPc<PointType>() 
+		{
+			name = "SamplerPcMLS";
+		}
 
 	protected:
 		virtual void ImplementProcess(

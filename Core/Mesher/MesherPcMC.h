@@ -24,7 +24,10 @@ namespace RecRoom
 			: percentageExtendGrid(percentageExtendGrid),
 			isoLevel(isoLevel),
 			gridRes(gridRes),
-			MesherPc<PointType>(preprocessSampler, preprocessFilter, fieldInterpolator) {}
+			MesherPc<PointType>(preprocessSampler, preprocessFilter, fieldInterpolator) 
+		{
+			name = "MesherPcGP3";
+		}
 
 	public:
 		float getPercentageExtendGrid() const { return percentageExtendGrid; }

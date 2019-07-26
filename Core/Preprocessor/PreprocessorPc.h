@@ -10,7 +10,10 @@ namespace RecRoom
 		public SearchInputSurfaceProcessorPc2Pc<PointRAW, PointRAW>
 	{
 	public:
-		PreprocessorPc() : SearchInputSurfaceProcessorPc2Pc<PointRAW, PointRAW>() {}
+		PreprocessorPc() : SearchInputSurfaceProcessorPc2Pc<PointRAW, PointRAW>()
+		{
+			name = "PreprocessorPc";
+		}
 	};
 }
 

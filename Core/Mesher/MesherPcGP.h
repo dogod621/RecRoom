@@ -23,7 +23,10 @@ namespace RecRoom
 			CONST_PTR(Filter) preprocessFilter = nullptr,
 			CONST_PTR(Interpolator) fieldInterpolator = CONST_PTR(Interpolator)(new InterpolatorNearest))
 			: resolution(resolution), maxBinarySearchLevel(maxBinarySearchLevel), maxNumNei(maxNumNei), paddingSize(paddingSize),
-			MesherPc<PointType>(preprocessSampler, preprocessFilter, fieldInterpolator) {}
+			MesherPc<PointType>(preprocessSampler, preprocessFilter, fieldInterpolator) 
+		{
+			name = "MesherPcGP";
+		}
 
 	protected:
 		virtual void ToMesh(PTR(Acc<PointType>)& searchSurface, PTR(Pc<PointType>)& input, Mesh& output) const;

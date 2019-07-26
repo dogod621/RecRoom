@@ -11,7 +11,10 @@ namespace RecRoom
 	{
 	public:
 		InterpolatorPc() 
-			: SearchAnySurfaceProcessorPc2Pc<InPointType, OutPointType>() {}
+			: SearchAnySurfaceProcessorPc2Pc<InPointType, OutPointType>() 
+		{
+			name = "InterpolatorPc";
+		}
 	};
 }
 

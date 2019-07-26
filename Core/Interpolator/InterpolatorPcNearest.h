@@ -8,7 +8,10 @@ namespace RecRoom
 	class InterpolatorPcNearest : public InterpolatorPc<InPointType, OutPointType>
 	{
 	public:
-		InterpolatorPcNearest() : InterpolatorPc<InPointType, OutPointType>() {}
+		InterpolatorPcNearest() : InterpolatorPc<InPointType, OutPointType>()
+		{
+			name = "InterpolatorPcNearest";
+		}
 
 	protected:
 		virtual void ImplementProcess(

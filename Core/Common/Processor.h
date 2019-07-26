@@ -9,7 +9,10 @@ namespace RecRoom
 	class ProcessorPc
 	{
 	public:
-		ProcessorPc() {}
+		ProcessorPc() 
+		{
+			name = "ProcessorPc";
+		}
 
 		void Process(
 			const CONST_PTR(Acc<SearchPointType>)& searchSurface,
@@ -17,24 +20,29 @@ namespace RecRoom
 			const CONST_PTR(PcIndex)& filter,
 			OutputType& output) const
 		{
+			//if ((&(*input)) == (&output))
+			//	THROW_EXCEPTION("input point to output");
+
+			PRINT_INFO(name + " - Start");
+
 			if (ImplementCheck(searchSurface, input, filter, output))
 				ImplementProcess(searchSurface, input, filter, output);
 			else
-				THROW_EXCEPTION("Not pass check");
-		}
+				THROW_EXCEPTION(name + " - Not pass check");
 
-		/*void Process(
-			const CONST_PTR(Pc<SearchPointType>)& searchSurface,
-			const CONST_PTR(AccVNN)& searchVNN,
-			const CONST_PTR(Pc<InputPointType>)& input,
-			const CONST_PTR(PcIndex)& filter,
-			OutputType& output) const
-		{
-			if (ImplementCheck(searchSurface, searchVNN, input, filter, output))
-				ImplementProcess(searchSurface, searchVNN, input, filter, output);
+			if (filter)
+			{
+				std::stringstream ss;
+				ss << name << " - End - inSize: " << filter->size() << ", outSize: " << OutputSize(output);
+				PRINT_INFO(ss.str());
+			}
 			else
-				THROW_EXCEPTION("Not pass check");
-		}*/
+			{
+				std::stringstream ss;
+				ss << name << " - End - inSize: " << input->size() << ", outSize: " << OutputSize(output);
+				PRINT_INFO(ss.str());
+			}
+		}
 
 	protected:
 		virtual bool ImplementCheck(
@@ -49,52 +57,64 @@ namespace RecRoom
 			const CONST_PTR(PcIndex)& filter,
 			OutputType& output) const = 0;
 
-		/*virtual bool ImplementCheck(
-			const CONST_PTR(Pc<SearchPointType>)& searchSurface,
-			const CONST_PTR(AccVNN)& searchVNN,
-			const CONST_PTR(Pc<InputPointType>)& input,
-			const CONST_PTR(PcIndex)& filter,
-			OutputType& output) const = 0;
+		virtual int OutputSize(OutputType& output) const
+		{
+			return 0;
+		}
 
-		virtual void ImplementProcess(
-			const CONST_PTR(Pc<SearchPointType>)& searchSurface,
-			const CONST_PTR(AccVNN)& searchVNN,
-			const CONST_PTR(Pc<InputPointType>)& input,
-			const CONST_PTR(PcIndex)& filter,
-			OutputType& output) const = 0;*/
+	protected:
+		std::string name;
 	};
 
 	template<class SearchPointType, class InputPointType, class OutputPointType>
 	class ProcessorPc2Pc : public ProcessorPc<SearchPointType, InputPointType, Pc<OutputPointType>>
 	{
 	public:
-		ProcessorPc2Pc() : ProcessorPc<SearchPointType, InputPointType, Pc<OutputPointType>>() {}
+		ProcessorPc2Pc() : ProcessorPc<SearchPointType, InputPointType, Pc<OutputPointType>>() 
+		{
+			name = "ProcessorPc2Pc";
+		}
 
 		void ProcessInOut(
 			const CONST_PTR(Acc<SearchPointType>)& searchSurface,
 			const PTR(Pc<InputPointType>)& inOut,
 			const CONST_PTR(PcIndex)& filter) const;
+
+	protected:
+		virtual int OutputSize(Pc<OutputPointType>& output) const
+		{
+			return output.size();
+		}
 	};
 
 	template<class InputPointType, class OutputType>
 	class SearchInputTypeProcessorPc : public ProcessorPc<InputPointType, InputPointType, OutputType>
 	{
 	public:
-		SearchInputTypeProcessorPc() : ProcessorPc<InputPointType, InputPointType, OutputType>() {}
+		SearchInputTypeProcessorPc() : ProcessorPc<InputPointType, InputPointType, OutputType>()
+		{
+			name = "SearchInputTypeProcessorPc";
+		}
 	};
 
 	template<class InputPointType, class OutputPointType>
 	class SearchInputTypeProcessorPc2Pc : public ProcessorPc2Pc<InputPointType, InputPointType, OutputPointType>
 	{
 	public:
-		SearchInputTypeProcessorPc2Pc() : ProcessorPc2Pc<InputPointType, InputPointType, OutputPointType>() {}
+		SearchInputTypeProcessorPc2Pc() : ProcessorPc2Pc<InputPointType, InputPointType, OutputPointType>() 
+		{
+			name = "SearchInputTypeProcessorPc2Pc";
+		}
 	};
 
 	template<class InputPointType, class OutputType>
 	class SearchAnySurfaceProcessorPc : public SearchInputTypeProcessorPc<InputPointType, OutputType>
 	{
 	public:
-		SearchAnySurfaceProcessorPc() : SearchInputTypeProcessorPc<InputPointType, OutputType>() {}
+		SearchAnySurfaceProcessorPc() : SearchInputTypeProcessorPc<InputPointType, OutputType>() 
+		{
+			name = "SearchAnySurfaceProcessorPc";
+		}
 
 	protected:
 		virtual bool ImplementCheck(
@@ -108,7 +128,10 @@ namespace RecRoom
 	class SearchAnySurfaceProcessorPc2Pc : public SearchInputTypeProcessorPc2Pc<InputPointType, OutputPointType>
 	{
 	public:
-		SearchAnySurfaceProcessorPc2Pc() : SearchInputTypeProcessorPc2Pc<InputPointType, OutputPointType>() {}
+		SearchAnySurfaceProcessorPc2Pc() : SearchInputTypeProcessorPc2Pc<InputPointType, OutputPointType>() 
+		{
+			name = "SearchAnySurfaceProcessorPc2Pc";
+		}
 
 	protected:
 		virtual bool ImplementCheck(
@@ -122,7 +145,10 @@ namespace RecRoom
 	class SearchInputSurfaceProcessorPc : public SearchInputTypeProcessorPc<InputPointType, OutputType>
 	{
 	public:
-		SearchInputSurfaceProcessorPc() : SearchInputTypeProcessorPc<InputPointType, OutputType>() {}
+		SearchInputSurfaceProcessorPc() : SearchInputTypeProcessorPc<InputPointType, OutputType>() 
+		{
+			name = "SearchInputSurfaceProcessorPc";
+		}
 
 	protected:
 		virtual bool ImplementCheck(
@@ -136,7 +162,10 @@ namespace RecRoom
 	class SearchInputSurfaceProcessorPc2Pc : public SearchInputTypeProcessorPc2Pc<InputPointType, OutputPointType>
 	{
 	public:
-		SearchInputSurfaceProcessorPc2Pc() : SearchInputTypeProcessorPc2Pc<InputPointType, OutputPointType>() {}
+		SearchInputSurfaceProcessorPc2Pc() : SearchInputTypeProcessorPc2Pc<InputPointType, OutputPointType>() 
+		{
+			name = "SearchInputSurfaceProcessorPc2Pc";
+		}
 
 	protected:
 		virtual bool ImplementCheck(

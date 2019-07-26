@@ -117,10 +117,6 @@ namespace RecRoom
 		virtual void Load(const nlohmann::json& j);
 		virtual void Dump(nlohmann::json& j) const;
 		virtual bool CheckExist() const;
-
-		void PcMEDRemoveNonFinite();
-
-		void PcMEDRemoveDuplicate();
 	};
 }
 

@@ -21,8 +21,6 @@ namespace RecRoom
 	{
 
 		{
-			PRINT_INFO("VoxelGrid Sampling - Start");
-
 			VoxelGridFilter<PointType> vf (Eigen::Vector3d(voxelSize, voxelSize, voxelSize), minAABB, maxAABB);
 			vf.setInputCloud(input);
 
@@ -30,10 +28,6 @@ namespace RecRoom
 				vf.setIndices(filter);
 
 			vf.filter(output);
-
-			std::stringstream ss;
-			ss << "Sampling - End - orgPcSize: " << input->size() << ", pcSize: " << output.size();
-			PRINT_INFO(ss.str());
 		}
 
 		if (tooCloseRatio >= 0.0f)
@@ -45,14 +39,8 @@ namespace RecRoom
 			PTR(Acc<PointType>) vs = PTR(Acc<PointType>)(new KDTree<PointType>);
 			vs->setInputCloud(vp);
 
-			PRINT_INFO("Removing Duplicate - Start");
-
 			FilterPcRemoveDuplicate<PointType> fd (voxelSize*tooCloseRatio);
 			fd.Process(vs, vp, nullptr, *vi);
-
-			std::stringstream ss;
-			ss << "Removing Duplicate - End - orgPcSize: " << vp->size() << ", pcSize: " << vi->size();
-			PRINT_INFO(ss.str());
 
 			pcl::ExtractIndices<PointType> extract;
 			extract.setInputCloud(vp);

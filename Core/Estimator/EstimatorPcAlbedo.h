@@ -19,6 +19,8 @@ namespace RecRoom
 			distInterParm(distInterParm), angleInterParm(angleInterParm), 
 			cutFalloff(cutFalloff), cutGrazing(cutGrazing) 
 		{
+			name = "EstimatorPcAlbedo";
+
 			if(!scanner)
 				THROW_EXCEPTION("scanner is not set");
 		}

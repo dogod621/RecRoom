@@ -11,7 +11,10 @@ namespace RecRoom
 		SegmenterPcSVC(float voxelResolution, float seedResolution, 
 			float xyzImportance = 0.4f, float normalImportance = 1.0f, float rgbImportance = 0.4f, float intensityImportance = 5.0f)
 			: SegmenterPc<PointType>(), voxelResolution(voxelResolution), seedResolution(seedResolution),
-			xyzImportance(xyzImportance), normalImportance(normalImportance), rgbImportance(rgbImportance), intensityImportance(intensityImportance) {}
+			xyzImportance(xyzImportance), normalImportance(normalImportance), rgbImportance(rgbImportance), intensityImportance(intensityImportance) 
+		{
+			name = "SegmenterPc";
+		}
 
 	protected:
 		virtual bool ImplementCheck(

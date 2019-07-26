@@ -11,7 +11,10 @@ namespace RecRoom
 		FilterPcAABB(
 			const Eigen::Vector3d& minAABB = Eigen::Vector3d(0.0, 0.0, 0.0),
 			const Eigen::Vector3d& maxAABB = Eigen::Vector3d(0.0, 0.0, 0.0)) 
-			: FilterPc<PointType>(), minAABB(minAABB), maxAABB(maxAABB) {}
+			: FilterPc<PointType>(), minAABB(minAABB), maxAABB(maxAABB) 
+		{
+			name = "FilterPcAABB";
+		}
 
 	protected:
 		virtual bool ImplementCheck(

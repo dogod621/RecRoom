@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Filter/FilterPcRemoveNonFinite.h"
+
 #include "MesherPc.h"
 
 namespace RecRoom
@@ -12,6 +14,11 @@ namespace RecRoom
 		Mesh& output) const
 	{
 		//
+		PTR(PcIndex) filterRmNAN (new PcIndex);
+		FilterPcRemoveNonFinite<PointType> fnan;
+		fnan.Process(searchSurface, input, filter, *filterRmNAN);
+
+		//
 		PTR(Pc<PointType>) pcVertex(new Pc<PointType>);
 		{
 			PTR(Acc<PointType>) searchSurface2;
@@ -19,25 +26,19 @@ namespace RecRoom
 			PTR(PcIndex) filter2;
 			if (preprocessSampler)
 			{
-				PRINT_INFO("Sampling - Start");
-
 				searchSurface2 = PTR(Acc<PointType>)(new KDTree<PointType>);
 				input2 = PTR(Pc<PointType>)(new Pc<PointType>);
 				filter2 = nullptr;
 
-				preprocessSampler->Process(searchSurface, input, filter, *input2);
+				preprocessSampler->Process(searchSurface, input, filterRmNAN, *input2);
 
 				searchSurface2->setInputCloud(input2);
-
-				std::stringstream ss;
-				ss << "Sampling - End - orgPcSize: " << input->size() << ", pcSize: " << input2->size();
-				PRINT_INFO(ss.str());
 			}
 			else
 			{
 				searchSurface2 = boost::const_pointer_cast<Acc<PointType>>(searchSurface);
 				input2 = boost::const_pointer_cast<Pc<PointType>>(input);
-				filter2 = boost::const_pointer_cast<PcIndex>(filter);
+				filter2 = boost::const_pointer_cast<PcIndex>(filterRmNAN);
 			}
 
 			//
@@ -45,18 +46,12 @@ namespace RecRoom
 			PTR(PcIndex) filter3;
 			if (preprocessFilter)
 			{
-				PRINT_INFO("Filtering - Start");
-
 				searchSurface3 = PTR(Acc<PointType>)(new KDTree<PointType>);
 				filter3 = PTR(PcIndex)(new PcIndex);
 
 				preprocessFilter->Process(searchSurface2, input2, filter2, *filter3);
 
 				searchSurface3->setInputCloud(input2, filter3);
-
-				std::stringstream ss;
-				ss << "Filtering - End - orgPcSize: " << input2->size() << ", pcSize: " << filter3->size();
-				PRINT_INFO(ss.str());
 			}
 			else
 			{
@@ -95,24 +90,14 @@ namespace RecRoom
 		treeVertex->setInputCloud(pcVertex);
 
 		//
-		{
-			PRINT_INFO("Reconstruct - Start");
-
-			ToMesh(treeVertex, pcVertex, output);
-
-			PRINT_INFO("Reconstruct - End");
-		}
+		ToMesh(treeVertex, pcVertex, output);
 
 		//
 		{
 			PTR(Pc<PointType>) pcVertex2(new Pc<PointType>);
 			pcl::fromPCLPointCloud2(output.cloud, *pcVertex2);
 
-			PRINT_INFO("Interpolation Field - Start");
-
 			fieldInterpolator->ProcessInOut(treeVertex, pcVertex2, nullptr);
-
-			PRINT_INFO("Interpolation Field - End");
 
 			pcl::toPCLPointCloud2(*pcVertex2, output.cloud);
 		}

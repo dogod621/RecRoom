@@ -14,6 +14,8 @@ namespace RecRoom
 			: SearchAnySurfaceProcessorPc2Pc<InPointType, OutPointType>(),
 			searchRadius(searchRadius)
 		{
+			name = "EstimatorPc";
+
 			if (searchRadius <= 0.0)
 				THROW_EXCEPTION("searchRadius is not valid");
 		}

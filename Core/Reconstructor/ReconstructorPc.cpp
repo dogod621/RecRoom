@@ -64,8 +64,6 @@ namespace RecRoom
 			pcMED->clear();
 			RecPointCloud();
 			status = (ReconstructStatus)(status | ReconstructStatus::POINT_CLOUD);
-			PcMEDRemoveNonFinite();
-			PcMEDRemoveDuplicate();
 			Dump();
 		}
 	}
@@ -104,7 +102,6 @@ namespace RecRoom
 				{
 					RecPcMaterial_NDF();
 					status = (ReconstructStatus)(status | ReconstructStatus::PC_MATERIAL);
-					PcMEDRemoveNonFinite();
 					Dump();
 				}
 				else
@@ -116,7 +113,6 @@ namespace RecRoom
 				{
 					RecPcMaterial_ALBEDO();
 					status = (ReconstructStatus)(status | ReconstructStatus::PC_MATERIAL);
-					PcMEDRemoveNonFinite();
 					Dump();
 				}
 				else
@@ -147,7 +143,6 @@ namespace RecRoom
 		{
 			RecPcSegment();
 			status = (ReconstructStatus)(status | ReconstructStatus::PC_SEGMENT);
-			PcMEDRemoveNonFinite();
 			Dump();
 		}
 		else
@@ -250,7 +245,6 @@ namespace RecRoom
 				ss << "VisualSegmentNDFs : " << segID;
 				PRINT_INFO(ss.str().c_str());
 			}
-
 
 			PTR(PcNDF) pcNDF = containerPcNDF->GetData(segID);
 			PcNDF pcVisNDF;
@@ -771,19 +765,13 @@ namespace RecRoom
 
 	void ReconstructorPc::RecPcSegment()
 	{
-		PRINT_INFO("Segment - Start");
-
 		PTR(AccMED) accMED(new KDTreeMED);
 		accMED->setInputCloud(pcMED);
 		segmenter->ProcessInOut(accMED, pcMED, nullptr);
-
-		PRINT_INFO("Segment - End");
 	}
 
 	void ReconstructorPc::RecMesh()
 	{
-		PRINT_INFO("RecMesh - Start");
-
 		PTR(PcREC) pcREC(new PcREC);
 		pcREC->resize(pcMED->size());
 		for (std::size_t px = 0; px < pcMED->size(); ++px)
@@ -792,54 +780,6 @@ namespace RecRoom
 		PTR(AccREC) accREC(new KDTreeREC);
 		accREC->setInputCloud(pcREC);
 		mesher->Process(accREC, pcREC, nullptr, *mesh);
-
-		PRINT_INFO("RecMesh - End");
-	}
-
-	void ReconstructorPc::PcMEDRemoveNonFinite()
-	{
-		PRINT_INFO("Removing NonFinite - Start");
-
-		PTR(PcMED)temp(new PcMED);
-		temp->reserve(pcMED->size());
-		for (PcMED::const_iterator it = pcMED->begin(); it != pcMED->end(); ++it)
-		{
-			if (pcl::isFinite(*it))
-				temp->push_back(*it);
-		}
-
-		std::stringstream ss;
-		ss << "Removing NonFinite - End - inSize: " << pcMED->size() << ", outSize: " << temp->size();
-		PRINT_INFO(ss.str());
-
-		pcMED = temp;
-	}
-
-	void ReconstructorPc::PcMEDRemoveDuplicate()
-	{
-		PRINT_INFO("Removing Duplicate - Start");
-
-		PTR(AccMED) accMED = PTR(AccMED)(new KDTreeMED);
-		accMED->setInputCloud(pcMED);
-		PTR(PcIndex) filter (new PcIndex);
-		
-		PRINT_INFO("Removing Duplicate - Start");
-
-		FilterPcRemoveDuplicate<PointMED> fd(res);
-		fd.Process(accMED, pcMED, nullptr, *filter);
-
-		PTR(PcMED) temp(new PcMED);
-		pcl::ExtractIndices<PointMED> extract;
-		extract.setInputCloud(pcMED);
-		extract.setIndices(filter);
-		extract.setNegative(false);
-		extract.filter(*temp);
-
-		std::stringstream ss;
-		ss << "Removing Duplicate - End - inSize: " << pcMED->size() << ", outSize: " << temp->size();
-		PRINT_INFO(ss.str());
-
-		pcMED = temp;
 	}
 }
 

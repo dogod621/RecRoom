@@ -8,7 +8,10 @@ namespace RecRoom
 	class FilterPcRemoveOutlier : public FilterPc<PointType>
 	{
 	public:
-		FilterPcRemoveOutlier(int meanK=50, double stdMul=1.0) : FilterPc<PointType>(), meanK(meanK), stdMul(stdMul){}
+		FilterPcRemoveOutlier(int meanK=50, double stdMul=1.0) : FilterPc<PointType>(), meanK(meanK), stdMul(stdMul)
+		{
+			name = "FilterPcRemoveOutlier";
+		}
 
 	public:
 		virtual void ImplementProcess(

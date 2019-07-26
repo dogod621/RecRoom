@@ -9,7 +9,10 @@ namespace RecRoom
 	class SamplerPc : public SearchInputSurfaceProcessorPc2Pc<PointType, PointType>
 	{
 	public:
-		SamplerPc() : SearchInputSurfaceProcessorPc2Pc<PointType, PointType>() {}
+		SamplerPc() : SearchInputSurfaceProcessorPc2Pc<PointType, PointType>() 
+		{
+			name = "SamplerPc";
+		}
 	};
 }
 

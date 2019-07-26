@@ -412,12 +412,12 @@ int main(int argc, char *argv[])
 			}
 			*/
 
-			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::MESH) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
+			/*if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::MESH) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
 			{
 				std::cout << "reconstructorPC->DoRecMesh()" << std::endl;
 
 				reconstructorPC->DoRecMesh();
-			}
+			}*/
 
 			//
 			/*if (pcl::console::find_switch(argc, argv, "-visSegNDFs"))

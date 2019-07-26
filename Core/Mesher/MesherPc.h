@@ -26,6 +26,8 @@ namespace RecRoom
 			: SearchInputSurfaceProcessorPc<PointType, Mesh>(),
 			preprocessSampler(preprocessSampler), preprocessFilter(preprocessFilter), fieldInterpolator(fieldInterpolator) 
 		{
+			name = "MesherPc";
+
 			if (!fieldInterpolator)
 				THROW_EXCEPTION("fieldInterpolator is not set");
 		}

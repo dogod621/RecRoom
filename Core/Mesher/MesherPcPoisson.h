@@ -32,7 +32,10 @@ namespace RecRoom
 			: depth(depth), minDepth(minDepth), pointWeight(pointWeight), scale(scale), solverDivide(solverDivide),
 			isoDivide(isoDivide), samplesPerNode(samplesPerNode), confidence(confidence), outputPolygons(outputPolygons),
 			manifold(manifold), degree(degree), 
-			MesherPc<PointType>(preprocessSampler, preprocessFilter, fieldInterpolator) {}
+			MesherPc<PointType>(preprocessSampler, preprocessFilter, fieldInterpolator) 
+		{
+			name = "MesherPcPoisson";
+		}
 
 	protected:
 		virtual void ToMesh(PTR(Acc<PointType>)& searchSurface, PTR(Pc<PointType>)& input, Mesh& output) const;

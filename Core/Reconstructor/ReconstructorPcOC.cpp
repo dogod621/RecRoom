@@ -3,11 +3,9 @@
 #include <pcl/filters/extract_indices.h>
 #include <pcl/filters/impl/extract_indices.hpp>
 
-#include <pcl/filters/crop_box.h>
-#include <pcl/filters/impl/crop_box.hpp>
-
 #include "Common/AsyncProcess.h"
 #include "Common/VoxelGrid.h"
+#include "Filter/FilterPcAABB.h"
 
 #include "ReconstructorPcOC.h"
 
@@ -77,7 +75,6 @@ namespace RecRoom
 		PTR(PcIndex) pcRecIdx;
 		PTR(AccMED) pcRawAcc;
 		PTR(AccMED) pcRecAcc;
-		PTR(PcIndex) pcReturnIdx;
 
 		AsyncData_Rec() :
 			pcRaw(new PcMED),
@@ -85,8 +82,7 @@ namespace RecRoom
 			pcRawIdx(new PcIndex),
 			pcRecIdx(new PcIndex),
 			pcRawAcc(nullptr),
-			pcRecAcc(new KDTreeMED),
-			pcReturnIdx(new PcIndex)
+			pcRecAcc(new KDTreeMED)
 		{
 		}
 	};
@@ -126,39 +122,17 @@ namespace RecRoom
 		// 
 		if (global.ptrReconstructorPcOC()->getDownSampler())
 		{
-			{
-				PRINT_INFO("DownSampling - Start");
-
-				global.ptrReconstructorPcOC()->getDownSampler()->Process(data.pcRawAcc, data.pcRaw, nullptr, *data.pcRec);
-
-				std::stringstream ss;
-				ss << "DownSampling - End - inSize: " << data.pcRaw->size() << ", outSize:" << data.pcRec->size();
-				PRINT_INFO(ss.str());
-			}
-
-			{
-				PRINT_INFO("Build pcRecAcc - Start");
-				data.pcRecAcc->setInputCloud(data.pcRec);
-				PRINT_INFO("Build pcRecAcc - End");
-			}
-
-			{
-				PRINT_INFO("Extract indices - Start");
-
-				pcl::CropBox<PointMED> cb;
-				cb.setMin(Eigen::Vector4f(cData.minAABB.x(), cData.minAABB.y(), cData.minAABB.z(), 1.0));
-				cb.setMax(Eigen::Vector4f(cData.maxAABB.x(), cData.maxAABB.y(), cData.maxAABB.z(), 1.0));
-				cb.setInputCloud(data.pcRec);
-				cb.filter(*data.pcRecIdx);
-				
-				std::stringstream ss;
-				ss << "Extract indices - End - pcSize: " << data.pcRec->size() << ", idxSize: " << data.pcRecIdx->size();
-				PRINT_INFO(ss.str());
-			}
+			global.ptrReconstructorPcOC()->getDownSampler()->Process(data.pcRawAcc, data.pcRaw, nullptr, *data.pcRec);
+			
+			PRINT_INFO("Build pcRecAcc - Start");
+			data.pcRecAcc->setInputCloud(data.pcRec);
+			PRINT_INFO("Build pcRecAcc - End");
+			
+			FilterPcAABB<PointMED> cb(cData.minAABB, cData.maxAABB);
+			cb.Process(nullptr, data.pcRec, nullptr, *data.pcRecIdx);
 		}
 		else
 		{
-			PRINT_WARNING("downSampler is not set, ignore it");
 			data.pcRec = data.pcRaw;
 			data.pcRecIdx = data.pcRawIdx;
 			data.pcRecAcc = data.pcRawAcc;
@@ -167,9 +141,6 @@ namespace RecRoom
 		//
 		if (global.ptrReconstructorPcOC()->getOutlierRemover())
 		{
-			PRINT_INFO("Outlier Removal - Start");
-
-
 			PcIndex orIndices;
 			global.ptrReconstructorPcOC()->getOutlierRemover()->Process(data.pcRecAcc, data.pcRec, nullptr, orIndices);
 			
@@ -184,17 +155,7 @@ namespace RecRoom
 				orIndices.begin(), orIndices.end(),
 				data.pcRecIdx->begin());
 			data.pcRecIdx->resize(it - data.pcRecIdx->begin());
-
-			//
-			std::stringstream ss;
-			ss << "Outlier Removal - End - pcSize: " << indices.size() << ", idxSize: " << data.pcRecIdx->size();
-			PRINT_INFO(ss.str());
 		}
-		else
-		{
-			PRINT_WARNING("outlierRemover is not set, ignore it");
-		}
-
 		return 0;
 	}
 
@@ -206,12 +167,8 @@ namespace RecRoom
 #elif defined OUTPUT_PERPOINT_NORMAL
 		if (global.ptrReconstructorPcOC()->getNormalEstimator())
 		{
-			PRINT_INFO("Estimat Normal - Start");
-
 			global.ptrReconstructorPcOC()->getNormalEstimator()->ProcessInOut(
 				data.pcRawAcc, data.pcRec, data.pcRecIdx);
-
-			PRINT_INFO("Estimat Normal - End");
 		}
 		else
 		{
@@ -226,20 +183,16 @@ namespace RecRoom
 
 	int CStep_RecPointCloud(AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, const AsyncData_Rec& data)
 	{
+		PRINT_INFO("Merge - Start");
+
 		PcMED temp;
 		{
-			PRINT_INFO("Extract - Start");
-
 			pcl::ExtractIndices<PointMED> extract;
 			extract.setInputCloud(data.pcRec);
 			extract.setIndices(data.pcRecIdx);
 			extract.setNegative(false);
 			extract.filter(temp);
-
-			PRINT_INFO("Extract - End - Size: " + std::to_string(temp.size()));
 		}
-
-		PRINT_INFO("Merge - Start");
 
 		(*global.ptrReconstructorPcOC()->getPcMED()) += temp;
 
@@ -296,62 +249,17 @@ namespace RecRoom
 
 		// 
 		{
-			PRINT_INFO("Extract return indices - Start");
+			data.pcRec = global.ptrReconstructorPcOC()->getPcMED();
 
-			pcl::CropBox<PointMED> cb;
-			cb.setMin(Eigen::Vector4f(cData.minAABB.x(), cData.minAABB.y(), cData.minAABB.z(), 1.0));
-			cb.setMax(Eigen::Vector4f(cData.maxAABB.x(), cData.maxAABB.y(), cData.maxAABB.z(), 1.0));
-			cb.setInputCloud(global.ptrReconstructorPcOC()->getPcMED());
-			cb.filter(*data.pcReturnIdx);
-
-			std::stringstream ss;
-			ss << "Extract return indices - End - pcSize: " << global.ptrReconstructorPcOC()->getPcMED()->size() << ", idxSize: " << data.pcReturnIdx->size();
-			PRINT_INFO(ss.str());
-		}
-
-		// 
-		{
-			PRINT_INFO("Extract pointCloud from pcMED - Start");
-
-			pcl::CropBox<PointMED> cb;
-			cb.setMin(Eigen::Vector4f(cData.extMinAABB.x(), cData.extMinAABB.y(), cData.extMinAABB.z(), 1.0));
-			cb.setMax(Eigen::Vector4f(cData.extMaxAABB.x(), cData.extMaxAABB.y(), cData.extMaxAABB.z(), 1.0));
-			cb.setInputCloud(global.ptrReconstructorPcOC()->getPcMED());
-			cb.filter(*data.pcRec);
-
-			std::stringstream ss;
-			ss << "Extract pointCloud from pcMED - End - inSize: " << global.ptrReconstructorPcOC()->getPcMED()->size() << ", outSize:" << data.pcRec->size();
-			PRINT_INFO(ss.str());
-
-		}
-
-		{
+			FilterPcAABB<PointMED> cb(cData.minAABB, cData.maxAABB);
+			cb.Process(nullptr, data.pcRec, nullptr, *data.pcRecIdx);
+		
 			PRINT_INFO("Build pcRecAcc - Start");
-			data.pcRecAcc->setInputCloud(data.pcRec);
+			data.pcRecAcc->setInputCloud(data.pcRec, data.pcRecIdx);
 			PRINT_INFO("Build pcRecAcc - End");
 		}
 
 		{
-			PRINT_INFO("Extract indices - Start");
-
-			pcl::CropBox<PointMED> cb;
-			cb.setMin(Eigen::Vector4f(cData.minAABB.x(), cData.minAABB.y(), cData.minAABB.z(), 1.0));
-			cb.setMax(Eigen::Vector4f(cData.maxAABB.x(), cData.maxAABB.y(), cData.maxAABB.z(), 1.0));
-			cb.setInputCloud(data.pcRec);
-			cb.filter(*data.pcRecIdx);
-
-			std::stringstream ss;
-			ss << "Extract indices - End - inSize: " << data.pcRec->size() << ", outSize:" << data.pcRecIdx->size();
-			PRINT_INFO(ss.str());
-
-			// Check
-			if (data.pcRecIdx->size() != data.pcReturnIdx->size())
-				return 1;
-		}
-
-		{
-			PRINT_INFO("Upsampling Normal - Start");
-
 			PcMED temp;
 
 			global.ptrReconstructorPcOC()->getInterpolator()->Process(data.pcRecAcc, data.pcRaw, nullptr, temp);
@@ -366,8 +274,6 @@ namespace RecRoom
 				tarP.normal_z = srcP.normal_z;
 				tarP.curvature = srcP.curvature;
 			}
-
-			PRINT_INFO("Upsampling Normal - End");
 		}
 
 		return 0;
@@ -376,46 +282,22 @@ namespace RecRoom
 	int CStep_RecPcAtt(AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, const AsyncData_Rec& data)
 	{
 		// Check
-		if (data.pcRecIdx->size() != data.pcReturnIdx->size())
-			return 1;
-
-		PRINT_INFO("Update Attribute - Start");
-
-		PcMED& srcPC = *data.pcRec;
-		PcMED& tarPC = *global.ptrReconstructorPcOC()->getPcMED();
-		PcIndex& srcIdx = *data.pcRecIdx;
-		PcIndex& tarIdx = *data.pcReturnIdx;
-		for (std::size_t px = 0; px < srcIdx.size(); ++px)
-			tarPC[tarIdx[px]] = srcPC[srcIdx[px]];
-
-		PRINT_INFO("Update Attribute - End");
-
 		return 0;
 	}
 
 	// Async Reconstruct Attribute - NDF
 	int BStep_RecPcAlbedo_NDF(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
 	{
-		PRINT_INFO("Estimat NDF - Start");
-
 		global.ptrReconstructorPcOC()->getNDFEstimator()->ProcessInOut(
 			data.pcRawAcc, data.pcRec, data.pcRecIdx);
-
-		PRINT_INFO("Estimat NDF - End");
-
 		return 0;
 	}
 
 	// Async Reconstruct Attribute - Albedo
 	int BStep_RecPcAlbedo_ALBEDO(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
 	{
-		PRINT_INFO("Estimat Albedo - Start");
-
 		global.ptrReconstructorPcOC()->getAlbedoEstimator()->ProcessInOut(
 			data.pcRawAcc, data.pcRec, data.pcRecIdx);
-
-		PRINT_INFO("Estimat Albedo - End");
-
 		return 0;
 	}
 

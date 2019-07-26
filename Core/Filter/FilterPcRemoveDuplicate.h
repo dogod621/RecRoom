@@ -10,7 +10,9 @@ namespace RecRoom
 	public:
 		FilterPcRemoveDuplicate(float minDistance)
 			: FilterPc<PointType>(),  minDistance(minDistance)
-		{}
+		{
+			name = "FilterPcRemoveDuplicate";
+		}
 
 	public:
 		virtual void ImplementProcess(

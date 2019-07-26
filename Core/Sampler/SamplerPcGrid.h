@@ -11,6 +11,8 @@ namespace RecRoom
 		SamplerPcGrid(double voxelSize, const Eigen::Vector3d& minAABB, const Eigen::Vector3d& maxAABB, double tooCloseRatio = 0.5)
 			: SamplerPc<PointType>(), voxelSize(voxelSize), minAABB(minAABB), maxAABB(maxAABB), tooCloseRatio(tooCloseRatio)
 		{
+			name = "SamplerPcGrid";
+
 			if ((tooCloseRatio < 0.0) or (tooCloseRatio >= 1.0))
 				THROW_EXCEPTION("tooCloseRatio must >=0.0 and < 1.0");
 		}

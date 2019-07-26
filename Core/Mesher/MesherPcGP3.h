@@ -29,7 +29,10 @@ namespace RecRoom
 			: searchRadius(searchRadius), mu(mu), maxNumNei(maxNumNei), 
 			minAngle(minAngle), maxAngle(maxAngle), epsAngle(epsAngle), 
 			consistent(consistent), consistentOrdering(consistentOrdering), 
-			MesherPc<PointType>(preprocessSampler, preprocessFilter, fieldInterpolator) {}
+			MesherPc<PointType>(preprocessSampler, preprocessFilter, fieldInterpolator) 
+		{
+			name = "MesherPcGP3";
+		}
 
 	protected:
 		virtual void ToMesh(PTR(Acc<PointType>)& searchSurface, PTR(Pc<PointType>)& input, Mesh& output) const;
