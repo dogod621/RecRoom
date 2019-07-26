@@ -31,10 +31,11 @@ namespace RecRoom
 		for (int idx = 0; idx < k; ++idx)
 		{
 			int px = indices[idx];
-			if (pcl::isFinite(cloud[px]))
+			const InPointType& inP = cloud[px];
+			if (pcl::isFinite(inP))
 			{
 				ScanLaser laser;
-				if (scanner->ToScanLaser(cloud[px], laser))
+				if (scanner->ToScanLaser(inP, laser))
 				{
 					if (laser.beamFalloff > cutFalloff)
 						scanDataSet.push_back(ScanData(laser, px, std::sqrt(distance[idx])));
@@ -167,11 +168,14 @@ namespace RecRoom
 			int px = indices[idx];
 			ScanLaser laser;
 			const InPointType& inP = cloud[px];
-			if (scanner->ToScanLaser(inP, laser))
+			if (pcl::isFinite(inP))
 			{
-				if ((laser.incidentDirection.dot(Eigen::Vector3f(inP.normal_x, inP.normal_y, inP.normal_z)) > cutGrazing) &&
-					(laser.beamFalloff > cutFalloff))
-					scanDataSet.push_back(ScanData(laser, px, std::sqrt(distance[idx])));
+				if (scanner->ToScanLaser(inP, laser))
+				{
+					if ((laser.incidentDirection.dot(Eigen::Vector3f(inP.normal_x, inP.normal_y, inP.normal_z)) > cutGrazing) &&
+						(laser.beamFalloff > cutFalloff))
+						scanDataSet.push_back(ScanData(laser, px, std::sqrt(distance[idx])));
+				}
 			}
 		}
 
