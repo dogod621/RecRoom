@@ -235,9 +235,10 @@ namespace RecRoom
 		{
 			int px = indices[idx];
 			ScanLaser laser;
-			if (scanner->ToScanLaser(cloud[px], laser))
+			const InPointType& inP = cloud[px];
+			if (scanner->ToScanLaser(inP, laser))
 			{
-				if ((laser.incidentDirection.dot(Eigen::Vector3f(center.normal_x, center.normal_y, center.normal_z)) > cutGrazing) &&
+				if ((laser.incidentDirection.dot(Eigen::Vector3f(inP.normal_x, inP.normal_y, inP.normal_z)) > cutGrazing) &&
 					(laser.beamFalloff > cutFalloff))
 					scanDataSet.push_back(ScanData(laser, px, std::sqrt(distance[idx])));
 			}

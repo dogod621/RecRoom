@@ -9,8 +9,6 @@ namespace RecRoom
 		const Pc<InPointType>& cloud, 
 		const InPointType& center, const std::vector<ScanData>& scanDataSet, OutPointType& outPoint) const
 	{
-		Eigen::Vector3f macroNormal(center.normal_x, center.normal_y, center.normal_z);
-
 		Eigen::MatrixXf A;
 		Eigen::MatrixXf B;
 
@@ -30,7 +28,7 @@ namespace RecRoom
 				return false;
 			}
 
-			float dotNN = hitNormal.dot(macroNormal);
+			float dotNN = hitNormal.dot(it->laser.incidentDirection);
 			float weight = std::pow(((float)search_radius_ - it->distance2Center) / (float)search_radius_, distInterParm) * std::pow(dotNN, angleInterParm);
 
 			A(shifter, 0) = weight * it->laser.incidentDirection.x();
