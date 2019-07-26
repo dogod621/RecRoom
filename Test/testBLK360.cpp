@@ -53,7 +53,7 @@ void PrintHelp(int argc, char **argv)
 		PRINT_HELP("\t", "res", "float 4", "Gird unit size in meters.");
 		PRINT_HELP("\t", "min", "float[3] -100 -100 -100", "Min AABB corner in meters. For example: -min \"-100 -100 -100\".");
 		PRINT_HELP("\t", "max", "float[3] 100 100 100", "Max AABB corner in meters. For example: -max \"100 100 100\".");
-		PRINT_HELP("\t", "overlap", "float 0.05", "Overlap size in meters when doing out-of-core.");
+		PRINT_HELP("\t", "overlap", "float ${searchRadius}", "Overlap size in meters when doing out-of-core.");
 	}
 
 	std::cout << "ScannerPcBLK360 Parmameters:==============================================================================================================================" << std::endl << std::endl;
@@ -63,7 +63,7 @@ void PrintHelp(int argc, char **argv)
 
 	std::cout << "SamplerPcGrid Parmameters:================================================================================================================================" << std::endl << std::endl;
 	{
-		PRINT_HELP("\t", "voxelSize", "float 0.05", "Gird unit size in meters.");
+		PRINT_HELP("\t", "voxelSize", "float 0.01", "Gird unit size in meters.");
 	}
 
 	std::cout << "FilterPcRemoveOutlier Parmameters:========================================================================================================================" << std::endl << std::endl;
@@ -74,7 +74,7 @@ void PrintHelp(int argc, char **argv)
 	
 	std::cout << "EstimatorPc Parmameters:==================================================================================================================================" << std::endl << std::endl;
 	{
-		PRINT_HELP("\t", "searchRadius", "float ${overlap}", "The search radius at surface.");
+		PRINT_HELP("\t", "searchRadius", "float ${voxelSize*5}", "The search radius at surface.");
 	}
 
 	std::cout << "EstimatorPcNormal/Albedo/NDF Parmameters:=================================================================================================================" << std::endl << std::endl;
@@ -124,6 +124,17 @@ int main(int argc, char *argv[])
 		PrintHelp(argc, argv);
 	else
 	{
+		// Parse SamplerPcGrid Parmameters
+		float voxelSize = 0.01;
+		pcl::console::parse_argument(argc, argv, "-voxelSize", voxelSize);
+		std::cout << "SamplerPcGrid Parmameters -voxelSize: " << voxelSize << std::endl;
+
+		// Parse EstimatorPc Parmameters
+		double searchRadius = voxelSize*5.0;
+		pcl::console::parse_argument(argc, argv, "-searchRadius", searchRadius);
+		std::cout << "EstimatorPcNormal -searchRadius: " << searchRadius << std::endl;
+		std::cout << "EstimatorPcAlbedo -searchRadius: " << searchRadius << std::endl;
+
 		// Parse Main Parmameters
 		unsigned int async = 1;
 		pcl::console::parse_argument(argc, argv, "-async", async);
@@ -165,7 +176,7 @@ int main(int argc, char *argv[])
 		std::cout << "ContainerPcRAWOC Parmameters -min: " << min << std::endl;
 		std::cout << "ContainerPcRAWOC Parmameters -max: " << max << std::endl;
 
-		double overlap = 0.05;
+		double overlap = searchRadius;
 		pcl::console::parse_argument(argc, argv, "-overlap", overlap);
 		std::cout << "ContainerPcRAWOC Parmameters -overlap: " << overlap << std::endl;
 
@@ -174,12 +185,6 @@ int main(int argc, char *argv[])
 		pcl::console::parse_argument(argc, argv, "-colorThresh", colorThresh);
 		std::cout << "ScannerPcBLK360 Parmameters -colorThresh: " << colorThresh << std::endl;
 
-
-		// Parse SamplerPcGrid Parmameters
-		float voxelSize = 0.05;
-		pcl::console::parse_argument(argc, argv, "-voxelSize", voxelSize);
-		std::cout << "SamplerPcGrid Parmameters -voxelSize: " << voxelSize << std::endl;
-
 		// Parse FilterPcRemoveOutlier Parmameters
 		int meanK = 50; 
 		double stdMul = 1.0;
@@ -187,12 +192,6 @@ int main(int argc, char *argv[])
 		pcl::console::parse_argument(argc, argv, "-stdMul", stdMul);
 		std::cout << "FilterPcRemoveOutlier Parmameters -meanK: " << meanK << std::endl;
 		std::cout << "FilterPcRemoveOutlier Parmameters -stdMul: " << stdMul << std::endl;
-
-		// Parse EstimatorPc Parmameters
-		double searchRadius = overlap;
-		pcl::console::parse_argument(argc, argv, "-searchRadius", searchRadius);
-		std::cout << "EstimatorPcNormal -searchRadius: " << searchRadius << std::endl;
-		std::cout << "EstimatorPcAlbedo -searchRadius: " << searchRadius << std::endl;
 
 		// Parse EstimatorPcAlbedo Parmameters
 		float distInterParm = 0.4f;
@@ -343,7 +342,7 @@ int main(int argc, char *argv[])
 				albedoEstimator(
 					new RecRoom::EstimatorPcAlbedo<RecRoom::PointMED, RecRoom::PointMED>(
 						searchRadius, scannerPc, RecRoom::LinearSolver::EIGEN_SVD, 
-						distInterParm, angleInterParm, cutFalloff, cutGrazing));
+						3, 1, cutFalloff, cutGrazing));
 			reconstructorPC->setAlbedoEstimator(albedoEstimator);
 
 			std::cout << "Create NDFEstimator" << std::endl;
@@ -351,7 +350,7 @@ int main(int argc, char *argv[])
 				ndfEstimator(
 					new RecRoom::EstimatorPcNDF<RecRoom::PointMED, RecRoom::PointMED>(
 						searchRadius, scannerPc, RecRoom::LinearSolver::EIGEN_SVD,
-						distInterParm, angleInterParm, cutFalloff, cutGrazing));
+						3, 1, cutFalloff, cutGrazing));
 			reconstructorPC->setNDFEstimator(ndfEstimator);
 
 			std::cout << "Create Segmenter" << std::endl;
@@ -391,12 +390,12 @@ int main(int argc, char *argv[])
 				reconstructorPC->DoRecPointCloud();
 			}
 
-			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::PC_MATERIAL) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
+			/*if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::PC_MATERIAL) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
 			{
 				std::cout << "reconstructorPC->DoRecPcMaterial()" << std::endl;
 
 				reconstructorPC->DoRecPcMaterial();
-			}
+			}*/
 
 			/*if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::PC_SEGMENT) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
 			{
@@ -425,13 +424,13 @@ int main(int argc, char *argv[])
 			{
 				std::cout << "reconstructorPC->VisualSegNDFs()" << std::endl;
 				reconstructorPC->VisualSegNDFs();
-			}
+			}*/
 
 			if (pcl::console::find_switch(argc, argv, "-visRecAtts"))
 			{
 				std::cout << "reconstructorPC->VisualRecAtts()" << std::endl;
 				reconstructorPC->VisualRecAtts();
-			}*/
+			}
 		}
 		catch (const RecRoom::exception& ex)
 		{
