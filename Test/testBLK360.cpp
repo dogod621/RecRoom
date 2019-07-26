@@ -107,12 +107,12 @@ void PrintHelp(int argc, char **argv)
 
 	std::cout << "MesherPcGP3 Parmameters:==================================================================================================================================" << std::endl << std::endl;
 	{
-		PRINT_HELP("\t", "maxEdgeSize", "float ${overlap}", "The nearest neighbors search radius for each point and the maximum edge length.");
+		PRINT_HELP("\t", "maxEdgeSize", "float ${voxelSize*0.33}", "The nearest neighbors search radius for each point and the maximum edge length.");
 		PRINT_HELP("\t", "mu", "float 2.5", "The nearest neighbor distance multiplier to obtain the final search radius.");
-		PRINT_HELP("\t", "maxNumNei", "int ${(maxEdgeSize/voxelSize)^2*M_PI}", "The maximum number of nearest neighbors accepted by searching.");
-		PRINT_HELP("\t", "minAngle", "float 10.0", "The preferred minimum angle in degrees for the triangles.");
+		PRINT_HELP("\t", "maxNumNei", "int ${(maxEdgeSize/voxelSize)^3*4/3*M_PI}", "The maximum number of nearest neighbors accepted by searching.");
+		PRINT_HELP("\t", "minAngle", "float 15.0", "The preferred minimum angle in degrees for the triangles.");
 		PRINT_HELP("\t", "maxAngle", "float 120.0", "The maximum angle in degrees for the triangles.");
-		PRINT_HELP("\t", "minAngle", "float 10.0", "Maximum surface angle in degrees.");
+		PRINT_HELP("\t", "epsAngle", "float 45.0", "Maximum surface angle in degrees.");
 	}
 
 	std::cout << "==========================================================================================================================================================" << std::endl << std::endl;
@@ -242,15 +242,15 @@ int main(int argc, char *argv[])
 		std::cout << "SegmenterPcSVC -isoLevel: " << isoLevel << std::endl;
 		std::cout << "SegmenterPcSVC -gridRes: " << gridRes << std::endl;*/
 
-		double maxEdgeSize = voxelSize*4.5;
+		double maxEdgeSize = voxelSize*0.33;
 		double mu = 2.5;
-		int maxNumNei = int(maxEdgeSize/voxelSize * maxEdgeSize/voxelSize * maxEdgeSize / voxelSize * (4.0/3.0) * M_PI);
-		double minAngle = 10.0;
-		double maxAngle = 160.0;
+		double minAngle = 15.0;
+		double maxAngle = 120.0;
 		double epsAngle = 45.0;
 
 		pcl::console::parse_argument(argc, argv, "-maxEdgeSize", maxEdgeSize);
 		pcl::console::parse_argument(argc, argv, "-mu", mu);
+		int maxNumNei = int(maxEdgeSize / voxelSize * maxEdgeSize / voxelSize * maxEdgeSize / voxelSize * (4.0 / 3.0) * M_PI);
 		pcl::console::parse_argument(argc, argv, "-maxNumNei", maxNumNei);
 		pcl::console::parse_argument(argc, argv, "-minAngle", minAngle);
 		pcl::console::parse_argument(argc, argv, "-maxAngle", maxAngle);
@@ -298,7 +298,7 @@ int main(int argc, char *argv[])
 				reconstructorPC(
 					new RecRoom::ReconstructorPcOC(
 						wd / boost::filesystem::path("ReconstructorPc"),
-						scannerPc, containerPcNDF, 0.01f));
+						scannerPc, containerPcNDF, voxelSize));
 			reconstructorPC->setAsyncSize(async);
 
 			//
