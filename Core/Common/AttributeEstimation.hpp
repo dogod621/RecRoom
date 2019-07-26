@@ -75,7 +75,7 @@ namespace RecRoom
 					}
 					else
 					{
-						PRINT_WARNING("CollectScanData failed");
+						//PRINT_WARNING("CollectScanData failed");
 						self->SetAttributeNAN(outPoint);
 						output->is_dense = false;
 					}
@@ -112,7 +112,7 @@ namespace RecRoom
 						}
 						else
 						{
-							PRINT_WARNING("CollectScanData failed");
+							//PRINT_WARNING("CollectScanData failed");
 							self->SetAttributeNAN(outPoint);
 							output->is_dense = false;
 						}
@@ -166,7 +166,7 @@ namespace RecRoom
 				}
 				else
 				{
-					PRINT_WARNING("CollectScanData failed");
+					//PRINT_WARNING("CollectScanData failed");
 					SetAttributeNAN(outPoint);
 					output.is_dense = false;
 				}
@@ -200,7 +200,7 @@ namespace RecRoom
 					}
 					else
 					{
-						PRINT_WARNING("CollectScanData failed");
+						//PRINT_WARNING("CollectScanData failed");
 						SetAttributeNAN(outPoint);
 						output.is_dense = false;
 					}
