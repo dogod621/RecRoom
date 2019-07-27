@@ -35,7 +35,7 @@ namespace RecRoom
 			const float distInterParm = 0.4f, const float angleInterParm = 0.6f,
 			const float cutFalloff = 0.33f, // cut attinuation less than 1/3
 			const float cutGrazing = 0.26f // cut incident agngle larger than 75 degrees
-		) : AttributeEstimation<InPointType, OutPointType>(scanner, cutFalloff, cutGrazing, 3),
+		) : AttributeEstimation<InPointType, OutPointType>(scanner, cutFalloff, cutGrazing, 4),
 			distInterParm(distInterParm), angleInterParm(angleInterParm), minSharpness(0.0f), maxSharpness(1.0f), threshSNR(90.f)
 		{
 			feature_name_ = "NDFEstimation";
@@ -102,7 +102,7 @@ namespace RecRoom
 			feature_name_ = "SGEstimation";
 
 			minSharpness = 0.0f;
-			maxSharpness = 10.0f;
+			maxSharpness = 6.0f;
 		};
 
 	protected:
