@@ -17,8 +17,9 @@ namespace RecRoom
 		boost::filesystem::path filePath_,
 		const CONST_PTR(ScannerPc)& scanner,
 		const PTR(ContainerPcNDF)& containerPcNDF,
-		float res)
-		: DumpAble("ReconstructorPc", filePath_), status(ReconstructStatus::ReconstructStatus_UNKNOWN), scanner(scanner), containerPcNDF(containerPcNDF), res(res),
+		bool useVNN,
+		float resVNN)
+		: DumpAble("ReconstructorPc", filePath_), status(ReconstructStatus::ReconstructStatus_UNKNOWN), scanner(scanner), containerPcNDF(containerPcNDF), useVNN(useVNN), resVNN(resVNN),
 		pcMED(new PcMED), mesh(new Mesh),
 		downSampler(nullptr),
 		interpolator(new InterpolatorPcNearest<PointMED, PointMED>),
@@ -830,9 +831,13 @@ namespace RecRoom
 
 	void ReconstructorPc::Load(const nlohmann::json& j)
 	{
-		if (j.find("res") == j.end())
-			THROW_EXCEPTION("File is not valid: missing \"res\"");
-		res = j["res"];
+		if (j.find("useVNN") == j.end())
+			THROW_EXCEPTION("File is not valid: missing \"useVNN\"");
+		useVNN = j["useVNN"];
+
+		if (j.find("resVNN") == j.end())
+			THROW_EXCEPTION("File is not valid: missing \"resVNN\"");
+		resVNN = j["resVNN"];
 
 		if (j.find("status") == j.end())
 			THROW_EXCEPTION("File is not valid: missing \"status\"");
@@ -841,7 +846,8 @@ namespace RecRoom
 
 	void ReconstructorPc::Dump(nlohmann::json& j) const
 	{
-		j["res"] = res;
+		j["useVNN"] = useVNN;
+		j["resVNN"] = resVNN;
 		j["status"] = Convert<nlohmann::json, ReconstructStatus>(status);
 	}
 

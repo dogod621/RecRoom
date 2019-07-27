@@ -41,7 +41,8 @@ namespace RecRoom
 			boost::filesystem::path filePath,
 			const CONST_PTR(ScannerPc)& scanner,
 			const PTR(ContainerPcNDF)& containerPcNDF,
-			float res = 0.01f);
+			bool useVNN = true,
+			float resVNN = 0.01f);
 
 	public:
 		void RecPointCloud();
@@ -64,7 +65,8 @@ namespace RecRoom
 		virtual void ImplementRecMesh();
 
 	public:
-		float getRes() const { return res; }
+		bool getUseVNN() const { return useVNN; }
+		float getResVNN() const { return resVNN; }
 		ReconstructStatus getStatus() const { return status; }
 		PTR(PcMED) getPcMED() const { return pcMED; }
 
@@ -100,7 +102,8 @@ namespace RecRoom
 		void setMesher(const CONST_PTR(Mesher)& v) { mesher = v;}
 		
 	protected:
-		float res;
+		bool useVNN;
+		float resVNN;
 		ReconstructStatus status;
 		PTR(PcMED) pcMED;
 		PTR(Mesh) mesh;

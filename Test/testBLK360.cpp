@@ -304,7 +304,7 @@ int main(int argc, char *argv[])
 				reconstructorPC(
 					new RecRoom::ReconstructorPcOC(
 						wd / boost::filesystem::path("ReconstructorPc"),
-						scannerPc, containerPcNDF, voxelSize));
+						scannerPc, containerPcNDF));
 			reconstructorPC->setAsyncSize(async);
 
 			//

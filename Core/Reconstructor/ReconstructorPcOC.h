@@ -19,21 +19,16 @@ namespace RecRoom
 			boost::filesystem::path filePath,
 			const CONST_PTR(ScannerPc)& scanner,
 			const PTR(ContainerPcNDF)& containerPcNDF,
-			float res = 0.01f)
-			: ReconstructorPc(filePath, scanner, containerPcNDF, res), AsyncAble(1), useVNN(true){}
-
-	public:
-		bool getUseVNN() const { return useVNN; }
-
+			bool useVNN = true,
+			float resVNN = 0.01f)
+			: ReconstructorPc(filePath, scanner, containerPcNDF, useVNN, resVNN), AsyncAble(1){}
+		
 	protected:
 		virtual void ImplementRecPointCloud();
 		virtual void ImplementRecPcNormal();
 		virtual void ImplementRecPcAlbedo();
 		virtual void ImplementRecPcSharpness();
 		virtual void ImplementRecSegMaterial();
-
-	protected:
-		bool useVNN;
 	};
 }
 
