@@ -26,10 +26,10 @@ namespace RecRoom
 		bool getUseVNN() const { return useVNN; }
 
 	protected:
-		virtual void RecPointCloud();
-		virtual void RecPcMaterial_NDF();
-		virtual void RecPcMaterial_ALBEDO();
-		virtual void RecSegMaterial();
+		virtual void ImplementRecPointCloud();
+		virtual void ImplementRecPcAlbedo();
+		virtual void ImplementRecPcSharpness();
+		virtual void ImplementRecSegMaterial();
 
 	protected:
 		bool useVNN;

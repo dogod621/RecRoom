@@ -201,7 +201,7 @@ namespace RecRoom
 		return 0;
 	}
 
-	void ReconstructorPcOC::RecPointCloud()
+	void ReconstructorPcOC::ImplementRecPointCloud()
 	{
 		AsyncGlobal_Rec global(this);
 
@@ -263,6 +263,18 @@ namespace RecRoom
 			PRINT_INFO("Build pcRecAcc - End");
 		}
 
+		return 0;
+	}
+
+	int CStep_RecPcAtt(AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, const AsyncData_Rec& data)
+	{
+		// Check
+		return 0;
+	}
+
+	// Async Reconstruct Attribute - Albedo
+	int BStep_RecPcAlbedo(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
+	{
 		{
 			PcMED temp;
 
@@ -281,28 +293,39 @@ namespace RecRoom
 			}
 		}
 
+		{
+			global.ptrReconstructorPcOC()->getAlbedoEstimator()->ProcessInOut(
+				data.pcRawAcc, data.pcRec, data.pcRecIdx);
+		}
 		return 0;
 	}
 
-	int CStep_RecPcAtt(AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, const AsyncData_Rec& data)
+	// Async Reconstruct Attribute - Sharpness
+	int BStep_RecPcSharpness(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
 	{
-		// Check
-		return 0;
-	}
+		{
+			PcMED temp;
 
-	// Async Reconstruct Attribute - NDF
-	int BStep_RecPcAlbedo_NDF(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
-	{
-		global.ptrReconstructorPcOC()->getNDFEstimator()->ProcessInOut(
-			data.pcRawAcc, data.pcRec, data.pcRecIdx);
-		return 0;
-	}
+			global.ptrReconstructorPcOC()->getInterpolator()->Process(data.pcRecAcc, data.pcRaw, nullptr, temp);
 
-	// Async Reconstruct Attribute - Albedo
-	int BStep_RecPcAlbedo_ALBEDO(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
-	{
-		global.ptrReconstructorPcOC()->getAlbedoEstimator()->ProcessInOut(
-			data.pcRawAcc, data.pcRec, data.pcRecIdx);
+			for (std::size_t px = 0; px < data.pcRaw->size(); ++px)
+			{
+				PointMED& tarP = (*data.pcRaw)[px];
+				PointMED& srcP = temp[px];
+
+				tarP.intensity = srcP.intensity;
+				tarP.normal_x = srcP.normal_x;
+				tarP.normal_y = srcP.normal_y;
+				tarP.normal_z = srcP.normal_z;
+				tarP.curvature = srcP.curvature;
+				tarP.label = srcP.label;
+			}
+		}
+
+		{
+			global.ptrReconstructorPcOC()->getSharpnessEstimator()->ProcessInOut(
+				data.pcRawAcc, data.pcRec, data.pcRecIdx);
+		}
 		return 0;
 	}
 
@@ -359,7 +382,7 @@ namespace RecRoom
 		return 0;
 	}
 
-	void ReconstructorPcOC::RecPcMaterial_NDF()
+	void ReconstructorPcOC::ImplementRecPcAlbedo()
 	{
 		AsyncGlobal_Rec global(this);
 
@@ -369,11 +392,11 @@ namespace RecRoom
 
 		AsyncProcess<AsyncGlobal_Rec, AsyncQuery_Rec, AsyncData_Rec>(
 			global, queries,
-			AStep_RecPcAtt, BStep_RecPcAlbedo_NDF, CStep_RecPcAtt,
+			AStep_RecPcAtt, BStep_RecPcAlbedo, CStep_RecPcAtt,
 			asyncSize);
 	}
 
-	void ReconstructorPcOC::RecPcMaterial_ALBEDO()
+	void ReconstructorPcOC::ImplementRecPcSharpness()
 	{
 		AsyncGlobal_Rec global(this);
 
@@ -383,11 +406,11 @@ namespace RecRoom
 
 		AsyncProcess<AsyncGlobal_Rec, AsyncQuery_Rec, AsyncData_Rec>(
 			global, queries,
-			AStep_RecPcAtt, BStep_RecPcAlbedo_ALBEDO, CStep_RecPcAtt,
+			AStep_RecPcAtt, BStep_RecPcSharpness, CStep_RecPcAtt,
 			asyncSize);
 	}
 
-	void ReconstructorPcOC::RecSegMaterial()
+	void ReconstructorPcOC::ImplementRecSegMaterial()
 	{
 		AsyncGlobal_Rec global(this);
 

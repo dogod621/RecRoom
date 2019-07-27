@@ -351,7 +351,7 @@ int main(int argc, char *argv[])
 					new RecRoom::EstimatorPcNDF<RecRoom::PointMED, RecRoom::PointMED>(
 						searchRadius, scannerPc, RecRoom::LinearSolver::EIGEN_SVD,
 						3, 1, cutFalloff, cutGrazing));
-			reconstructorPC->setNDFEstimator(ndfEstimator);
+			reconstructorPC->setSharpnessEstimator(ndfEstimator);
 
 			std::cout << "Create Segmenter" << std::endl;
 			PTR(RecRoom::ReconstructorPcOC::Segmenter)
@@ -385,38 +385,45 @@ int main(int argc, char *argv[])
 			//
 			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::POINT_CLOUD) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
 			{
-				std::cout << "reconstructorPC->DoRecPointCloud()" << std::endl;
+				std::cout << "reconstructorPC->RecPointCloud()" << std::endl;
 
-				reconstructorPC->DoRecPointCloud();
+				reconstructorPC->RecPointCloud();
 			}
 
-			/*if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::PC_MATERIAL) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
+			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::PC_ALBEDO) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
 			{
-				std::cout << "reconstructorPC->DoRecPcMaterial()" << std::endl;
+				std::cout << "reconstructorPC->RecPcAlbedo()" << std::endl;
 
-				reconstructorPC->DoRecPcMaterial();
-			}*/
+				reconstructorPC->RecPcAlbedo();
+			}
+
+			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::PC_SHARPNESS) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
+			{
+				std::cout << "reconstructorPC->RecPcSharpness()" << std::endl;
+
+				reconstructorPC->RecPcSharpness();
+			}
 
 			/*if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::PC_SEGMENT) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
 			{
-				std::cout << "reconstructorPC->DoRecPcSegment()" << std::endl;
+				std::cout << "reconstructorPC->RecPcSegment()" << std::endl;
 
-				reconstructorPC->DoRecPcSegment();
+				reconstructorPC->RecPcSegment();
 			}
 
 			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::SEG_MATERIAL) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
 			{
-				std::cout << "reconstructorPC->DoRecSegMaterial()" << std::endl;
+				std::cout << "reconstructorPC->RecSegMaterial()" << std::endl;
 
-				reconstructorPC->DoRecSegMaterial();
+				reconstructorPC->RecSegMaterial();
 			}
 			*/
 
 			/*if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::MESH) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
 			{
-				std::cout << "reconstructorPC->DoRecMesh()" << std::endl;
+				std::cout << "reconstructorPC->RecMesh()" << std::endl;
 
-				reconstructorPC->DoRecMesh();
+				reconstructorPC->RecMesh();
 			}*/
 
 			//

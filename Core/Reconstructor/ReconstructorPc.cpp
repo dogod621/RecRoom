@@ -24,8 +24,8 @@ namespace RecRoom
 		interpolator(new InterpolatorPcNearest<PointMED, PointMED>),
 		outlierRemover(nullptr),
 		normalEstimator(nullptr),
-		ndfEstimator(nullptr),
 		albedoEstimator(nullptr),
+		sharpnessEstimator(nullptr),
 		segmenter(nullptr),
 		mesher(nullptr)
 	{
@@ -52,7 +52,7 @@ namespace RecRoom
 			THROW_EXCEPTION("interpolator is not created?")
 	}
 
-	void ReconstructorPc::DoRecPointCloud()
+	void ReconstructorPc::RecPointCloud()
 	{
 		//
 		if (status & ReconstructStatus::POINT_CLOUD)
@@ -62,15 +62,15 @@ namespace RecRoom
 		{
 			status = ReconstructStatus::ReconstructStatus_UNKNOWN;
 			pcMED->clear();
-			RecPointCloud();
+			ImplementRecPointCloud();
 			status = (ReconstructStatus)(status | ReconstructStatus::POINT_CLOUD);
 			Dump();
 		}
 	}
 
-	void ReconstructorPc::DoRecPcMaterial()
+	void ReconstructorPc::RecPcAlbedo()
 	{
-		if (status & ReconstructStatus::PC_MATERIAL)
+		if (status & ReconstructStatus::PC_ALBEDO)
 		{
 			PRINT_WARNING("Aready reconstructed, ignore.");
 		}
@@ -88,40 +88,71 @@ namespace RecRoom
 		}
 		else if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 		{
-			PRINT_WARNING("pcMED is not reconstructed yet, ignore.");
+			PRINT_WARNING("POINT_CLOUD is not reconstructed yet, ignore.");
 		}
 		else if (pcMED->empty())
 		{
 			PRINT_WARNING("pcMED is empty, ignore.");
 		}
+		else if (albedoEstimator)
+		{
+			ImplementRecPcAlbedo();
+			status = (ReconstructStatus)(status | ReconstructStatus::PC_ALBEDO);
+			Dump();
+		}
 		else
 		{
-			if (WITH_PERPOINT_SHARPNESS)
-			{
-				if (ndfEstimator)
-				{
-					RecPcMaterial_NDF();
-					status = (ReconstructStatus)(status | ReconstructStatus::PC_MATERIAL);
-					Dump();
-				}
-				else
-					PRINT_WARNING("ndfEstimator is not set, ignore it");
-			}
-			else
-			{
-				if (albedoEstimator)
-				{
-					RecPcMaterial_ALBEDO();
-					status = (ReconstructStatus)(status | ReconstructStatus::PC_MATERIAL);
-					Dump();
-				}
-				else
-					PRINT_WARNING("albedoEstimater is not set, ignore it");
-			}
+			PRINT_WARNING("albedoEstimater is not set, ignore it");
 		}
 	}
 
-	void ReconstructorPc::DoRecPcSegment()
+	void ReconstructorPc::RecPcSharpness()
+	{
+		if (status & ReconstructStatus::PC_SHARPNESS)
+		{
+			PRINT_WARNING("Aready reconstructed, ignore.");
+		}
+		else if (!WITH_INPUT_PERPOINT_INTENSITY)
+		{
+			PRINT_WARNING("!WITH_INPUT_PERPOINT_INTENSITY, ignore. You must compile with INPUT_PERPOINT_INTENSITY to enable this feature.");
+		}
+		else if (!WITH_PERPOINT_SHARPNESS)
+		{
+			PRINT_WARNING("!WITH_PERPOINT_SHARPNESS, ignore. You must compile with OUTPUT_PERPOINT_INTENSITY to enable this feature.");
+		}
+		else if (!WITH_PERPOINT_NORMAL)
+		{
+			PRINT_WARNING("!WITH_PERPOINT_NORMAL, ignore. You must compile with INPUT_PERPOINT_NORMAL or OUTPUT_PERPOINT_NORMAL to enable this feature.");
+		}
+		else if (!WITH_PERPOINT_SERIAL_NUMBER)
+		{
+			PRINT_WARNING("!WITH_PERPOINT_SERIAL_NUMBER, ignore. You must compile with INPUT_PERPOINT_SERIAL_NUMBER to enable this feature.");
+		}
+		else if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("POINT_CLOUD is not reconstructed yet, ignore.");
+		}
+		else if ((status & ReconstructStatus::PC_ALBEDO) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("PC_ALBEDO is not reconstructed yet, ignore.");
+		}
+		else if (pcMED->empty())
+		{
+			PRINT_WARNING("pcMED is empty, ignore.");
+		}
+		else if (albedoEstimator)
+		{
+			ImplementRecPcSharpness();
+			status = (ReconstructStatus)(status | ReconstructStatus::PC_SHARPNESS);
+			Dump();
+		}
+		else
+		{
+			PRINT_WARNING("albedoEstimater is not set, ignore it");
+		}
+	}
+
+	void ReconstructorPc::RecPcSegment()
 	{
 		if (status & ReconstructStatus::PC_SEGMENT)
 		{
@@ -133,7 +164,7 @@ namespace RecRoom
 		}
 		else if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 		{
-			PRINT_WARNING("pcMED is not reconstructed yet, ignore.");
+			PRINT_WARNING("POINT_CLOUD is not reconstructed yet, ignore.");
 		}
 		else if (pcMED->empty())
 		{
@@ -141,7 +172,7 @@ namespace RecRoom
 		}
 		else if (segmenter)
 		{
-			RecPcSegment();
+			ImplementRecPcSegment();
 			status = (ReconstructStatus)(status | ReconstructStatus::PC_SEGMENT);
 			Dump();
 		}
@@ -151,7 +182,7 @@ namespace RecRoom
 		}
 	}
 
-	void ReconstructorPc::DoRecSegMaterial()
+	void ReconstructorPc::RecSegMaterial()
 	{
 		if (status & ReconstructStatus::SEG_MATERIAL)
 		{
@@ -179,11 +210,11 @@ namespace RecRoom
 		}
 		else if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 		{
-			PRINT_WARNING("pcMED is not reconstructed yet, ignore.");
+			PRINT_WARNING("POINT_CLOUD is not reconstructed yet, ignore.");
 		}
 		else if ((status & ReconstructStatus::PC_SEGMENT) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 		{
-			PRINT_WARNING("pcMED segment is not reconstructed yet, ignore.");
+			PRINT_WARNING("PC_SEGMENT is not reconstructed yet, ignore.");
 		}
 		else if (pcMED->empty())
 		{
@@ -191,13 +222,13 @@ namespace RecRoom
 		}
 		else
 		{
-			RecSegMaterial();
+			ImplementRecSegMaterial();
 			status = (ReconstructStatus)(status | ReconstructStatus::SEG_MATERIAL);
 			Dump();
 		}
 	}
 
-	void ReconstructorPc::DoRecMesh()
+	void ReconstructorPc::RecMesh()
 	{
 		if (status & ReconstructStatus::MESH)
 		{
@@ -209,7 +240,7 @@ namespace RecRoom
 		}
 		else if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 		{
-			PRINT_WARNING("pcMED is not reconstructed yet, ignore.");
+			PRINT_WARNING("POINT_CLOUD is not reconstructed yet, ignore.");
 		}
 		else if (pcMED->empty())
 		{
@@ -217,7 +248,7 @@ namespace RecRoom
 		}
 		else if(mesher)
 		{
-			RecMesh();
+			ImplementRecMesh();
 			status = (ReconstructStatus)(status | ReconstructStatus::MESH);
 			Dump();
 		}
@@ -337,7 +368,7 @@ namespace RecRoom
 		}
 
 		if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
-			THROW_EXCEPTION("pcMED is not reconstructed yet.");
+			THROW_EXCEPTION("POINT_CLOUD is not reconstructed yet.");
 		if (pcMED->empty())
 			THROW_EXCEPTION("pcMED is empty.");
 
@@ -763,14 +794,14 @@ namespace RecRoom
 	}
 
 
-	void ReconstructorPc::RecPcSegment()
+	void ReconstructorPc::ImplementRecPcSegment()
 	{
 		PTR(AccMED) accMED(new KDTreeMED);
 		accMED->setInputCloud(pcMED);
 		segmenter->ProcessInOut(accMED, pcMED, nullptr);
 	}
 
-	void ReconstructorPc::RecMesh()
+	void ReconstructorPc::ImplementRecMesh()
 	{
 		PTR(PcREC) pcREC(new PcREC);
 		pcREC->resize(pcMED->size());

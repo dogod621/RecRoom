@@ -18,10 +18,11 @@ namespace RecRoom
 	{
 		ReconstructStatus_UNKNOWN = 0,
 		POINT_CLOUD = 1 << 1,
-		PC_MATERIAL = 1 << 2,
-		PC_SEGMENT = 1 << 3,
-		SEG_MATERIAL = 1 << 4,
-		MESH = 1 << 5
+		PC_ALBEDO = 1 << 2,
+		PC_SHARPNESS = 1 << 3,
+		PC_SEGMENT = 1 << 4,
+		SEG_MATERIAL = 1 << 5,
+		MESH = 1 << 6
 	};
 
 	class ReconstructorPc : public DumpAble
@@ -42,21 +43,22 @@ namespace RecRoom
 			float res = 0.01f);
 
 	public:
-		void DoRecPointCloud();
-		void DoRecPcMaterial();
-		void DoRecPcSegment();
-		void DoRecSegMaterial();
-		void DoRecMesh();
+		void RecPointCloud();
+		void RecPcAlbedo();
+		void RecPcSharpness();
+		void RecPcSegment();
+		void RecSegMaterial();
+		void RecMesh();
 		void VisualSegNDFs();
 		void VisualRecAtts();
 
 	protected:
-		virtual void RecPointCloud() = 0;
-		virtual void RecPcMaterial_NDF() = 0;
-		virtual void RecPcMaterial_ALBEDO() = 0;
-		virtual void RecPcSegment();
-		virtual void RecSegMaterial() = 0;
-		virtual void RecMesh();
+		virtual void ImplementRecPointCloud() = 0;
+		virtual void ImplementRecPcAlbedo() = 0;
+		virtual void ImplementRecPcSharpness() = 0;
+		virtual void ImplementRecPcSegment();
+		virtual void ImplementRecSegMaterial() = 0;
+		virtual void ImplementRecMesh();
 
 	public:
 		float getRes() const { return res; }
@@ -70,8 +72,8 @@ namespace RecRoom
 		CONST_PTR(Interpolator) getInterpolator() const { return interpolator; }
 		CONST_PTR(Filter) getOutlierRemover() const { return outlierRemover; }
 		CONST_PTR(Estimator) getNormalEstimator() const { return normalEstimator; }
-		CONST_PTR(Estimator) getNDFEstimator() const { return ndfEstimator; }
 		CONST_PTR(Estimator) getAlbedoEstimator() const { return albedoEstimator; }
+		CONST_PTR(Estimator) getSharpnessEstimator() const { return sharpnessEstimator; }
 		CONST_PTR(Segmenter) getSegmenter() const { return segmenter; }
 		CONST_PTR(Mesher) getMesher() const { return mesher; }
 
@@ -89,8 +91,8 @@ namespace RecRoom
 		}
 		void setOutlierRemover(const CONST_PTR(Filter)& v) { outlierRemover = v; }
 		void setNormalEstimator(const CONST_PTR(Estimator)& v) { normalEstimator = v; }
-		void setNDFEstimator(const CONST_PTR(Estimator)& v) { ndfEstimator = v; }
 		void setAlbedoEstimator(const CONST_PTR(Estimator)& v) { albedoEstimator = v; }
+		void setSharpnessEstimator(const CONST_PTR(Estimator)& v) { sharpnessEstimator = v; }
 		void setSegmenter(const CONST_PTR(Segmenter)& v) { segmenter = v; }
 		void setMesher(const CONST_PTR(Mesher)& v) { mesher = v;}
 		
@@ -107,8 +109,8 @@ namespace RecRoom
 		CONST_PTR(Interpolator) interpolator;
 		CONST_PTR(Filter) outlierRemover;
 		CONST_PTR(Estimator) normalEstimator;
-		CONST_PTR(Estimator) ndfEstimator;
 		CONST_PTR(Estimator) albedoEstimator;
+		CONST_PTR(Estimator) sharpnessEstimator;
 		CONST_PTR(Segmenter) segmenter;
 		CONST_PTR(Mesher) mesher;
 
