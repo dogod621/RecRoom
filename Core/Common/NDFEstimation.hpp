@@ -13,6 +13,7 @@ namespace RecRoom
 		samples.reserve(scanDataSet.size());
 		float meanIntensity = 0.0;
 		float sumWeight = 0.0;
+		std::map<uint32_t, int> temp;
 		for (std::vector<ScanData>::const_iterator it = scanDataSet.begin(); it != scanDataSet.end(); ++it)
 		{
 			const InPointType& hitPoint = cloud[it->index];
@@ -30,9 +31,10 @@ namespace RecRoom
 			if (hafwayNorm > std::numeric_limits<float>::epsilon())
 			{
 				hafway /= hafwayNorm;
+				float dotLN = hitNormal.dot(it->laser.incidentDirection);
 				float dotNN = hitNormal.dot(hafway);
 				float weight = std::pow((search_radius_ - it->distance2Center) / search_radius_, distInterParm) * std::pow(dotNN, angleInterParm);
-				float intensity = it->laser.intensity / it->laser.beamFalloff;
+				float intensity = it->laser.intensity / (it->laser.beamFalloff * dotLN);
 				meanIntensity += weight * intensity;
 				sumWeight += weight;
 				samples.push_back(NDFSample(
@@ -41,8 +43,12 @@ namespace RecRoom
 						hitBitangent.dot(hafway),
 						hitNormal.dot(hafway)),
 					intensity, weight));
+				temp[hitPoint.serialNumber] = 0;
 			}
 		}
+		if(temp.size() < minRequireNumData)
+			return false;
+
 		meanIntensity /= sumWeight;
 		std::vector<float> ndfValues(samples.size());
 		
