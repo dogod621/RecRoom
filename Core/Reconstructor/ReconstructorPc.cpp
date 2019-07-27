@@ -68,6 +68,40 @@ namespace RecRoom
 		}
 	}
 
+	void ReconstructorPc::RecPcNormal()
+	{
+		if (status & ReconstructStatus::PC_NORMAL)
+		{
+			PRINT_WARNING("Aready reconstructed, ignore.");
+		}
+		else if (!WITH_PERPOINT_NORMAL)
+		{
+			PRINT_WARNING("!WITH_PERPOINT_NORMAL, ignore. You must compile with INPUT_PERPOINT_NORMAL or OUTPUT_PERPOINT_NORMAL to enable this feature.");
+		}
+		else if (!WITH_PERPOINT_SERIAL_NUMBER)
+		{
+			PRINT_WARNING("!WITH_PERPOINT_SERIAL_NUMBER, ignore. You must compile with INPUT_PERPOINT_SERIAL_NUMBER to enable this feature.");
+		}
+		else if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("POINT_CLOUD is not reconstructed yet, ignore.");
+		}
+		else if (pcMED->empty())
+		{
+			PRINT_WARNING("pcMED is empty, ignore.");
+		}
+		else if (normalEstimator)
+		{
+			ImplementRecPcNormal();
+			status = (ReconstructStatus)(status | ReconstructStatus::PC_NORMAL);
+			Dump();
+		}
+		else
+		{
+			PRINT_WARNING("normalEstimator is not set, ignore it");
+		}
+	}
+
 	void ReconstructorPc::RecPcAlbedo()
 	{
 		if (status & ReconstructStatus::PC_ALBEDO)
@@ -89,6 +123,10 @@ namespace RecRoom
 		else if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 		{
 			PRINT_WARNING("POINT_CLOUD is not reconstructed yet, ignore.");
+		}
+		else if ((status & ReconstructStatus::PC_NORMAL) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("PC_NORMAL is not reconstructed yet, ignore.");
 		}
 		else if (pcMED->empty())
 		{
@@ -131,6 +169,10 @@ namespace RecRoom
 		else if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 		{
 			PRINT_WARNING("POINT_CLOUD is not reconstructed yet, ignore.");
+		}
+		else if ((status & ReconstructStatus::PC_NORMAL) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("PC_NORMAL is not reconstructed yet, ignore.");
 		}
 		else if ((status & ReconstructStatus::PC_ALBEDO) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 		{
@@ -216,6 +258,10 @@ namespace RecRoom
 		{
 			PRINT_WARNING("PC_SEGMENT is not reconstructed yet, ignore.");
 		}
+		else if ((status & ReconstructStatus::PC_NORMAL) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("PC_NORMAL is not reconstructed yet, ignore.");
+		}
 		else if (pcMED->empty())
 		{
 			PRINT_WARNING("pcMED is empty, ignore.");
@@ -241,6 +287,10 @@ namespace RecRoom
 		else if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 		{
 			PRINT_WARNING("POINT_CLOUD is not reconstructed yet, ignore.");
+		}
+		else if ((status & ReconstructStatus::PC_NORMAL) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("PC_NORMAL is not reconstructed yet, ignore.");
 		}
 		else if (pcMED->empty())
 		{

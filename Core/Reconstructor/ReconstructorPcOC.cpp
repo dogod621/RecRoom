@@ -161,24 +161,7 @@ namespace RecRoom
 
 	int BStep_RecPointCloud(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
 	{
-#ifdef INPUT_PERPOINT_NORMAL
-		THROW_EXCEPTION("Not done, using scane normal is a feature in to-do list.");
-		return 1;
-#elif defined OUTPUT_PERPOINT_NORMAL
-		if (global.ptrReconstructorPcOC()->getNormalEstimator())
-		{
-			global.ptrReconstructorPcOC()->getNormalEstimator()->ProcessInOut(
-				data.pcRawAcc, data.pcRec, data.pcRecIdx);
-		}
-		else
-		{
-			PRINT_WARNING("normalEstimator is not set, ignore it");
-		}
 		return 0;
-#else
-		PRINT_WARNING("None of INPUT_PERPOINT_NORMAL or OUTPUT_PERPOINT_NORMAL is set, ignore it");
-		return 0;
-#endif
 	}
 
 	int CStep_RecPointCloud(AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, const AsyncData_Rec& data)
@@ -199,20 +182,6 @@ namespace RecRoom
 		PRINT_INFO("Merge - End - pcSize: " + std::to_string(global.ptrReconstructorPcOC()->getPcMED()->size()));
 
 		return 0;
-	}
-
-	void ReconstructorPcOC::ImplementRecPointCloud()
-	{
-		AsyncGlobal_Rec global(this);
-
-		std::vector<AsyncQuery_Rec> queries(scanner->getContainerPcRAW()->Size());
-		for (std::size_t i = 0; i < queries.size(); ++i)
-			queries[i].index = i;
-
-		AsyncProcess<AsyncGlobal_Rec, AsyncQuery_Rec, AsyncData_Rec>(
-			global, queries,
-			AStep_RecPointCloud, BStep_RecPointCloud, CStep_RecPointCloud,
-			asyncSize);
 	}
 
 	// Async Reconstruct Attribute
@@ -269,6 +238,16 @@ namespace RecRoom
 	int CStep_RecPcAtt(AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, const AsyncData_Rec& data)
 	{
 		// Check
+		return 0;
+	}
+
+	// Async Reconstruct Attribute - Normal
+	int BStep_RecPcNormal(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
+	{
+		{
+			global.ptrReconstructorPcOC()->getNormalEstimator()->ProcessInOut(
+				data.pcRawAcc, data.pcRec, data.pcRecIdx);
+		}
 		return 0;
 	}
 
@@ -339,6 +318,24 @@ namespace RecRoom
 	{
 		const float cutFalloff = 0.33f; // 
 
+		{
+			PcMED temp;
+
+			global.ptrReconstructorPcOC()->getInterpolator()->Process(data.pcRecAcc, data.pcRaw, nullptr, temp);
+
+			for (std::size_t px = 0; px < data.pcRaw->size(); ++px)
+			{
+				PointMED& tarP = (*data.pcRaw)[px];
+				PointMED& srcP = temp[px];
+
+				tarP.normal_x = srcP.normal_x;
+				tarP.normal_y = srcP.normal_y;
+				tarP.normal_z = srcP.normal_z;
+				tarP.curvature = srcP.curvature;
+				tarP.label = srcP.label;
+			}
+		}
+
 #ifdef PERPOINT_NORMAL
 #ifdef PERPOINT_LABEL
 		PTR(PcNDF) pcNDF (new PcNDF);
@@ -380,6 +377,34 @@ namespace RecRoom
 #endif
 #endif
 		return 0;
+	}
+
+	void ReconstructorPcOC::ImplementRecPointCloud()
+	{
+		AsyncGlobal_Rec global(this);
+
+		std::vector<AsyncQuery_Rec> queries(scanner->getContainerPcRAW()->Size());
+		for (std::size_t i = 0; i < queries.size(); ++i)
+			queries[i].index = i;
+
+		AsyncProcess<AsyncGlobal_Rec, AsyncQuery_Rec, AsyncData_Rec>(
+			global, queries,
+			AStep_RecPointCloud, BStep_RecPointCloud, CStep_RecPointCloud,
+			asyncSize);
+	}
+
+	void ReconstructorPcOC::ImplementRecPcNormal()
+	{
+		AsyncGlobal_Rec global(this);
+
+		std::vector<AsyncQuery_Rec> queries(scanner->getContainerPcRAW()->Size());
+		for (std::size_t i = 0; i < queries.size(); ++i)
+			queries[i].index = i;
+
+		AsyncProcess<AsyncGlobal_Rec, AsyncQuery_Rec, AsyncData_Rec>(
+			global, queries,
+			AStep_RecPcAtt, BStep_RecPcNormal, CStep_RecPcAtt,
+			asyncSize);
 	}
 
 	void ReconstructorPcOC::ImplementRecPcAlbedo()

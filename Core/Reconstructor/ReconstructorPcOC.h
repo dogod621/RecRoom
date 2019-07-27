@@ -27,6 +27,7 @@ namespace RecRoom
 
 	protected:
 		virtual void ImplementRecPointCloud();
+		virtual void ImplementRecPcNormal();
 		virtual void ImplementRecPcAlbedo();
 		virtual void ImplementRecPcSharpness();
 		virtual void ImplementRecSegMaterial();

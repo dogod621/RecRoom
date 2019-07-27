@@ -10,6 +10,7 @@ namespace RecRoom
 	inline ReconstructStatus Convert<ReconstructStatus, std::string>(const std::string& v)
 	{
 		if (v == "POINT_CLOUD") return ReconstructStatus::POINT_CLOUD;
+		else if (v == "PC_NORMAL") return ReconstructStatus::PC_NORMAL;
 		else if (v == "PC_ALBEDO") return ReconstructStatus::PC_ALBEDO;
 		else if (v == "PC_SHARPNESS") return ReconstructStatus::PC_SHARPNESS;
 		else if (v == "PC_SEGMENT") return ReconstructStatus::PC_SEGMENT;
@@ -24,6 +25,7 @@ namespace RecRoom
 		switch (v)
 		{
 		case ReconstructStatus::POINT_CLOUD: return std::string("POINT_CLOUD"); break;
+		case ReconstructStatus::PC_NORMAL: return std::string("PC_NORMAL"); break;
 		case ReconstructStatus::PC_ALBEDO: return std::string("PC_ALBEDO"); break;
 		case ReconstructStatus::PC_SHARPNESS: return std::string("PC_SHARPNESS"); break;
 		case ReconstructStatus::PC_SEGMENT: return std::string("PC_SEGMENT"); break;
@@ -47,6 +49,7 @@ namespace RecRoom
 	{
 		nlohmann::json j;
 		if (v & ReconstructStatus::POINT_CLOUD) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::POINT_CLOUD));
+		if (v & ReconstructStatus::PC_NORMAL) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::PC_NORMAL));
 		if (v & ReconstructStatus::PC_ALBEDO) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::PC_ALBEDO));
 		if (v & ReconstructStatus::PC_SHARPNESS) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::PC_SHARPNESS));
 		if (v & ReconstructStatus::PC_SEGMENT) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::PC_SEGMENT));

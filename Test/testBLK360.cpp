@@ -390,6 +390,13 @@ int main(int argc, char *argv[])
 				reconstructorPC->RecPointCloud();
 			}
 
+			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::PC_NORMAL) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
+			{
+				std::cout << "reconstructorPC->RecPcNormal()" << std::endl;
+
+				reconstructorPC->RecPcNormal();
+			}
+
 			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::PC_ALBEDO) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
 			{
 				std::cout << "reconstructorPC->RecPcAlbedo()" << std::endl;

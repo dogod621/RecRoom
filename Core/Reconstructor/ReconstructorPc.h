@@ -18,11 +18,12 @@ namespace RecRoom
 	{
 		ReconstructStatus_UNKNOWN = 0,
 		POINT_CLOUD = 1 << 1,
-		PC_ALBEDO = 1 << 2,
-		PC_SHARPNESS = 1 << 3,
-		PC_SEGMENT = 1 << 4,
-		SEG_MATERIAL = 1 << 5,
-		MESH = 1 << 6
+		PC_NORMAL = 1 << 2,
+		PC_ALBEDO = 1 << 3,
+		PC_SHARPNESS = 1 << 4,
+		PC_SEGMENT = 1 << 5,
+		SEG_MATERIAL = 1 << 6,
+		MESH = 1 << 7
 	};
 
 	class ReconstructorPc : public DumpAble
@@ -44,6 +45,7 @@ namespace RecRoom
 
 	public:
 		void RecPointCloud();
+		void RecPcNormal();
 		void RecPcAlbedo();
 		void RecPcSharpness();
 		void RecPcSegment();
@@ -54,6 +56,7 @@ namespace RecRoom
 
 	protected:
 		virtual void ImplementRecPointCloud() = 0;
+		virtual void ImplementRecPcNormal() = 0;
 		virtual void ImplementRecPcAlbedo() = 0;
 		virtual void ImplementRecPcSharpness() = 0;
 		virtual void ImplementRecPcSegment();
