@@ -65,12 +65,12 @@ namespace RecRoom
 
 			ImplementRecPointCloud();
 
-			if (downSampler)
+			/*if (downSampler)
 			{
 				PTR(AccMED) accMED(new KDTreeMED);
 				accMED->setInputCloud(pcMED);
 				downSampler->ProcessInOut(accMED, pcMED, nullptr);
-			}
+			}*/
 
 			status = (ReconstructStatus)(status | ReconstructStatus::POINT_CLOUD);
 			Dump();
