@@ -70,7 +70,7 @@ namespace RecRoom
 		float testSharpness;
 		float testIntensity;
 		float testMSE;
-		float stopEps = 0.001f;
+		float stopEps = 1e-6;
 		int extNumGap = numTest/2;
 		for (int d = 1; d <= numDepth; ++d)
 		{
