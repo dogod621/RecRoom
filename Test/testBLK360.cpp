@@ -389,8 +389,7 @@ int main(int argc, char *argv[])
 			mesher->setPreprocessSampler(mesherSampler);*/
 			reconstructorPC->setMesher(mesher);
 
-			//ent material.");
-			PRINT_HELP("\t", "recMesh", "", "Reconstruct mesh.");
+			//
 			if (pcl::console::find_switch(argc, argv, "-recPointCloud"))
 			{
 				reconstructorPC->RecPointCloud();
