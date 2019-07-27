@@ -60,7 +60,7 @@ namespace RecRoom
 							*self->surface_,
 							inPoint, scanDataSet, outPoint))
 						{
-							PRINT_WARNING("ComputeAttribute failed");
+							//PRINT_WARNING("ComputeAttribute failed");
 							self->SetAttributeNAN(outPoint);
 							output->is_dense = false;
 						}
@@ -113,7 +113,7 @@ namespace RecRoom
 						*surface_,
 						inPoint, scanDataSet, outPoint))
 					{
-						PRINT_WARNING("ComputeAttribute failed");
+						//PRINT_WARNING("ComputeAttribute failed");
 						SetAttributeNAN(outPoint);
 						output.is_dense = false;
 					}
