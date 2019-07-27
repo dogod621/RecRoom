@@ -1,6 +1,6 @@
 #include <fstream>
 
-#include <pcl/filters/crop_box.h>
+#include "Filter/FilterPcAABB.h"
 
 #include "ContainerPcRAWOC.h"
 
@@ -78,11 +78,8 @@ namespace RecRoom
 			(*data.pcMED)[px] = (*temp)[px];
 
 		//
-		pcl::CropBox<PointMED> cb;
-		cb.setMin(Eigen::Vector4f(meta.minAABB.x(), meta.minAABB.y(), meta.minAABB.z(), 1.0));
-		cb.setMax(Eigen::Vector4f(meta.maxAABB.x(), meta.maxAABB.y(), meta.maxAABB.z(), 1.0));
-		cb.setInputCloud(data.pcMED);
-		cb.filter(*data.pcIndex);
+		FilterPcAABB<PointMED> cb (meta.minAABB, meta.maxAABB);
+		cb.Process(nullptr, data.pcMED, nullptr, *data.pcIndex);
 
 		return data;
 	}

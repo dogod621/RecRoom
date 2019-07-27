@@ -13,9 +13,8 @@ namespace RecRoom
 		NormalEstimation(
 			const CONST_PTR(ScannerPc)& scanner,
 			const float distInterParm = 0.4f,
-			const float cutFalloff = 0.33f, // cut attinuation less than 1/3
-			unsigned int numThreads = 0)
-			: SurfaceEstimation<InPointType, OutPointType>(scanner, cutFalloff, 3, numThreads), // 3 point ensure a surface
+			const float cutFalloff = 0.33f // cut attinuation less than 1/3
+		) : SurfaceEstimation<InPointType, OutPointType>(scanner, cutFalloff, 3), // 3 point ensure a surface
 			distInterParm(distInterParm)
 		{
 			feature_name_ = "NormalEstimation";

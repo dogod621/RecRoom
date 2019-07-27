@@ -5,10 +5,10 @@
 namespace RecRoom
 {
 	template<class InPointType, class OutPointType>
-	class InterpolatorPcNearest : public InterpolatorPc<InPointType, OutPointType>
+	class InterpolatorPcNearest : public InterpolatorPc<InPointType, OutPointType>, public ThreadAble
 	{
 	public:
-		InterpolatorPcNearest() : InterpolatorPc<InPointType, OutPointType>()
+		InterpolatorPcNearest() : ThreadAble(), InterpolatorPc<InPointType, OutPointType>()
 		{
 			name = "InterpolatorPcNearest";
 		}

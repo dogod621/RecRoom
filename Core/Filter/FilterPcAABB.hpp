@@ -1,8 +1,5 @@
 #pragma once
 
-#include <pcl/filters/crop_box.h>
-#include <pcl/filters/impl/crop_box.hpp>
-
 #include "FilterPcAABB.h"
 
 namespace RecRoom
@@ -14,14 +11,39 @@ namespace RecRoom
 		const CONST_PTR(PcIndex)& filter,
 		PcIndex& output) const
 	{
-		pcl::CropBox<PointMED> cb;
-		cb.setMin(Eigen::Vector4f(minAABB.x(), minAABB.y(), minAABB.z(), 1.0));
-		cb.setMax(Eigen::Vector4f(maxAABB.x(), maxAABB.y(), maxAABB.z(), 1.0));
-		cb.setInputCloud(input);
-
+		output.clear();
+		
 		if (filter)
-			cb.setIndices(filter);
+		{
+			output.reserve(filter->size());
 
-		cb.filter(output);
+			for (PcIndex::const_iterator it = filter->begin(); it != filter->end(); ++it)
+			{
+				const PointType& intP = (*input)[*it];
+
+				if (pcl::isFinite(intP))
+				{
+					if ((intP.x >= minAABB[0]) && (intP.y >= minAABB[1]) && (intP.z >= minAABB[2]) &&
+						(intP.x < maxAABB[0]) && (intP.y < maxAABB[1]) && (intP.z < maxAABB[2]))
+						output.push_back(*it);
+				}
+			}
+		}
+		else
+		{
+			output.reserve(input->size());
+
+			for (int px = 0; px < input->size(); ++px)
+			{
+				const PointType& intP = (*input)[px];
+
+				if (pcl::isFinite(intP))
+				{
+					if ((intP.x >= minAABB[0]) && (intP.y >= minAABB[1]) && (intP.z >= minAABB[2]) &&
+						(intP.x < maxAABB[0]) && (intP.y < maxAABB[1]) && (intP.z < maxAABB[2]))
+						output.push_back(px);
+				}
+			}
+		}
 	}
 }

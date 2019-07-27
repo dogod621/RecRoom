@@ -1,3 +1,5 @@
+#include <thread>
+
 #include "Common.h"
 
 namespace RecRoom
@@ -112,6 +114,18 @@ namespace RecRoom
 			}
 		}
 		return false;
+	}
+
+	void ThreadAble::SetNumberOfThreads(unsigned int numThreads_)
+	{
+		if (numThreads_ == 0)
+#ifdef _OPENMP
+			numThreads = omp_get_num_procs();
+#else
+			threads_ = std::thread::hardware_concurrency();
+#endif
+		else
+			numThreads = numThreads_;
 	}
 
 	DumpAble::DumpAble(const std::string& className, const boost::filesystem::path& filePath)

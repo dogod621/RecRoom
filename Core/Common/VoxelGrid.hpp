@@ -59,9 +59,9 @@ namespace RecRoom
 				pcl_isfinite(p.y) &&
 				pcl_isfinite(p.z))
 			{
-				if ((p.x > minAABB.x()) &&
-					(p.y > minAABB.y()) &&
-					(p.z > minAABB.z()) &&
+				if ((p.x >= minAABB.x()) &&
+					(p.y >= minAABB.y()) &&
+					(p.z >= minAABB.z()) &&
 					(p.x < maxAABB.x()) &&
 					(p.y < maxAABB.y()) &&
 					(p.z < maxAABB.z()))
@@ -126,9 +126,9 @@ namespace RecRoom
 				pcl_isfinite(p.y) &&
 				pcl_isfinite(p.z))
 			{
-				if ((p.x > minAABB.x()) &&
-					(p.y > minAABB.y()) &&
-					(p.z > minAABB.z()) &&
+				if ((p.x >= minAABB.x()) &&
+					(p.y >= minAABB.y()) &&
+					(p.z >= minAABB.z()) &&
 					(p.x < maxAABB.x()) &&
 					(p.y < maxAABB.y()) &&
 					(p.z < maxAABB.z()))

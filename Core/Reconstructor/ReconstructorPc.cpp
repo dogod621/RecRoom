@@ -62,7 +62,16 @@ namespace RecRoom
 		{
 			status = ReconstructStatus::ReconstructStatus_UNKNOWN;
 			pcMED->clear();
+
 			ImplementRecPointCloud();
+
+			if (downSampler)
+			{
+				PTR(AccMED) accMED(new KDTreeMED);
+				accMED->setInputCloud(pcMED);
+				downSampler->ProcessInOut(accMED, pcMED, nullptr);
+			}
+
 			status = (ReconstructStatus)(status | ReconstructStatus::POINT_CLOUD);
 			Dump();
 		}

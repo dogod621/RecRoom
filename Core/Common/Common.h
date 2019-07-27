@@ -156,6 +156,22 @@ namespace RecRoom
 
 	using Mesh = pcl::PolygonMesh;
 
+	using PcIndex = std::vector<int>;
+
+	class ThreadAble
+	{
+	public:
+		ThreadAble()
+		{
+			SetNumberOfThreads();
+		}
+
+		void SetNumberOfThreads(unsigned int numThreads = 0);
+
+	protected:
+		unsigned int numThreads;
+	};
+
 	class DumpAble
 	{
 	public:
@@ -191,8 +207,6 @@ namespace RecRoom
 	protected:
 		std::size_t asyncSize;
 	};
-
-	using PcIndex = std::vector<int>;
 }
 
 #include "Common.hpp"

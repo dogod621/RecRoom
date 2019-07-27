@@ -17,7 +17,7 @@ namespace RecRoom
 		{
 			output.resize(filter->size());
 #ifdef _OPENMP
-#pragma omp parallel for num_threads(omp_get_num_procs())
+#pragma omp parallel for num_threads(numThreads)
 #endif
 			// Iterating over the entire index vector
 			for (int idx = 0; idx < static_cast<int> (filter->size()); ++idx)
@@ -42,7 +42,7 @@ namespace RecRoom
 		{
 			output.resize(input->size());
 #ifdef _OPENMP
-#pragma omp parallel for num_threads(omp_get_num_procs())
+#pragma omp parallel for num_threads(numThreads)
 #endif
 			// Iterating over the entire index vector
 			for (int px = 0; px < static_cast<int> (input->size()); ++px)

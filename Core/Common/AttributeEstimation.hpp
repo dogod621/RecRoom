@@ -7,19 +7,6 @@
 namespace RecRoom
 {
 	template<class InPointType, class OutPointType>
-	void SurfaceEstimation<InPointType, OutPointType>::SetNumberOfThreads(unsigned int numThreads)
-	{
-		if (numThreads == 0)
-#ifdef _OPENMP
-			threads_ = omp_get_num_procs();
-#else
-			threads_ = std::thread::hardware_concurrency();
-#endif
-		else
-			threads_ = numThreads;
-	}
-
-	template<class InPointType, class OutPointType>
 	inline bool SurfaceEstimation<InPointType, OutPointType>::CollectScanData(
 		const Pc<InPointType>& cloud, int k, const std::vector<int>& indices, const std::vector<float>& distance,
 		const InPointType& center, std::vector<ScanData>& scanDataSet) const
@@ -54,7 +41,7 @@ namespace RecRoom
 		std::vector<ScanData> scanDataSet(self->k_);
 		for (int idx = 0; idx < static_cast<int> (self->indices_->size()); ++idx)
 		{
-			if (id % self->threads_ == id)
+			if (id % self->numThreads == id)
 			{
 				const InPointType& inPoint = (*self->input_)[(*self->indices_)[idx]];
 				OutPointType& outPoint = output->points[idx];
@@ -107,7 +94,7 @@ namespace RecRoom
 		std::vector<float> nnDists(k_);
 		std::vector<ScanData> scanDataSet(k_);
 
-#pragma omp parallel for shared (output) private (nnIndices, nnDists, scanDataSet) num_threads(threads_)
+#pragma omp parallel for shared (output) private (nnIndices, nnDists, scanDataSet) num_threads(numThreads)
 		for (int idx = 0; idx < static_cast<int> (indices_->size()); ++idx)
 		{
 			const InPointType& inPoint = (*input_)[(*indices_)[idx]];
@@ -147,7 +134,7 @@ namespace RecRoom
 		}
 #else
 		std::vector<std::thread> threads;
-		for (int i = 0; i < threads_; i++)
+		for (int i = 0; i < numThreads; i++)
 			threads.push_back(std::thread(EstimationTask<InPointType, OutPointType>, i, this, &output));
 		for (auto& thread : threads)
 			thread.join();
