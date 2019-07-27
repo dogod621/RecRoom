@@ -140,7 +140,7 @@ namespace RecRoom
 		{
 			PRINT_WARNING("pcMED is empty, ignore.");
 		}
-		else if (albedoEstimator)
+		else if (sharpnessEstimator)
 		{
 			ImplementRecPcSharpness();
 			status = (ReconstructStatus)(status | ReconstructStatus::PC_SHARPNESS);
@@ -148,7 +148,7 @@ namespace RecRoom
 		}
 		else
 		{
-			PRINT_WARNING("albedoEstimater is not set, ignore it");
+			PRINT_WARNING("sharpnessEstimator is not set, ignore it");
 		}
 	}
 
