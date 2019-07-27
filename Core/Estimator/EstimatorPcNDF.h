@@ -1,7 +1,9 @@
 #pragma once
 
-#include "EstimatorPc.h"
+#include "Common/NDFEstimation.h"
 #include "Scanner/ScannerPc.h"
+
+#include "EstimatorPc.h"
 
 namespace RecRoom
 {
@@ -11,11 +13,11 @@ namespace RecRoom
 	public:
 		EstimatorPcNDF(double searchRadius,
 			const CONST_PTR(ScannerPc)& scanner,
-			const LinearSolver linearSolver = LinearSolver::EIGEN_SVD,
+			const NDF ndf = NDF::SG,
 			const float distInterParm = 0.4f, const float angleInterParm = 0.6f,
 			const float cutFalloff = 0.33f, const float cutGrazing = 0.26f)
 			: EstimatorPc<InPointType, OutPointType>(searchRadius),
-			scanner(scanner), linearSolver(linearSolver),
+			scanner(scanner), ndf(ndf),
 			distInterParm(distInterParm), angleInterParm(angleInterParm), 
 			cutFalloff(cutFalloff), cutGrazing(cutGrazing)
 		{
@@ -33,14 +35,14 @@ namespace RecRoom
 			Pc<OutPointType>& output) const;
 
 	public:
-		LinearSolver getLinearSolver() const { return linearSolver; }
+		NDF getNDF() const { return ndf; }
 		float getDistInterParm() const { return distInterParm; }
 		float getAngleInterParm() const { return angleInterParm; }
 		float getCutFalloff() const { return cutFalloff; }
 		float getCutGrazing() const { return cutGrazing; }
 		CONST_PTR(ScannerPc) getScanner() const { return scanner; }
 
-		void setLinearSolver(LinearSolver v) { linearSolver = v; }
+		void setNDF(NDF v) { ndf = v; }
 		void setDistInterParm(float v) { distInterParm = v; }
 		void setAngleInterParm(float v) { angleInterParm = v; }
 		void setCutFalloff(float v) { cutFalloff = v; }
@@ -58,7 +60,7 @@ namespace RecRoom
 		}
 
 	protected:
-		LinearSolver linearSolver;
+		NDF ndf; 
 		float distInterParm;
 		float angleInterParm;
 		float cutFalloff;

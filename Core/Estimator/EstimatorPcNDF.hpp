@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Common/NDFEstimation.h"
-
 #include "EstimatorPcNDF.h"
 
 namespace RecRoom
@@ -13,16 +11,28 @@ namespace RecRoom
 		const CONST_PTR(PcIndex)& filter,
 		Pc<OutPointType>& output) const
 	{
-		NDFEstimation<InPointType, OutPointType> fe(scanner, linearSolver, distInterParm, angleInterParm, cutFalloff, cutGrazing);
+		switch (ndf)
+		{
+		case NDF::SG:
+		{
+			SGEstimation<InPointType, OutPointType> fe(scanner, distInterParm, angleInterParm, cutFalloff, cutGrazing);
 
-		fe.setInputCloud(input);
-		fe.setSearchMethod(boost::const_pointer_cast<Acc<InPointType>>(searchSurface)); // trick, already ensure it won't be modified 
-		fe.setRadiusSearch(searchRadius);
-		fe.setSearchSurface(searchSurface->getInputCloud());
+			fe.setInputCloud(input);
+			fe.setSearchMethod(boost::const_pointer_cast<Acc<InPointType>>(searchSurface)); // trick, already ensure it won't be modified 
+			fe.setRadiusSearch(searchRadius);
+			fe.setSearchSurface(searchSurface->getInputCloud());
 
-		if (filter)
-			fe.setIndices(filter);
+			if (filter)
+				fe.setIndices(filter);
 
-		fe.compute(output);
+			fe.compute(output);
+		}
+		break;
+		default:
+		{
+			THROW_EXCEPTION("ndf is not support");
+		}
+		break;
+		}
 	}
 }

@@ -356,7 +356,7 @@ int main(int argc, char *argv[])
 			PTR(RecRoom::ReconstructorPcOC::Estimator)
 				ndfEstimator(
 					new RecRoom::EstimatorPcNDF<RecRoom::PointMED, RecRoom::PointMED>(
-						searchRadius, scannerPc, RecRoom::LinearSolver::EIGEN_SVD,
+						searchRadius, scannerPc, RecRoom::NDF::SG,
 						3, 1, cutFalloff, cutGrazing));
 			reconstructorPC->setSharpnessEstimator(ndfEstimator);
 

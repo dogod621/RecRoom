@@ -9,13 +9,10 @@ namespace RecRoom
 		const Pc<InPointType>& cloud,
 		const InPointType& center, const std::vector<ScanData>& scanDataSet, OutPointType& outPoint) const
 	{
-		Eigen::MatrixXf A;
-		Eigen::MatrixXf B;
-
-		A = Eigen::MatrixXf(scanDataSet.size() * 3, 3);
-		B = Eigen::MatrixXf(scanDataSet.size() * 3, 1);
-
-		int shifter = 0;
+		std::vector<NDFSample> samples;
+		samples.reserve(scanDataSet.size());
+		float meanIntensity = 0.0;
+		float sumWeight = 0.0;
 		for (std::vector<ScanData>::const_iterator it = scanDataSet.begin(); it != scanDataSet.end(); ++it)
 		{
 			const InPointType& hitPoint = cloud[it->index];
@@ -28,78 +25,73 @@ namespace RecRoom
 				return false;
 			}
 
-			float dotNN = hitNormal.dot(it->laser.incidentDirection);
-			float weight = std::pow((search_radius_ - it->distance2Center) / search_radius_, distInterParm) * std::pow(dotNN, angleInterParm);
-
-			A(shifter, 0) = weight * it->laser.incidentDirection.x();
-			A(shifter, 1) = weight * it->laser.incidentDirection.y();
-			A(shifter, 2) = weight * it->laser.incidentDirection.z();
-			B(shifter, 0) = weight * (it->laser.intensity / it->laser.beamFalloff);
-
-			A(shifter + 1, 0) = weight * hitTangent.x();
-			A(shifter + 1, 1) = weight * hitTangent.y();
-			A(shifter + 1, 2) = weight * hitTangent.z();
-			B(shifter + 1, 0) = 0.0f;
-
-			A(shifter + 2, 0) = weight * hitBitangent.x();
-			A(shifter + 2, 1) = weight * hitBitangent.y();
-			A(shifter + 2, 2) = weight * hitBitangent.z();
-			B(shifter + 2, 0) = 0.0f;
-
-			shifter += 3;
+			Eigen::Vector3f hafway = it->laser.incidentDirection + it->laser.reflectedDirection;
+			float hafwayNorm = hafway.norm();
+			if (hafwayNorm > std::numeric_limits<float>::epsilon())
+			{
+				hafway /= hafwayNorm;
+				float dotNN = hitNormal.dot(hafway);
+				float weight = std::pow((search_radius_ - it->distance2Center) / search_radius_, distInterParm) * std::pow(dotNN, angleInterParm);
+				float intensity = it->laser.intensity / it->laser.beamFalloff;
+				meanIntensity += weight * intensity;
+				sumWeight += weight;
+				samples.push_back(NDFSample(
+					Eigen::Vector3f(
+						hitTangent.dot(hafway),
+						hitBitangent.dot(hafway),
+						hitNormal.dot(hafway)),
+					intensity, weight));
+			}
 		}
-
-		Eigen::MatrixXf X;
-		switch (linearSolver)
-		{
-		case LinearSolver::EIGEN_QR:
-		{
-			X = A.colPivHouseholderQr().solve(B);
-		}
-		break;
-		case LinearSolver::EIGEN_SVD:
-		{
-			X = A.bdcSvd(Eigen::ComputeThinU | Eigen::ComputeThinV).solve(B);
-		}
-		break;
-		case LinearSolver::EIGEN_NE:
-		{
-			Eigen::MatrixXf localAT = A.transpose();
-			X = (localAT * A).ldlt().solve(localAT * B);
-		}
-		break;
-		default:
-		{
-			THROW_EXCEPTION("LinearSolver is not supported.");
-		}
-		break;
-		}
+		meanIntensity /= sumWeight;
+		std::vector<float> ndfValues(samples.size());
+		
+		//
+		const int numDepth = 5;
+		const int numTest = 9; 
 
 		//
-		Eigen::Vector3f xVec(X(0, 0), X(1, 0), X(2, 0));
-		if (std::isfinite(xVec.x()) && std::isfinite(xVec.y()) && std::isfinite(xVec.z()))
+		outPoint.sharpness = (maxSharpness - minSharpness) * 0.5f; // start center
+		float bestMSE;
+		float bestSNR;
+		EvaluateMSE(samples, outPoint.sharpness, meanIntensity, sumWeight,
+			ndfValues, outPoint.intensity, bestMSE);
+		bestSNR = 10.0f * std::log10f(meanIntensity / bestMSE);
+		if (bestSNR > threshSNR)
+			return true;
+
+		// 
+		float testSharpness;
+		float testIntensity;
+		float testMSE;
+		float stopEps = 0.001f;
+		int extNumGap = numTest/2;
+		for (int d = 1; d <= numDepth; ++d)
 		{
-			float xVecNorm = xVec.norm();
-			if (xVecNorm > std::numeric_limits<float>::epsilon())
+			float eps = (maxSharpness - minSharpness) * std::pow(1.0f / (float)(numTest), (float)(d));
+			for (int i = -extNumGap; i <= extNumGap; ++i)
 			{
-				outPoint.sharpness = 0.0f;
-				outPoint.intensity = xVecNorm;
-				xVec /= xVecNorm;
-				outPoint.normal_x = xVec.x();
-				outPoint.normal_y = xVec.y();
-				outPoint.normal_z = xVec.z();
-				return true;
+				if (i != 0)
+				{
+					testSharpness = outPoint.sharpness + float(i) * eps;
+					EvaluateMSE(samples, testSharpness, meanIntensity, sumWeight,
+						ndfValues, testIntensity, testMSE);
+
+					if (testMSE < bestMSE)
+					{
+						outPoint.sharpness = testSharpness;
+						outPoint.intensity = testIntensity;
+
+						if(((bestMSE - testMSE) / bestMSE) < stopEps)
+							return true;
+
+						bestMSE = testMSE;
+						bestSNR = 10.0f * std::log10f(meanIntensity / bestMSE);
+						if (bestSNR > threshSNR)
+							return true;
+					}
+				}
 			}
-			else
-			{
-				//PRINT_WARNING("LinearSolver solve zero norm");
-				return false;
-			}
-		}
-		else
-		{
-			//PRINT_WARNING("LinearSolver solve non finite value");
-			return false;
 		}
 		return true;
 	}
