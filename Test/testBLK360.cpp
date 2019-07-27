@@ -44,6 +44,13 @@ void PrintHelp(int argc, char **argv)
 		PRINT_HELP("\t", "e57File", "sting \"\"", "Input e57 file path.");
 		PRINT_HELP("\t", "lfFile", "sting \"\"", "Input light field file path.");
 		PRINT_HELP("\t", "printScannerInfo", "", "Print scanner information.");
+		PRINT_HELP("\t", "recPointCloud", "", "Reconstruct point cloud.");
+		PRINT_HELP("\t", "recPcNormal", "", "Reconstruct point cloud normal.");
+		PRINT_HELP("\t", "recPcAlbedo", "", "Reconstruct point cloud albedo.");
+		PRINT_HELP("\t", "recPcSharpness", "", "Reconstruct point cloud sharpness.");
+		PRINT_HELP("\t", "recPcSegment", "", "Reconstruct point cloud segment.");
+		PRINT_HELP("\t", "recSegMaterial", "", "Reconstruct segment material.");
+		PRINT_HELP("\t", "recMesh", "", "Reconstruct mesh.");
 		PRINT_HELP("\t", "visSegNDFs", "", "Plot segment NDFs after reconstruction.");
 		PRINT_HELP("\t", "visRecAtts", "", "Plot reconstruction result after reconstruction.");
 	}
@@ -382,63 +389,48 @@ int main(int argc, char *argv[])
 			mesher->setPreprocessSampler(mesherSampler);*/
 			reconstructorPC->setMesher(mesher);
 
-			//
-			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::POINT_CLOUD) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
+			//ent material.");
+			PRINT_HELP("\t", "recMesh", "", "Reconstruct mesh.");
+			if (pcl::console::find_switch(argc, argv, "-recPointCloud"))
 			{
-				std::cout << "reconstructorPC->RecPointCloud()" << std::endl;
-
 				reconstructorPC->RecPointCloud();
 			}
 
-			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::PC_NORMAL) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
+			if (pcl::console::find_switch(argc, argv, "-recPcNormal"))
 			{
-				std::cout << "reconstructorPC->RecPcNormal()" << std::endl;
-
 				reconstructorPC->RecPcNormal();
 			}
 
-			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::PC_ALBEDO) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
+			if (pcl::console::find_switch(argc, argv, "-recPcAlbedo"))
 			{
-				std::cout << "reconstructorPC->RecPcAlbedo()" << std::endl;
-
 				reconstructorPC->RecPcAlbedo();
 			}
 
-			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::PC_SHARPNESS) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
+			if (pcl::console::find_switch(argc, argv, "-recPcSharpness"))
 			{
-				std::cout << "reconstructorPC->RecPcSharpness()" << std::endl;
-
 				reconstructorPC->RecPcSharpness();
 			}
 
-			/*if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::PC_SEGMENT) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
+			if (pcl::console::find_switch(argc, argv, "-recPcSegment"))
 			{
-				std::cout << "reconstructorPC->RecPcSegment()" << std::endl;
-
 				reconstructorPC->RecPcSegment();
 			}
 
-			if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::SEG_MATERIAL) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
+			if (pcl::console::find_switch(argc, argv, "-recSegMaterial"))
 			{
-				std::cout << "reconstructorPC->RecSegMaterial()" << std::endl;
-
 				reconstructorPC->RecSegMaterial();
 			}
-			*/
 
-			/*if ((RecRoom::ReconstructStatus)(reconstructorPC->getStatus() & RecRoom::ReconstructStatus::MESH) == RecRoom::ReconstructStatus::ReconstructStatus_UNKNOWN)
+			if (pcl::console::find_switch(argc, argv, "-recMesh"))
 			{
-				std::cout << "reconstructorPC->RecMesh()" << std::endl;
-
 				reconstructorPC->RecMesh();
-			}*/
+			}
 
-			//
-			/*if (pcl::console::find_switch(argc, argv, "-visSegNDFs"))
+			if (pcl::console::find_switch(argc, argv, "-visSegNDFs"))
 			{
 				std::cout << "reconstructorPC->VisualSegNDFs()" << std::endl;
 				reconstructorPC->VisualSegNDFs();
-			}*/
+			}
 
 			if (pcl::console::find_switch(argc, argv, "-visRecAtts"))
 			{
