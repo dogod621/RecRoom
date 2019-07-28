@@ -2,6 +2,8 @@
 
 #include "Common/SupervoxelClustering.h"
 
+#include "Filter/FilterPcRemoveNonFinite.h"
+
 #include "SegmenterPcSVC.h"
 
 namespace RecRoom
@@ -13,14 +15,17 @@ namespace RecRoom
 		const CONST_PTR(PcIndex)& filter,
 		Pc<PointType>& output) const
 	{
+		PTR(PcIndex) filter2(new PcIndex);
+		FilterPcRemoveNonFinite<PointType> fNAN;
+		fNAN.Process(searchSurface, input, filter, *filter2);
+
 		SupervoxelClustering<PointType> super(
 			voxelResolution, seedResolution,
-			xyzImportance, normalImportance, rgbImportance, intensityImportance);
+			xyzImportance, rgbImportance, intensityImportance, normalImportance, sharpnessImportance);
 
 		super.setInputCloud(input);
 
-		if (filter)
-			super.setIndices(filter);
+		super.setIndices(filter2);
 
 		super.Extract(output);
 	}

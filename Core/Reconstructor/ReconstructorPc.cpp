@@ -793,8 +793,8 @@ namespace RecRoom
 				pcl::PCLImage image;
 				pcl::io::PointCloudImageExtractorFromZField<PointMED> pcie;
 				pcie.setPaintNaNsWithBlack(true);
-				pcie.setScalingMethod(pcie.SCALING_FIXED_FACTOR);
-				pcie.setScalingFactor(1.0);
+				pcie.setScalingMethod(pcie.SCALING_FULL_RANGE);
+				//pcie.setScalingFactor(6.0);
 				if (!pcie.extract(pcVisRec, image))
 					THROW_EXCEPTION("Failed to extract an image from Sharpness field .");
 				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
