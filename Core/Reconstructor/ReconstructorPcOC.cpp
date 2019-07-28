@@ -343,35 +343,36 @@ namespace RecRoom
 		for (PcIndex::const_iterator it = data.pcRawIdx->begin(); it != data.pcRawIdx->end(); ++it)
 		{
 			PointMED& pRaw = (*data.pcRaw)[*it];
-			if (pRaw.HasLabel())
+			if (pcl::isFinite(pRaw))
 			{
-				Eigen::Vector3f hitNormal(pRaw.normal_x, pRaw.normal_y, pRaw.normal_z);
-				Eigen::Vector3f hitTangent;
-				Eigen::Vector3f hitBitangent;
-				if (Common::GenFrame(hitNormal, hitTangent, hitBitangent))
+				if (pRaw.HasLabel())
 				{
-					ScanLaser scanLaser;
-					if (global.ptrReconstructorPcOC()->getScanner()->ToScanLaser(pRaw, scanLaser))
+					Eigen::Vector3f hitNormal(pRaw.normal_x, pRaw.normal_y, pRaw.normal_z);
+					Eigen::Vector3f hitTangent;
+					Eigen::Vector3f hitBitangent;
+					if (Common::GenFrame(hitNormal, hitTangent, hitBitangent))
 					{
-						Eigen::Vector3f hafway = scanLaser.incidentDirection + scanLaser.reflectedDirection;
-						float hafwayNorm = hafway.norm();
-						if (hafwayNorm > std::numeric_limits<float>::epsilon())
+						ScanLaser scanLaser;
+						if (global.ptrReconstructorPcOC()->getScanner()->ToScanLaser(pRaw, scanLaser))
 						{
-							hafway /= hafwayNorm;
-							if (scanLaser.beamFalloff > cutFalloff)
+							Eigen::Vector3f hafway = scanLaser.incidentDirection + scanLaser.reflectedDirection;
+							float hafwayNorm = hafway.norm();
+							if (hafwayNorm > std::numeric_limits<float>::epsilon())
 							{
-								Eigen::Vector3f tanHafway(
-									hitTangent.dot(hafway),
-									hitBitangent.dot(hafway),
-									hitNormal.dot(hafway));
-								pcNDF->push_back(PointNDF(hafway.x(), hafway.y(), hafway.z(), pRaw.label, scanLaser.intensity / scanLaser.beamFalloff));
+								hafway /= hafwayNorm;
+								if (scanLaser.beamFalloff > cutFalloff)
+								{
+									Eigen::Vector3f tanHafway(
+										hitTangent.dot(hafway),
+										hitBitangent.dot(hafway),
+										hitNormal.dot(hafway));
+									pcNDF->push_back(PointNDF(hafway.x(), hafway.y(), hafway.z(), pRaw.label, scanLaser.intensity / scanLaser.beamFalloff));
+								}
 							}
 						}
 					}
 				}
 			}
-			else
-				PRINT_WARNING("!pRaw.HasSegLabel(), ignore");
 		}
 		global.ptrReconstructorPcOC()->getContainerPcNDF()->Merge(pcNDF);
 #endif
