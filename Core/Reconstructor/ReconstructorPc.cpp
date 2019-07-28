@@ -339,12 +339,12 @@ namespace RecRoom
 				PRINT_INFO(ss.str().c_str());
 			}
 
-			PcNDF pcVisNDF;
+			Pc<pcl::PointXYZINormal> pcVisNDF;
 			pcVisNDF.width = width;
 			pcVisNDF.height = height;
 			pcVisNDF.is_dense = false;
 			pcVisNDF.resize(width * height);
-			for (PcNDF::iterator it = pcVisNDF.begin(); it != pcVisNDF.end(); ++it)
+			for (Pc<pcl::PointXYZINormal>::iterator it = pcVisNDF.begin(); it != pcVisNDF.end(); ++it)
 			{
 				it->x = 0.0;// use as counter
 				it->y = 0.0;
@@ -361,15 +361,12 @@ namespace RecRoom
 				std::size_t col = uv.x() * (width - 1);
 				std::size_t row = (1.0 - uv.y()) * (height - 1);
 				std::size_t index = row * width + col;
-				PointNDF& pVisNDF = pcVisNDF[index];
-				{
-					pVisNDF.x += 1;
-					pVisNDF.intensity += it->intensity;
-				}
+				pcVisNDF[index].x += 1;
+				pcVisNDF[index].intensity += it->intensity;
 			}
 
 			std::size_t index = 0;
-			for (PcNDF::iterator it = pcVisNDF.begin(); it != pcVisNDF.end(); ++it)
+			for (Pc<pcl::PointXYZINormal>::iterator it = pcVisNDF.begin(); it != pcVisNDF.end(); ++it)
 			{
 				if (it->x > 0)
 				{
@@ -396,7 +393,7 @@ namespace RecRoom
 				fileName << segID << "_Dir.png";
 
 				pcl::PCLImage image;
-				pcl::io::PointCloudImageExtractorFromNormalField<PointNDF> pcie;
+				pcl::io::PointCloudImageExtractorFromNormalField<pcl::PointXYZINormal> pcie;
 				pcie.setPaintNaNsWithBlack(true);
 				if (!pcie.extract(pcVisNDF, image))
 					THROW_EXCEPTION("Failed to extract an image from Normal field .");
@@ -408,7 +405,7 @@ namespace RecRoom
 				fileName << segID << "_Intensity.png";
 
 				pcl::PCLImage image;
-				pcl::io::PointCloudImageExtractorFromIntensityField<PointNDF> pcie;
+				pcl::io::PointCloudImageExtractorFromIntensityField<pcl::PointXYZINormal> pcie;
 				pcie.setPaintNaNsWithBlack(true);
 				pcie.setScalingMethod(pcie.SCALING_FIXED_FACTOR);
 				pcie.setScalingFactor(255.f);
