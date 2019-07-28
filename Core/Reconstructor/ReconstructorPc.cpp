@@ -331,13 +331,14 @@ namespace RecRoom
 		std::size_t height = 256;
 		for (std::size_t segID = 0; segID < containerPcNDF->Size(); ++segID)
 		{
+			PTR(PcNDF) pcNDF = containerPcNDF->GetData(segID);
+
 			{
 				std::stringstream ss;
-				ss << "VisualSegmentNDFs : " << segID;
+				ss << "VisualSegmentNDFs : " << segID << ", pcSize: " << pcNDF->size();
 				PRINT_INFO(ss.str().c_str());
 			}
 
-			PTR(PcNDF) pcNDF = containerPcNDF->GetData(segID);
 			PcNDF pcVisNDF;
 			pcVisNDF.width = width;
 			pcVisNDF.height = height;

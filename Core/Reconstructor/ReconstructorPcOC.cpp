@@ -109,7 +109,7 @@ namespace RecRoom
 			if (global.ptrReconstructorPcOC()->getUseVNN())
 			{
 				float res = global.ptrReconstructorPcOC()->getResVNN();
-				data.pcRawAcc = PTR(VNN<PointMED>)(new VNN<PointMED> (Eigen::Vector3d(res, res, res), cData.minAABB, cData.maxAABB));
+				data.pcRawAcc = PTR(VNN<PointMED>)(new VNN<PointMED>(Eigen::Vector3d(res, res, res), cData.minAABB, cData.maxAABB));
 			}
 			else
 			{
@@ -123,11 +123,11 @@ namespace RecRoom
 		if (global.ptrReconstructorPcOC()->getDownSampler())
 		{
 			global.ptrReconstructorPcOC()->getDownSampler()->Process(data.pcRawAcc, data.pcRaw, nullptr, *data.pcRec);
-			
+
 			PRINT_INFO("Build pcRecAcc - Start");
 			data.pcRecAcc->setInputCloud(data.pcRec);
 			PRINT_INFO("Build pcRecAcc - End");
-			
+
 			FilterPcAABB<PointMED> cb(cData.minAABB, cData.maxAABB);
 			cb.Process(nullptr, data.pcRec, nullptr, *data.pcRecIdx);
 		}
@@ -143,7 +143,7 @@ namespace RecRoom
 		{
 			PcIndex orIndices;
 			global.ptrReconstructorPcOC()->getOutlierRemover()->Process(data.pcRecAcc, data.pcRec, nullptr, orIndices);
-			
+
 			// Combine
 			std::sort(orIndices.begin(), orIndices.end());
 			std::sort(data.pcRecIdx->begin(), data.pcRecIdx->end());
@@ -223,8 +223,8 @@ namespace RecRoom
 			FilterPcAABB<PointMED> cb(cData.minAABB, cData.maxAABB);
 			cb.Process(nullptr, data.pcRec, nullptr, *data.pcRecIdx);
 
-			PTR(PcIndex) cbIdxEXT (new PcIndex);
-			FilterPcAABB<PointMED> cbEXT (cData.extMinAABB, cData.extMaxAABB);
+			PTR(PcIndex) cbIdxEXT(new PcIndex);
+			FilterPcAABB<PointMED> cbEXT(cData.extMinAABB, cData.extMaxAABB);
 			cbEXT.Process(nullptr, data.pcRec, nullptr, *cbIdxEXT);
 
 			if (!data.pcRecIdx->empty())
@@ -269,13 +269,18 @@ namespace RecRoom
 				PointMED& tarP = (*data.pcRaw)[px];
 				PointMED& srcP = temp[px];
 
+#ifdef PERPOINT_NORMAL
 				tarP.normal_x = srcP.normal_x;
 				tarP.normal_y = srcP.normal_y;
 				tarP.normal_z = srcP.normal_z;
 				tarP.curvature = srcP.curvature;
+#endif
+
+#ifdef PERPOINT_LABEL
 				tarP.label = srcP.label;
+#endif
 			}
-		
+
 			global.ptrReconstructorPcOC()->getAlbedoEstimator()->ProcessInOut(
 				data.pcRawAcc, data.pcRec, data.pcRecIdx);
 		}
@@ -296,14 +301,22 @@ namespace RecRoom
 				PointMED& tarP = (*data.pcRaw)[px];
 				PointMED& srcP = temp[px];
 
+#ifdef PERPOINT_INTENSITY
 				tarP.intensity = srcP.intensity;
+#endif
+
+#ifdef PERPOINT_NORMAL
 				tarP.normal_x = srcP.normal_x;
 				tarP.normal_y = srcP.normal_y;
 				tarP.normal_z = srcP.normal_z;
 				tarP.curvature = srcP.curvature;
+#endif
+
+#ifdef PERPOINT_LABEL
 				tarP.label = srcP.label;
+#endif
 			}
-		
+
 			global.ptrReconstructorPcOC()->getSharpnessEstimator()->ProcessInOut(
 				data.pcRawAcc, data.pcRec, data.pcRecIdx);
 		}
@@ -324,12 +337,15 @@ namespace RecRoom
 		{
 			PcMED temp;
 
-			global.ptrReconstructorPcOC()->getInterpolator()->Process(data.pcRecAcc, data.pcRaw, nullptr, temp);
+			global.ptrReconstructorPcOC()->getInterpolator()->Process(data.pcRecAcc, data.pcRaw, data.pcRawIdx, temp);
 
-			for (std::size_t px = 0; px < data.pcRaw->size(); ++px)
+#ifdef PERPOINT_NORMAL
+#ifdef PERPOINT_LABEL
+
+			for (std::size_t idx = 0; idx < data.pcRawIdx->size(); ++idx)
 			{
-				PointMED& tarP = (*data.pcRaw)[px];
-				PointMED& srcP = temp[px];
+				PointMED& tarP = (*data.pcRaw)[(*data.pcRawIdx)[idx]];
+				PointMED& srcP = temp[idx];
 
 				tarP.normal_x = srcP.normal_x;
 				tarP.normal_y = srcP.normal_y;
@@ -339,38 +355,34 @@ namespace RecRoom
 			}
 
 
-#ifdef PERPOINT_NORMAL
-#ifdef PERPOINT_LABEL
+#ifdef PERPOINT_SERIAL_NUMBER
 			PTR(PcNDF) pcNDF(new PcNDF);
 			pcNDF->reserve(data.pcRawIdx->size());
 			for (PcIndex::const_iterator it = data.pcRawIdx->begin(); it != data.pcRawIdx->end(); ++it)
 			{
 				PointMED& pRaw = (*data.pcRaw)[*it];
-				if (pcl::isFinite(pRaw))
+				if (pcl::isFinite(pRaw) && pRaw.HasSerialNumber() && pRaw.HasLabel())
 				{
-					if (pRaw.HasLabel())
+					Eigen::Vector3f hitNormal(pRaw.normal_x, pRaw.normal_y, pRaw.normal_z);
+					Eigen::Vector3f hitTangent;
+					Eigen::Vector3f hitBitangent;
+					if (Common::GenFrame(hitNormal, hitTangent, hitBitangent))
 					{
-						Eigen::Vector3f hitNormal(pRaw.normal_x, pRaw.normal_y, pRaw.normal_z);
-						Eigen::Vector3f hitTangent;
-						Eigen::Vector3f hitBitangent;
-						if (Common::GenFrame(hitNormal, hitTangent, hitBitangent))
+						ScanLaser scanLaser;
+						if (global.ptrReconstructorPcOC()->getScanner()->ToScanLaser(pRaw, scanLaser))
 						{
-							ScanLaser scanLaser;
-							if (global.ptrReconstructorPcOC()->getScanner()->ToScanLaser(pRaw, scanLaser))
+							Eigen::Vector3f hafway = scanLaser.incidentDirection + scanLaser.reflectedDirection;
+							float hafwayNorm = hafway.norm();
+							if (hafwayNorm > std::numeric_limits<float>::epsilon())
 							{
-								Eigen::Vector3f hafway = scanLaser.incidentDirection + scanLaser.reflectedDirection;
-								float hafwayNorm = hafway.norm();
-								if (hafwayNorm > std::numeric_limits<float>::epsilon())
+								hafway /= hafwayNorm;
+								if (scanLaser.beamFalloff > cutFalloff)
 								{
-									hafway /= hafwayNorm;
-									if (scanLaser.beamFalloff > cutFalloff)
-									{
-										Eigen::Vector3f tanHafway(
-											hitTangent.dot(hafway),
-											hitBitangent.dot(hafway),
-											hitNormal.dot(hafway));
-										pcNDF->push_back(PointNDF(hafway.x(), hafway.y(), hafway.z(), pRaw.label, scanLaser.intensity / scanLaser.beamFalloff));
-									}
+									Eigen::Vector3f tanHafway(
+										hitTangent.dot(hafway),
+										hitBitangent.dot(hafway),
+										hitNormal.dot(hafway));
+									pcNDF->push_back(PointNDF(hafway.x(), hafway.y(), hafway.z(), pRaw.label, scanLaser.intensity / scanLaser.beamFalloff));
 								}
 							}
 						}
@@ -378,6 +390,7 @@ namespace RecRoom
 				}
 			}
 			global.ptrReconstructorPcOC()->getContainerPcNDF()->Merge(pcNDF);
+#endif
 #endif
 #endif
 		}
