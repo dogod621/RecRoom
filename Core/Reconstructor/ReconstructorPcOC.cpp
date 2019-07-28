@@ -227,9 +227,12 @@ namespace RecRoom
 			FilterPcAABB<PointMED> cbEXT (cData.extMinAABB, cData.extMaxAABB);
 			cbEXT.Process(nullptr, data.pcRec, nullptr, *cbIdxEXT);
 
-			PRINT_INFO("Build pcRecAcc - Start");
-			data.pcRecAcc->setInputCloud(data.pcRec, cbIdxEXT);
-			PRINT_INFO("Build pcRecAcc - End");
+			if (!data.pcRecIdx->empty())
+			{
+				PRINT_INFO("Build pcRecAcc - Start");
+				data.pcRecAcc->setInputCloud(data.pcRec, cbIdxEXT);
+				PRINT_INFO("Build pcRecAcc - End");
+			}
 		}
 
 		return 0;
@@ -244,6 +247,7 @@ namespace RecRoom
 	// Async Reconstruct Attribute - Normal
 	int BStep_RecPcNormal(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
 	{
+		if (!data.pcRecIdx->empty())
 		{
 			global.ptrReconstructorPcOC()->getNormalEstimator()->ProcessInOut(
 				data.pcRawAcc, data.pcRec, data.pcRecIdx);
@@ -254,6 +258,7 @@ namespace RecRoom
 	// Async Reconstruct Attribute - Albedo
 	int BStep_RecPcAlbedo(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
 	{
+		if (!data.pcRecIdx->empty())
 		{
 			PcMED temp;
 
@@ -270,9 +275,7 @@ namespace RecRoom
 				tarP.curvature = srcP.curvature;
 				tarP.label = srcP.label;
 			}
-		}
-
-		{
+		
 			global.ptrReconstructorPcOC()->getAlbedoEstimator()->ProcessInOut(
 				data.pcRawAcc, data.pcRec, data.pcRecIdx);
 		}
@@ -282,6 +285,7 @@ namespace RecRoom
 	// Async Reconstruct Attribute - Sharpness
 	int BStep_RecPcSharpness(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
 	{
+		if (!data.pcRecIdx->empty())
 		{
 			PcMED temp;
 
@@ -299,9 +303,7 @@ namespace RecRoom
 				tarP.curvature = srcP.curvature;
 				tarP.label = srcP.label;
 			}
-		}
-
-		{
+		
 			global.ptrReconstructorPcOC()->getSharpnessEstimator()->ProcessInOut(
 				data.pcRawAcc, data.pcRec, data.pcRecIdx);
 		}
@@ -318,6 +320,7 @@ namespace RecRoom
 	{
 		const float cutFalloff = 0.33f; // 
 
+		if (!data.pcRecIdx->empty())
 		{
 			PcMED temp;
 
@@ -334,49 +337,50 @@ namespace RecRoom
 				tarP.curvature = srcP.curvature;
 				tarP.label = srcP.label;
 			}
-		}
+
 
 #ifdef PERPOINT_NORMAL
 #ifdef PERPOINT_LABEL
-		PTR(PcNDF) pcNDF (new PcNDF);
-		pcNDF->reserve(data.pcRawIdx->size());
-		for (PcIndex::const_iterator it = data.pcRawIdx->begin(); it != data.pcRawIdx->end(); ++it)
-		{
-			PointMED& pRaw = (*data.pcRaw)[*it];
-			if (pcl::isFinite(pRaw))
+			PTR(PcNDF) pcNDF(new PcNDF);
+			pcNDF->reserve(data.pcRawIdx->size());
+			for (PcIndex::const_iterator it = data.pcRawIdx->begin(); it != data.pcRawIdx->end(); ++it)
 			{
-				if (pRaw.HasLabel())
+				PointMED& pRaw = (*data.pcRaw)[*it];
+				if (pcl::isFinite(pRaw))
 				{
-					Eigen::Vector3f hitNormal(pRaw.normal_x, pRaw.normal_y, pRaw.normal_z);
-					Eigen::Vector3f hitTangent;
-					Eigen::Vector3f hitBitangent;
-					if (Common::GenFrame(hitNormal, hitTangent, hitBitangent))
+					if (pRaw.HasLabel())
 					{
-						ScanLaser scanLaser;
-						if (global.ptrReconstructorPcOC()->getScanner()->ToScanLaser(pRaw, scanLaser))
+						Eigen::Vector3f hitNormal(pRaw.normal_x, pRaw.normal_y, pRaw.normal_z);
+						Eigen::Vector3f hitTangent;
+						Eigen::Vector3f hitBitangent;
+						if (Common::GenFrame(hitNormal, hitTangent, hitBitangent))
 						{
-							Eigen::Vector3f hafway = scanLaser.incidentDirection + scanLaser.reflectedDirection;
-							float hafwayNorm = hafway.norm();
-							if (hafwayNorm > std::numeric_limits<float>::epsilon())
+							ScanLaser scanLaser;
+							if (global.ptrReconstructorPcOC()->getScanner()->ToScanLaser(pRaw, scanLaser))
 							{
-								hafway /= hafwayNorm;
-								if (scanLaser.beamFalloff > cutFalloff)
+								Eigen::Vector3f hafway = scanLaser.incidentDirection + scanLaser.reflectedDirection;
+								float hafwayNorm = hafway.norm();
+								if (hafwayNorm > std::numeric_limits<float>::epsilon())
 								{
-									Eigen::Vector3f tanHafway(
-										hitTangent.dot(hafway),
-										hitBitangent.dot(hafway),
-										hitNormal.dot(hafway));
-									pcNDF->push_back(PointNDF(hafway.x(), hafway.y(), hafway.z(), pRaw.label, scanLaser.intensity / scanLaser.beamFalloff));
+									hafway /= hafwayNorm;
+									if (scanLaser.beamFalloff > cutFalloff)
+									{
+										Eigen::Vector3f tanHafway(
+											hitTangent.dot(hafway),
+											hitBitangent.dot(hafway),
+											hitNormal.dot(hafway));
+										pcNDF->push_back(PointNDF(hafway.x(), hafway.y(), hafway.z(), pRaw.label, scanLaser.intensity / scanLaser.beamFalloff));
+									}
 								}
 							}
 						}
 					}
 				}
 			}
+			global.ptrReconstructorPcOC()->getContainerPcNDF()->Merge(pcNDF);
+#endif
+#endif
 		}
-		global.ptrReconstructorPcOC()->getContainerPcNDF()->Merge(pcNDF);
-#endif
-#endif
 		return 0;
 	}
 
