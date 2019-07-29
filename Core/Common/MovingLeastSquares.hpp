@@ -298,8 +298,6 @@ namespace RecRoom
 					// This thread's ID (range 0 to threads-1)
 #ifdef _OPENMP
 					const int tn = omp_get_thread_num();
-					// Size of projected points before computeMLSPointNormal () adds points
-					size_t pp_size = projectedPointSet[tn].size();
 #else
 					PointCloudOut projectedPoints;
 #endif
