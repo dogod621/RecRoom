@@ -5,16 +5,16 @@ namespace RecRoom
 	void MLSResult::getMLSCoordinates(const Eigen::Vector3d &pt, double &u, double &v, double &w) const
 	{
 		Eigen::Vector3d delta = pt - mean;
-		u = delta.dot(u_axis);
-		v = delta.dot(v_axis);
-		w = delta.dot(plane_normal);
+		u = delta.dot(uAxis);
+		v = delta.dot(vAxis);
+		w = delta.dot(planeNormal);
 	}
 
 	void MLSResult::getMLSCoordinates(const Eigen::Vector3d &pt, double &u, double &v) const
 	{
 		Eigen::Vector3d delta = pt - mean;
-		u = delta.dot(u_axis);
-		v = delta.dot(v_axis);
+		u = delta.dot(uAxis);
+		v = delta.dot(vAxis);
 	}
 
 	double MLSResult::getPolynomialValue(const double u, const double v) const
@@ -30,7 +30,7 @@ namespace RecRoom
 			v_pow = 1;
 			for (int vi = 0; vi <= order - ui; ++vi)
 			{
-				result += c_vec[j++] * u_pow * v_pow;
+				result += cAxis[j++] * u_pow * v_pow;
 				v_pow *= v;
 			}
 			u_pow *= u;
@@ -54,23 +54,23 @@ namespace RecRoom
 			for (int vi = 0; vi <= order - ui; ++vi)
 			{
 				// Compute displacement along normal
-				d.z += u_pow(ui) * v_pow(vi) * c_vec[j];
+				d.z += u_pow(ui) * v_pow(vi) * cAxis[j];
 
 				// Compute partial derivatives
 				if (ui >= 1)
-					d.z_u += c_vec[j] * ui * u_pow(ui - 1) * v_pow(vi);
+					d.z_u += cAxis[j] * ui * u_pow(ui - 1) * v_pow(vi);
 
 				if (vi >= 1)
-					d.z_v += c_vec[j] * vi * u_pow(ui) * v_pow(vi - 1);
+					d.z_v += cAxis[j] * vi * u_pow(ui) * v_pow(vi - 1);
 
 				if (ui >= 1 && vi >= 1)
-					d.z_uv += c_vec[j] * ui * u_pow(ui - 1) * vi * v_pow(vi - 1);
+					d.z_uv += cAxis[j] * ui * u_pow(ui - 1) * vi * v_pow(vi - 1);
 
 				if (ui >= 2)
-					d.z_uu += c_vec[j] * ui * (ui - 1) * u_pow(ui - 2) * v_pow(vi);
+					d.z_uu += cAxis[j] * ui * (ui - 1) * u_pow(ui - 2) * v_pow(vi);
 
 				if (vi >= 2)
-					d.z_vv += c_vec[j] * vi * (vi - 1) * u_pow(ui) * v_pow(vi - 2);
+					d.z_vv += cAxis[j] * vi * (vi - 1) * u_pow(ui) * v_pow(vi - 2);
 
 				if (ui == 0)
 					v_pow(vi + 1) = v_pow(vi) * v;
@@ -91,7 +91,7 @@ namespace RecRoom
 		// Then:
 		//      k1 = H + sqrt(H^2 - K)
 		//      k1 = H - sqrt(H^2 - K)
-		if (order > 1 && c_vec.size() >= (order + 1) * (order + 2) / 2 && pcl_isfinite(c_vec[0]))
+		if (order > 1 && cAxis.size() >= (order + 1) * (order + 2) / 2 && pcl_isfinite(cAxis[0]))
 		{
 			PolynomialPartialDerivative d = getPolynomialPartialDerivative(u, v);
 			double Z = 1 + d.z_u * d.z_u + d.z_v * d.z_v;
@@ -121,8 +121,8 @@ namespace RecRoom
 		double gw = 0;
 
 		MLSProjectionResults result;
-		result.normal = plane_normal;
-		if (order > 1 && c_vec.size() >= (order + 1) * (order + 2) / 2 && pcl_isfinite(c_vec[0]))
+		result.normal = planeNormal;
+		if (order > 1 && cAxis.size() >= (order + 1) * (order + 2) / 2 && pcl_isfinite(cAxis[0]))
 		{
 			PolynomialPartialDerivative d = getPolynomialPartialDerivative(gu, gv);
 			gw = d.z;
@@ -169,11 +169,11 @@ namespace RecRoom
 
 			result.u = gu;
 			result.v = gv;
-			result.normal -= (d.z_u * u_axis + d.z_v * v_axis);
+			result.normal -= (d.z_u * uAxis + d.z_v * vAxis);
 			result.normal.normalize();
 		}
 
-		result.point = mean + gu * u_axis + gv * v_axis + gw * plane_normal;
+		result.point = mean + gu * uAxis + gv * vAxis + gw * planeNormal;
 
 		return (result);
 	}
@@ -183,8 +183,8 @@ namespace RecRoom
 		MLSProjectionResults result;
 		result.u = u;
 		result.v = v;
-		result.normal = plane_normal;
-		result.point = mean + u * u_axis + v * v_axis;
+		result.normal = planeNormal;
+		result.point = mean + u * uAxis + v * vAxis;
 
 		return (result);
 	}
@@ -196,28 +196,28 @@ namespace RecRoom
 
 		result.u = u;
 		result.v = v;
-		result.normal = plane_normal;
+		result.normal = planeNormal;
 
-		if (order > 1 && c_vec.size() >= (order + 1) * (order + 2) / 2 && pcl_isfinite(c_vec[0]))
+		if (order > 1 && cAxis.size() >= (order + 1) * (order + 2) / 2 && pcl_isfinite(cAxis[0]))
 		{
 			PolynomialPartialDerivative d = getPolynomialPartialDerivative(u, v);
 			w = d.z;
-			result.normal -= (d.z_u * u_axis + d.z_v * v_axis);
+			result.normal -= (d.z_u * uAxis + d.z_v * vAxis);
 			result.normal.normalize();
 		}
 
-		result.point = mean + u * u_axis + v * v_axis + w * plane_normal;
+		result.point = mean + u * uAxis + v * vAxis + w * planeNormal;
 
 		return (result);
 	}
 
-	MLSProjectionResults MLSResult::projectPoint(const Eigen::Vector3d &pt, MLSProjectionMethod method, int required_neighbors) const
+	MLSProjectionResults MLSResult::projectPoint(const Eigen::Vector3d &pt, MLSProjectionMethod method, int requiredNeighbors) const
 	{
 		double u, v, w;
 		getMLSCoordinates(pt, u, v, w);
 
 		MLSProjectionResults proj;
-		if (order > 1 && num_neighbors >= required_neighbors && pcl_isfinite(c_vec[0]) && method != MLSProjectionMethod::MLSProjectionMethod_NONE)
+		if (order > 1 && numNeighbors >= requiredNeighbors && pcl_isfinite(cAxis[0]) && method != MLSProjectionMethod::MLSProjectionMethod_NONE)
 		{
 			if (method == MLSProjectionMethod::ORTHOGONAL)
 				proj = projectPointOrthogonalToPolynomialSurface(u, v, w);
@@ -232,30 +232,30 @@ namespace RecRoom
 		return  (proj);
 	}
 
-	MLSProjectionResults MLSResult::projectQueryPoint(MLSProjectionMethod method, int required_neighbors) const
+	MLSProjectionResults MLSResult::projectQueryPoint(MLSProjectionMethod method, int requiredNeighbors) const
 	{
 		MLSProjectionResults proj;
-		if (order > 1 && num_neighbors >= required_neighbors && pcl_isfinite(c_vec[0]) && method != MLSProjectionMethod::MLSProjectionMethod_NONE)
+		if (order > 1 && numNeighbors >= requiredNeighbors && pcl_isfinite(cAxis[0]) && method != MLSProjectionMethod::MLSProjectionMethod_NONE)
 		{
 			if (method == MLSProjectionMethod::ORTHOGONAL)
 			{
 				double u, v, w;
-				getMLSCoordinates(query_point, u, v, w);
+				getMLSCoordinates(queryPoint, u, v, w);
 				proj = projectPointOrthogonalToPolynomialSurface(u, v, w);
 			}
 			else // MLSProjectionMethod::SIMPLE
 			{
 				// Projection onto MLS surface along Darboux normal to the height at (0,0)
-				proj.point = mean + (c_vec[0] * plane_normal);
+				proj.point = mean + (cAxis[0] * planeNormal);
 
-				// Compute tangent vectors using the partial derivates evaluated at (0,0) which is c_vec[order_+1] and c_vec[1]
-				proj.normal = plane_normal - c_vec[order + 1] * u_axis - c_vec[1] * v_axis;
+				// Compute tangent vectors using the partial derivates evaluated at (0,0) which is cAxis[order_+1] and cAxis[1]
+				proj.normal = planeNormal - cAxis[order + 1] * uAxis - cAxis[1] * vAxis;
 				proj.normal.normalize();
 			}
 		}
 		else
 		{
-			proj.normal = plane_normal;
+			proj.normal = planeNormal;
 			proj.point = mean;
 		}
 

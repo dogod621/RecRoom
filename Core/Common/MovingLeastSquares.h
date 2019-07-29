@@ -68,14 +68,14 @@ namespace RecRoom
 	// brief Data structure used to store the results of the MLS fitting
 	struct MLSResult
 	{
-		MLSResult() : num_neighbors(0), curvature(0.0f), order(0), valid(false) {}
+		MLSResult() : numNeighbors(0), curvature(0.0f), order(0), valid(false) {}
 
-		MLSResult(const Eigen::Vector3d &a_query_point, const Eigen::Vector3d &a_mean, const Eigen::Vector3d &a_plane_normal,
-			const Eigen::Vector3d &a_u, const Eigen::Vector3d &a_v, const Eigen::VectorXd &a_c_vec,
-			const int a_num_neighbors, const float a_curvature, const int a_order) :
-			query_point(a_query_point), mean(a_mean), plane_normal(a_plane_normal), 
-			u_axis(a_u), v_axis(a_v), c_vec(a_c_vec), num_neighbors(a_num_neighbors), 
-			curvature(a_curvature), order(a_order), valid(true) {}
+		MLSResult(const Eigen::Vector3d& queryPoint, const Eigen::Vector3d& mean, const Eigen::Vector3d& planeNormal,
+			const Eigen::Vector3d& uAxis, const Eigen::Vector3d& vAxis, const Eigen::VectorXd& cAxis,
+			const int numNeighbors, const float curvature, const int order) :
+			queryPoint(queryPoint), mean(mean), planeNormal(planeNormal),
+			uAxis(uAxis), vAxis(vAxis), cAxis(cAxis), numNeighbors(numNeighbors),
+			curvature(curvature), order(order), valid(true) {}
 
 		// brief Given a point calculate it's 3D location in the MLS frame.
 		inline void getMLSCoordinates(const Eigen::Vector3d &pt, double &u, double &v, double &w) const;
@@ -102,31 +102,31 @@ namespace RecRoom
 		inline MLSProjectionResults projectPointSimpleToPolynomialSurface(const double u, const double v) const;
 
 		// brief Project a point using the specified method.
-		inline MLSProjectionResults projectPoint(const Eigen::Vector3d &pt, MLSProjectionMethod method, int required_neighbors = 0) const;
+		inline MLSProjectionResults projectPoint(const Eigen::Vector3d &pt, MLSProjectionMethod method, int requiredNeighbors = 0) const;
 
 		// brief Project the query point used to generate the mls surface about using the specified method.
-		inline MLSProjectionResults projectQueryPoint(MLSProjectionMethod method, int required_neighbors = 0) const;
+		inline MLSProjectionResults projectQueryPoint(MLSProjectionMethod method, int requiredNeighbors = 0) const;
 
 		// brief Smooth a given point and its neighborghood using Moving Least Squares.
 		template <class PointT>
-		void computeMLSSurface(const pcl::PointCloud<PointT> &cloud, int index, const std::vector<int> &nn_indices,
-			double search_radius, int polynomial_order = 2, boost::function<double(const double)> weight_func = 0);
+		void computeMLSSurface(const pcl::PointCloud<PointT> &cloud, int index, const std::vector<int> &nnIndices,
+			double searchRadius, int polynomialOrder = 2, boost::function<double(const double)> WeightFunc = 0);
 
-		Eigen::Vector3d query_point;  // brief The query point about which the mls surface was generated 
-		Eigen::Vector3d mean;         // brief The mean point of all the neighbors. 
-		Eigen::Vector3d plane_normal; // brief The normal of the local plane of the query point. 
-		Eigen::Vector3d u_axis;       // brief The axis corresponding to the u-coordinates of the local plane of the query point. 
-		Eigen::Vector3d v_axis;       // brief The axis corresponding to the v-coordinates of the local plane of the query point. 
-		Eigen::VectorXd c_vec;        // brief The polynomial coefficients Example: z = c_vec[0] + c_vec[1]*v + c_vec[2]*v^2 + c_vec[3]*u + c_vec[4]*u*v + c_vec[5]*u^2 
-		int num_neighbors;            // brief The number of neighbors used to create the mls surface. 
-		float curvature;              // brief The curvature at the query point. 
-		int order;                    // brief The order of the polynomial. If order > 1 then use polynomial fit 
-		bool valid;                   // brief If True, the mls results data is valid, otherwise False. 
+		Eigen::Vector3d queryPoint;		// brief The query point about which the mls surface was generated 
+		Eigen::Vector3d mean;			// brief The mean point of all the neighbors. 
+		Eigen::Vector3d planeNormal;	// brief The normal of the local plane of the query point. 
+		Eigen::Vector3d uAxis;			// brief The axis corresponding to the u-coordinates of the local plane of the query point. 
+		Eigen::Vector3d vAxis;			// brief The axis corresponding to the v-coordinates of the local plane of the query point. 
+		Eigen::VectorXd cAxis;			// brief The polynomial coefficients Example: z = cAxis[0] + cAxis[1]*v + cAxis[2]*v^2 + cAxis[3]*u + cAxis[4]*u*v + cAxis[5]*u^2 
+		int numNeighbors;				// brief The number of neighbors used to create the mls surface. 
+		float curvature;				// brief The curvature at the query point. 
+		int order;						// brief The order of the polynomial. If order > 1 then use polynomial fit 
+		bool valid;						// brief If True, the mls results data is valid, otherwise False. 
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
 	private:
 		// brief The default weight function used when fitting a polynomial surface
-		inline double computeMLSWeight(const double sq_dist, const double sq_mls_radius) { return (exp(-sq_dist / sq_mls_radius)); }
+		inline double computeMLSWeight(const double sqrDist, const double sqrRadius) { return (exp(-sqrDist / sqrRadius)); }
 	};
 
 	// brief A minimalistic implementation of a voxel grid, necessary for the point cloud upsampling
@@ -306,7 +306,7 @@ namespace RecRoom
 			return (search_method_(index, search_radius_, indices, sqr_distances));
 		}
 
-		void computeMLSPointNormal(int index, const std::vector<int> &nn_indices, Pc<OutPointN>& projected_points, pcl::PointIndices &corresponding_input_indices, MLSResult &mls_result) const;
+		void computeMLSPointNormal(int index, const std::vector<int> &nnIndices, Pc<OutPointN>& projected_points, pcl::PointIndices &corresponding_input_indices, MLSResult &mls_result) const;
 
 		inline void addProjectedPointNormal(int index, const Eigen::Vector3d &point, const Eigen::Vector3d &normal, double curvature, 
 			Pc<OutPointN>& projected_points, pcl::PointIndices &corresponding_input_indices) const

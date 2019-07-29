@@ -8,81 +8,366 @@
 
 namespace RecRoom
 {
-	struct CloudPointIndexIdx
+	template <class PointType, class CenterType>
+	inline bool VoxelGrid<PointType, CenterType>::GetVoxelGridIndex(const PointType& p, VoxelGridIndex& voxelGridIndex) const
 	{
-		std::size_t idx;
-		std::size_t idy;
-		std::size_t idz;
-		int cloudPointIndex;
-
-		CloudPointIndexIdx(std::size_t idx, std::size_t idy, std::size_t idz, int cloudPointIndex)
-			: idx(idx), idy(idy), idz(idz), cloudPointIndex(cloudPointIndex) {}
-		bool operator < (const CloudPointIndexIdx& p) const
+		if (pcl_isfinite(p.x) &&
+			pcl_isfinite(p.y) &&
+			pcl_isfinite(p.z))
 		{
-			if (idx < p.idx)
+			if ((p.x >= minAABB.x()) &&
+				(p.y >= minAABB.y()) &&
+				(p.z >= minAABB.z()) &&
+				(p.x < maxAABB.x()) &&
+				(p.y < maxAABB.y()) &&
+				(p.z < maxAABB.z()))
+			{
+				voxelGridIndex.idx = static_cast<std::size_t> (std::floor((p.x - minAABB.x()) * invLeafSize[0]));
+				voxelGridIndex.idy = static_cast<std::size_t> (std::floor((p.y - minAABB.y()) * invLeafSize[1]));
+				voxelGridIndex.idz = static_cast<std::size_t> (std::floor((p.z - minAABB.z()) * invLeafSize[2]));
 				return true;
-			else if (idx > p.idx)
-				return false;
+			}
+		}
+		return false;
+	}
+
+	template <class PointType, class CenterType>
+	inline void VoxelGrid<PointType, CenterType>::AddPoint(const PointType& p)
+	{
+		VoxelGridIndex pID;
+		if (GetVoxelGridIndex(p, pID))
+		{
+			Leaves::iterator it = leaves->find(pID);
+			if (it != leaves->end())
+			{
+				UpdateLeafAddPoint(it->second, p);
+			}
 			else
 			{
-				if (idy < p.idy)
-					return true;
-				else if (idy > p.idy)
-					return false;
-				else
+				Leaf toInsert();
+				InitLeaf(toInsert);
+				UpdateLeafAddPoint(toInsert, p);
+				leaves[pID] = toInsert;
+			}
+		}
+	}
+
+	template <class PointType, class CenterType>
+	inline void VoxelGrid<PointType, CenterType>::DeletePoint(const PointType& p)
+	{
+		VoxelGridIndex pID;
+		if (GetVoxelGridIndex(p, pID))
+		{
+			Leaves::iterator it = leaves->find(pID);
+			if (it != leaves->end())
+			{
+				UpdateLeafDeletePoint(it->second, p);
+				if (it->second.size == 0)
 				{
-					if (idz < p.idz)
-						return true;
-					else
-						return false;
+					leaves->erase(it);
 				}
 			}
 		}
+	}
 
-		bool operator == (const CloudPointIndexIdx& p) const
+	template <class PointType, class CenterType>
+	inline void VoxelGrid<PointType, CenterType>::AddPointCloud(const Pc<PointType>& pc)
+	{
+		for (Pc<PointType>::iterator it = pc.begin(); it != pc.end(); ++it)
+			AddPoint(*it);
+	}
+
+	template <class PointType, class CenterType>
+	inline void VoxelGrid<PointType, CenterType>::DeletePointCloud(const Pc<PointType>& pc)
+	{
+		for (Pc<PointType>::iterator it = pc.begin(); it != pc.end(); ++it)
+			DeletePoint(*it);
+	}
+
+	template <class PointType>
+	inline void BinaryVoxelGrid<PointType>::AddPoint(const VoxelGridIndex& pID)
+	{
+		Leaves::iterator it = leaves->find(pID);
+		if (it != leaves->end())
 		{
-			return (idx == p.idx) && (idy == p.idy) && (idz == p.idz);
+			it->second.size += 1;
+		}
+		else
+		{
+			Leaf toInsert();
+			InitLeaf(toInsert);
+			toInsert.size += 1;
+			leaves[pID] = toInsert;
+		}
+	}
+
+	template <class PointType>
+	inline void BinaryVoxelGrid<PointType>::DeletePoint(const VoxelGridIndex& pID)
+	{
+		Leaves::iterator it = leaves->find(pID);
+		if (it != leaves->end())
+		{
+			if (it->second.size == 0)
+			{
+				THROW_EXCEPTION("This should not be happened.");
+			}
+
+			it->second.size -= 1;
+
+			if (it->second.size == 0)
+			{
+				leaves->erase(it);
+			}
+		}
+	}
+
+	template <class PointType>
+	void BinaryVoxelGrid<PointType>::Dilation(std::size_t kernelSize, std::size_t iteration)
+	{
+		if ((kernelSize % 2) != 0)
+			THROW_EXCEPTION("kernelSize must odd");
+		std::size_t extSize = kernelSize / 2;
+
+		if (maxIndexX < extSize)
+			THROW_EXCEPTION("extSize is not valid");
+		if (maxIndexY < extSize)
+			THROW_EXCEPTION("extSize is not valid");
+		if (maxIndexZ < extSize)
+			THROW_EXCEPTION("extSize is not valid");
+
+		for (std::size_t itr = 0; itr < iteration; ++itr)
+		{
+			for (Leaves::const_iterator it = leaves->begin(); it != leaves->end(); ++it)
+			{
+				// Iterator window
+				for (std::size_t siftX = 1; (siftX <= extSize) && (it->first.idx + siftX <= maxIndexX); ++siftX)
+				{
+					for (std::size_t siftY = 1; (siftY <= extSize) && (it->first.idy + siftY <= maxIndexY); ++siftY)
+					{
+						// + + +
+						for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz + siftZ <= maxIndexZ); ++siftZ)
+							AddPoint(VoxelGridIndex(
+								it->first.idx + siftX,
+								it->first.idy + siftY,
+								it->first.idz + siftZ));
+
+						// + + -
+						for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz >= siftZ); ++siftZ)
+							AddPoint(VoxelGridIndex(
+								it->first.idx + siftX,
+								it->first.idy + siftY,
+								it->first.idz - siftZ));
+					}
+					for (std::size_t siftY = 1; (siftY <= extSize) && (it->first.idy >= siftY); ++siftY)
+					{
+						// + - +
+						for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz + siftZ <= maxIndexZ); ++siftZ)
+							AddPoint(VoxelGridIndex(
+								it->first.idx + siftX,
+								it->first.idy - siftY,
+								it->first.idz + siftZ));
+
+						// + - -
+						for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz >= siftZ); ++siftZ)
+							AddPoint(VoxelGridIndex(
+								it->first.idx + siftX,
+								it->first.idy - siftY,
+								it->first.idz - siftZ));
+					}
+				}
+				for (std::size_t siftX = 1; (siftX <= extSize) && (it->first.idx >= siftX); ++siftX)
+				{
+					for (std::size_t siftY = 1; (siftY <= extSize) && (it->first.idy + siftY <= maxIndexY); ++siftY)
+					{
+						// - + +
+						for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz + siftZ <= maxIndexZ); ++siftZ)
+							AddPoint(VoxelGridIndex(
+								it->first.idx - siftX,
+								it->first.idy + siftY,
+								it->first.idz + siftZ));
+
+						// - + -
+						for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz >= siftZ); ++siftZ)
+							AddPoint(VoxelGridIndex(
+								it->first.idx - siftX,
+								it->first.idy + siftY,
+								it->first.idz - siftZ));
+					}
+					for (std::size_t siftY = 1; (siftY <= extSize) && (it->first.idy >= siftY); ++siftY)
+					{
+						// - - +
+						for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz + siftZ <= maxIndexZ); ++siftZ)
+							AddPoint(VoxelGridIndex(
+								it->first.idx - siftX,
+								it->first.idy - siftY,
+								it->first.idz + siftZ));
+
+						// - - -
+						for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz >= siftZ); ++siftZ)
+							AddPoint(VoxelGridIndex(
+								it->first.idx - siftX,
+								it->first.idy - siftY,
+								it->first.idz - siftZ));
+					}
+				}
+			}
+		}
+	}
+
+	template <class PointType>
+	void BinaryVoxelGrid<PointType>::Erosion(std::size_t kernelSize, std::size_t iteration)
+	{
+		if ((kernelSize % 2) != 0)
+			THROW_EXCEPTION("kernelSize must odd");
+		std::size_t extSize = kernelSize / 2;
+
+		if (maxIndexX < extSize)
+			THROW_EXCEPTION("extSize is not valid");
+		if (maxIndexY < extSize)
+			THROW_EXCEPTION("extSize is not valid");
+		if (maxIndexZ < extSize)
+			THROW_EXCEPTION("extSize is not valid");
+
+		for (std::size_t itr = 0; itr < iteration; ++itr)
+		{
+			for (Leaves::const_iterator it = leaves->begin(); it != leaves->end(); ++it)
+			{
+				// Iterator window
+				for (std::size_t siftX = 1; (siftX <= extSize) && (it->first.idx + siftX <= maxIndexX); ++siftX)
+				{
+					for (std::size_t siftY = 1; (siftY <= extSize) && (it->first.idy + siftY <= maxIndexY); ++siftY)
+					{
+						// + + +
+						for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz + siftZ <= maxIndexZ); ++siftZ)
+							DeletePoint(VoxelGridIndex(
+								it->first.idx + siftX,
+								it->first.idy + siftY,
+								it->first.idz + siftZ));
+
+						// + + -
+						for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz >= siftZ); ++siftZ)
+							DeletePoint(VoxelGridIndex(
+								it->first.idx + siftX,
+								it->first.idy + siftY,
+								it->first.idz - siftZ));
+					}
+					for (std::size_t siftY = 1; (siftY <= extSize) && (it->first.idy >= siftY); ++siftY)
+					{
+						// + - +
+						for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz + siftZ <= maxIndexZ); ++siftZ)
+							DeletePoint(VoxelGridIndex(
+								it->first.idx + siftX,
+								it->first.idy - siftY,
+								it->first.idz + siftZ));
+
+						// + - -
+						for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz >= siftZ); ++siftZ)
+							DeletePoint(VoxelGridIndex(
+								it->first.idx + siftX,
+								it->first.idy - siftY,
+								it->first.idz - siftZ));
+					}
+				}
+				for (std::size_t siftX = 1; (siftX <= extSize) && (it->first.idx >= siftX); ++siftX)
+				{
+					for (std::size_t siftY = 1; (siftY <= extSize) && (it->first.idy + siftY <= maxIndexY); ++siftY)
+					{
+						// - + +
+						for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz + siftZ <= maxIndexZ); ++siftZ)
+							DeletePoint(VoxelGridIndex(
+								it->first.idx - siftX,
+								it->first.idy + siftY,
+								it->first.idz + siftZ));
+
+						// - + -
+						for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz >= siftZ); ++siftZ)
+							DeletePoint(VoxelGridIndex(
+								it->first.idx - siftX,
+								it->first.idy + siftY,
+								it->first.idz - siftZ));
+					}
+					for (std::size_t siftY = 1; (siftY <= extSize) && (it->first.idy >= siftY); ++siftY)
+					{
+						// - - +
+						for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz + siftZ <= maxIndexZ); ++siftZ)
+							DeletePoint(VoxelGridIndex(
+								it->first.idx - siftX,
+								it->first.idy - siftY,
+								it->first.idz + siftZ));
+
+						// - - -
+						for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz >= siftZ); ++siftZ)
+							DeletePoint(VoxelGridIndex(
+								it->first.idx - siftX,
+								it->first.idy - siftY,
+								it->first.idz - siftZ));
+					}
+				}
+			}
+		}
+	}
+
+	template <class PointType>
+	void BinaryVoxelGrid<PointType>::Opening(std::size_t kernelSize, std::size_t iteration)
+	{
+		for (std::size_t itr = 0; itr < iteration; ++itr)
+		{
+			Erosion(kernelSize);
+			Dilation(kernelSize);
+		}
+	}
+
+	template <class PointType>
+	void BinaryVoxelGrid<PointType>::Closing(std::size_t kernelSize, std::size_t iteration)
+	{
+		for (std::size_t itr = 0; itr < iteration; ++itr)
+		{
+			Dilation(kernelSize);
+			Erosion(kernelSize);
+		}
+	}
+
+	struct IndexPair
+	{
+		VoxelGridIndex voxelGridIndex;
+		int cloudPointIndex;
+
+		IndexPair(const VoxelGridIndex& voxelGridIndex, int cloudPointIndex)
+			: voxelGridIndex(voxelGridIndex), cloudPointIndex(cloudPointIndex) {}
+
+		inline bool operator < (const IndexPair& p) const
+		{
+			return voxelGridIndex < p.voxelGridIndex;
+		}
+
+		inline bool operator == (const IndexPair& p) const
+		{
+			return voxelGridIndex == p.voxelGridIndex;
 		}
 	};
 
-	template <typename PointT>
-	void VoxelGridFilter<PointT>::applyFilter(PointCloud& output)
+	template <typename PointType>
+	void VoxelGridFilter<PointType>::applyFilter(PointCloud& output)
 	{
-		std::vector<CloudPointIndexIdx> indices;
-		indices.reserve(indices_->size());
+		std::vector<IndexPair> indexPairs;
+		indexPairs.reserve(indices_->size());
 
 		for (std::vector<int>::const_iterator it = indices_->begin(); it != indices_->end(); ++it)
 		{
-			const PointT& p = (*input_)[(*it)];
-
-			if (pcl_isfinite(p.x) &&
-				pcl_isfinite(p.y) &&
-				pcl_isfinite(p.z))
-			{
-				if ((p.x >= minAABB.x()) &&
-					(p.y >= minAABB.y()) &&
-					(p.z >= minAABB.z()) &&
-					(p.x < maxAABB.x()) &&
-					(p.y < maxAABB.y()) &&
-					(p.z < maxAABB.z()))
-				{
-					std::size_t idx = static_cast<std::size_t> (std::floor((p.x - minAABB.x()) * invLeafSize[0]));
-					std::size_t idy = static_cast<std::size_t> (std::floor((p.y - minAABB.y()) * invLeafSize[1]));
-					std::size_t idz = static_cast<std::size_t> (std::floor((p.z - minAABB.z()) * invLeafSize[2]));
-					indices.push_back(CloudPointIndexIdx(idx, idy, idz, *it));
-				}
-			}
+			VoxelGridIndex voxelGridIndex;
+			if (GetVoxelGridIndex((*input_)[(*it)], voxelGridIndex))
+				indexPairs.push_back(IndexPair(voxelGridIndex, *it));
 		}
-		std::sort(indices.begin(), indices.end(), std::less<CloudPointIndexIdx>());
+		std::sort(indexPairs.begin(), indexPairs.end());
 
 		std::size_t total = 0;
 		std::size_t index = 0;
 		std::vector<std::pair<std::size_t, std::size_t>> firstAndLastIndices;
-		firstAndLastIndices.reserve(indices.size());
-		while (index < indices.size())
+		firstAndLastIndices.reserve(indexPairs.size());
+		while (index < indexPairs.size())
 		{
 			std::size_t i = index + 1;
-			while ((i < indices.size()) && (indices[i] == indices[index]))
+			while ((i < indexPairs.size()) && (indexPairs[i] == indexPairs[index]))
 				++i;
 			if ((i - index) >= minPointsPerVoxel)
 			{
@@ -97,17 +382,17 @@ namespace RecRoom
 		index = 0;
 		for (std::vector<std::pair<std::size_t, std::size_t>>::const_iterator it = firstAndLastIndices.begin(); it != firstAndLastIndices.end(); ++it)
 		{
-			pcl::CentroidPoint<PointT> centroid;
+			pcl::CentroidPoint<PointType> centroid;
 			for (std::size_t li = it->first; li < it->second; ++li)
-				centroid.add(input_->points[indices[li].cloudPointIndex]);
+				centroid.add(input_->points[indexPairs[li].cloudPointIndex]);
 			centroid.get(output.points[index]);
 
 			++index;
 		}
 	}
 
-	template <typename PointT>
-	void VNNGenerator<PointT>::Generate(std::vector<uint32_t>& cache, PcVNN& output)
+	template <typename PointType>
+	void VNNGenerator<PointType>::Generate(std::vector<uint32_t>& cache, PcVNN& output)
 	{
 		if (!initCompute())
 		{
@@ -115,41 +400,25 @@ namespace RecRoom
 			return;
 		}
 
-		std::vector<CloudPointIndexIdx> indices;
-		indices.reserve(indices_->size());
+		std::vector<IndexPair> indexPairs;
+		indexPairs.reserve(indices_->size());
 
 		for (std::vector<int>::const_iterator it = indices_->begin(); it != indices_->end(); ++it)
 		{
-			const PointT& p = (*input_)[(*it)];
-
-			if (pcl_isfinite(p.x) &&
-				pcl_isfinite(p.y) &&
-				pcl_isfinite(p.z))
-			{
-				if ((p.x >= minAABB.x()) &&
-					(p.y >= minAABB.y()) &&
-					(p.z >= minAABB.z()) &&
-					(p.x < maxAABB.x()) &&
-					(p.y < maxAABB.y()) &&
-					(p.z < maxAABB.z()))
-				{
-					std::size_t idx = static_cast<std::size_t> (std::floor((p.x - minAABB.x()) * invLeafSize[0]));
-					std::size_t idy = static_cast<std::size_t> (std::floor((p.y - minAABB.y()) * invLeafSize[1]));
-					std::size_t idz = static_cast<std::size_t> (std::floor((p.z - minAABB.z()) * invLeafSize[2]));
-					indices.push_back(CloudPointIndexIdx(idx, idy, idz, *it));
-				}
-			}
+			VoxelGridIndex voxelGridIndex;
+			if (GetVoxelGridIndex((*input_)[(*it)], voxelGridIndex))
+				indexPairs.push_back(IndexPair(voxelGridIndex, *it));
 		}
-		std::sort(indices.begin(), indices.end(), std::less<CloudPointIndexIdx>());
+		std::sort(indexPairs.begin(), indexPairs.end());
 
 		std::size_t total = 0;
 		std::size_t index = 0;
 		std::vector<std::pair<std::size_t, std::size_t>> firstAndLastIndices;
-		firstAndLastIndices.reserve(indices.size());
-		while (index < indices.size())
+		firstAndLastIndices.reserve(indexPairs.size());
+		while (index < indexPairs.size())
 		{
 			std::size_t i = index + 1;
-			while ((i < indices.size()) && (indices[i] == indices[index]))
+			while ((i < indexPairs.size()) && (indexPairs[i] == indexPairs[index]))
 				++i;
 			if ((i - index) >= minPointsPerVoxel)
 			{
@@ -163,7 +432,7 @@ namespace RecRoom
 
 		//
 		index = 0;
-		cache.reserve(indices.size());
+		cache.reserve(indexPairs.size());
 		for (std::vector<std::pair<std::size_t, std::size_t>>::const_iterator it = firstAndLastIndices.begin(); it != firstAndLastIndices.end(); ++it)
 		{
 			float cx = 0.0f;
@@ -172,8 +441,8 @@ namespace RecRoom
 			std::size_t startPos = cache.size();
 			for (std::size_t li = it->first; li < it->second; ++li)
 			{
-				int id = indices[li].cloudPointIndex;
-				const PointT& pt = input_->points[id];
+				int id = indexPairs[li].cloudPointIndex;
+				const PointType& pt = input_->points[id];
 				cx += pt.x;
 				cy += pt.y;
 				cz += pt.z;
@@ -195,9 +464,9 @@ namespace RecRoom
 		}
 	}
 
-	template <typename PointT>
-	int VNN<PointT>::nearestKSearch(
-		const PointT& point, int k,
+	template <typename PointType>
+	int VNN<PointType>::nearestKSearch(
+		const PointType& point, int k,
 		std::vector<int>& nnIndices,
 		std::vector<float>& nnSqrDist) const
 	{
@@ -205,9 +474,9 @@ namespace RecRoom
 		return 0;
 	}
 
-	template <typename PointT>
-	int VNN<PointT>::radiusSearch(
-		const PointT& point, double radius,
+	template <typename PointType>
+	int VNN<PointType>::radiusSearch(
+		const PointType& point, double radius,
 		std::vector<int>& nnIndices,
 		std::vector<float>& nnSqrDist,
 		unsigned int maxNN = 0) const
@@ -247,7 +516,7 @@ namespace RecRoom
 					for (int j = 0; j < pVNN.k; ++j)
 					{
 						int pi = pVNN.indices[j];
-						const PointT& pt = (*input_)[pi];
+						const PointType& pt = (*input_)[pi];
 						nnIndices.push_back(pi);
 
 						dx = pt.x - point.x;
@@ -261,7 +530,7 @@ namespace RecRoom
 					for (int j = 0; j < pVNN.k; ++j)
 					{
 						int pi = pVNN.indices[j];
-						const PointT& pt = (*input_)[pi];
+						const PointType& pt = (*input_)[pi];
 
 						dx = pt.x - point.x;
 						dy = pt.y - point.y;

@@ -6,18 +6,18 @@ namespace RecRoom
 {
 	template <class PointT>
 	void MLSResult::computeMLSSurface(
-		const pcl::PointCloud<PointT> &cloud, int index, const std::vector<int> &nn_indices,
-		double search_radius, int polynomial_order, boost::function<double(const double)> weight_func)
+		const pcl::PointCloud<PointT> &cloud, int index, const std::vector<int> &nnIndices,
+		double searchRadius, int polynomialOrder, boost::function<double(const double)> WeightFunc)
 	{
 		// Compute the plane coefficients
 		EIGEN_ALIGN16 Eigen::Matrix3d covariance_matrix;
 		Eigen::Vector4d xyz_centroid;
 
 		// Estimate the XYZ centroid
-		pcl::compute3DCentroid(cloud, nn_indices, xyz_centroid);
+		pcl::compute3DCentroid(cloud, nnIndices, xyz_centroid);
 
 		// Compute the 3x3 covariance matrix
-		pcl::computeCovarianceMatrix(cloud, nn_indices, xyz_centroid, covariance_matrix);
+		pcl::computeCovarianceMatrix(cloud, nnIndices, xyz_centroid, covariance_matrix);
 		EIGEN_ALIGN16 Eigen::Vector3d::Scalar eigen_value;
 		EIGEN_ALIGN16 Eigen::Vector3d eigen_vector;
 		Eigen::Vector4d model_coefficients(0, 0, 0, 0);
@@ -27,9 +27,9 @@ namespace RecRoom
 
 		// Projected query point
 		valid = true;
-		query_point = cloud.points[index].getVector3fMap().template cast<double>();
-		double distance = query_point.dot(model_coefficients.head<3>()) + model_coefficients[3];
-		mean = query_point - distance * model_coefficients.head<3>();
+		queryPoint = cloud.points[index].getVector3fMap().template cast<double>();
+		double distance = queryPoint.dot(model_coefficients.head<3>()) + model_coefficients[3];
+		mean = queryPoint - distance * model_coefficients.head<3>();
 
 		curvature = covariance_matrix.trace();
 		// Compute the curvature surface change
@@ -37,57 +37,57 @@ namespace RecRoom
 			curvature = std::abs(eigen_value / curvature);
 
 		// Get a copy of the plane normal easy access
-		plane_normal = model_coefficients.head<3>();
+		planeNormal = model_coefficients.head<3>();
 
 		// Local coordinate system (Darboux frame)
-		v_axis = plane_normal.unitOrthogonal();
-		u_axis = plane_normal.cross(v_axis);
+		vAxis = planeNormal.unitOrthogonal();
+		uAxis = planeNormal.cross(vAxis);
 
 		// Perform polynomial fit to update point and normal
 		////////////////////////////////////////////////////
-		num_neighbors = static_cast<int> (nn_indices.size());
-		order = polynomial_order;
+		numNeighbors = static_cast<int> (nnIndices.size());
+		order = polynomialOrder;
 		if (order > 1)
 		{
 			int nr_coeff = (order + 1) * (order + 2) / 2;
 
-			if (num_neighbors >= nr_coeff)
+			if (numNeighbors >= nr_coeff)
 			{
-				// Note: The max_sq_radius parameter is only used if weight_func was not defined
+				// Note: The max_sq_radius parameter is only used if WeightFunc was not defined
 				double max_sq_radius = 1;
-				if (weight_func == 0)
+				if (WeightFunc == 0)
 				{
-					max_sq_radius = search_radius * search_radius;
-					weight_func = boost::bind(&pcl::MLSResult::computeMLSWeight, this, _1, max_sq_radius);
+					max_sq_radius = searchRadius * searchRadius;
+					WeightFunc = boost::bind(&pcl::MLSResult::computeMLSWeight, this, _1, max_sq_radius);
 				}
 
 				// Allocate matrices and vectors to hold the data used for the polynomial fit
-				Eigen::VectorXd weight_vec(num_neighbors);
-				Eigen::MatrixXd P(nr_coeff, num_neighbors);
-				Eigen::VectorXd f_vec(num_neighbors);
-				Eigen::MatrixXd P_weight; // size will be (nr_coeff_, nn_indices.size ());
+				Eigen::VectorXd weight_vec(numNeighbors);
+				Eigen::MatrixXd P(nr_coeff, numNeighbors);
+				Eigen::VectorXd f_vec(numNeighbors);
+				Eigen::MatrixXd P_weight; // size will be (nr_coeff_, nnIndices.size ());
 				Eigen::MatrixXd P_weight_Pt(nr_coeff, nr_coeff);
 
 				// Update neighborhood, since point was projected, and computing relative
 				// positions. Note updating only distances for the weights for speed
-				std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d> > de_meaned(num_neighbors);
-				for (size_t ni = 0; ni < (size_t)num_neighbors; ++ni)
+				std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d> > de_meaned(numNeighbors);
+				for (size_t ni = 0; ni < (size_t)numNeighbors; ++ni)
 				{
-					de_meaned[ni][0] = cloud.points[nn_indices[ni]].x - mean[0];
-					de_meaned[ni][1] = cloud.points[nn_indices[ni]].y - mean[1];
-					de_meaned[ni][2] = cloud.points[nn_indices[ni]].z - mean[2];
-					weight_vec(ni) = weight_func(de_meaned[ni].dot(de_meaned[ni]));
+					de_meaned[ni][0] = cloud.points[nnIndices[ni]].x - mean[0];
+					de_meaned[ni][1] = cloud.points[nnIndices[ni]].y - mean[1];
+					de_meaned[ni][2] = cloud.points[nnIndices[ni]].z - mean[2];
+					weight_vec(ni) = WeightFunc(de_meaned[ni].dot(de_meaned[ni]));
 				}
 
 				// Go through neighbors, transform them in the local coordinate system,
 				// save height and the evaluation of the polynome's terms
 				double u_coord, v_coord, u_pow, v_pow;
-				for (size_t ni = 0; ni < (size_t)num_neighbors; ++ni)
+				for (size_t ni = 0; ni < (size_t)numNeighbors; ++ni)
 				{
 					// Transforming coordinates
-					u_coord = de_meaned[ni].dot(u_axis);
-					v_coord = de_meaned[ni].dot(v_axis);
-					f_vec(ni) = de_meaned[ni].dot(plane_normal);
+					u_coord = de_meaned[ni].dot(uAxis);
+					v_coord = de_meaned[ni].dot(vAxis);
+					f_vec(ni) = de_meaned[ni].dot(planeNormal);
 
 					// Compute the polynomial's terms at the current point
 					int j = 0;
@@ -107,8 +107,8 @@ namespace RecRoom
 				// Computing coefficients
 				P_weight = P * weight_vec.asDiagonal();
 				P_weight_Pt = P_weight * P.transpose();
-				c_vec = P_weight * f_vec;
-				P_weight_Pt.llt().solveInPlace(c_vec);
+				cAxis = P_weight * f_vec;
+				P_weight_Pt.llt().solveInPlace(cAxis);
 			}
 		}
 	}
@@ -241,9 +241,9 @@ namespace RecRoom
 	}
 
 	template <typename InPointN, typename OutPointN>
-	void MovingLeastSquares<InPointN, OutPointN>::computeMLSPointNormal(int index, const std::vector<int> &nn_indices, Pc<OutPointN>& projected_points, pcl::PointIndices &corresponding_input_indices, MLSResult &mls_result) const
+	void MovingLeastSquares<InPointN, OutPointN>::computeMLSPointNormal(int index, const std::vector<int> &nnIndices, Pc<OutPointN>& projected_points, pcl::PointIndices &corresponding_input_indices, MLSResult &mls_result) const
 	{
-		mls_result.computeMLSSurface<InPointN>(*input_, index, nn_indices, search_radius_, order_);
+		mls_result.computeMLSSurface<InPointN>(*input_, index, nnIndices, search_radius_, order_);
 
 		switch (upsample_method_)
 		{
@@ -270,7 +270,7 @@ namespace RecRoom
 		case (MLSUpsamplingMethod::RANDOM_UNIFORM_DENSITY):
 		{
 			// Compute the local point density and add more samples if necessary
-			int num_points_to_add = static_cast<int> (floor(desired_num_points_in_radius_ / 2.0 / static_cast<double> (nn_indices.size())));
+			int num_points_to_add = static_cast<int> (floor(desired_num_points_in_radius_ / 2.0 / static_cast<double> (nnIndices.size())));
 
 			// Just add the query point, because the density is good
 			if (num_points_to_add <= 0)
@@ -292,7 +292,7 @@ namespace RecRoom
 						continue;
 
 					MLSResult::MLSProjectionResults proj;
-					if (order_ > 1 && mls_result.num_neighbors >= 5 * nr_coeff_)
+					if (order_ > 1 && mls_result.numNeighbors >= 5 * nr_coeff_)
 						proj = mls_result.projectPointSimpleToPolynomialSurface(u, v);
 					else
 						proj = mls_result.projectPointToMLSPlane(u, v);
@@ -327,14 +327,14 @@ namespace RecRoom
 		{
 			// Allocate enough space to hold the results of nearest neighbor searches
 			// \note resize is irrelevant for a radiusSearch ().
-			std::vector<int> nn_indices;
+			std::vector<int> nnIndices;
 			std::vector<float> nn_sqr_dists;
 
 			// Get the initial estimates of point positions and their neighborhoods
-			if (searchForNeighbors((*indices_)[cp], nn_indices, nn_sqr_dists))
+			if (searchForNeighbors((*indices_)[cp], nnIndices, nn_sqr_dists))
 			{
 				// Check the number of nearest neighbors for normal estimation (and later for polynomial fit as well)
-				if (nn_indices.size() >= 3)
+				if (nnIndices.size() >= 3)
 				{
 					// This thread's ID (range 0 to threads-1)
 #ifdef _OPENMP
@@ -353,13 +353,13 @@ namespace RecRoom
 						mls_result_index = index; // otherwise we give it a dummy location.
 
 #ifdef _OPENMP
-					computeMLSPointNormal(index, nn_indices, projected_points[tn], corresponding_input_indices[tn], mls_results_[mls_result_index]);
+					computeMLSPointNormal(index, nnIndices, projected_points[tn], corresponding_input_indices[tn], mls_results_[mls_result_index]);
 
 					// Copy all information from the input cloud to the output points (not doing any interpolation)
 					for (size_t pp = pp_size; pp < projected_points[tn].size(); ++pp)
 						copyMissingFields(input_->points[(*indices_)[cp]], projected_points[tn][pp]);
 #else
-					computeMLSPointNormal(index, nn_indices, projected_points, *corresponding_input_indices_, mls_results_[mls_result_index]);
+					computeMLSPointNormal(index, nnIndices, projected_points, *corresponding_input_indices_, mls_results_[mls_result_index]);
 
 					// Append projected points to output
 					output.insert(output.end(), projected_points.begin(), projected_points.end());
@@ -396,10 +396,10 @@ namespace RecRoom
 
 				// Get 3D position of point
 				//Eigen::Vector3f pos = distinct_cloud_->points[dp_i].getVector3fMap ();
-				std::vector<int> nn_indices;
+				std::vector<int> nnIndices;
 				std::vector<float> nn_dists;
-				tree_->nearestKSearch(distinct_cloud_->points[dp_i], 1, nn_indices, nn_dists);
-				int input_index = nn_indices.front();
+				tree_->nearestKSearch(distinct_cloud_->points[dp_i], 1, nnIndices, nn_dists);
+				int input_index = nnIndices.front();
 
 				// If the closest point did not have a valid MLS fitting result
 				// OR if it is too far away from the sampled point
@@ -433,10 +433,10 @@ namespace RecRoom
 				p.y = pos[1];
 				p.z = pos[2];
 
-				std::vector<int> nn_indices;
+				std::vector<int> nnIndices;
 				std::vector<float> nn_dists;
-				tree_->nearestKSearch(p, 1, nn_indices, nn_dists);
-				int input_index = nn_indices.front();
+				tree_->nearestKSearch(p, 1, nnIndices, nn_dists);
+				int input_index = nnIndices.front();
 
 				// If the closest point did not have a valid MLS fitting result
 				// OR if it is too far away from the sampled point

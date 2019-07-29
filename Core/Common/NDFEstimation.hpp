@@ -13,7 +13,8 @@ namespace RecRoom
 		samples.reserve(scanDataSet.size());
 		float meanIntensity = 0.0;
 		float sumWeight = 0.0;
-		std::map<uint32_t, int> temp;
+		std::vector<uint32_t> temp;
+		temp.reserve(scanDataSet.size());
 		for (std::vector<ScanData>::const_iterator it = scanDataSet.begin(); it != scanDataSet.end(); ++it)
 		{
 			const InPointType& hitPoint = cloud[it->index];
@@ -44,10 +45,11 @@ namespace RecRoom
 						hitBitangent.dot(hafway),
 						hitNormal.dot(hafway)),
 					intensity, weight));
-				temp[hitPoint.serialNumber] = 0;
+				temp.push_back(hitPoint.serialNumber);
 			}
 		}
-		if(temp.size() < minRequireNumData)
+		std::sort(temp.begin(), temp.end());
+		if(std::distance(temp.begin(), std::unique(temp.begin(), temp.end())) < minRequireNumData)
 			return false;
 
 		meanIntensity /= sumWeight;
