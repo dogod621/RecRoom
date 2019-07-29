@@ -14,6 +14,7 @@
 #include <map>
 #include <boost/function.hpp>
 
+#include "Common.h"
 #include "Point.h"
 #include "Random.h"
 
@@ -31,12 +32,12 @@ namespace RecRoom
 		MLSUpsamplingMethod_NONE,	// brief No upsampling will be done, only the input points will be projected to their own MLS surfaces.
 		DISTINCT_CLOUD,				// brief Project the points of the distinct cloud to the MLS surface. 
 		SAMPLE_LOCAL_PLANE,			// brief The local plane of each input point will be sampled in a circular fashion
-									// using the upsampling_radius_ and the upsampling_step_ parameters. 
+									// using the upsamplingRadius and the upsamplingStep parameters. 
 		RANDOM_UNIFORM_DENSITY,		// brief The local plane of each input point will be sampled using an uniform random
 									// distribution such that the density of points is constant throughout the
 									// cloud - given by the desired_num_points_in_radius_ parameter. 
 		VOXEL_GRID_DILATION			// brief The input cloud will be inserted into a voxel grid with voxels of
-									// size voxel_size_; this voxel grid will be dilated dilation_iteration_num_
+									// size voxelSize; this voxel grid will be dilated dilationIterationNum
 									// times and the resulting points will be projected to the MLS surface
 									// of the closest point in the input cloud; the result is a point cloud
 									// with filled holes and a constant point density. 
@@ -130,7 +131,7 @@ namespace RecRoom
 	};
 
 	template <class InPointN, class OutPointN>
-	class MovingLeastSquares : public pcl::CloudSurfaceProcessing<InPointN, OutPointN>
+	class MovingLeastSquares : public pcl::CloudSurfaceProcessing<InPointN, OutPointN>, public ThreadAble
 	{
 	public:
 		typedef boost::shared_ptr<MovingLeastSquares<InPointN, OutPointN> > Ptr;
@@ -142,121 +143,100 @@ namespace RecRoom
 		using pcl::PCLBase<InPointN>::initCompute;
 		using pcl::PCLBase<InPointN>::deinitCompute;
 
-		typedef boost::function<int(int, double, std::vector<int> &, std::vector<float> &)> SearchMethod;
-
 		MovingLeastSquares(
-			double search_radius_,
-			int order_ = 2,
-			MLSProjectionMethod projection_method_ = MLSProjectionMethod::SIMPLE,
-			MLSUpsamplingMethod upsample_method_ = MLSUpsamplingMethod::MLSUpsamplingMethod_NONE,
-			unsigned int threads_ = 1,
-			bool compute_normals_ = true ) 
+			double searchRadius,
+			int order = 2,
+			MLSProjectionMethod projectionMethod = MLSProjectionMethod::SIMPLE,
+			MLSUpsamplingMethod upsampleMethod = MLSUpsamplingMethod::MLSUpsamplingMethod_NONE,
+			bool computeNormals = true ) 
 			: 
 			pcl::CloudSurfaceProcessing<InPointN, OutPointN>(),
-			search_method_(),
-			tree_(),
+			ThreadAble(),
+			tree(),
 
 			// Parms
-			search_radius_(search_radius_),
-			order_(order_),
-			projection_method_(projection_method_),
-			upsample_method_(upsample_method_),
-			threads_(threads_),
-			compute_normals_(compute_normals_),
+			searchRadius(searchRadius),
+			order(order),
+			projectionMethod(projectionMethod),
+			upsampleMethod(upsampleMethod),
+			computeNormals(computeNormals),
 
 			// Options
-			upsampling_radius_(0.0),
-			upsampling_step_(0.0),
+			upsamplingRadius(0.0),
+			upsamplingStep(0.0),
 			desired_num_points_in_radius_(0),
-			cache_mls_results_(true),
-			mls_results_(),
-			voxel_size_(1.0),
-			dilation_iteration_num_(0),
+			cacheMLSResults(true),
+			mlsResults(),
+			voxelSize(1.0),
+			dilationIterationNum(0),
 
 			// Vars
-			distinct_cloud_(),
-			corresponding_input_indices_(),
+			distinctCloud_(),
+			correspondingInputIndices(),
 			rng_alg_(),
 			rng_uniform_distribution_()
 		{
-			nr_coeff_ = (order_ + 1) * (order_ + 2) / 2;
-			sqr_gauss_param_ = search_radius_ * search_radius_;
+			numCoeff = (order + 1) * (order + 2) / 2;
+			sqrGaussParam = searchRadius * searchRadius;
 
-			if (search_radius_ <= 0 || sqr_gauss_param_ <= 0)
+			if (searchRadius <= 0 || sqrGaussParam <= 0)
 			{
 				THROW_EXCEPTION("Invalid search radius or Gaussian parameter");
 				return;
 			}
 		};
 
-		inline void setSearchMethod(const PTR(Acc<InPointN>) &tree)
-		{
-			tree_ = tree;
-			// Declare the search locator definition
-			int (Acc<InPointN>::*radiusSearch)(int index, double radius, std::vector<int> &k_indices, std::vector<float> &k_sqr_distances, unsigned int max_nn) const = &KdTree::radiusSearch;
-			search_method_ = boost::bind(radiusSearch, boost::ref(tree_), _1, _2, _3, _4, 0);
-		}
-
 		void process(Pc<OutPointN>& output);
 
 		// brief Get the set of indices with each point in output having the corresponding point in input 
-		inline PointIndicesPtr getCorrespondingIndices() const { return (corresponding_input_indices_); }
+		inline PointIndicesPtr getCorrespondingIndices() const { return (correspondingInputIndices); }
 
 	public:
-		inline void setDistinctCloud(CONST_PTR(Pc<InPointN>) distinct_cloud) { distinct_cloud_ = distinct_cloud; }
-		inline CONST_PTR(Pc<InPointN>) getDistinctCloud() const { return (distinct_cloud_); }
+		inline void setDistinctCloud(CONST_PTR(Pc<InPointN>) distinct_cloud) { distinctCloud_ = distinct_cloud; }
+		inline CONST_PTR(Pc<InPointN>) getDistinctCloud() const { return (distinctCloud_); }
 
-		inline void setUpsamplingRadius(double radius) { upsampling_radius_ = radius; }
-		inline double getUpsamplingRadius() const { return (upsampling_radius_); }
+		inline void setUpsamplingRadius(double radius) { upsamplingRadius = radius; }
+		inline double getUpsamplingRadius() const { return (upsamplingRadius); }
 
-		inline void setUpsamplingStepSize(double step_size) { upsampling_step_ = step_size; }
-		inline double getUpsamplingStepSize() const { return (upsampling_step_); }
+		inline void setUpsamplingStepSize(double step_size) { upsamplingStep = step_size; }
+		inline double getUpsamplingStepSize() const { return (upsamplingStep); }
 
 		inline void setPointDensity(int desired_num_points_in_radius) { desired_num_points_in_radius_ = desired_num_points_in_radius; }
 		inline int getPointDensity() const { return (desired_num_points_in_radius_); }
 
-		inline void setDilationVoxelSize(float voxel_size) { voxel_size_ = voxel_size; }
-		inline float getDilationVoxelSize() const { return (voxel_size_); }
+		inline void setDilationVoxelSize(float voxel_size) { voxelSize = voxel_size; }
+		inline float getDilationVoxelSize() const { return (voxelSize); }
 
-		inline void setDilationIterations(int iterations) { dilation_iteration_num_ = iterations; }
-		inline int getDilationIterations() const { return (dilation_iteration_num_); }
+		inline void setDilationIterations(int iterations) { dilationIterationNum = iterations; }
+		inline int getDilationIterations() const { return (dilationIterationNum); }
 
-		inline void setCacheMLSResults(bool cache_mls_results) { cache_mls_results_ = cache_mls_results; }
-		inline bool getCacheMLSResults() const { return (cache_mls_results_); }
+		inline void setCacheMLSResults(bool cache_mls_results) { cacheMLSResults = cache_mls_results; }
+		inline bool getCacheMLSResults() const { return (cacheMLSResults); }
 
-		inline const std::vector<MLSResult>& getMLSResults() const { return (mls_results_); }
-
-	protected:
-		unsigned int threads_; // brief The maximum number of threads the scheduler should use.
+		inline const std::vector<MLSResult>& getMLSResults() const { return (mlsResults); }
 
 	protected:
-		CONST_PTR(Pc<InPointN>) distinct_cloud_; // brief The distinct point cloud that will be projected to the MLS surface.
-		SearchMethod search_method_; // brief The search method template for indices.
-		PTR(Acc<InPointN>) tree_; // brief A pointer to the spatial search object.
-		int order_; // brief The order of the polynomial to be fit.
-		int nr_coeff_; // brief Number of coefficients, to be computed from the requested order.
-		double search_radius_; // brief The nearest neighbors search radius for each point.
-		double sqr_gauss_param_; // brief Parameter for distance based weighting of neighbors (search_radius_ * search_radius_ works fine)
-		bool compute_normals_; // brief Parameter that specifies whether the normals should be computed for the input cloud or not
-		MLSUpsamplingMethod upsample_method_; // brief Parameter that specifies the upsampling method to be used 
-		MLSProjectionMethod projection_method_; // brief Parameter that specifies the projection method to be used.
-		PointIndicesPtr corresponding_input_indices_; // brief Collects for each point in output the corrseponding point in the input.
+		CONST_PTR(Pc<InPointN>) distinctCloud_; // brief The distinct point cloud that will be projected to the MLS surface.
+		PTR(Acc<InPointN>) tree; // brief A pointer to the spatial search object.
+		int order; // brief The order of the polynomial to be fit.
+		int numCoeff; // brief Number of coefficients, to be computed from the requested order.
+		double searchRadius; // brief The nearest neighbors search radius for each point.
+		double sqrGaussParam; // brief Parameter for distance based weighting of neighbors (searchRadius * searchRadius works fine)
+		bool computeNormals; // brief Parameter that specifies whether the normals should be computed for the input cloud or not
+		MLSUpsamplingMethod upsampleMethod; // brief Parameter that specifies the upsampling method to be used 
+		MLSProjectionMethod projectionMethod; // brief Parameter that specifies the projection method to be used.
+		PointIndicesPtr correspondingInputIndices; // brief Collects for each point in output the corrseponding point in the input.
 
 	protected:
-		double upsampling_radius_; // brief Radius of the circle in the local point plane that will be sampled for SAMPLE_LOCAL_PLANE upsampling
-		double upsampling_step_; // brief Step size for the local plane sampling for SAMPLE_LOCAL_PLANE upsampling
+		double upsamplingRadius; // brief Radius of the circle in the local point plane that will be sampled for SAMPLE_LOCAL_PLANE upsampling
+		double upsamplingStep; // brief Step size for the local plane sampling for SAMPLE_LOCAL_PLANE upsampling
 		int desired_num_points_in_radius_; // brief Parameter that specifies the desired number of points within the search radius for RANDOM_UNIFORM_DENSITY upsampling
-		bool cache_mls_results_; // brief True if the mls results for the input cloud should be stored. note This is forced to true when using upsampling methods VOXEL_GRID_DILATION or DISTINCT_CLOUD.
-		std::vector<MLSResult> mls_results_; // brief Stores the MLS result for each point in the input cloud for VOXEL_GRID_DILATION or DISTINCT_CLOUD upsampling
-		float voxel_size_; // brief Voxel size for the VOXEL_GRID_DILATION upsampling method 
-		int dilation_iteration_num_; // brief Number of dilation steps for the VOXEL_GRID_DILATION upsampling method
+		bool cacheMLSResults; // brief True if the mls results for the input cloud should be stored. note This is forced to true when using upsampling methods VOXEL_GRID_DILATION or DISTINCT_CLOUD.
+		std::vector<MLSResult> mlsResults; // brief Stores the MLS result for each point in the input cloud for VOXEL_GRID_DILATION or DISTINCT_CLOUD upsampling
+		float voxelSize; // brief Voxel size for the VOXEL_GRID_DILATION upsampling method 
+		int dilationIterationNum; // brief Number of dilation steps for the VOXEL_GRID_DILATION upsampling method
 
 	protected:
-		inline int searchForNeighbors(int index, std::vector<int> &indices, std::vector<float> &sqr_distances) const
-		{
-			return (search_method_(index, search_radius_, indices, sqr_distances));
-		}
-
 		void computeMLSPointNormal(int index, const std::vector<int> &nnIndices, Pc<OutPointN>& projected_points, pcl::PointIndices &corresponding_input_indices, MLSResult &mls_result) const;
 
 		inline void addProjectedPointNormal(int index, const Eigen::Vector3d &point, const Eigen::Vector3d &normal, double curvature, 
@@ -268,7 +248,7 @@ namespace RecRoom
 			aux.z = static_cast<float> (point[2]);
 			// Copy additional point information if available
 			copyMissingFields(input_->points[index], aux);
-			if (compute_normals_)
+			if (computeNormals)
 			{
 				aux.normal_x = static_cast<float> (normal[0]);
 				aux.normal_y = static_cast<float> (normal[1]);

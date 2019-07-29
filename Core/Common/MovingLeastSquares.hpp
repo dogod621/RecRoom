@@ -67,7 +67,7 @@ namespace RecRoom
 				Eigen::VectorXd weight_vec(numNeighbors);
 				Eigen::MatrixXd P(nr_coeff, numNeighbors);
 				Eigen::VectorXd f_vec(numNeighbors);
-				Eigen::MatrixXd P_weight; // size will be (nr_coeff_, nnIndices.size ());
+				Eigen::MatrixXd P_weight; // size will be (numCoeff, nnIndices.size ());
 				Eigen::MatrixXd P_weight_Pt(nr_coeff, nr_coeff);
 
 				// Update neighborhood, since point was projected, and computing relative
@@ -119,27 +119,27 @@ namespace RecRoom
 	void MovingLeastSquares<InPointN, OutPointN>::process(Pc<OutPointN>& output)
 	{
 		// Reset or initialize the collection of indices
-		corresponding_input_indices_.reset(new pcl::PointIndices);
+		correspondingInputIndices.reset(new pcl::PointIndices);
 
 		// Copy the header
 		output.header = input_->header;
 		output.width = output.height = 0;
 		output.points.clear();
 
-		// Check if distinct_cloud_ was set
-		if (upsample_method_ == MLSUpsamplingMethod::DISTINCT_CLOUD && !distinct_cloud_)
+		// Check if distinctCloud_ was set
+		if (upsampleMethod == MLSUpsamplingMethod::DISTINCT_CLOUD && !distinctCloud_)
 		{
 			THROW_EXCEPTION("Upsample method was set to DISTINCT_CLOUD, but no distinct cloud was specified.");
 			return;
 		}
 
-		switch (upsample_method_)
+		switch (upsampleMethod)
 		{
 			// Initialize random number generator if necessary
 		case (MLSUpsamplingMethod::RANDOM_UNIFORM_DENSITY):
 		{
 			rng_alg_.seed(static_cast<unsigned> (std::time(0)));
-			float tmp = static_cast<float> (search_radius_ / 2.0f);
+			float tmp = static_cast<float> (searchRadius / 2.0f);
 			boost::uniform_real<float> uniform_distrib(-tmp, tmp);
 			rng_uniform_distribution_.reset(new boost::variate_generator<boost::mt19937&, boost::uniform_real<float> >(rng_alg_, uniform_distrib));
 			break;
@@ -147,9 +147,9 @@ namespace RecRoom
 		case (MLSUpsamplingMethod::VOXEL_GRID_DILATION):
 		case (MLSUpsamplingMethod::DISTINCT_CLOUD):
 		{
-			if (!cache_mls_results_)
+			if (!cacheMLSResults)
 				PCL_WARN("The cache mls results is forced when using upsampling method VOXEL_GRID_DILATION or DISTINCT_CLOUD");
-			cache_mls_results_ = true;
+			cacheMLSResults = true;
 			break;
 		}
 		default:
@@ -160,26 +160,25 @@ namespace RecRoom
 			return;
 
 		// Initialize the spatial locator
-		if (!tree_)
+		if (!tree)
 		{
 			KdTreePtr tree;
 			if (input_->isOrganized())
 				tree.reset(new pcl::search::OrganizedNeighbor<InPointN>());
 			else
 				tree.reset(new pcl::search::KdTree<InPointN>(false));
-			setSearchMethod(tree);
 		}
 
 		// Send the surface dataset to the spatial locator
-		tree_->setInputCloud(input_);
+		tree->setInputCloud(input_);
 
-		if (cache_mls_results_)
+		if (cacheMLSResults)
 		{
-			mls_results_.resize(input_->size());
+			mlsResults.resize(input_->size());
 		}
 		else
 		{
-			mls_results_.resize(1); // Need to have a reference to a single dummy result.
+			mlsResults.resize(1); // Need to have a reference to a single dummy result.
 		}
 
 		// Perform the actual surface reconstruction
@@ -195,13 +194,13 @@ namespace RecRoom
 	template <typename InPointN, typename OutPointN>
 	void MovingLeastSquares<InPointN, OutPointN>::computeMLSPointNormal(int index, const std::vector<int> &nnIndices, Pc<OutPointN>& projected_points, pcl::PointIndices &corresponding_input_indices, MLSResult &mls_result) const
 	{
-		mls_result.computeMLSSurface<InPointN>(*input_, index, nnIndices, search_radius_, order_);
+		mls_result.computeMLSSurface<InPointN>(*input_, index, nnIndices, searchRadius, order);
 
-		switch (upsample_method_)
+		switch (upsampleMethod)
 		{
 		case (MLSUpsamplingMethod::MLSUpsamplingMethod_NONE):
 		{
-			MLSResult::MLSProjectionResults proj = mls_result.projectQueryPoint(projection_method_, nr_coeff_);
+			MLSResult::MLSProjectionResults proj = mls_result.projectQueryPoint(projectionMethod, numCoeff);
 			addProjectedPointNormal(index, proj.point, proj.normal, mls_result.curvature, projected_points, corresponding_input_indices);
 			break;
 		}
@@ -209,9 +208,9 @@ namespace RecRoom
 		case (MLSUpsamplingMethod::SAMPLE_LOCAL_PLANE):
 		{
 			// Uniformly sample a circle around the query point using the radius and step parameters
-			for (float u_disp = -static_cast<float> (upsampling_radius_); u_disp <= upsampling_radius_; u_disp += static_cast<float> (upsampling_step_))
-				for (float v_disp = -static_cast<float> (upsampling_radius_); v_disp <= upsampling_radius_; v_disp += static_cast<float> (upsampling_step_))
-					if (u_disp * u_disp + v_disp * v_disp < upsampling_radius_ * upsampling_radius_)
+			for (float u_disp = -static_cast<float> (upsamplingRadius); u_disp <= upsamplingRadius; u_disp += static_cast<float> (upsamplingStep))
+				for (float v_disp = -static_cast<float> (upsamplingRadius); v_disp <= upsamplingRadius; v_disp += static_cast<float> (upsamplingStep))
+					if (u_disp * u_disp + v_disp * v_disp < upsamplingRadius * upsamplingRadius)
 					{
 						MLSResult::MLSProjectionResults proj = mls_result.projectPointSimpleToPolynomialSurface(u_disp, v_disp);
 						addProjectedPointNormal(index, proj.point, proj.normal, mls_result.curvature, projected_points, corresponding_input_indices);
@@ -228,7 +227,7 @@ namespace RecRoom
 			if (num_points_to_add <= 0)
 			{
 				// Just add the current point
-				MLSResult::MLSProjectionResults proj = mls_result.projectQueryPoint(projection_method_, nr_coeff_);
+				MLSResult::MLSProjectionResults proj = mls_result.projectQueryPoint(projectionMethod, numCoeff);
 				addProjectedPointNormal(index, proj.point, proj.normal, mls_result.curvature, projected_points, corresponding_input_indices);
 			}
 			else
@@ -240,11 +239,11 @@ namespace RecRoom
 					double v = (*rng_uniform_distribution_) ();
 
 					// Check if inside circle; if not, try another coin flip
-					if (u * u + v * v > search_radius_ * search_radius_ / 4)
+					if (u * u + v * v > searchRadius * searchRadius / 4)
 						continue;
 
 					MLSResult::MLSProjectionResults proj;
-					if (order_ > 1 && mls_result.numNeighbors >= 5 * nr_coeff_)
+					if (order > 1 && mls_result.numNeighbors >= 5 * numCoeff)
 						proj = mls_result.projectPointSimpleToPolynomialSurface(u, v);
 					else
 						proj = mls_result.projectPointToMLSPlane(u, v);
@@ -267,13 +266,13 @@ namespace RecRoom
 	{
 #ifdef _OPENMP
 		// Create temporaries for each thread in order to avoid synchronization
-		typename Pc<OutPointN>::CloudVectorType projected_points(threads_);
-		std::vector<pcl::PointIndices> corresponding_input_indices(threads_);
+		typename Pc<OutPointN>::CloudVectorType projected_points(numThreads);
+		std::vector<pcl::PointIndices> corresponding_input_indices(numThreads);
 #endif
 
 		// For all points
 #ifdef _OPENMP
-#pragma omp parallel for schedule (dynamic,1000) num_threads (threads_)
+#pragma omp parallel for schedule (dynamic,1000) num_threads (numThreads)
 #endif
 		for (int cp = 0; cp < static_cast<int> (indices_->size()); ++cp)
 		{
@@ -283,7 +282,7 @@ namespace RecRoom
 			std::vector<float> nn_sqr_dists;
 
 			// Get the initial estimates of point positions and their neighborhoods
-			if (searchForNeighbors((*indices_)[cp], nnIndices, nn_sqr_dists))
+			if (tree->radiusSearch((*indices_)[cp], searchRadius, nnIndices, nn_sqr_dists))
 			{
 				// Check the number of nearest neighbors for normal estimation (and later for polynomial fit as well)
 				if (nnIndices.size() >= 3)
@@ -301,17 +300,17 @@ namespace RecRoom
 					const int index = (*indices_)[cp];
 
 					size_t mls_result_index = 0;
-					if (cache_mls_results_)
+					if (cacheMLSResults)
 						mls_result_index = index; // otherwise we give it a dummy location.
 
 #ifdef _OPENMP
-					computeMLSPointNormal(index, nnIndices, projected_points[tn], corresponding_input_indices[tn], mls_results_[mls_result_index]);
+					computeMLSPointNormal(index, nnIndices, projected_points[tn], corresponding_input_indices[tn], mlsResults[mls_result_index]);
 
 					// Copy all information from the input cloud to the output points (not doing any interpolation)
 					for (size_t pp = pp_size; pp < projected_points[tn].size(); ++pp)
 						copyMissingFields(input_->points[(*indices_)[cp]], projected_points[tn][pp]);
 #else
-					computeMLSPointNormal(index, nnIndices, projected_points, *corresponding_input_indices_, mls_results_[mls_result_index]);
+					computeMLSPointNormal(index, nnIndices, projected_points, *correspondingInputIndices, mlsResults[mls_result_index]);
 
 					// Append projected points to output
 					output.insert(output.end(), projected_points.begin(), projected_points.end());
@@ -322,10 +321,10 @@ namespace RecRoom
 
 #ifdef _OPENMP
 		// Combine all threads' results into the output vectors
-		for (unsigned int tn = 0; tn < threads_; ++tn)
+		for (unsigned int tn = 0; tn < numThreads; ++tn)
 		{
 			output.insert(output.end(), projected_points[tn].begin(), projected_points[tn].end());
-			corresponding_input_indices_->indices.insert(corresponding_input_indices_->indices.end(),
+			correspondingInputIndices->indices.insert(correspondingInputIndices->indices.end(),
 				corresponding_input_indices[tn].indices.begin(), corresponding_input_indices[tn].indices.end());
 		}
 #endif
@@ -337,49 +336,49 @@ namespace RecRoom
 	template <typename InPointN, typename OutPointN>
 	void MovingLeastSquares<InPointN, OutPointN>::performUpsampling(Pc<OutPointN>& output)
 	{
-		if (upsample_method_ == MLSUpsamplingMethod::DISTINCT_CLOUD)
+		if (upsampleMethod == MLSUpsamplingMethod::DISTINCT_CLOUD)
 		{
-			corresponding_input_indices_.reset(new PointIndices);
-			for (size_t dp_i = 0; dp_i < distinct_cloud_->size(); ++dp_i) // dp_i = distinct_point_i
+			correspondingInputIndices.reset(new PointIndices);
+			for (size_t dp_i = 0; dp_i < distinctCloud_->size(); ++dp_i) // dp_i = distinct_point_i
 			{
 				// Distinct cloud may have nan points, skip them
-				if (!pcl_isfinite(distinct_cloud_->points[dp_i].x))
+				if (!pcl_isfinite(distinctCloud_->points[dp_i].x))
 					continue;
 
 				// Get 3D position of point
-				//Eigen::Vector3f pos = distinct_cloud_->points[dp_i].getVector3fMap ();
+				//Eigen::Vector3f pos = distinctCloud_->points[dp_i].getVector3fMap ();
 				std::vector<int> nnIndices;
 				std::vector<float> nn_dists;
-				tree_->nearestKSearch(distinct_cloud_->points[dp_i], 1, nnIndices, nn_dists);
+				tree->nearestKSearch(distinctCloud_->points[dp_i], 1, nnIndices, nn_dists);
 				int input_index = nnIndices.front();
 
 				// If the closest point did not have a valid MLS fitting result
 				// OR if it is too far away from the sampled point
-				if (mls_results_[input_index].valid == false)
+				if (mlsResults[input_index].valid == false)
 					continue;
 
-				Eigen::Vector3d add_point = distinct_cloud_->points[dp_i].getVector3fMap().template cast<double>();
-				MLSResult::MLSProjectionResults proj = mls_results_[input_index].projectPoint(add_point, projection_method_, 5 * nr_coeff_);
-				addProjectedPointNormal(input_index, proj.point, proj.normal, mls_results_[input_index].curvature, output, *normals_, *corresponding_input_indices_);
+				Eigen::Vector3d add_point = distinctCloud_->points[dp_i].getVector3fMap().template cast<double>();
+				MLSResult::MLSProjectionResults proj = mlsResults[input_index].projectPoint(add_point, projectionMethod, 5 * numCoeff);
+				addProjectedPointNormal(input_index, proj.point, proj.normal, mlsResults[input_index].curvature, output, *normals_, *correspondingInputIndices);
 			}
 		}
 
 		// For the voxel grid upsampling method, generate the voxel grid and dilate it
 		// Then, project the newly obtained points to the MLS surface
-		if (upsample_method_ == MLSUpsamplingMethod::VOXEL_GRID_DILATION)
+		if (upsampleMethod == MLSUpsamplingMethod::VOXEL_GRID_DILATION)
 		{
-			corresponding_input_indices_.reset(new PointIndices);
+			correspondingInputIndices.reset(new PointIndices);
 
 			Eigen::Vector4f minAABB, maxAABB;
 			pcl::getMinMax3D(*input_, *indices_, minAABB, maxAABB);
 
 			BinaryVoxelGrid<InPointN> voxelGrid(
-				voxel_size_,
+				voxelSize,
 				Eigen::Vector3d(minAABB.x(), minAABB.y(), minAABB.z()),
 				Eigen::Vector3d(maxAABB.x(), maxAABB.y(), maxAABB.z()));
 
 			voxelGrid.AddPointCloud(input_, indices_)
-			voxelGrid.Dilation(1, dilation_iteration_num_);
+			voxelGrid.Dilation(1, dilationIterationNum);
 			PTR(Pc<PointType>) pcDilat = voxelGrid.GetPointCloud();
 
 			for (Pc<InPointN>::const_iterator it = pcDilat->begin(); it != pcDilat->end(); ++it)
@@ -387,17 +386,17 @@ namespace RecRoom
 				// Get 3D position of point
 				std::vector<int> nnIndices;
 				std::vector<float> nn_dists;
-				tree_->nearestKSearch(*it, 1, nnIndices, nn_dists);
+				tree->nearestKSearch(*it, 1, nnIndices, nn_dists);
 				int input_index = nnIndices.front();
 
 				// If the closest point did not have a valid MLS fitting result
 				// OR if it is too far away from the sampled point
-				if (mls_results_[input_index].valid == false)
+				if (mlsResults[input_index].valid == false)
 					continue;
 
 				Eigen::Vector3d add_point = it->getVector3fMap().template cast<double>();
-				MLSResult::MLSProjectionResults proj = mls_results_[input_index].projectPoint(add_point, projection_method_, 5 * nr_coeff_);
-				addProjectedPointNormal(input_index, proj.point, proj.normal, mls_results_[input_index].curvature, output, *normals_, *corresponding_input_indices_);
+				MLSResult::MLSProjectionResults proj = mlsResults[input_index].projectPoint(add_point, projectionMethod, 5 * numCoeff);
+				addProjectedPointNormal(input_index, proj.point, proj.normal, mlsResults[input_index].curvature, output, *normals_, *correspondingInputIndices);
 			}
 		}
 	}

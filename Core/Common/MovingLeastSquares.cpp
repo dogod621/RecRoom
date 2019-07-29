@@ -248,7 +248,7 @@ namespace RecRoom
 				// Projection onto MLS surface along Darboux normal to the height at (0,0)
 				proj.point = mean + (cAxis[0] * planeNormal);
 
-				// Compute tangent vectors using the partial derivates evaluated at (0,0) which is cAxis[order_+1] and cAxis[1]
+				// Compute tangent vectors using the partial derivates evaluated at (0,0) which is cAxis[order+1] and cAxis[1]
 				proj.normal = planeNormal - cAxis[order + 1] * uAxis - cAxis[1] * vAxis;
 				proj.normal.normalize();
 			}
