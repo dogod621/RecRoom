@@ -1,8 +1,12 @@
 #pragma once
 
+#include <pcl/filters/extract_indices.h>
+#include <pcl/filters/impl/extract_indices.hpp>
+
 #include "VoxelGrid.h"
 #include "Random.h"
 
+#include "Filter/FilterPcRemoveNonFinite.h"
 #include "MovingLeastSquares.h"
 
 namespace RecRoom
@@ -128,10 +132,47 @@ namespace RecRoom
 		output.points.clear();
 
 		// Check if distinctCloud was set
-		if ((upsampleMethod == MLSUpsamplingMethod::DISTINCT_CLOUD) && !distinctCloud)
+		if (upsampleMethod == MLSUpsamplingMethod::DISTINCT_CLOUD )
 		{
-			THROW_EXCEPTION("Upsample method was set to DISTINCT_CLOUD, but no distinct cloud was specified.");
-			return;
+			if (!distinctCloud)
+			{
+				THROW_EXCEPTION("Upsample method was set to DISTINCT_CLOUD, but no distinct cloud was specified.");
+				return;
+			}
+			else
+			{
+				PTR(PcIndex) filterNAN(new PcIndex);
+				FilterPcRemoveNonFinite<PointType> fNAN;
+				fNAN.Process(nullptr, distinctCloud, nullptr, *filterNAN);
+				PTR(Pc<InPointN>) temp (new Pc<InPointN>);
+				{
+					pcl::ExtractIndices<InPointN> extract;
+					extract.setInputCloud(distinctCloud);
+					extract.setIndices(filterNAN);
+					extract.setNegative(false);
+					extract.filter(temp);
+				}
+				distinctCloud = temp;
+			}
+		}
+		if (upsampleMethod == MLSUpsamplingMethod::VOXEL_GRID_DILATION)
+		{
+			if (distinctCloud)
+			{
+				PRINT_WARNING("Upsample method was set to VOXEL_GRID_DILATION, but no distinct cloud was specified, clear it.");
+			}
+
+			Eigen::Vector4f minAABB, maxAABB;
+			pcl::getMinMax3D(*input_, *indices_, minAABB, maxAABB);
+
+			BinaryVoxelGrid<InPointN> voxelGrid(
+				dilationVoxelSize,
+				Eigen::Vector3d(minAABB.x(), minAABB.y(), minAABB.z()),
+				Eigen::Vector3d(maxAABB.x(), maxAABB.y(), maxAABB.z()));
+
+			voxelGrid.AddPointCloud(input_, indices_);
+			voxelGrid.Dilation(dilationKernalSize, dilationIterations);
+			distinctCloud = voxelGrid.GetPointCloud();
 		}
 
 		//
@@ -343,68 +384,43 @@ namespace RecRoom
 	template <typename InPointN, typename OutPointN>
 	void MovingLeastSquares<InPointN, OutPointN>::performUpsampling(Pc<OutPointN>& output)
 	{
-		if (upsampleMethod == MLSUpsamplingMethod::DISTINCT_CLOUD)
+		switch (upsampleMethod)
 		{
-			correspondingInputIndices.reset(new PcIndex);
-			for (size_t dp_i = 0; dp_i < distinctCloud->size(); ++dp_i) // dp_i = distinct_point_i
+		case (MLSUpsamplingMethod::VOXEL_GRID_DILATION):
+		case (MLSUpsamplingMethod::DISTINCT_CLOUD):
+		{
 			{
-				// Distinct cloud may have nan points, skip them
-				if (!pcl_isfinite(distinctCloud->points[dp_i].x))
-					continue;
+				correspondingInputIndices.reset(new PcIndex);
+				correspondingInputIndices->resize(distinctCloud->size());
+				PointCloudOut projectedPoints;
+				projectedPoints.resize(distinctCloud->size());
 
-				// Get 3D position of point
-				//Eigen::Vector3f pos = distinctCloud->points[dp_i].getVector3fMap ();
-				PcIndex nnIndices;
-				std::vector<float> nn_dists;
-				searchMethod->nearestKSearch(distinctCloud->points[dp_i], 1, nnIndices, nn_dists);
-				int input_index = nnIndices.front();
+#ifdef _OPENMP
+#pragma omp parallel for num_threads(numThreads)
+#endif
+				for (int px = 0; cp < static_cast<int> (distinctCloud->size()); ++px)
+				{
+					PcIndex nnIndices;
+					std::vector<float> nn_dists;
+					if (searchMethod->nearestKSearch((*distinctCloud)[px], 1, nnIndices, nn_dists) > 0)
+					{
+						int inputIndex = nnIndices.front();
 
-				// If the closest point did not have a valid MLS fitting result
-				// OR if it is too far away from the sampled point
-				if (mlsResults[input_index].valid == false)
-					continue;
+						// If the closest point did not have a valid MLS fitting result
+						// OR if it is too far away from the sampled point
+						if (mlsResults[inputIndex].valid == false)
+							continue;
 
-				Eigen::Vector3d add_point = distinctCloud->points[dp_i].getVector3fMap().template cast<double>();
-				MLSResult::MLSProjectionResults proj = mlsResults[input_index].projectPoint(add_point, projectionMethod, 5 * numCoeff);
-				addProjectedPointNormal(input_index, proj.point, proj.normal, mlsResults[input_index].curvature, output, *correspondingInputIndices);
+						Eigen::Vector3d addPoint = (*distinctCloud)[px].getVector3fMap().template cast<double>();
+						MLSResult::MLSProjectionResults proj = mlsResults[inputIndex].projectPoint(addPoint, projectionMethod, 5 * numCoeff);
+						addProjectedPointNormal(inputIndex, proj.point, proj.normal, mlsResults[inputIndex].curvature, output[px], (*correspondingInputIndices)[px]);
+					}
+				}
 			}
+			break;
 		}
-
-		// For the voxel grid upsampling method, generate the voxel grid and dilate it
-		// Then, project the newly obtained points to the MLS surface
-		if (upsampleMethod == MLSUpsamplingMethod::VOXEL_GRID_DILATION)
-		{
-			correspondingInputIndices.reset(new PcIndex);
-
-			Eigen::Vector4f minAABB, maxAABB;
-			pcl::getMinMax3D(*input_, *indices_, minAABB, maxAABB);
-
-			BinaryVoxelGrid<InPointN> voxelGrid(
-				dilationVoxelSize,
-				Eigen::Vector3d(minAABB.x(), minAABB.y(), minAABB.z()),
-				Eigen::Vector3d(maxAABB.x(), maxAABB.y(), maxAABB.z()));
-
-			voxelGrid.AddPointCloud(input_, indices_)
-			voxelGrid.Dilation(dilationKernalSize, dilationIterations);
-			PTR(Pc<PointType>) pcDilat = voxelGrid.GetPointCloud();
-
-			for (Pc<InPointN>::const_iterator it = pcDilat->begin(); it != pcDilat->end(); ++it)
-			{
-				// Get 3D position of point
-				PcIndex nnIndices;
-				std::vector<float> nn_dists;
-				searchMethod->nearestKSearch(*it, 1, nnIndices, nn_dists);
-				int input_index = nnIndices.front();
-
-				// If the closest point did not have a valid MLS fitting result
-				// OR if it is too far away from the sampled point
-				if (mlsResults[input_index].valid == false)
-					continue;
-
-				Eigen::Vector3d add_point = it->getVector3fMap().template cast<double>();
-				MLSResult::MLSProjectionResults proj = mlsResults[input_index].projectPoint(add_point, projectionMethod, 5 * numCoeff);
-				addProjectedPointNormal(input_index, proj.point, proj.normal, mlsResults[input_index].curvature, output, *correspondingInputIndices);
-			}
+		default:
+			break;
 		}
 	}
 }

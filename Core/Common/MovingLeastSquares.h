@@ -236,7 +236,7 @@ namespace RecRoom
 		std::vector<MLSResult> mlsResults; // brief Stores the MLS result for each point in the input cloud for VOXEL_GRID_DILATION or DISTINCT_CLOUD upsampling
 
 	protected:
-		CONST_PTR(Pc<InPointN>) distinctCloud; // brief The distinct point cloud that will be projected to the MLS surface for DISTINCT_CLOUD upsampling
+		CONST_PTR(Pc<InPointN>) distinctCloud; // brief The distinct point cloud that will be projected to the MLS surface for DISTINCT_CLOUD or VOXEL_GRID_DILATION upsampling
 		double upsamplingRadius; // brief Radius of the circle in the local point plane that will be sampled for SAMPLE_LOCAL_PLANE upsampling
 		double upsamplingStep; // brief Step size for the local plane sampling for SAMPLE_LOCAL_PLANE upsampling
 		int pointDensity; // brief Parameter that specifies the desired number of points within the search radius for RANDOM_UNIFORM_DENSITY upsampling
@@ -278,6 +278,37 @@ namespace RecRoom
 			}
 			projectedPoints.push_back(aux);
 			correspondingInputIndices_.push_back(index);
+		}
+
+		inline void addProjectedPointNormal(
+			int index, const Eigen::Vector3d& point, const Eigen::Vector3d& normal, double curvature,
+			OutPointN& projectedPoint, int& correspondingInputIndex) const
+		{
+			OutPointN aux;
+			aux.x = static_cast<float> (point[0]);
+			aux.y = static_cast<float> (point[1]);
+			aux.z = static_cast<float> (point[2]);
+			// Copy additional point information if available
+			copyMissingFields(input_->points[index], aux);
+			if (computeNormals)
+			{
+				InOutPointN& inP = (*input_)[index];
+				if ((inP.normal_x * normal.x() + inP.normal_y * normal.x() + inP.normal_z * normal.z()) > 0)
+				{
+					aux.normal_x = static_cast<float> (normal[0]);
+					aux.normal_y = static_cast<float> (normal[1]);
+					aux.normal_z = static_cast<float> (normal[2]);
+				}
+				else
+				{
+					aux.normal_x = static_cast<float> (-normal[0]);
+					aux.normal_y = static_cast<float> (-normal[1]);
+					aux.normal_z = static_cast<float> (-normal[2]);
+				}
+				aux.curvature = curvature;
+			}
+			projectedPoint = aux;
+			correspondingInputIndex = index;
 		}
 		
 		inline void copyMissingFields(const InPointN& inP, OutPointN& outP) const
