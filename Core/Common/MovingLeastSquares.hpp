@@ -184,7 +184,7 @@ namespace RecRoom
 	}
 
 	template <typename InPointN, typename OutPointN>
-	void MovingLeastSquares<InPointN, OutPointN>::computeMLSPointNormal(int index, const PcIndex& nnIndices, Pc<OutPointN>& projectedPoints, PTR(PcIndex)& correspondingInputIndices_, MLSResult &mlsResult) const
+	void MovingLeastSquares<InPointN, OutPointN>::computeMLSPointNormal(int index, const PcIndex& nnIndices, Pc<OutPointN>& projectedPoints, PcIndex& correspondingInputIndices_, MLSResult &mlsResult) const
 	{
 		mlsResult.computeMLSSurface<InPointN>(*input_, index, nnIndices, searchRadius, order);
 
@@ -268,12 +268,14 @@ namespace RecRoom
 #endif
 		for (int cp = 0; cp < static_cast<int> (indices_->size()); ++cp)
 		{
+			// Get a plane approximating the local surface's tangent and project point onto it
+			const int index = (*indices_)[cp];
+			InOutPointN& inP = (*input_)[index];
+
 			// Allocate enough space to hold the results of nearest neighbor searches
 			// \note resize is irrelevant for a radiusSearch ().
 			PcIndex nnIndices;
 			std::vector<float> nnSqrDists;
-
-			InOutPointN& inP = (*indices_)[cp];
 
 			// Get the initial estimates of point positions and their neighborhoods
 			if (searchMethod->radiusSearch(inP, searchRadius, nnIndices, nnSqrDists))
@@ -301,9 +303,6 @@ namespace RecRoom
 #else
 					PointCloudOut projectedPoints;
 #endif
-
-					// Get a plane approximating the local surface's tangent and project point onto it
-					const int index = (*indices_)[cp];
 
 #ifdef _OPENMP
 					if (cacheMLSResults)
@@ -335,7 +334,7 @@ namespace RecRoom
 		for (unsigned int tn = 0; tn < numThreads; ++tn)
 		{
 			output.insert(output.end(), projectedPoints[tn].begin(), projectedPoints[tn].end());
-			correspondingInputIndices->indices.insert(correspondingInputIndices.end(), correspondingInputIndicesSet[tn].begin(), correspondingInputIndicesSet[tn].end());
+			correspondingInputIndices->insert(correspondingInputIndices.end(), correspondingInputIndicesSet[tn].begin(), correspondingInputIndicesSet[tn].end());
 		}
 #endif
 

@@ -177,11 +177,10 @@ namespace RecRoom
 			rngUniformDistribution()
 		{
 			numCoeff = (order + 1) * (order + 2) / 2;
-			sqrGaussParam = searchRadius * searchRadius;
 
-			if (searchRadius <= 0 || sqrGaussParam <= 0)
+			if (searchRadius <= 0 )
 			{
-				THROW_EXCEPTION("Invalid search radius or Gaussian parameter");
+				THROW_EXCEPTION("Invalid search radius");
 				return;
 			}
 		};
@@ -230,7 +229,6 @@ namespace RecRoom
 		int order; // brief The order of the polynomial to be fit.
 		int numCoeff; // brief Number of coefficients, to be computed from the requested order.
 		double searchRadius; // brief The nearest neighbors search radius for each point.
-		double sqrGaussParam; // brief Parameter for distance based weighting of neighbors (searchRadius * searchRadius works fine)
 		bool computeNormals; // brief Parameter that specifies whether the normals should be computed for the input cloud or not
 		MLSUpsamplingMethod upsampleMethod; // brief Parameter that specifies the upsampling method to be used 
 		MLSProjectionMethod projectionMethod; // brief Parameter that specifies the projection method to be used.
@@ -249,11 +247,11 @@ namespace RecRoom
 
 	protected:
 		void computeMLSPointNormal(
-			int index, const PcIndex &nnIndices, Pc<OutPointN>& projectedPoints, PTR(PcIndex)& correspondingInputIndices_, MLSResult &mlsResult) const;
+			int index, const PcIndex &nnIndices, Pc<OutPointN>& projectedPoints, PcIndex& correspondingInputIndices_, MLSResult &mlsResult) const;
 
 		inline void addProjectedPointNormal(
 			int index, const Eigen::Vector3d &point, const Eigen::Vector3d &normal, double curvature, 
-			Pc<OutPointN>& projectedPoints, PTR(PcIndex)& correspondingInputIndices_) const
+			Pc<OutPointN>& projectedPoints, PcIndex& correspondingInputIndices_) const
 		{
 			OutPointN aux;
 			aux.x = static_cast<float> (point[0]);
@@ -263,16 +261,23 @@ namespace RecRoom
 			copyMissingFields(input_->points[index], aux);
 			if (computeNormals)
 			{
-				if ()
+				InOutPointN& inP = (*input_)[index];
+				if ((inP.normal_x * normal.x() + inP.normal_y * normal.x() + inP.normal_z * normal.z()) > 0)
 				{
 					aux.normal_x = static_cast<float> (normal[0]);
 					aux.normal_y = static_cast<float> (normal[1]);
 					aux.normal_z = static_cast<float> (normal[2]);
-					aux.curvature = curvature;
 				}
+				else
+				{
+					aux.normal_x = static_cast<float> (-normal[0]);
+					aux.normal_y = static_cast<float> (-normal[1]);
+					aux.normal_z = static_cast<float> (-normal[2]);
+				}
+				aux.curvature = curvature;
 			}
 			projectedPoints.push_back(aux);
-			correspondingInputIndices_.indices.push_back(index);
+			correspondingInputIndices_.push_back(index);
 		}
 		
 		inline void copyMissingFields(const InPointN& inP, OutPointN& outP) const
