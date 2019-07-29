@@ -106,9 +106,9 @@ namespace RecRoom
 
 		inline void DeletePoint(const PointType& p);
 
-		inline void AddPointCloud(const Pc<PointType>& pc);
+		inline void AddPointCloud(CONST_PTR(Pc<PointType>) input, CONST_PTR(PcIndex) filter = nullptr);
 
-		inline void DeletePointCloud(const Pc<PointType>& pc);
+		inline void DeletePointCloud(CONST_PTR(Pc<PointType>) input, CONST_PTR(PcIndex) filter = nullptr);
 
 		inline virtual PTR(Pc<PointType>) GetPointCloud() const
 		{

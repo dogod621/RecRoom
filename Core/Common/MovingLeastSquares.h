@@ -129,55 +129,6 @@ namespace RecRoom
 		inline double computeMLSWeight(const double sqrDist, const double sqrRadius) { return (exp(-sqrDist / sqrRadius)); }
 	};
 
-	// brief A minimalistic implementation of a voxel grid, necessary for the point cloud upsampling
-	// note Used only in the case of VOXEL_GRID_DILATION upsampling
-	template <class InPointN>
-	class MLSVoxelGrid
-	{
-	public:
-		struct Leaf { Leaf() : valid(true) {} bool valid; };
-
-		MLSVoxelGrid(PTR(Pc<InPointN>)& cloud, PTR(PcIndex)& indices, float voxel_size);
-
-		void dilate();
-
-		inline void getIndexIn1D(const Eigen::Vector3i &index, uint64_t &index_1d) const
-		{
-			index_1d = index[0] * data_size_ * data_size_ +
-				index[1] * data_size_ + index[2];
-		}
-
-		inline void getIndexIn3D(uint64_t index_1d, Eigen::Vector3i& index_3d) const
-		{
-			index_3d[0] = static_cast<Eigen::Vector3i::Scalar> (index_1d / (data_size_ * data_size_));
-			index_1d -= index_3d[0] * data_size_ * data_size_;
-			index_3d[1] = static_cast<Eigen::Vector3i::Scalar> (index_1d / data_size_);
-			index_1d -= index_3d[1] * data_size_;
-			index_3d[2] = static_cast<Eigen::Vector3i::Scalar> (index_1d);
-		}
-
-		inline void getCellIndex(const Eigen::Vector3f &p, Eigen::Vector3i& index) const
-		{
-			for (int i = 0; i < 3; ++i)
-				index[i] = static_cast<Eigen::Vector3i::Scalar> ((p[i] - bounding_min_(i)) / voxel_size_);
-		}
-
-		inline void getPosition(const uint64_t &index_1d, Eigen::Vector3f &point) const
-		{
-			Eigen::Vector3i index_3d;
-			getIndexIn3D(index_1d, index_3d);
-			for (int i = 0; i < 3; ++i)
-				point[i] = static_cast<Eigen::Vector3f::Scalar> (index_3d[i]) * voxel_size_ + bounding_min_[i];
-		}
-
-		typedef std::map<uint64_t, Leaf> HashMap;
-		HashMap voxel_grid_;
-		Eigen::Vector4f bounding_min_, bounding_max_;
-		uint64_t data_size_;
-		float voxel_size_;
-		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-	};
-
 	template <class InPointN, class OutPointN>
 	class MovingLeastSquares : public pcl::CloudSurfaceProcessing<InPointN, OutPointN>
 	{

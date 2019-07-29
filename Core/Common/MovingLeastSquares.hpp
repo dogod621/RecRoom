@@ -1,5 +1,7 @@
 #pragma once
 
+#include "VoxelGrid.h"
+
 #include "MovingLeastSquares.h"
 
 namespace RecRoom
@@ -111,56 +113,6 @@ namespace RecRoom
 				P_weight_Pt.llt().solveInPlace(cAxis);
 			}
 		}
-	}
-
-	template <class InPointN>
-	MLSVoxelGrid<InPointN>::MLSVoxelGrid(PTR(Pc<InPointN>)& cloud, PTR(PcIndex)& indices, float voxel_size)
-		: voxel_grid_(), bounding_min_(), bounding_max_(), data_size_(), voxel_size_(voxel_size)
-	{
-		pcl::getMinMax3D(*cloud, *indices, bounding_min_, bounding_max_);
-
-		Eigen::Vector4f bounding_box_size = bounding_max_ - bounding_min_;
-		double max_size = (std::max) ((std::max)(bounding_box_size.x(), bounding_box_size.y()), bounding_box_size.z());
-		// Put initial cloud in voxel grid
-		data_size_ = static_cast<uint64_t> (1.5 * max_size / voxel_size_);
-		for (unsigned int i = 0; i < indices->size(); ++i)
-			if (pcl_isfinite(cloud->points[(*indices)[i]].x))
-			{
-				Eigen::Vector3i pos;
-				getCellIndex(cloud->points[(*indices)[i]].getVector3fMap(), pos);
-
-				uint64_t index_1d;
-				getIndexIn1D(pos, index_1d);
-				Leaf leaf;
-				voxel_grid_[index_1d] = leaf;
-			}
-	}
-
-	template <class InPointN>
-	void MLSVoxelGrid<InPointN>::MLSVoxelGrid::dilate()
-	{
-		HashMap new_voxel_grid = voxel_grid_;
-		for (typename MLSVoxelGrid::HashMap::iterator m_it = voxel_grid_.begin(); m_it != voxel_grid_.end(); ++m_it)
-		{
-			Eigen::Vector3i index;
-			getIndexIn3D(m_it->first, index);
-
-			// Now dilate all of its voxels
-			for (int x = -1; x <= 1; ++x)
-				for (int y = -1; y <= 1; ++y)
-					for (int z = -1; z <= 1; ++z)
-						if (x != 0 || y != 0 || z != 0)
-						{
-							Eigen::Vector3i new_index;
-							new_index = index + Eigen::Vector3i(x, y, z);
-
-							uint64_t index_1d;
-							getIndexIn1D(new_index, index_1d);
-							Leaf leaf;
-							new_voxel_grid[index_1d] = leaf;
-						}
-		}
-		voxel_grid_ = new_voxel_grid;
 	}
 
 	template <typename InPointN, typename OutPointN> 
@@ -418,24 +370,24 @@ namespace RecRoom
 		{
 			corresponding_input_indices_.reset(new PointIndices);
 
-			MLSVoxelGrid voxel_grid(input_, indices_, voxel_size_);
-			for (int iteration = 0; iteration < dilation_iteration_num_; ++iteration)
-				voxel_grid.dilate();
+			Eigen::Vector4f minAABB, maxAABB;
+			pcl::getMinMax3D(*input_, *indices_, minAABB, maxAABB);
 
-			for (typename MLSVoxelGrid::HashMap::iterator m_it = voxel_grid.voxel_grid_.begin(); m_it != voxel_grid.voxel_grid_.end(); ++m_it)
+			BinaryVoxelGrid<InPointN> voxelGrid(
+				voxel_size_,
+				Eigen::Vector3d(minAABB.x(), minAABB.y(), minAABB.z()),
+				Eigen::Vector3d(maxAABB.x(), maxAABB.y(), maxAABB.z()));
+
+			voxelGrid.AddPointCloud(input_, indices_)
+			voxelGrid.Dilation(1, dilation_iteration_num_);
+			PTR(Pc<PointType>) pcDilat = voxelGrid.GetPointCloud();
+
+			for (Pc<InPointN>::const_iterator it = pcDilat->begin(); it != pcDilat->end(); ++it)
 			{
 				// Get 3D position of point
-				Eigen::Vector3f pos;
-				voxel_grid.getPosition(m_it->first, pos);
-
-				InPointN p;
-				p.x = pos[0];
-				p.y = pos[1];
-				p.z = pos[2];
-
 				std::vector<int> nnIndices;
 				std::vector<float> nn_dists;
-				tree_->nearestKSearch(p, 1, nnIndices, nn_dists);
+				tree_->nearestKSearch(*it, 1, nnIndices, nn_dists);
 				int input_index = nnIndices.front();
 
 				// If the closest point did not have a valid MLS fitting result
@@ -443,7 +395,7 @@ namespace RecRoom
 				if (mls_results_[input_index].valid == false)
 					continue;
 
-				Eigen::Vector3d add_point = p.getVector3fMap().template cast<double>();
+				Eigen::Vector3d add_point = it->getVector3fMap().template cast<double>();
 				MLSResult::MLSProjectionResults proj = mls_results_[input_index].projectPoint(add_point, projection_method_, 5 * nr_coeff_);
 				addProjectedPointNormal(input_index, proj.point, proj.normal, mls_results_[input_index].curvature, output, *normals_, *corresponding_input_indices_);
 			}

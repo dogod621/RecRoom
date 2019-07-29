@@ -71,17 +71,33 @@ namespace RecRoom
 	}
 
 	template <class PointType, class CenterType>
-	inline void VoxelGrid<PointType, CenterType>::AddPointCloud(const Pc<PointType>& pc)
+	inline void VoxelGrid<PointType, CenterType>::AddPointCloud(CONST_PTR(Pc<PointType>) input, CONST_PTR(PcIndex) filter)
 	{
-		for (Pc<PointType>::iterator it = pc.begin(); it != pc.end(); ++it)
-			AddPoint(*it);
+		if (filter)
+		{
+			for (PcIndex::const_iterator it = filter->begin(); it != filter->end(); ++it)
+				AddPoint((*input)[(*it)]);
+		}
+		else
+		{
+			for (Pc<PointType>::iterator it = input->begin(); it != input->end(); ++it)
+				AddPoint(*it);
+		}
 	}
 
 	template <class PointType, class CenterType>
-	inline void VoxelGrid<PointType, CenterType>::DeletePointCloud(const Pc<PointType>& pc)
+	inline void VoxelGrid<PointType, CenterType>::DeletePointCloud(CONST_PTR(Pc<PointType>) input, CONST_PTR(PcIndex) filter)
 	{
-		for (Pc<PointType>::iterator it = pc.begin(); it != pc.end(); ++it)
-			DeletePoint(*it);
+		if (filter)
+		{
+			for (PcIndex::const_iterator it = filter->begin(); it != filter->end(); ++it)
+				DeletePoint((*input)[(*it)]);
+		}
+		else
+		{
+			for (Pc<PointType>::iterator it = input->begin(); it != input->end(); ++it)
+				DeletePoint(*it);
+		}
 	}
 
 	template <class PointType>
