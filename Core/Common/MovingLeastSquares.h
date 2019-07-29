@@ -20,27 +20,27 @@
 
 namespace RecRoom
 {
-	enum MLSProjectionMethod
+	enum MLSProjectionMethod : Flag
 	{
-		MLSProjectionMethod_NONE,	// brief Project to the mls plane.
-		SIMPLE,						// brief Project along the mls plane normal to the polynomial surface.
-		ORTHOGONAL					// brief Project to the closest point on the polynonomial surface.
+		MLSProjectionMethod_NONE = 0,	// brief Project to the mls plane.
+		SIMPLE = 1,						// brief Project along the mls plane normal to the polynomial surface.
+		ORTHOGONAL = 2					// brief Project to the closest point on the polynonomial surface.
 	};
 
-	enum MLSUpsamplingMethod
+	enum MLSUpsamplingMethod : Flag
 	{
-		MLSUpsamplingMethod_NONE,	// brief No upsampling will be done, only the input points will be projected to their own MLS surfaces.
-		DISTINCT_CLOUD,				// brief Project the points of the distinct cloud to the MLS surface. 
-		SAMPLE_LOCAL_PLANE,			// brief The local plane of each input point will be sampled in a circular fashion
-									// using the upsamplingRadius and the upsamplingStep parameters. 
-		RANDOM_UNIFORM_DENSITY,		// brief The local plane of each input point will be sampled using an uniform random
-									// distribution such that the density of points is constant throughout the
-									// cloud - given by the desired_num_points_in_radius_ parameter. 
-		VOXEL_GRID_DILATION			// brief The input cloud will be inserted into a voxel grid with voxels of
-									// size voxelSize; this voxel grid will be dilated dilationIterationNum
-									// times and the resulting points will be projected to the MLS surface
-									// of the closest point in the input cloud; the result is a point cloud
-									// with filled holes and a constant point density. 
+		MLSUpsamplingMethod_NONE = 0,	// brief No upsampling will be done, only the input points will be projected to their own MLS surfaces.
+		DISTINCT_CLOUD = 1,				// brief Project the points of the distinct cloud to the MLS surface. 
+		SAMPLE_LOCAL_PLANE = 2,			// brief The local plane of each input point will be sampled in a circular fashion
+										// using the upsamplingRadius and the upsamplingStep parameters. 
+		RANDOM_UNIFORM_DENSITY = 3,		// brief The local plane of each input point will be sampled using an uniform random
+										// distribution such that the density of points is constant throughout the
+										// cloud - given by the pointDensity parameter. 
+		VOXEL_GRID_DILATION	= 4			// brief The input cloud will be inserted into a voxel grid with voxels of
+										// size dilationVoxelSize; this voxel grid will be dilated dilationIterations
+										// times and the resulting points will be projected to the MLS surface
+										// of the closest point in the input cloud; the result is a point cloud
+										// with filled holes and a constant point density. 
 	};
 
 	// brief Data structure used to store the MLS polynomial partial derivatives
@@ -110,7 +110,7 @@ namespace RecRoom
 
 		// brief Smooth a given point and its neighborghood using Moving Least Squares.
 		template <class PointT>
-		void computeMLSSurface(const pcl::PointCloud<PointT> &cloud, int index, const std::vector<int> &nnIndices,
+		void computeMLSSurface(const pcl::PointCloud<PointT> &cloud, int index, const PcIndex& nnIndices,
 			double searchRadius, int polynomialOrder = 2, boost::function<double(const double)> WeightFunc = 0);
 
 		Eigen::Vector3d queryPoint;		// brief The query point about which the mls surface was generated 
@@ -139,7 +139,6 @@ namespace RecRoom
 
 		using pcl::PCLBase<InPointN>::input_;
 		using pcl::PCLBase<InPointN>::indices_;
-		using pcl::PCLBase<InPointN>::fake_indices_;
 		using pcl::PCLBase<InPointN>::initCompute;
 		using pcl::PCLBase<InPointN>::deinitCompute;
 
@@ -152,7 +151,7 @@ namespace RecRoom
 			: 
 			pcl::CloudSurfaceProcessing<InPointN, OutPointN>(),
 			ThreadAble(),
-			tree(),
+			searchMethod(),
 
 			// Parms
 			searchRadius(searchRadius),
@@ -164,17 +163,18 @@ namespace RecRoom
 			// Options
 			upsamplingRadius(0.0),
 			upsamplingStep(0.0),
-			desired_num_points_in_radius_(0),
+			pointDensity(0),
 			cacheMLSResults(true),
-			mlsResults(),
-			voxelSize(1.0),
-			dilationIterationNum(0),
+			dilationVoxelSize(1.0),
+			dilationKernalSize(0),
+			dilationIterations(0),
 
 			// Vars
-			distinctCloud_(),
+			distinctCloud(),
 			correspondingInputIndices(),
-			rng_alg_(),
-			rng_uniform_distribution_()
+			mlsResults(),
+			rngGenerator(),
+			rngUniformDistribution()
 		{
 			numCoeff = (order + 1) * (order + 2) / 2;
 			sqrGaussParam = searchRadius * searchRadius;
@@ -189,35 +189,44 @@ namespace RecRoom
 		void process(Pc<OutPointN>& output);
 
 		// brief Get the set of indices with each point in output having the corresponding point in input 
-		inline PointIndicesPtr getCorrespondingIndices() const { return (correspondingInputIndices); }
-
-	public:
-		inline void setDistinctCloud(CONST_PTR(Pc<InPointN>) distinct_cloud) { distinctCloud_ = distinct_cloud; }
-		inline CONST_PTR(Pc<InPointN>) getDistinctCloud() const { return (distinctCloud_); }
-
-		inline void setUpsamplingRadius(double radius) { upsamplingRadius = radius; }
-		inline double getUpsamplingRadius() const { return (upsamplingRadius); }
-
-		inline void setUpsamplingStepSize(double step_size) { upsamplingStep = step_size; }
-		inline double getUpsamplingStepSize() const { return (upsamplingStep); }
-
-		inline void setPointDensity(int desired_num_points_in_radius) { desired_num_points_in_radius_ = desired_num_points_in_radius; }
-		inline int getPointDensity() const { return (desired_num_points_in_radius_); }
-
-		inline void setDilationVoxelSize(float voxel_size) { voxelSize = voxel_size; }
-		inline float getDilationVoxelSize() const { return (voxelSize); }
-
-		inline void setDilationIterations(int iterations) { dilationIterationNum = iterations; }
-		inline int getDilationIterations() const { return (dilationIterationNum); }
-
-		inline void setCacheMLSResults(bool cache_mls_results) { cacheMLSResults = cache_mls_results; }
-		inline bool getCacheMLSResults() const { return (cacheMLSResults); }
-
+		inline PTR(PcIndex) getCorrespondingIndices() const { return (correspondingInputIndices); }
 		inline const std::vector<MLSResult>& getMLSResults() const { return (mlsResults); }
 
+	public:
+		inline void setSearchMethod(const PTR(Acc<InPointN>)& v) { searchMethod = v; }
+
+		/** \brief Get a pointer to the search method used. */
+		inline PTR(Acc<InPointN>) getSearchMethod() const
+		{
+			return searchMethod;
+		}
+
+		inline void setDistinctCloud(CONST_PTR(Pc<InPointN>) v) { distinctCloud = v; }
+		inline CONST_PTR(Pc<InPointN>) getDistinctCloud() const { return (distinctCloud); }
+
+		inline void setUpsamplingRadius(double v) { upsamplingRadius = v; }
+		inline double getUpsamplingRadius() const { return (upsamplingRadius); }
+
+		inline void setUpsamplingStep(double v) { upsamplingStep = v; }
+		inline double getUpsamplingStep() const { return (upsamplingStep); }
+
+		inline void setPointDensity(int v) { pointDensity = v; }
+		inline int getPointDensity() const { return (pointDensity); }
+
+		inline void setCacheMLSResults(bool v) { cacheMLSResults = v; }
+		inline bool getCacheMLSResults() const { return (cacheMLSResults); }
+
+		inline void setDilationVoxelSize(float v) { dilationVoxelSize = v; }
+		inline float getDilationVoxelSize() const { return (dilationVoxelSize); }
+
+		inline void setDilationKernalSize(int v) { dilationKernalSize = v; }
+		inline int getDilationKernalSize() const { return (dilationKernalSize); }
+		
+		inline void setDilationIterations(int v) { dilationIterations = v; }
+		inline int getDilationIterations() const { return (dilationIterations); }
+
 	protected:
-		CONST_PTR(Pc<InPointN>) distinctCloud_; // brief The distinct point cloud that will be projected to the MLS surface.
-		PTR(Acc<InPointN>) tree; // brief A pointer to the spatial search object.
+		PTR(Acc<InPointN>) searchMethod; // brief A pointer to the spatial search object.
 		int order; // brief The order of the polynomial to be fit.
 		int numCoeff; // brief Number of coefficients, to be computed from the requested order.
 		double searchRadius; // brief The nearest neighbors search radius for each point.
@@ -225,22 +234,26 @@ namespace RecRoom
 		bool computeNormals; // brief Parameter that specifies whether the normals should be computed for the input cloud or not
 		MLSUpsamplingMethod upsampleMethod; // brief Parameter that specifies the upsampling method to be used 
 		MLSProjectionMethod projectionMethod; // brief Parameter that specifies the projection method to be used.
-		PointIndicesPtr correspondingInputIndices; // brief Collects for each point in output the corrseponding point in the input.
+		PTR(PcIndex) correspondingInputIndices; // brief Collects for each point in output the corrseponding point in the input.
+		std::vector<MLSResult> mlsResults; // brief Stores the MLS result for each point in the input cloud for VOXEL_GRID_DILATION or DISTINCT_CLOUD upsampling
 
 	protected:
+		CONST_PTR(Pc<InPointN>) distinctCloud; // brief The distinct point cloud that will be projected to the MLS surface for DISTINCT_CLOUD upsampling
 		double upsamplingRadius; // brief Radius of the circle in the local point plane that will be sampled for SAMPLE_LOCAL_PLANE upsampling
 		double upsamplingStep; // brief Step size for the local plane sampling for SAMPLE_LOCAL_PLANE upsampling
-		int desired_num_points_in_radius_; // brief Parameter that specifies the desired number of points within the search radius for RANDOM_UNIFORM_DENSITY upsampling
+		int pointDensity; // brief Parameter that specifies the desired number of points within the search radius for RANDOM_UNIFORM_DENSITY upsampling
 		bool cacheMLSResults; // brief True if the mls results for the input cloud should be stored. note This is forced to true when using upsampling methods VOXEL_GRID_DILATION or DISTINCT_CLOUD.
-		std::vector<MLSResult> mlsResults; // brief Stores the MLS result for each point in the input cloud for VOXEL_GRID_DILATION or DISTINCT_CLOUD upsampling
-		float voxelSize; // brief Voxel size for the VOXEL_GRID_DILATION upsampling method 
-		int dilationIterationNum; // brief Number of dilation steps for the VOXEL_GRID_DILATION upsampling method
+		float dilationVoxelSize; // brief Voxel size for the VOXEL_GRID_DILATION upsampling method 
+		int dilationKernalSize; // brief dilation kernal size for the VOXEL_GRID_DILATION upsampling method
+		int dilationIterations; // brief Number of dilation steps for the VOXEL_GRID_DILATION upsampling method
 
 	protected:
-		void computeMLSPointNormal(int index, const std::vector<int> &nnIndices, Pc<OutPointN>& projected_points, pcl::PointIndices &corresponding_input_indices, MLSResult &mls_result) const;
+		void computeMLSPointNormal(
+			int index, const PcIndex &nnIndices, Pc<OutPointN>& projectedPoints, PTR(PcIndex)& correspondingInputIndices_, MLSResult &mlsResult) const;
 
-		inline void addProjectedPointNormal(int index, const Eigen::Vector3d &point, const Eigen::Vector3d &normal, double curvature, 
-			Pc<OutPointN>& projected_points, pcl::PointIndices &corresponding_input_indices) const
+		inline void addProjectedPointNormal(
+			int index, const Eigen::Vector3d &point, const Eigen::Vector3d &normal, double curvature, 
+			Pc<OutPointN>& projectedPoints, PTR(PcIndex)& correspondingInputIndices_) const
 		{
 			OutPointN aux;
 			aux.x = static_cast<float> (point[0]);
@@ -250,30 +263,31 @@ namespace RecRoom
 			copyMissingFields(input_->points[index], aux);
 			if (computeNormals)
 			{
-				aux.normal_x = static_cast<float> (normal[0]);
-				aux.normal_y = static_cast<float> (normal[1]);
-				aux.normal_z = static_cast<float> (normal[2]);
-				aux.curvature = curvature;
+				if ()
+				{
+					aux.normal_x = static_cast<float> (normal[0]);
+					aux.normal_y = static_cast<float> (normal[1]);
+					aux.normal_z = static_cast<float> (normal[2]);
+					aux.curvature = curvature;
+				}
 			}
-			projected_points.push_back(aux);
-			corresponding_input_indices.indices.push_back(index);
+			projectedPoints.push_back(aux);
+			correspondingInputIndices_.indices.push_back(index);
 		}
 		
-		inline void copyMissingFields(const InPointN& point_in, OutPointN& point_out) const
+		inline void copyMissingFields(const InPointN& inP, OutPointN& outP) const
 		{
-			OutPointN temp = point_out;
-			pcl::copyPoint(point_in, point_out);
-			point_out.x = temp.x;
-			point_out.y = temp.y;
-			point_out.z = temp.z;
+			OutPointN temp = outP;
+			pcl::copyPoint(inP, outP);
+			outP.x = temp.x;
+			outP.y = temp.y;
+			outP.z = temp.z;
 		}
 
 		virtual void performProcessing(Pc<OutPointN>& output);
 		void performUpsampling(Pc<OutPointN>& output);
 
 	private:
-		boost::mt19937 rng_alg_;
-		boost::shared_ptr<boost::variate_generator<boost::mt19937&, boost::uniform_real<float> >> rng_uniform_distribution_;
 		std::string getClassName() const { return ("MovingLeastSquares"); }
 	};
 }

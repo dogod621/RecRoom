@@ -326,21 +326,15 @@ namespace RecRoom
 	template <class PointType>
 	void BinaryVoxelGrid<PointType>::Opening(std::size_t kernelSize, std::size_t iteration)
 	{
-		for (std::size_t itr = 0; itr < iteration; ++itr)
-		{
-			Erosion(kernelSize);
-			Dilation(kernelSize);
-		}
+		Erosion(kernelSize, iteration);
+		Dilation(kernelSize, iteration);
 	}
 
 	template <class PointType>
 	void BinaryVoxelGrid<PointType>::Closing(std::size_t kernelSize, std::size_t iteration)
 	{
-		for (std::size_t itr = 0; itr < iteration; ++itr)
-		{
-			Dilation(kernelSize);
-			Erosion(kernelSize);
-		}
+		Dilation(kernelSize, iteration);
+		Erosion(kernelSize, iteration);
 	}
 
 	struct IndexPair
