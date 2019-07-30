@@ -17,8 +17,11 @@ namespace RecRoom
 
 		std::vector<int> nnIndices;
 		std::vector<float> nnSqrDists;
+
 #ifdef _OPENMP
 #pragma omp parallel for private (nnIndices, nnSqrDists) num_threads(numThreads)
+#else
+		PRINT_WARNING("without OPENMP support, use single thread");
 #endif
 		// Iterating over the entire index vector
 		for (int idx = 0; idx < static_cast<int> (filter->size()); ++idx)

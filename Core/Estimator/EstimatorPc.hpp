@@ -47,6 +47,8 @@ namespace RecRoom
 
 #ifdef _OPENMP
 #pragma omp parallel for private (nnIndices, nnSqrDists, scanDataSet) num_threads(numThreads)
+#else
+		PRINT_WARNING("without OPENMP support, use single thread");
 #endif
 		for (int idx = 0; idx < static_cast<int> (filter->size()); ++idx)
 		{

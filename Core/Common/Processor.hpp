@@ -108,13 +108,15 @@ namespace RecRoom
 		}
 
 		//
-		output.is_dense = true;
-		for (Pc<OutputPointType>::iterator it = output.begin(); it != output.end(); ++it)
+		if (output.is_dense)
 		{
-			if (!OutPointValid(*it))
+			for (Pc<OutputPointType>::iterator it = output.begin(); it != output.end(); ++it)
 			{
-				output.is_dense = false;
-				break;
+				if (!OutPointValid(*it))
+				{
+					output.is_dense = false;
+					break;
+				}
 			}
 		}
 	}
@@ -148,13 +150,15 @@ namespace RecRoom
 		}
 
 		//
-		output.is_dense = true;
-		for (Pc<OutputPointType>::iterator it = output.begin(); it != output.end(); ++it)
+		if (output.is_dense)
 		{
-			if (!OutPointValid(*it))
+			for (Pc<OutputPointType>::iterator it = output.begin(); it != output.end(); ++it)
 			{
-				output.is_dense = false;
-				break;
+				if (!OutPointValid(*it))
+				{
+					output.is_dense = false;
+					break;
+				}
 			}
 		}
 	}
@@ -196,12 +200,22 @@ namespace RecRoom
 			PRINT_INFO(ss.str());
 		}
 
-		for (std::size_t idx = 0; idx < filter2->size(); ++idx)
+		if (temp2.is_dense)
 		{
-			(*inOut)[(*filter2)[idx]] = temp2[idx];
+			for (std::size_t idx = 0; idx < filter2->size(); ++idx)
+			{
+				(*inOut)[(*filter2)[idx]] = temp2[idx];
 
-			if (!OutPointValid((*inOut)[(*filter2)[idx]]))
-				inOut->is_dense = false;
+				if (!OutPointValid(temp2[idx]))
+					inOut->is_dense = false;
+			}
+		}
+		else
+		{
+			for (std::size_t idx = 0; idx < filter2->size(); ++idx)
+			{
+				(*inOut)[(*filter2)[idx]] = temp2[idx];
+			}
 		}
 	}
 
