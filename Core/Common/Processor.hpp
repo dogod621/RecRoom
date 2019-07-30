@@ -71,14 +71,14 @@ namespace RecRoom
 
 		PRINT_INFO(name + " - Start");
 
-		if (ImplementCheck(searchSurface, input, filter2, output))
+		if (ImplementCheck(searchSurface, input, filter, output))
 			ImplementProcess(searchSurface, input, filter2, output);
 		else
 			THROW_EXCEPTION(name + " - Not pass check");
 
 		{
 			std::stringstream ss;
-			ss << name << " - End - inSize: " << filter2->size() << ", outSize: " << OutputSize(output);
+			ss << name << " - End - inSize: " << filter->size() << ", outSize: " << OutputSize(output);
 			PRINT_INFO(ss.str());
 		}
 	}
@@ -99,14 +99,14 @@ namespace RecRoom
 
 		PRINT_INFO(name + " - Start");
 
-		if (ImplementCheck(searchSurface, input, filter2, output))
+		if (ImplementCheck(searchSurface, input, filter, output))
 			ImplementProcess(searchSurface, input, filter2, output);
 		else
 			THROW_EXCEPTION(name + " - Not pass check");
 
 		{
 			std::stringstream ss;
-			ss << name << " - End - inSize: " << filter2->size() << ", outSize: " << OutputSize(output);
+			ss << name << " - End - inSize: " << filter->size() << ", outSize: " << OutputSize(output);
 			PRINT_INFO(ss.str());
 		}
 
@@ -139,14 +139,14 @@ namespace RecRoom
 
 		PRINT_INFO(name + " - Start");
 
-		if (ImplementCheck(searchSurface, input, filter2, output))
+		if (ImplementCheck(searchSurface, input, filter, output))
 			ImplementProcess(searchSurface, input, filter2, output);
 		else
 			THROW_EXCEPTION(name + " - Not pass check");
 
 		{
 			std::stringstream ss;
-			ss << name << " - End - inSize: " << filter2->size() << ", outSize: " << OutputSize(output);
+			ss << name << " - End - inSize: " << filter->size() << ", outSize: " << OutputSize(output);
 			PRINT_INFO(ss.str());
 		}
 
@@ -185,7 +185,7 @@ namespace RecRoom
 
 		PRINT_INFO(name + " - Start");
 
-		if (ImplementCheck(searchSurface, inOut, filter2, temp2))
+		if (ImplementCheck(searchSurface, inOut, filter, temp2))
 			ImplementProcess(searchSurface, inOut, filter2, temp2);
 		else
 			THROW_EXCEPTION(name + " - Not pass check");
@@ -195,7 +195,7 @@ namespace RecRoom
 
 		{
 			std::stringstream ss;
-			ss << name << " - End - inSize: " << filter2->size() << ", outSize: " << OutputSize(temp2);
+			ss << name << " - End - inSize: " << filter->size() << ", outSize: " << OutputSize(temp2);
 			PRINT_INFO(ss.str());
 		}
 
