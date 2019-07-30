@@ -304,40 +304,51 @@ namespace RecRoom
 
 		if (searchSurface->getIndices())
 		{
-			if (searchSurface->getIndices()->size() != filter->size()) // In general case, make sure the tree searches the surface
+			if (filter)
 			{
-				THROW_EXCEPTION("searchSurface is not valid, filter not match");
-				return false;
+				if (searchSurface->getIndices()->size() != filter->size()) // In general case, make sure the tree searches the surface
+				{
+					THROW_EXCEPTION("searchSurface is not valid, filter not match");
+					return false;
+				}
+				else
+				{
+					PcIndex temp = (*searchSurface->getIndices());
+					std::sort(temp.begin(), temp.end());
+					for (std::size_t idx = 0; idx < filter->size(); ++idx)
+					{
+						if ((*filter)[idx] != temp[idx])
+						{
+							THROW_EXCEPTION("searchSurface is not valid, filter not match");
+							return false;
+						}
+					}
+				}
 			}
 			else
 			{
-				PcIndex temp = (*searchSurface->getIndices());
-				std::sort(temp.begin(), temp.end());
-				for (std::size_t idx = 0; idx < filter->size(); ++idx)
-				{
-					if ((*filter)[idx] != temp[idx])
-					{
-						THROW_EXCEPTION("searchSurface is not valid, filter not match");
-						return false;
-					}
-				}
+				THROW_EXCEPTION("searchSurface is not valid, filter not match");
+				return false;
 			}
 		}
 		else
 		{
-			if (filter->size() != input->size())
+			if (filter)
 			{
-				THROW_EXCEPTION("searchSurface is not valid, filter not match");
-				return false;
-			}
-			else
-			{
-				for (int idx = 0; idx < filter->size(); ++idx)
+				if (filter->size() != input->size())
 				{
-					if ((*filter)[idx] != idx)
+					THROW_EXCEPTION("searchSurface is not valid, filter not match");
+					return false;
+				}
+				else
+				{
+					for (int idx = 0; idx < filter->size(); ++idx)
 					{
-						THROW_EXCEPTION("searchSurface is not valid, filter not match");
-						return false;
+						if ((*filter)[idx] != idx)
+						{
+							THROW_EXCEPTION("searchSurface is not valid, filter not match");
+							return false;
+						}
 					}
 				}
 			}
@@ -367,40 +378,51 @@ namespace RecRoom
 
 		if (searchSurface->getIndices())
 		{
-			if (searchSurface->getIndices()->size() != filter->size()) // In general case, make sure the tree searches the surface
+			if (filter)
 			{
-				THROW_EXCEPTION("searchSurface is not valid, filter not match");
-				return false;
+				if (searchSurface->getIndices()->size() != filter->size()) // In general case, make sure the tree searches the surface
+				{
+					THROW_EXCEPTION("searchSurface is not valid, filter not match");
+					return false;
+				}
+				else
+				{
+					PcIndex temp = (*searchSurface->getIndices());
+					std::sort(temp.begin(), temp.end());
+					for (std::size_t idx = 0; idx < filter->size(); ++idx)
+					{
+						if ((*filter)[idx] != temp[idx])
+						{
+							THROW_EXCEPTION("searchSurface is not valid, filter not match");
+							return false;
+						}
+					}
+				}
 			}
 			else
 			{
-				PcIndex temp = (*searchSurface->getIndices());
-				std::sort(temp.begin(), temp.end());
-				for (std::size_t idx = 0; idx < filter->size(); ++idx)
-				{
-					if ((*filter)[idx] != temp[idx])
-					{
-						THROW_EXCEPTION("searchSurface is not valid, filter not match");
-						return false;
-					}
-				}
+				THROW_EXCEPTION("searchSurface is not valid, filter not match");
+				return false;
 			}
 		}
 		else
 		{
-			if (filter->size() != input->size())
+			if (filter)
 			{
-				THROW_EXCEPTION("searchSurface is not valid, filter not match");
-				return false;
-			}
-			else
-			{
-				for (int idx = 0; idx < filter->size(); ++idx)
+				if (filter->size() != input->size())
 				{
-					if ((*filter)[idx] != idx)
+					THROW_EXCEPTION("searchSurface is not valid, filter not match");
+					return false;
+				}
+				else
+				{
+					for (int idx = 0; idx < filter->size(); ++idx)
 					{
-						THROW_EXCEPTION("searchSurface is not valid, filter not match");
-						return false;
+						if ((*filter)[idx] != idx)
+						{
+							THROW_EXCEPTION("searchSurface is not valid, filter not match");
+							return false;
+						}
 					}
 				}
 			}
@@ -430,40 +452,51 @@ namespace RecRoom
 
 		if (searchSurface->getIndices())
 		{
-			if (searchSurface->getIndices()->size() != filter->size()) // In general case, make sure the tree searches the surface
+			if (filter)
 			{
-				THROW_EXCEPTION("searchSurface is not valid, filter not match");
-				return false;
+				if (searchSurface->getIndices()->size() != filter->size()) // In general case, make sure the tree searches the surface
+				{
+					THROW_EXCEPTION("searchSurface is not valid, filter not match");
+					return false;
+				}
+				else
+				{
+					PcIndex temp = (*searchSurface->getIndices());
+					std::sort(temp.begin(), temp.end());
+					for (std::size_t idx = 0; idx < filter->size(); ++idx)
+					{
+						if ((*filter)[idx] != temp[idx])
+						{
+							THROW_EXCEPTION("searchSurface is not valid, filter not match");
+							return false;
+						}
+					}
+				}
 			}
 			else
 			{
-				PcIndex temp = (*searchSurface->getIndices());
-				std::sort(temp.begin(), temp.end());
-				for (std::size_t idx = 0; idx < filter->size(); ++idx)
-				{
-					if ((*filter)[idx] != temp[idx])
-					{
-						THROW_EXCEPTION("searchSurface is not valid, filter not match");
-						return false;
-					}
-				}
+				THROW_EXCEPTION("searchSurface is not valid, filter not match");
+				return false;
 			}
 		}
 		else
 		{
-			if (filter->size() != input->size())
+			if (filter)
 			{
-				THROW_EXCEPTION("searchSurface is not valid, filter not match");
-				return false;
-			}
-			else
-			{
-				for (int idx = 0; idx < filter->size(); ++idx)
+				if (filter->size() != input->size())
 				{
-					if ((*filter)[idx] != idx)
+					THROW_EXCEPTION("searchSurface is not valid, filter not match");
+					return false;
+				}
+				else
+				{
+					for (int idx = 0; idx < filter->size(); ++idx)
 					{
-						THROW_EXCEPTION("searchSurface is not valid, filter not match");
-						return false;
+						if ((*filter)[idx] != idx)
+						{
+							THROW_EXCEPTION("searchSurface is not valid, filter not match");
+							return false;
+						}
 					}
 				}
 			}
