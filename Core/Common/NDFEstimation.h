@@ -32,11 +32,11 @@ namespace RecRoom
 	public:
 		NDFEstimation(
 			const CONST_PTR(ScannerPc)& scanner,
-			const float distInterParm = 0.4f, const float angleInterParm = 0.6f,
+			const float distInterParm = 3.0f, const float angleInterParm = 1.0f,
 			const float cutFalloff = 0.33f, // cut attinuation less than 1/3
 			const float cutGrazing = 0.26f // cut incident agngle larger than 75 degrees
-		) : AttributeEstimation<InPointType, OutPointType>(scanner, cutFalloff, cutGrazing, 4),
-			distInterParm(distInterParm), angleInterParm(angleInterParm), minSharpness(0.0f), maxSharpness(1.0f), threshSNR(90.f)
+		) : AttributeEstimation<InPointType, OutPointType>(scanner, distInterParm, angleInterParm, cutFalloff, cutGrazing, 4),
+			 minSharpness(0.0f), maxSharpness(1.0f), threshSNR(90.f)
 		{
 			feature_name_ = "NDFEstimation";
 		};
@@ -53,9 +53,6 @@ namespace RecRoom
 		}
 
 	protected:
-		float distInterParm;
-		float angleInterParm;
-
 		float minSharpness;
 		float maxSharpness;
 		float threshSNR;
@@ -94,7 +91,7 @@ namespace RecRoom
 	public:
 		SGEstimation(
 			const CONST_PTR(ScannerPc)& scanner,
-			const float distInterParm = 0.4f, const float angleInterParm = 0.6f,
+			const float distInterParm = 3.0f, const float angleInterParm = 1.0f,
 			const float cutFalloff = 0.33f, // cut attinuation less than 1/3
 			const float cutGrazing = 0.26f // cut incident agngle larger than 75 degrees
 		) : NDFEstimation<InPointType, OutPointType>(scanner, distInterParm, angleInterParm, cutFalloff, cutGrazing)

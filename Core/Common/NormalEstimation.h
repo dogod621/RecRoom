@@ -14,8 +14,7 @@ namespace RecRoom
 			const CONST_PTR(ScannerPc)& scanner,
 			const float distInterParm = 0.4f,
 			const float cutFalloff = 0.33f // cut attinuation less than 1/3
-		) : SurfaceEstimation<InPointType, OutPointType>(scanner, cutFalloff, 3), // 3 point ensure a surface
-			distInterParm(distInterParm)
+		) : SurfaceEstimation<InPointType, OutPointType>(scanner, distInterParm, cutFalloff, 3) // 3 point ensure a surface
 		{
 			feature_name_ = "NormalEstimation";
 		};
@@ -32,9 +31,6 @@ namespace RecRoom
 			p.normal_z = std::numeric_limits<float>::quiet_NaN();
 			p.curvature = std::numeric_limits<float>::quiet_NaN();
 		}
-
-	protected:
-		float distInterParm;
 
 	public:
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW

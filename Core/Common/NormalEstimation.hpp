@@ -21,7 +21,7 @@ namespace RecRoom
 		for (std::vector<ScanData>::const_iterator it = scanDataSet.begin(); it != scanDataSet.end(); ++it)
 		{
 			const InPointType& hitPoint = cloud[it->index];
-			float weight = std::pow((search_radius_ - it->distance2Center) / search_radius_, distInterParm);
+			float weight = DistInterWeight(search_radius_, it->distance2Center, distInterParm);
 			sumWeight += weight;
 
 			accu[0] += weight * hitPoint.x * hitPoint.x;

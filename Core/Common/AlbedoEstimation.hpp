@@ -31,8 +31,7 @@ namespace RecRoom
 				return false;
 			}
 
-			float dotNN = hitNormal.dot(it->laser.incidentDirection);
-			float weight = std::pow(((float)search_radius_ - it->distance2Center) / (float)search_radius_, distInterParm) * std::pow(dotNN, angleInterParm);
+			float weight = DistInterWeight(search_radius_, it->distance2Center, distInterParm) * AngleInterWeight(hitNormal, it->laser.incidentDirection, angleInterParm);
 			sumWeight += weight;
 
 			A(shifter, 0) = weight * it->laser.incidentDirection.x();

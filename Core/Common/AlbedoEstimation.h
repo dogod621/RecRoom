@@ -13,11 +13,11 @@ namespace RecRoom
 		AlbedoEstimation(
 			const CONST_PTR(ScannerPc)& scanner,
 			const LinearSolver linearSolver = LinearSolver::EIGEN_SVD,
-			const float distInterParm = 0.4f, const float angleInterParm = 0.6f,
+			const float distInterParm = 3.0f, const float angleInterParm = 1.0f,
 			const float cutFalloff = 0.33f, // cut attinuation less than 1/3
 			const float cutGrazing = 0.26f // cut incident agngle larger than 75 degrees
-		) : AttributeEstimation<InPointType, OutPointType>(scanner, cutFalloff, cutGrazing, 4),
-			distInterParm(distInterParm), angleInterParm(angleInterParm), linearSolver(linearSolver)
+		) : AttributeEstimation<InPointType, OutPointType>(scanner, distInterParm, angleInterParm, cutFalloff, cutGrazing, 4),
+			linearSolver(linearSolver)
 		{
 			feature_name_ = "AlbedoEstimation";
 		};
@@ -37,8 +37,6 @@ namespace RecRoom
 		}
 
 	protected:
-		float distInterParm;
-		float angleInterParm;
 		LinearSolver linearSolver;
 
 	public:
