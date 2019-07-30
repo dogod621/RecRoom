@@ -105,40 +105,10 @@ namespace RecRoom
 	};
 
 	template<class InputPointType, class OutputType>
-	class SearchInputTypeProcessorPc : public ProcessorPc<InputPointType, InputPointType, OutputType>
+	class SearchAnySurfaceProcessorPc : public ProcessorPc<InputPointType, InputPointType, OutputType>
 	{
 	public:
-		SearchInputTypeProcessorPc() : ProcessorPc<InputPointType, InputPointType, OutputType>()
-		{
-			name = "SearchInputTypeProcessorPc";
-		}
-	};
-
-	template<class InputPointType, class OutputPointType>
-	class SearchInputTypeProcessorPc2Pc : public ProcessorPc2Pc<InputPointType, InputPointType, OutputPointType>
-	{
-	public:
-		SearchInputTypeProcessorPc2Pc() : ProcessorPc2Pc<InputPointType, InputPointType, OutputPointType>() 
-		{
-			name = "SearchInputTypeProcessorPc2Pc";
-		}
-	};
-
-	template<class InputPointType, class OutputPointType>
-	class SearchInputTypeProcessorPc2PcInOut : public ProcessorPc2PcInOut<InputPointType, InputPointType, OutputPointType>
-	{
-	public:
-		SearchInputTypeProcessorPc2PcInOut() : ProcessorPc2PcInOut<InputPointType, InputPointType, OutputPointType>()
-		{
-			name = "SearchInputTypeProcessorPc2PcInOut";
-		}
-	};
-
-	template<class InputPointType, class OutputType>
-	class SearchAnySurfaceProcessorPc : public SearchInputTypeProcessorPc<InputPointType, OutputType>
-	{
-	public:
-		SearchAnySurfaceProcessorPc() : SearchInputTypeProcessorPc<InputPointType, OutputType>() 
+		SearchAnySurfaceProcessorPc() : ProcessorPc<InputPointType, InputPointType, OutputType>()
 		{
 			name = "SearchAnySurfaceProcessorPc";
 		}
@@ -152,10 +122,10 @@ namespace RecRoom
 	};
 
 	template<class InputPointType, class OutputPointType>
-	class SearchAnySurfaceProcessorPc2Pc : public SearchInputTypeProcessorPc2Pc<InputPointType, OutputPointType>
+	class SearchAnySurfaceProcessorPc2Pc : public ProcessorPc2Pc<InputPointType, InputPointType, OutputPointType>
 	{
 	public:
-		SearchAnySurfaceProcessorPc2Pc() : SearchInputTypeProcessorPc2Pc<InputPointType, OutputPointType>() 
+		SearchAnySurfaceProcessorPc2Pc() : ProcessorPc2Pc<InputPointType, InputPointType, OutputPointType>()
 		{
 			name = "SearchAnySurfaceProcessorPc2Pc";
 		}
@@ -169,10 +139,10 @@ namespace RecRoom
 	};
 
 	template<class InputPointType, class OutputPointType>
-	class SearchAnySurfaceProcessorPc2PcInOut : public SearchInputTypeProcessorPc2PcInOut<InputPointType, OutputPointType>
+	class SearchAnySurfaceProcessorPc2PcInOut : public ProcessorPc2PcInOut<InputPointType, InputPointType, OutputPointType>
 	{
 	public:
-		SearchAnySurfaceProcessorPc2PcInOut() : SearchInputTypeProcessorPc2PcInOut<InputPointType, OutputPointType>()
+		SearchAnySurfaceProcessorPc2PcInOut() : ProcessorPc2PcInOut<InputPointType, InputPointType, OutputPointType>()
 		{
 			name = "SearchAnySurfaceProcessorPc2PcInOut";
 		}
@@ -186,10 +156,10 @@ namespace RecRoom
 	};
 
 	template<class InputPointType, class OutputType>
-	class SearchInputSurfaceProcessorPc : public SearchInputTypeProcessorPc<InputPointType, OutputType>
+	class SearchInputSurfaceProcessorPc : public ProcessorPc<InputPointType, InputPointType, OutputType>
 	{
 	public:
-		SearchInputSurfaceProcessorPc() : SearchInputTypeProcessorPc<InputPointType, OutputType>() 
+		SearchInputSurfaceProcessorPc() : ProcessorPc<InputPointType, InputPointType, OutputType>()
 		{
 			name = "SearchInputSurfaceProcessorPc";
 		}
@@ -203,10 +173,10 @@ namespace RecRoom
 	};
 
 	template<class InputPointType, class OutputPointType>
-	class SearchInputSurfaceProcessorPc2Pc : public SearchInputTypeProcessorPc2Pc<InputPointType, OutputPointType>
+	class SearchInputSurfaceProcessorPc2Pc : public ProcessorPc2Pc<InputPointType, InputPointType, OutputPointType>
 	{
 	public:
-		SearchInputSurfaceProcessorPc2Pc() : SearchInputTypeProcessorPc2Pc<InputPointType, OutputPointType>() 
+		SearchInputSurfaceProcessorPc2Pc() : ProcessorPc2Pc<InputPointType, InputPointType, OutputPointType>()
 		{
 			name = "SearchInputSurfaceProcessorPc2Pc";
 		}
@@ -220,10 +190,10 @@ namespace RecRoom
 	};
 
 	template<class InputPointType, class OutputPointType>
-	class SearchInputSurfaceProcessorPc2PcInOut : public SearchInputTypeProcessorPc2PcInOut<InputPointType, OutputPointType>
+	class SearchInputSurfaceProcessorPc2PcInOut : public ProcessorPc2PcInOut<InputPointType, InputPointType, OutputPointType>
 	{
 	public:
-		SearchInputSurfaceProcessorPc2PcInOut() : SearchInputTypeProcessorPc2PcInOut<InputPointType, OutputPointType>()
+		SearchInputSurfaceProcessorPc2PcInOut() : ProcessorPc2PcInOut<InputPointType, InputPointType, OutputPointType>()
 		{
 			name = "SearchInputSurfaceProcessorPc2PcInOut";
 		}

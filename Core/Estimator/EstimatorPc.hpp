@@ -1,9 +1,58 @@
 #pragma once
 
+#include <thread>
+#include <iostream>
+
 #include "EstimatorPc.h"
 
 namespace RecRoom
 {
+	template<class InPointType, class OutPointType>
+	void EstimatorPc<InPointType, OutPointType>::EstimationTask(
+		int id,
+		void* self_,
+		void* searchSurface_,
+		void* input_,
+		void* filter_,
+		void* output_)
+	{
+		EstimatorPc<InPointType, OutPointType>& self = (*(EstimatorPc<InPointType, OutPointType>*)(self_));
+		const Acc<InPointType>& searchSurface = (*(Acc<InPointType>*)(searchSurface_));
+		const Pc<InPointType>& input = (*(Pc<InPointType>*)(input_));
+		const PcIndex& filter = (*(PcIndex*)(filter_));
+		Pc<OutPointType>& output = (*(Pc<OutPointType>*)(output_));
+
+		std::vector<int> nnIndices;
+		std::vector<float> nnSqrDists;
+		std::vector<ScanData> scanDataSet;
+
+		for (int idx = id; idx < static_cast<int> (filter.size()); idx += self.numThreads)
+		{
+			const InPointType& inPoint = input[filter[idx]];
+			OutPointType& outPoint = output[idx];
+
+			if (searchSurface.radiusSearch(inPoint, self.searchRadius, nnIndices, nnSqrDists) > 0)
+			{
+				//
+				if (self.CollectScanData(*searchSurface.getInputCloud(), nnIndices, nnSqrDists, scanDataSet))
+				{
+					if (!self.ComputeAttribute(*searchSurface.getInputCloud(), scanDataSet, outPoint))
+					{
+						//PRINT_WARNING("ComputeAttribute failed");
+						self.SetAttributeNAN(outPoint);
+						output.is_dense = false;
+					}
+				}
+				else
+				{
+					//PRINT_WARNING("CollectScanData failed");
+					self.SetAttributeNAN(outPoint);
+					output.is_dense = false;
+				}
+			}
+		}
+	}
+
 	template<class InPointType, class OutPointType>
 	bool EstimatorPc<InPointType, OutPointType>::CollectScanData(
 		const Pc<InPointType>& cloud,
@@ -41,15 +90,12 @@ namespace RecRoom
 	{
 		output.is_dense = true;
 
+#ifdef _OPENMP
 		std::vector<int> nnIndices;
 		std::vector<float> nnSqrDists;
 		std::vector<ScanData> scanDataSet;
 
-#ifdef _OPENMP
 #pragma omp parallel for private (nnIndices, nnSqrDists, scanDataSet) num_threads(numThreads)
-#else
-		PRINT_WARNING("without OPENMP support, use single thread");
-#endif
 		for (int idx = 0; idx < static_cast<int> (filter->size()); ++idx)
 		{
 			const InPointType& inPoint = (*input)[(*filter)[idx]];
@@ -75,5 +121,18 @@ namespace RecRoom
 				}
 			}
 		}
+#else
+		PRINT_WARNING("OPENMP is not enabled, us std thread instead")
+		std::vector<std::thread> threads;
+		for (int i = 0; i < numThreads; i++)
+			threads.push_back(std::thread(EstimatorPc::EstimationTask, i, 
+				(void*)(this),
+				(void*)(&(*searchSurface)),
+				(void*)(&(*input)),
+				(void*)(&(*filter)),
+				(void*)(&output)));
+		for (auto& thread : threads)
+			thread.join();
+#endif
 	}
 }

@@ -22,6 +22,15 @@ namespace RecRoom
 		: public SearchAnySurfaceProcessorPc2PcInOut<InPointType, OutPointType>, public ThreadAble
 	{
 	public:
+		static void EstimationTask(
+			int id,
+			void* self,
+			void* searchSurface,
+			void* input,
+			void* filter, 
+			void* output);
+
+	public:
 		EstimatorPc(
 			const CONST_PTR(ScannerPc)& scanner,
 			float searchRadius,
@@ -66,8 +75,13 @@ namespace RecRoom
 
 		inline virtual bool ComputeAttribute(
 			const Pc<InPointType>& cloud,
-			const std::vector<ScanData>& scanDataSet, OutPointType& outPoint) const = 0;
+			const std::vector<ScanData>& scanDataSet, OutPointType& outPoint) const 
+		{
+			THROW_EXCEPTION("Interface is not implemented");
+			return false;
+		}
 
+	protected:
 		inline virtual float DistInterWeight(float searchRadius, float distance, float interParm) const
 		{
 			// return std::exp(-interParm * distance/searchRadius); gaussian
@@ -88,7 +102,10 @@ namespace RecRoom
 				(scanLaser.beamFalloff > cutFalloff));
 		}
 
-		inline virtual void SetAttributeNAN(OutPointType& p) const = 0;
+		inline virtual void SetAttributeNAN(OutPointType& p) const 
+		{
+			THROW_EXCEPTION("Interface is not implemented");
+		}
 
 		inline virtual bool SearchPointValid(const InPointType& p) const
 		{
