@@ -2,6 +2,10 @@
 
 #define _USE_MATH_DEFINES
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include <iostream>
 #include <cmath>
 #include <mutex>
@@ -167,6 +171,7 @@ namespace RecRoom
 		}
 
 		void SetNumberOfThreads(unsigned int numThreads = 0);
+		unsigned int getNumThreads() const { return numThreads; }
 
 	protected:
 		unsigned int numThreads;

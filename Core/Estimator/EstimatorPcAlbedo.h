@@ -12,7 +12,7 @@ namespace RecRoom
 	public:
 		EstimatorPcAlbedo(
 			const CONST_PTR(ScannerPc)& scanner,
-			double searchRadius,
+			float searchRadius,
 			const float distInterParm = 3.0f, 
 			const float angleInterParm = 1.0f,
 			const float cutFalloff = 0.33f, 
@@ -27,7 +27,7 @@ namespace RecRoom
 				THROW_EXCEPTION("scanner is not set");
 		}
 
-	protected:
+	public:
 		inline virtual bool ComputeAttribute(
 			const Pc<InPointType>& cloud,
 			const std::vector<ScanData>& scanDataSet, OutPointType& outPoint) const;

@@ -25,7 +25,7 @@ namespace RecRoom
 	public:
 		EstimatorPcNDF(
 			const CONST_PTR(ScannerPc)& scanner,
-			double searchRadius,
+			float searchRadius,
 			const float distInterParm = 3.0f,
 			const float angleInterParm = 1.0f,
 			const float cutFalloff = 0.33f,
@@ -36,7 +36,7 @@ namespace RecRoom
 			name = "EstimatorPcNDF";
 		}
 
-	protected:
+	public:
 		inline virtual bool ComputeAttribute(
 			const Pc<InPointType>& cloud,
 			const std::vector<ScanData>& scanDataSet, OutPointType& outPoint) const;
@@ -68,7 +68,7 @@ namespace RecRoom
 			std::vector<float>& ndfValues, float& intensity, float& mse) const
 		{
 			float meanNDF = 0.0;
-			for (std::size_t i = 0; i < samples.size(); ++i)
+			for (int i = 0; i < samples.size(); ++i)
 			{
 				ndfValues[i] = Distribution(samples[i].tanDir, sharpness);
 				meanNDF += samples[i].weight * ndfValues[i];
@@ -77,7 +77,7 @@ namespace RecRoom
 
 			intensity = meanIntensity / meanNDF;
 			mse = 0.0f;
-			for (std::size_t i = 0; i < samples.size(); ++i)
+			for (int i = 0; i < samples.size(); ++i)
 			{
 				ndfValues[i] *= intensity;
 				float diff = samples[i].intensity - ndfValues[i];
@@ -101,7 +101,7 @@ namespace RecRoom
 	public:
 		EstimatorPcSGNDF(
 			const CONST_PTR(ScannerPc)& scanner,
-			double searchRadius,
+			float searchRadius,
 			const float distInterParm = 3.0f,
 			const float angleInterParm = 1.0f,
 			const float cutFalloff = 0.33f,

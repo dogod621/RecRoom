@@ -10,15 +10,15 @@ namespace RecRoom
 	public:
 		EstimatorPcNormal(
 			const CONST_PTR(ScannerPc)& scanner,
-			double searchRadius,
+			float searchRadius,
 			const float distInterParm = 0.4f,
 			const float cutFalloff = 0.33f)
-			: EstimatorPc<InPointType, OutPointType>(scanner, searchRadius, distInterParm, 0.0f, cutFalloff, 0.0, 3) // 3 point ensure a surface
+			: EstimatorPc<InPointType, OutPointType>(scanner, searchRadius, distInterParm, 0.0f, cutFalloff, 0.0f, 3) // 3 point ensure a surface
 		{
 			name = "EstimatorPcNormal";
 		}
 
-	protected:
+	public:
 		inline virtual bool ComputeAttribute(
 			const Pc<InPointType>& cloud,
 			const std::vector<ScanData>& scanDataSet, OutPointType& outPoint) const;

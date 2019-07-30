@@ -122,7 +122,7 @@ namespace RecRoom
 #ifdef _OPENMP
 			numThreads = omp_get_num_procs();
 #else
-			threads_ = std::thread::hardware_concurrency();
+			numThreads = std::thread::hardware_concurrency();
 #endif
 		else
 			numThreads = numThreads_;

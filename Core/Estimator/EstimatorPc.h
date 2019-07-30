@@ -24,7 +24,7 @@ namespace RecRoom
 	public:
 		EstimatorPc(
 			const CONST_PTR(ScannerPc)& scanner,
-			double searchRadius,
+			float searchRadius,
 			const float distInterParm,
 			const float angleInterParm,
 			const float cutFalloff = 0.33f, 
@@ -44,7 +44,7 @@ namespace RecRoom
 			if (!scanner)
 				THROW_EXCEPTION("scanner is not set");
 
-			if (searchRadius <= 0.0)
+			if (searchRadius <= 0.0f)
 				THROW_EXCEPTION("searchRadius is not valid");
 
 			if (minRequireNumData < 1)
@@ -111,7 +111,7 @@ namespace RecRoom
 
 	public:
 		CONST_PTR(ScannerPc) getScanner() const { return scanner; }
-		double getSearchRadius() const { return searchRadius; }
+		float getSearchRadius() const { return searchRadius; }
 		float getDistInterParm() const { return distInterParm; }
 		float getAngleInterParm() const { return angleInterParm; }
 		float getCutFalloff() const { return cutFalloff; }
@@ -156,7 +156,7 @@ namespace RecRoom
 
 	protected:
 		CONST_PTR(ScannerPc) scanner;
-		double searchRadius;
+		float searchRadius;
 		float distInterParm;
 		float angleInterParm;
 		float cutFalloff;
