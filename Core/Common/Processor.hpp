@@ -47,10 +47,7 @@ namespace RecRoom
 			{
 				filter2->reserve(input->size());
 				for (int px = 0; px < input->size(); ++px)
-				{
-					if (InputPointValid((*input)[px]))
-						filter2->push_back(px);
-				}
+					filter2->push_back(px);
 			}
 		}
 
