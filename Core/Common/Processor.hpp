@@ -75,7 +75,7 @@ namespace RecRoom
 
 		{
 			std::stringstream ss;
-			ss << name << " - End - inSize: " << filter->size() << ", outSize: " << OutputSize(output);
+			ss << name << " - End - inSize: " << filter2->size() << ", outSize: " << OutputSize(output);
 			PRINT_INFO(ss.str());
 		}
 	}
@@ -103,7 +103,7 @@ namespace RecRoom
 
 		{
 			std::stringstream ss;
-			ss << name << " - End - inSize: " << filter->size() << ", outSize: " << OutputSize(output);
+			ss << name << " - End - inSize: " << filter2->size() << ", outSize: " << OutputSize(output);
 			PRINT_INFO(ss.str());
 		}
 
@@ -143,7 +143,7 @@ namespace RecRoom
 
 		{
 			std::stringstream ss;
-			ss << name << " - End - inSize: " << filter->size() << ", outSize: " << OutputSize(output);
+			ss << name << " - End - inSize: " << filter2->size() << ", outSize: " << OutputSize(output);
 			PRINT_INFO(ss.str());
 		}
 
@@ -192,7 +192,7 @@ namespace RecRoom
 
 		{
 			std::stringstream ss;
-			ss << name << " - End - inSize: " << filter->size() << ", outSize: " << OutputSize(temp2);
+			ss << name << " - End - inSize: " << filter2->size() << ", outSize: " << OutputSize(temp2);
 			PRINT_INFO(ss.str());
 		}
 
