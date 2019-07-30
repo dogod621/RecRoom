@@ -45,7 +45,8 @@ namespace RecRoom
 		{
 			if (filter)
 			{
-				filter2 = boost::const_pointer_cast<PcIndex>(filter);
+				(*filter2) = (*filter);
+				std::sort(filter2->begin(), filter2->end());
 			}
 			else
 			{
@@ -110,7 +111,8 @@ namespace RecRoom
 		{
 			if (filter)
 			{
-				filter2 = boost::const_pointer_cast<PcIndex>(filter);
+				(*filter2) = (*filter);
+				std::sort(filter2->begin(), filter2->end());
 			}
 			else
 			{
@@ -137,9 +139,9 @@ namespace RecRoom
 		}
 
 		//
-		for (std::size_t px = 0; px < output.size(); ++px)
+		for (Pc<OutputPointType>::iterator it = output.begin(); it != output.end(); ++it)
 		{
-			if (!pcl::isFinite(output[px]))
+			if (!pcl::isFinite(*it))
 			{
 				output.is_dense = false;
 				break;
@@ -226,10 +228,7 @@ namespace RecRoom
 				(*inOut)[(*filter2)[idx]] = temp2[idx];
 
 				if (!pcl::isFinite((*inOut)[(*filter2)[idx]]))
-				{
 					inOut->is_dense = false;
-					break;
-				}
 			}
 		}
 	}
