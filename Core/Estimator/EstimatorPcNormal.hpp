@@ -20,9 +20,7 @@ namespace RecRoom
 		ne.setSearchMethod(boost::const_pointer_cast<Acc<InPointType>>(searchSurface)); // trick, already ensure it won't be modified 
 		ne.setRadiusSearch(searchRadius);
 		ne.setSearchSurface(searchSurface->getInputCloud());
-		
-		if (filter)
-			ne.setIndices(filter);
+		ne.setIndices(filter);
 
 		ne.compute(output);
 	}

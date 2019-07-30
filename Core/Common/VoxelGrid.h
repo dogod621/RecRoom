@@ -11,6 +11,15 @@
 
 namespace RecRoom
 {
+	enum MorphologyOperation : Flag
+	{
+		MorphologyOperation_NONE = 0,
+		DILATION = 1,
+		EROSION = 2,
+		OPENING = 3,
+		CLOSING = 4
+	};
+
 	struct VoxelGridIndex
 	{
 		std::size_t idx;
@@ -69,7 +78,7 @@ namespace RecRoom
 	{
 	public:
 		using Leaf = VoxelGridLeaf<CenterType>;
-		using Leaves = std::map<VoxelGridIndex, VoxelGridLeaf<CenterType>>;
+		using Leaves = std::map<const VoxelGridIndex, Leaf>;
 
 	public:
 		VoxelGrid(const Eigen::Vector3d& leafSize, const Eigen::Vector3d& minAABB, const Eigen::Vector3d& maxAABB)
@@ -159,8 +168,8 @@ namespace RecRoom
 	class BinaryVoxelGrid : public VoxelGrid<PointType, bool>
 	{
 	public:
-		using Leaf = VoxelGridLeaf<bool>;
-		using Leaves = std::vector<Leaf>;
+		using Leaf = VoxelGrid<PointType, bool>::Leaf;
+		using Leaves = VoxelGrid<PointType, bool>::Leaves;
 
 	public:
 		BinaryVoxelGrid(const Eigen::Vector3d& leafSize, const Eigen::Vector3d& minAABB, const Eigen::Vector3d& maxAABB)
@@ -175,9 +184,9 @@ namespace RecRoom
 			for (Leaves::const_iterator it = leaves->begin(); it != leaves->end(); ++it)
 			{
 				PointType p;
-				p.x = ((float)(it->first.idx) + 0.5f) * (float)(leafSize)+minAABB.x();
-				p.y = ((float)(it->first.idy) + 0.5f) * (float)(leafSize)+minAABB.y();
-				p.z = ((float)(it->first.idz) + 0.5f) * (float)(leafSize)+minAABB.z();
+				p.x = ((float)(it->first.idx) + 0.5f) * (float)(leafSize.x())+minAABB.x();
+				p.y = ((float)(it->first.idy) + 0.5f) * (float)(leafSize.y())+minAABB.y();
+				p.z = ((float)(it->first.idz) + 0.5f) * (float)(leafSize.z())+minAABB.z();
 				pc->push_back(p);
 			}
 			return pc;
@@ -222,8 +231,8 @@ namespace RecRoom
 	class VoxelGridFilter : public pcl::Filter<PointType>, public VoxelGrid<PointType, bool>
 	{
 	public:
-		using Leaf = VoxelGridLeaf<bool>;
-		using Leaves = std::vector<Leaf>;
+		using Leaf = VoxelGrid<PointType, bool>::Leaf;
+		using Leaves = VoxelGrid<PointType, bool>::Leaves;
 
 	protected:
 		using pcl::Filter<PointType>::filter_name_;

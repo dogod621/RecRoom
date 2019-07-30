@@ -44,10 +44,11 @@ namespace RecRoom
 			}
 			else
 			{
-				Leaf toInsert();
+				Leaf toInsert;
 				InitLeaf(toInsert);
 				UpdateLeafAddPoint(toInsert, p);
-				leaves[pID] = toInsert;
+				//leaves->insert(std::pair<const VoxelGridIndex, Leaf>(pID, toInsert));
+				(*leaves)[pID] = toInsert;
 			}
 		}
 	}
@@ -80,7 +81,7 @@ namespace RecRoom
 		}
 		else
 		{
-			for (Pc<PointType>::iterator it = input->begin(); it != input->end(); ++it)
+			for (Pc<PointType>::const_iterator it = input->begin(); it != input->end(); ++it)
 				AddPoint(*it);
 		}
 	}
@@ -110,10 +111,11 @@ namespace RecRoom
 		}
 		else
 		{
-			Leaf toInsert();
+			Leaf toInsert;
 			InitLeaf(toInsert);
 			toInsert.size += 1;
-			leaves[pID] = toInsert;
+			//leaves->insert(std::pair<const VoxelGridIndex, Leaf>(pID, toInsert));
+			(*leaves)[pID] = toInsert;
 		}
 	}
 

@@ -13,53 +13,26 @@ namespace RecRoom
 	{
 		output.clear();
 
-		if (filter)
-		{
-			output.resize(filter->size());
+		output.resize(filter->size());
 #ifdef _OPENMP
 #pragma omp parallel for num_threads(numThreads)
 #endif
-			// Iterating over the entire index vector
-			for (int idx = 0; idx < static_cast<int> (filter->size()); ++idx)
+		// Iterating over the entire index vector
+		for (int idx = 0; idx < static_cast<int> (filter->size()); ++idx)
+		{
+			int px = (*filter)[idx];
+			std::vector<int> ki;
+			std::vector<float> kd;
+			if (searchSurface->nearestKSearch(*input, px, 1, ki, kd) > 0)
 			{
-				int px = (*filter)[idx];
-				std::vector<int> ki;
-				std::vector<float> kd;
-				if (searchSurface->nearestKSearch(*input, px, 1, ki, kd) > 0)
-				{
-					output[idx] = (*searchSurface->getInputCloud())[ki[0]];
-					output[idx].x = (*input)[px].x;
-					output[idx].y = (*input)[px].y;
-					output[idx].z = (*input)[px].z;
-				}
-				else
-				{
-					output[idx] = (*input)[px];
-				}
+				output[idx] = (*searchSurface->getInputCloud())[ki[0]];
+				output[idx].x = (*input)[px].x;
+				output[idx].y = (*input)[px].y;
+				output[idx].z = (*input)[px].z;
 			}
-		}
-		else
-		{
-			output.resize(input->size());
-#ifdef _OPENMP
-#pragma omp parallel for num_threads(numThreads)
-#endif
-			// Iterating over the entire index vector
-			for (int px = 0; px < static_cast<int> (input->size()); ++px)
+			else
 			{
-				std::vector<int> ki;
-				std::vector<float> kd;
-				if (searchSurface->nearestKSearch(*input, px, 1, ki, kd) > 0)
-				{
-					output[px] = (*searchSurface->getInputCloud())[ki[0]];
-					output[px].x = (*input)[px].x;
-					output[px].y = (*input)[px].y;
-					output[px].z = (*input)[px].z;
-				}
-				else
-				{
-					output[px] = (*input)[px];
-				}
+				output[idx] = (*input)[px];
 			}
 		}
 	}

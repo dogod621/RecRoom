@@ -47,34 +47,25 @@ namespace RecRoom
 				OutPointType& outPoint = output->points[idx];
 
 				//
-				if (pcl::isFinite(inPoint))
-				{
-					int k = self->searchForNeighbors((*self->indices_)[idx], self->search_parameter_, nnIndices, nnDists);
+				int k = self->searchForNeighbors((*self->indices_)[idx], self->search_parameter_, nnIndices, nnDists);
 
-					//
-					if (self->CollectScanData(
-						*self->surface_, k, nnIndices, nnDists,
-						inPoint, scanDataSet))
+				//
+				if (self->CollectScanData(
+					*self->surface_, k, nnIndices, nnDists,
+					inPoint, scanDataSet))
+				{
+					if (!self->ComputeAttribute(
+						*self->surface_,
+						inPoint, scanDataSet, outPoint))
 					{
-						if (!self->ComputeAttribute(
-							*self->surface_,
-							inPoint, scanDataSet, outPoint))
-						{
-							//PRINT_WARNING("ComputeAttribute failed");
-							self->SetAttributeNAN(outPoint);
-							output->is_dense = false;
-						}
-					}
-					else
-					{
-						//PRINT_WARNING("CollectScanData failed");
+						//PRINT_WARNING("ComputeAttribute failed");
 						self->SetAttributeNAN(outPoint);
 						output->is_dense = false;
 					}
 				}
 				else
 				{
-					//PRINT_WARNING("Input point contain non finite value");
+					//PRINT_WARNING("CollectScanData failed");
 					self->SetAttributeNAN(outPoint);
 					output->is_dense = false;
 				}
@@ -100,34 +91,25 @@ namespace RecRoom
 			const InPointType& inPoint = (*input_)[(*indices_)[idx]];
 			OutPointType& outPoint = output.points[idx];
 
-			if (pcl::isFinite(inPoint))
-			{
-				int k = searchForNeighbors((*indices_)[idx], search_parameter_, nnIndices, nnDists);
+			int k = searchForNeighbors((*indices_)[idx], search_parameter_, nnIndices, nnDists);
 
-				//
-				if (CollectScanData(
-					*surface_, k, nnIndices, nnDists,
-					inPoint, scanDataSet))
+			//
+			if (CollectScanData(
+				*surface_, k, nnIndices, nnDists,
+				inPoint, scanDataSet))
+			{
+				if (!ComputeAttribute(
+					*surface_,
+					inPoint, scanDataSet, outPoint))
 				{
-					if (!ComputeAttribute(
-						*surface_,
-						inPoint, scanDataSet, outPoint))
-					{
-						//PRINT_WARNING("ComputeAttribute failed");
-						SetAttributeNAN(outPoint);
-						output.is_dense = false;
-					}
-				}
-				else
-				{
-					//PRINT_WARNING("CollectScanData failed");
+					//PRINT_WARNING("ComputeAttribute failed");
 					SetAttributeNAN(outPoint);
 					output.is_dense = false;
 				}
 			}
 			else
 			{
-				//PRINT_WARNING("Input point contain non finite value");
+				//PRINT_WARNING("CollectScanData failed");
 				SetAttributeNAN(outPoint);
 				output.is_dense = false;
 			}
@@ -167,5 +149,5 @@ namespace RecRoom
 		}
 
 		return static_cast<int>(scanDataSet.size()) >= minRequireNumData;
-	}
+}
 }

@@ -15,34 +15,23 @@ namespace RecRoom
 
 		std::vector<bool> pcStatus;
 		pcStatus.resize(input->size());
-		if (filter)
+		output.reserve(filter->size());
+
+		for (std::size_t px = 0; px < pcStatus.size(); ++px)
+			pcStatus[px] = false;
+		for (PcIndex::const_iterator it = filter->begin(); it != filter->end(); ++it)
+			pcStatus[(*it)] = true;
+
+		for (PcIndex::const_iterator it = filter->begin(); it != filter->end(); ++it)
 		{
-			output.reserve(filter->size());
-
-			for (std::size_t px = 0; px < pcStatus.size(); ++px)
-				pcStatus[px] = false;
-
-			for (PcIndex::const_iterator it = filter->begin(); it != filter->end(); ++it)
-				pcStatus[(*it)] = true;
-		}
-		else
-		{
-			output.reserve(input->size());
-
-			for (std::size_t px = 0; px < pcStatus.size(); ++px)
-				pcStatus[px] = true;
-		}
-
-		for (int px = 0; px < input->size(); ++px)
-		{
-			if (pcStatus[px])
+			if (pcStatus[*it])
 			{
-				output.push_back(px);
-				pcStatus[px] = false;
+				output.push_back(*it);
+				pcStatus[*it] = false;
 
 				std::vector<int> ki;
 				std::vector<float> kd;
-				int k = searchSurface->radiusSearch(*input, px, minDistance, ki, kd);
+				int k = searchSurface->radiusSearch(*input, *it, minDistance, ki, kd);
 				for (int i = 0; i < k; ++i)
 					pcStatus[ki[i]] = false;
 			}

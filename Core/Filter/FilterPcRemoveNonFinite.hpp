@@ -13,23 +13,11 @@ namespace RecRoom
 	{
 		output.clear();
 
-		if (filter)
+		output.reserve(filter->size());
+		for (PcIndex::const_iterator it = filter->begin(); it != filter->end(); ++it)
 		{
-			output.reserve(filter->size());
-			for (PcIndex::const_iterator it = filter->begin(); it != filter->end(); ++it)
-			{
-				if (pcl::isFinite((*input)[(*it)]))
-					output.push_back(*it);
-			}
-		}
-		else
-		{
-			output.reserve(input->size());
-			for (int px = 0 ; px < input->size(); ++px)
-			{
-				if (pcl::isFinite((*input)[px]))
-					output.push_back(px);
-			}
+			if (pcl::isFinite((*input)[(*it)]))
+				output.push_back(*it);
 		}
 	}
 }

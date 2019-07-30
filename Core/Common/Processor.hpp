@@ -7,20 +7,200 @@
 
 namespace RecRoom
 {
+	template<class SearchPointType, class InputPointType, class OutputType>
+	void ProcessorPc<SearchPointType, InputPointType, OutputType>::Process(
+		const CONST_PTR(Acc<SearchPointType>)& searchSurface,
+		const CONST_PTR(Pc<InputPointType>)& input,
+		const CONST_PTR(PcIndex)& filter,
+		OutputType& output) const
+	{
+		//if ((&(*input)) == (&output))
+		//	THROW_EXCEPTION("input point to output");
+
+		PTR(PcIndex) filter2(new PcIndex);
+
+		if (!input->is_dense)
+		{
+			if (filter)
+			{
+				filter2->reserve(filter->size());
+				for (PcIndex::const_iterator it = filter->begin(); it != filter->end(); ++it)
+				{
+					if (pcl::isFinite((*input)[(*it)]))
+						filter2->push_back(*it);
+				}
+				std::sort(filter2->begin(), filter2->end());
+			}
+			else
+			{
+				filter2->reserve(input->size());
+				for (int px = 0; px < input->size(); ++px)
+				{
+					if (pcl::isFinite((*input)[px]))
+						filter2->push_back(px);
+				}
+			}
+		}
+		else
+		{
+			if (filter)
+			{
+				filter2 = boost::const_pointer_cast<PcIndex>(filter);
+			}
+			else
+			{
+				filter2->reserve(input->size());
+				for (int px = 0; px < input->size(); ++px)
+				{
+					if (pcl::isFinite((*input)[px]))
+						filter2->push_back(px);
+				}
+			}
+		}
+
+		PRINT_INFO(name + " - Start");
+
+		if (ImplementCheck(searchSurface, input, filter2, output))
+			ImplementProcess(searchSurface, input, filter2, output);
+		else
+			THROW_EXCEPTION(name + " - Not pass check");
+
+		{
+			std::stringstream ss;
+			ss << name << " - End - inSize: " << filter2->size() << ", outSize: " << OutputSize(output);
+			PRINT_INFO(ss.str());
+		}
+	}
+
+	template<class SearchPointType, class InputPointType, class OutputPointType>
+	void ProcessorPc2Pc<SearchPointType, InputPointType, OutputPointType>::Process(
+		const CONST_PTR(Acc<SearchPointType>)& searchSurface,
+		const CONST_PTR(Pc<InputPointType>)& input,
+		const CONST_PTR(PcIndex)& filter,
+		Pc<OutputPointType>& output) const
+	{
+		//if ((&(*input)) == (&output))
+		//	THROW_EXCEPTION("input point to output");
+
+		PTR(PcIndex) filter2(new PcIndex);
+
+		if (!input->is_dense)
+		{
+			if (filter)
+			{
+				filter2->reserve(filter->size());
+				for (PcIndex::const_iterator it = filter->begin(); it != filter->end(); ++it)
+				{
+					if (pcl::isFinite((*input)[(*it)]))
+						filter2->push_back(*it);
+				}
+				std::sort(filter2->begin(), filter2->end());
+			}
+			else
+			{
+				filter2->reserve(input->size());
+				for (int px = 0; px < input->size(); ++px)
+				{
+					if (pcl::isFinite((*input)[px]))
+						filter2->push_back(px);
+				}
+			}
+		}
+		else
+		{
+			if (filter)
+			{
+				filter2 = boost::const_pointer_cast<PcIndex>(filter);
+			}
+			else
+			{
+				filter2->reserve(input->size());
+				for (int px = 0; px < input->size(); ++px)
+				{
+					if (pcl::isFinite((*input)[px]))
+						filter2->push_back(px);
+				}
+			}
+		}
+
+		PRINT_INFO(name + " - Start");
+
+		if (ImplementCheck(searchSurface, input, filter2, output))
+			ImplementProcess(searchSurface, input, filter2, output);
+		else
+			THROW_EXCEPTION(name + " - Not pass check");
+
+		{
+			std::stringstream ss;
+			ss << name << " - End - inSize: " << filter2->size() << ", outSize: " << OutputSize(output);
+			PRINT_INFO(ss.str());
+		}
+
+		//
+		for (std::size_t px = 0; px < output.size(); ++px)
+		{
+			if (!pcl::isFinite(output[px]))
+			{
+				output.is_dense = false;
+				break;
+			}
+		}
+	}
+
 	template<class SearchPointType, class InputPointType, class OutputPointType>
 	void ProcessorPc2Pc<SearchPointType, InputPointType, OutputPointType>::ProcessInOut(
 		const CONST_PTR(Acc<SearchPointType>)& searchSurface,
 		const PTR(Pc<InputPointType>)& inOut,
 		const CONST_PTR(PcIndex)& filter) const
 	{
-		if (filter)
+		PTR(PcIndex) filter2(new PcIndex);
+
+		if (!inOut->is_dense)
+		{
+			if (filter)
+			{
+				filter2->reserve(filter->size());
+				for (PcIndex::const_iterator it = filter->begin(); it != filter->end(); ++it)
+				{
+					if (pcl::isFinite((*inOut)[(*it)]))
+						filter2->push_back(*it);
+				}
+				std::sort(filter2->begin(), filter2->end());
+			}
+			else
+			{
+				filter2->reserve(inOut->size());
+				for (int px = 0; px < inOut->size(); ++px)
+				{
+					if (pcl::isFinite((*inOut)[px]))
+						filter2->push_back(px);
+				}
+			}
+		}
+		else
+		{
+			if (filter)
+			{
+				filter2 = boost::const_pointer_cast<PcIndex>(filter);
+			}
+			else
+			{
+				filter2->reserve(inOut->size());
+				for (int px = 0; px < inOut->size(); ++px)
+				{
+					if (pcl::isFinite((*inOut)[px]))
+						filter2->push_back(px);
+				}
+			}
+		}
+
 		{
 			Pc<InputPointType> temp1;
 			Pc<OutputPointType> temp2;
 
 			pcl::ExtractIndices<InputPointType> extract;
 			extract.setInputCloud(inOut);
-			extract.setIndices(filter);
+			extract.setIndices(filter2);
 			extract.setNegative(false);
 			extract.filter(temp1);
 
@@ -28,22 +208,29 @@ namespace RecRoom
 			for (std::size_t px = 0; px < temp1.size(); ++px)
 				temp2[px] = temp1[px];
 
-			this->Process(searchSurface, inOut, filter, temp2);
+			PRINT_INFO(name + " - Start");
 
-			for (std::size_t idx = 0; idx < filter->size(); ++idx)
-				(*inOut)[(*filter)[idx]] = temp2[idx];
-		}
-		else
-		{
-			Pc<OutputPointType> temp;
-			temp.resize(inOut->size());
-			for (std::size_t px = 0; px < inOut->size(); ++px)
-				temp[px] = (*inOut)[px];
+			if (ImplementCheck(searchSurface, inOut, filter2, temp2))
+				ImplementProcess(searchSurface, inOut, filter2, temp2);
+			else
+				THROW_EXCEPTION(name + " - Not pass check");
 
-			this->Process(searchSurface, inOut, filter, temp);
+			{
+				std::stringstream ss;
+				ss << name << " - End - inSize: " << filter2->size() << ", outSize: " << OutputSize(temp2);
+				PRINT_INFO(ss.str());
+			}
 
-			for (std::size_t px = 0; px < inOut->size(); ++px)
-				(*inOut)[px] = temp[px];
+			for (std::size_t idx = 0; idx < filter2->size(); ++idx)
+			{
+				(*inOut)[(*filter2)[idx]] = temp2[idx];
+
+				if (!pcl::isFinite((*inOut)[(*filter2)[idx]]))
+				{
+					inOut->is_dense = false;
+					break;
+				}
+			}
 		}
 	}
 
@@ -118,18 +305,42 @@ namespace RecRoom
 
 		if (searchSurface->getIndices())
 		{
-			if (searchSurface->getIndices() != filter) // In general case, make sure the tree searches the surface
+			if (searchSurface->getIndices()->size() != filter->size()) // In general case, make sure the tree searches the surface
 			{
 				THROW_EXCEPTION("searchSurface is not valid, filter not match");
 				return false;
 			}
+			else
+			{
+				PcIndex temp = (*searchSurface->getIndices());
+				std::sort(temp.begin(), temp.end());
+				for (std::size_t idx = 0; idx < filter->size(); ++idx)
+				{
+					if ((*filter)[idx] != temp[idx])
+					{
+						THROW_EXCEPTION("searchSurface is not valid, filter not match");
+						return false;
+					}
+				}
+			}
 		}
 		else
 		{
-			if (filter) // In general case, make sure the tree searches the surface
+			if (filter->size() != input->size())
 			{
 				THROW_EXCEPTION("searchSurface is not valid, filter not match");
 				return false;
+			}
+			else
+			{
+				for (int idx = 0; idx < filter->size(); ++idx)
+				{
+					if ((*filter)[idx] != idx)
+					{
+						THROW_EXCEPTION("searchSurface is not valid, filter not match");
+						return false;
+					}
+				}
 			}
 		}
 
@@ -157,18 +368,42 @@ namespace RecRoom
 
 		if (searchSurface->getIndices())
 		{
-			if (searchSurface->getIndices() != filter) // In general case, make sure the tree searches the surface
+			if (searchSurface->getIndices()->size() != filter->size()) // In general case, make sure the tree searches the surface
 			{
 				THROW_EXCEPTION("searchSurface is not valid, filter not match");
 				return false;
 			}
+			else
+			{
+				PcIndex temp = (*searchSurface->getIndices());
+				std::sort(temp.begin(), temp.end());
+				for (std::size_t idx = 0; idx < filter->size(); ++idx)
+				{
+					if ((*filter)[idx] != temp[idx])
+					{
+						THROW_EXCEPTION("searchSurface is not valid, filter not match");
+						return false;
+					}
+				}
+			}
 		}
 		else
 		{
-			if (filter) // In general case, make sure the tree searches the surface
+			if (filter->size() != input->size())
 			{
 				THROW_EXCEPTION("searchSurface is not valid, filter not match");
 				return false;
+			}
+			else
+			{
+				for (int idx = 0; idx < filter->size(); ++idx)
+				{
+					if ((*filter)[idx] != idx)
+					{
+						THROW_EXCEPTION("searchSurface is not valid, filter not match");
+						return false;
+					}
+				}
 			}
 		}
 

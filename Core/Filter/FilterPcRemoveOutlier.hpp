@@ -19,9 +19,7 @@ namespace RecRoom
 		olr.setStddevMulThresh(stdMul);
 		olr.setInputCloud(input);
 		olr.setSearchMethod(searchSurface);
-
-		if (filter)
-			olr.setIndices(filter);
+		olr.setIndices(filter);
 
 		olr.filter(output);
 	}

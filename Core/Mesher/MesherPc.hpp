@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Filter/FilterPcRemoveNonFinite.h"
-
 #include "MesherPc.h"
 
 namespace RecRoom
@@ -14,11 +12,6 @@ namespace RecRoom
 		Mesh& output) const
 	{
 		//
-		PTR(PcIndex) filterRmNAN (new PcIndex);
-		FilterPcRemoveNonFinite<PointType> fnan;
-		fnan.Process(searchSurface, input, filter, *filterRmNAN);
-
-		//
 		PTR(Pc<PointType>) pcVertex(new Pc<PointType>);
 		{
 			PTR(Acc<PointType>) searchSurface2;
@@ -30,7 +23,7 @@ namespace RecRoom
 				input2 = PTR(Pc<PointType>)(new Pc<PointType>);
 				filter2 = nullptr;
 
-				preprocessSampler->Process(searchSurface, input, filterRmNAN, *input2);
+				preprocessSampler->Process(searchSurface, input, filter, *input2);
 
 				searchSurface2->setInputCloud(input2);
 			}
@@ -38,7 +31,7 @@ namespace RecRoom
 			{
 				searchSurface2 = boost::const_pointer_cast<Acc<PointType>>(searchSurface);
 				input2 = boost::const_pointer_cast<Pc<PointType>>(input);
-				filter2 = boost::const_pointer_cast<PcIndex>(filterRmNAN);
+				filter2 = boost::const_pointer_cast<PcIndex>(filter);
 			}
 
 			//
@@ -60,28 +53,12 @@ namespace RecRoom
 			}
 
 			//
-			if (filter3)
+			pcVertex->reserve(filter3->size());
+			for (PcIndex::const_iterator it = filter3->begin(); it != filter3->end(); ++it)
 			{
-				pcVertex->reserve(filter3->size());
-				for (PcIndex::const_iterator it = filter3->begin(); it != filter3->end(); ++it)
-				{
-					PointType srcP = (*input2)[*it];
-
-					if (pcl::isFinite(srcP))
-						pcVertex->push_back(srcP);
-				}
-			}
-			else
-			{
-				pcVertex->reserve(input2->size());
-
-				for (std::size_t px = 0; px < input2->size(); ++px)
-				{
-					PointType srcP = (*input2)[px];
-
-					if (pcl::isFinite(srcP))
-						pcVertex->push_back(srcP);
-				}
+				PointType srcP = (*input2)[*it];
+				if (pcl::isFinite(srcP))
+					pcVertex->push_back(srcP);
 			}
 		}
 
@@ -96,9 +73,7 @@ namespace RecRoom
 		{
 			PTR(Pc<PointType>) pcVertex2(new Pc<PointType>);
 			pcl::fromPCLPointCloud2(output.cloud, *pcVertex2);
-
 			fieldInterpolator->ProcessInOut(treeVertex, pcVertex2, nullptr);
-
 			pcl::toPCLPointCloud2(*pcVertex2, output.cloud);
 		}
 	}

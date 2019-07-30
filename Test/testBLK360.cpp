@@ -20,10 +20,12 @@
 #include "Estimator/EstimatorPcAlbedo.h"
 #include "Estimator/EstimatorPcNDF.h"
 #include "Filter/FilterPcRemoveOutlier.h"
+#include "Filter/FilterPcRemoveDuplicate.h"
 #include "Mesher/MesherPcMC.h"
 #include "Mesher/MesherPcGP3.h"
 #include "Mesher/MesherPcGP.h"
 #include "Sampler/SamplerPcGrid.h"
+#include "Sampler/SamplerPcMLS.h"
 #include "Segmenter/SegmenterPcSVC.h"
 
 #define CMD_SPACE 25
@@ -329,70 +331,93 @@ int main(int argc, char *argv[])
 
 			//
 			std::cout << "Create DownSampler" << std::endl;
-			PTR(RecRoom::ReconstructorPcOC::Sampler)
-				downSampler(
-					new RecRoom::SamplerPcGrid<RecRoom::PointMED>(voxelSize, containerPcRAW->getMinAABB(), containerPcRAW->getMaxAABB()));
-			reconstructorPC->setDownSampler(downSampler);
+			{
+				PTR(RecRoom::ReconstructorPcOC::Sampler)
+					downSampler(
+						new RecRoom::SamplerPcGrid<RecRoom::PointMED>(voxelSize, containerPcRAW->getMinAABB(), containerPcRAW->getMaxAABB()));
+				reconstructorPC->setDownSampler(downSampler);
+			}
 
 			std::cout << "Create OutlierRemover" << std::endl;
-			std::cout << "Not used" << std::endl;
-			/*PTR(RecRoom::ReconstructorPcOC::Filter)
-				outlierRemover(
-					new RecRoom::FilterPcRemoveOutlier<RecRoom::PointMED>(meanK, stdMul));
-			reconstructorPC->setOutlierRemover(outlierRemover);*/
+			{
+				std::cout << "Not used" << std::endl;
+				/*PTR(RecRoom::ReconstructorPcOC::Filter)
+					outlierRemover(
+						new RecRoom::FilterPcRemoveOutlier<RecRoom::PointMED>(meanK, stdMul));
+				reconstructorPC->setOutlierRemover(outlierRemover);*/
+			}
 
 			std::cout << "Create NormalEstimator" << std::endl;
-			PTR(RecRoom::ReconstructorPcOC::Estimator)
-				normalEstimator(
-					new RecRoom::EstimatorPcNormal<RecRoom::PointMED, RecRoom::PointMED>(
-						searchRadius, scannerPc,
-						distInterParm, cutFalloff));
-			reconstructorPC->setNormalEstimator(normalEstimator);
+			{
+				PTR(RecRoom::ReconstructorPcOC::Estimator)
+					normalEstimator(
+						new RecRoom::EstimatorPcNormal<RecRoom::PointMED, RecRoom::PointMED>(
+							searchRadius, scannerPc,
+							distInterParm, cutFalloff));
+				reconstructorPC->setNormalEstimator(normalEstimator);
+			}
 
 			std::cout << "Create AlbedoEstimator" << std::endl;
-			PTR(RecRoom::ReconstructorPcOC::Estimator)
-				albedoEstimator(
-					new RecRoom::EstimatorPcAlbedo<RecRoom::PointMED, RecRoom::PointMED>(
-						searchRadius, scannerPc, RecRoom::LinearSolver::EIGEN_SVD, 
-						3, 1, cutFalloff, cutGrazing));
-			reconstructorPC->setAlbedoEstimator(albedoEstimator);
+			{
+				PTR(RecRoom::ReconstructorPcOC::Estimator)
+					albedoEstimator(
+						new RecRoom::EstimatorPcAlbedo<RecRoom::PointMED, RecRoom::PointMED>(
+							searchRadius, scannerPc, RecRoom::LinearSolver::EIGEN_SVD,
+							3, 1, cutFalloff, cutGrazing));
+				reconstructorPC->setAlbedoEstimator(albedoEstimator);
+			}
 
 			std::cout << "Create NDFEstimator" << std::endl;
-			PTR(RecRoom::ReconstructorPcOC::Estimator)
-				ndfEstimator(
-					new RecRoom::EstimatorPcNDF<RecRoom::PointMED, RecRoom::PointMED>(
-						searchRadius, scannerPc, RecRoom::NDF::SG,
-						3, 1, cutFalloff, cutGrazing));
-			reconstructorPC->setSharpnessEstimator(ndfEstimator);
+			{
+				PTR(RecRoom::ReconstructorPcOC::Estimator)
+					ndfEstimator(
+						new RecRoom::EstimatorPcNDF<RecRoom::PointMED, RecRoom::PointMED>(
+							searchRadius, scannerPc, RecRoom::NDF::SG,
+							3, 1, cutFalloff, cutGrazing));
+				reconstructorPC->setSharpnessEstimator(ndfEstimator);
+			}
 
 			std::cout << "Create Segmenter" << std::endl;
-			PTR(RecRoom::ReconstructorPcOC::Segmenter)
-				segmenter(
-					new RecRoom::SegmenterPcSVC<RecRoom::PointMED>(
-						voxelResolution, seedResolution,
-						xyzImportance, rgbImportance, intensityImportance, normalImportance, sharpnessImportance));
-			reconstructorPC->setSegmenter(segmenter);
+			{
+				PTR(RecRoom::ReconstructorPcOC::Segmenter)
+					segmenter(
+						new RecRoom::SegmenterPcSVC<RecRoom::PointMED>(
+							voxelResolution, seedResolution,
+							xyzImportance, rgbImportance, intensityImportance, normalImportance, sharpnessImportance));
+				reconstructorPC->setSegmenter(segmenter);
+			}
 
 			std::cout << "Create Mesher" << std::endl;
-			
-			/*PTR(RecRoom::ReconstructorPcOC::Mesher)
-				mesher(
-					new RecRoom::MesherPcMCHoppe<RecRoom::PointREC>(distIgnore, percentageExtendGrid, isoLevel, gridRes));
-			reconstructorPC->setMesher(mesher);*/
-			
-			PTR(RecRoom::ReconstructorPcOC::Mesher)
-				mesher(
-					new RecRoom::MesherPcGP3<RecRoom::PointREC>(maxEdgeSize, mu, maxNumNei, minAngle, maxAngle, epsAngle, false, true));
+			{
+				/*PTR(RecRoom::SamplerPc<RecRoom::PointREC>)
+					distinctSampler(
+						new RecRoom::SamplerPcBinaryGrid<RecRoom::PointREC>(
+							voxelSize, containerPcRAW->getMinAABB(), containerPcRAW->getMaxAABB(),
+							RecRoom::MorphologyOperation::DILATION, 5));
 
-			/*PTR(RecRoom::FilterPc<RecRoom::PointREC>)
-				mesherFilter(
-					new RecRoom::FilterPcRemoveDuplicate<RecRoom::PointREC>(voxelSize));
-			mesher->setPreprocessFilter(mesherFilter);*/
-			/*PTR(RecRoom::SamplerPc<RecRoom::PointREC>)
-				mesherSampler(
-					new RecRoom::SamplerPcGrid<RecRoom::PointREC>(voxelSize, containerPcRAW->getMinAABB(), containerPcRAW->getMaxAABB(), 0.75));
-			mesher->setPreprocessSampler(mesherSampler);*/
-			reconstructorPC->setMesher(mesher);
+				PTR(RecRoom::SamplerPc<RecRoom::PointREC>)
+					preprocessSampler(
+						new RecRoom::SamplerPcMLS<RecRoom::PointREC>(
+							searchRadius, 2, RecRoom::MLSProjectionMethod::SIMPLE, RecRoom::MLSUpsamplingMethod::DISTINCT_CLOUD, true, 
+							distinctSampler ));
+
+				PTR(RecRoom::FilterPc<RecRoom::PointREC>)
+					preprocessFilter(
+						new RecRoom::FilterPcRemoveDuplicate<RecRoom::PointREC>(voxelSize*0.5));
+
+				PTR(RecRoom::ReconstructorPcOC::Mesher)
+					mesher(
+						new RecRoom::MesherPcGP3<RecRoom::PointREC>(
+							maxEdgeSize, mu, maxNumNei, minAngle, maxAngle, epsAngle, false, true,
+							preprocessSampler, preprocessFilter));*/
+
+				PTR(RecRoom::ReconstructorPcOC::Mesher)
+					mesher(
+						new RecRoom::MesherPcGP3<RecRoom::PointREC>(
+							maxEdgeSize, mu, maxNumNei, minAngle, maxAngle, epsAngle, false, true));
+
+				reconstructorPC->setMesher(mesher);
+			}
 
 			//
 			if (pcl::console::find_switch(argc, argv, "-recPointCloud"))

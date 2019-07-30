@@ -143,20 +143,18 @@ namespace RecRoom
 
 		{
 			CreateSupervoxels(InitialSeeds());
-			ExpandSupervoxels(static_cast<int> (1.8f*seedResolution / voxelResolution));
+			ExpandSupervoxels(static_cast<int> (1.8f * seedResolution / voxelResolution));
 		}
 
+		for (Pc<PointCINS>::iterator it = pcLabel.begin(); it != pcLabel.end(); ++it)
 		{
-			for (Pc<PointCINS>::iterator it = pcLabel.begin(); it != pcLabel.end(); ++it)
+			it->hasLabel = -1;
+			if (pcl::isFinite<PointCINS>(*it))
 			{
-				it->hasLabel = -1;
-				if (pcl::isFinite<PointCINS>(*it))
-				{
 
-					Voxel<PointCINS>& voxel = oat->getLeafContainerAtPoint(*it)->getData();
-					if (voxel.parent)
-						it->label = voxel.parent->label;
-				}
+				Voxel<PointCINS>& voxel = oat->getLeafContainerAtPoint(*it)->getData();
+				if (voxel.parent)
+					it->label = voxel.parent->label;
 			}
 		}
 
@@ -194,8 +192,8 @@ namespace RecRoom
 			std::vector<int> neighbors;
 			std::vector<float> sqrDistances;
 			seeds.reserve(oriSeeds.size());
-			float searchRadius = 0.5f*seedResolution;
-			float minPoints = 0.05f * (searchRadius)*(searchRadius)* M_PI / (voxelResolution*voxelResolution);
+			float searchRadius = 0.5f * seedResolution;
+			float minPoints = 0.05f * (searchRadius) * (searchRadius)* M_PI / (voxelResolution * voxelResolution);
 			for (size_t i = 0; i < oriSeeds.size(); ++i)
 			{
 				int num = accCentroid->radiusSearch(oriSeeds[i], searchRadius, neighbors, sqrDistances);

@@ -14,35 +14,11 @@ namespace RecRoom
 			name = "ProcessorPc";
 		}
 
-		void Process(
+		virtual void Process(
 			const CONST_PTR(Acc<SearchPointType>)& searchSurface,
 			const CONST_PTR(Pc<InputPointType>)& input,
 			const CONST_PTR(PcIndex)& filter,
-			OutputType& output) const
-		{
-			//if ((&(*input)) == (&output))
-			//	THROW_EXCEPTION("input point to output");
-
-			PRINT_INFO(name + " - Start");
-
-			if (ImplementCheck(searchSurface, input, filter, output))
-				ImplementProcess(searchSurface, input, filter, output);
-			else
-				THROW_EXCEPTION(name + " - Not pass check");
-
-			if (filter)
-			{
-				std::stringstream ss;
-				ss << name << " - End - inSize: " << filter->size() << ", outSize: " << OutputSize(output);
-				PRINT_INFO(ss.str());
-			}
-			else
-			{
-				std::stringstream ss;
-				ss << name << " - End - inSize: " << input->size() << ", outSize: " << OutputSize(output);
-				PRINT_INFO(ss.str());
-			}
-		}
+			OutputType& output) const;
 
 	protected:
 		virtual bool ImplementCheck(
@@ -75,7 +51,13 @@ namespace RecRoom
 			name = "ProcessorPc2Pc";
 		}
 
-		void ProcessInOut(
+		virtual void Process(
+			const CONST_PTR(Acc<SearchPointType>)& searchSurface,
+			const CONST_PTR(Pc<InputPointType>)& input,
+			const CONST_PTR(PcIndex)& filter,
+			Pc<OutputPointType>& output) const;
+
+		virtual void ProcessInOut(
 			const CONST_PTR(Acc<SearchPointType>)& searchSurface,
 			const PTR(Pc<InputPointType>)& inOut,
 			const CONST_PTR(PcIndex)& filter) const;

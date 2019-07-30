@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Common/MovingLeastSquares.h"
+#include "Interpolator/InterpolatorPcNearest.h"
 
 #include "SamplerPc.h"
 
@@ -10,19 +11,34 @@ namespace RecRoom
 	class SamplerPcMLS : public SamplerPc<PointType>
 	{
 	public:
+		using Sampler = SamplerPc<PointType>;
+		using Interpolator = InterpolatorPc<PointType, PointType>;
+		using InterpolatorNearest = InterpolatorPcNearest<PointType, PointType>;
+
+	public:
 		SamplerPcMLS(
 			double searchRadius,
 			int order = 2,
 			MLSProjectionMethod projectionMethod = MLSProjectionMethod::SIMPLE,
 			MLSUpsamplingMethod upsampleMethod = MLSUpsamplingMethod::MLSUpsamplingMethod_NONE,
-			unsigned int threads = 1,
-			bool computeNormals = true) 
-			: searchRadius(searchRadius), order(order),
-			projectionMethod(projectionMethod), upsampleMethod(upsampleMethod),
-			threads(threads), computeNormals(computeNormals),
-			ResamplerPc<PointType>() 
+			bool computeNormals = true,
+			CONST_PTR(Sampler) distinctSampler = nullptr,
+			CONST_PTR(Interpolator) fieldInterpolator = CONST_PTR(Interpolator)(new InterpolatorNearest))
+			: SamplerPc<PointType>() ,
+			searchRadius(searchRadius), 
+			order(order),
+			projectionMethod(projectionMethod), 
+			upsampleMethod(upsampleMethod),
+			computeNormals(computeNormals), 
+			distinctSampler(distinctSampler),
+			fieldInterpolator(fieldInterpolator)
 		{
 			name = "SamplerPcMLS";
+
+			if (!fieldInterpolator)
+			{
+				THROW_EXCEPTION("fieldInterpolator is not set");
+			}
 		}
 
 	protected:
@@ -39,6 +55,8 @@ namespace RecRoom
 		MLSUpsamplingMethod getUpsampleMethod() const { return upsampleMethod; }
 		unsigned int getThreads() const { return threads; }
 		bool getComputeNormals() const { return computeNormals; }
+		CONST_PTR(Sampler) getDistinctSampler() const { return distinctSampler; };
+		CONST_PTR(Interpolator) getFieldInterpolator() const { return fieldInterpolator; };
 
 		void setSearchRadius(double v) { searchRadius = v; }
 		void setOrder(int v) { order = v; }
@@ -46,6 +64,18 @@ namespace RecRoom
 		void setUpsampleMethod(MLSUpsamplingMethod v) { upsampleMethod = v; }
 		void setThreads(unsigned int v) { threads = v; }
 		void setComputeNormals(bool v) { computeNormals = v; }
+		void setDistinctSampler(const CONST_PTR(Sampler)& v) { distinctSampler = v; };
+		void setFieldInterpolator(const CONST_PTR(Interpolator)& v)
+		{
+			if (!v)
+			{
+				THROW_EXCEPTION("fieldInterpolator is not set");
+			}
+			else
+			{
+				fieldInterpolator = v;
+			}
+		};
 
 	protected:
 		double searchRadius;
@@ -54,6 +84,8 @@ namespace RecRoom
 		MLSUpsamplingMethod upsampleMethod;
 		unsigned int threads;
 		bool computeNormals;
+		CONST_PTR(Sampler) distinctSampler;
+		CONST_PTR(Interpolator) fieldInterpolator;
 	};
 }
 

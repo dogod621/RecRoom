@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Common/VoxelGrid.h"
 #include "SamplerPc.h"
 
 namespace RecRoom
@@ -13,8 +14,8 @@ namespace RecRoom
 		{
 			name = "SamplerPcGrid";
 
-			if ((tooCloseRatio < 0.0) or (tooCloseRatio >= 1.0))
-				THROW_EXCEPTION("tooCloseRatio must >=0.0 and < 1.0");
+			if ( tooCloseRatio >= 1.0 )
+				THROW_EXCEPTION("tooCloseRatio must < 1.0");
 		}
 
 	protected:
@@ -46,9 +47,9 @@ namespace RecRoom
 		void setMaxAABB(const Eigen::Vector3d& v ) { maxAABB = v; }
 		void setTooCloseRatio(double v)
 		{ 
-			if ((v < 0.0) or (v >= 1.0))
+			if (v >= 1.0)
 			{
-				THROW_EXCEPTION("tooCloseRatio must >=0.0 and < 1.0");
+				THROW_EXCEPTION("tooCloseRatio must < 1.0");
 			}
 			else
 				tooCloseRatio = v;
@@ -59,6 +60,39 @@ namespace RecRoom
 		Eigen::Vector3d maxAABB;
 		double voxelSize;
 		double tooCloseRatio;
+	};
+
+	template<class PointType>
+	class SamplerPcBinaryGrid : public SamplerPcGrid<PointType>
+	{
+	public:
+		SamplerPcBinaryGrid(double voxelSize, const Eigen::Vector3d& minAABB, const Eigen::Vector3d& maxAABB,
+			MorphologyOperation morphologyOperation = MorphologyOperation::MorphologyOperation_NONE, std::size_t kernelSize = 0, std::size_t iteration = 0 )
+			: SamplerPcGrid<PointType>(voxelSize, minAABB, maxAABB, -1.0), morphologyOperation(morphologyOperation), kernelSize(kernelSize), iteration(iteration)
+		{
+			name = "SamplerPcBinaryGrid";
+		}
+
+	protected:
+		virtual void ImplementProcess(
+			const CONST_PTR(Acc<PointType>)& searchSurface,
+			const CONST_PTR(Pc<PointType>)& input,
+			const CONST_PTR(PcIndex)& filter,
+			Pc<PointType>& output) const;
+
+	public:
+		MorphologyOperation getMorphologyOperation() const { return morphologyOperation; }
+		std::size_t getKernelSize() const { return kernelSize; }
+		std::size_t getIteration() const { return iteration; }
+
+		void setMorphologyOperation(MorphologyOperation v) { morphologyOperation = v; }
+		void setKernelSize(std::size_t v) { kernelSize = v; }
+		void setIteration(std::size_t v) { iteration = v; }
+
+	protected:
+		MorphologyOperation morphologyOperation;
+		std::size_t kernelSize;
+		std::size_t iteration;
 	};
 }
 
