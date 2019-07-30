@@ -36,7 +36,7 @@ namespace RecRoom
 			name = "EstimatorPcNDF";
 		}
 
-	public:
+	protected:
 		inline virtual bool ComputeAttribute(
 			const Pc<InPointType>& cloud,
 			const std::vector<ScanData>& scanDataSet, OutPointType& outPoint) const;

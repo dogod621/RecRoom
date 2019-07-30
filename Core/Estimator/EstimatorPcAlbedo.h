@@ -27,7 +27,7 @@ namespace RecRoom
 				THROW_EXCEPTION("scanner is not set");
 		}
 
-	public:
+	protected:
 		inline virtual bool ComputeAttribute(
 			const Pc<InPointType>& cloud,
 			const std::vector<ScanData>& scanDataSet, OutPointType& outPoint) const;
