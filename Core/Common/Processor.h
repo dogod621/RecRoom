@@ -21,6 +21,10 @@ namespace RecRoom
 			OutputType& output) const;
 
 	protected:
+		PTR(PcIndex) GenFilter(
+			const CONST_PTR(Pc<InputPointType>)& input,
+			const CONST_PTR(PcIndex)& filter) const;
+
 		virtual bool ImplementCheck(
 			const CONST_PTR(Acc<SearchPointType>)& searchSurface,
 			const CONST_PTR(Pc<InputPointType>)& input,
@@ -33,7 +37,17 @@ namespace RecRoom
 			const CONST_PTR(PcIndex)& filter,
 			OutputType& output) const = 0;
 
-		virtual int OutputSize(OutputType& output) const
+		inline virtual bool SearchPointValid(const SearchPointType& p) const
+		{
+			return pcl::isFinite(p);
+		}
+
+		inline virtual bool InputPointValid(const InputPointType& p) const
+		{
+			return pcl::isFinite(p);
+		}
+
+		inline virtual int OutputSize(OutputType& output) const
 		{
 			return 0;
 		}
@@ -57,16 +71,37 @@ namespace RecRoom
 			const CONST_PTR(PcIndex)& filter,
 			Pc<OutputPointType>& output) const;
 
-		virtual void ProcessInOut(
-			const CONST_PTR(Acc<SearchPointType>)& searchSurface,
-			const PTR(Pc<InputPointType>)& inOut,
-			const CONST_PTR(PcIndex)& filter) const;
-
 	protected:
+		inline virtual bool OutPointValid(const OutputPointType& p) const
+		{
+			return pcl::isFinite(p);
+		}
+
 		virtual int OutputSize(Pc<OutputPointType>& output) const
 		{
 			return output.size();
 		}
+	};
+
+	template<class SearchPointType, class InputPointType, class OutputPointType>
+	class ProcessorPc2PcInOut : public ProcessorPc2Pc<SearchPointType, InputPointType, OutputPointType>
+	{
+	public:
+		ProcessorPc2PcInOut() : ProcessorPc2Pc<SearchPointType, InputPointType, OutputPointType>()
+		{
+			name = "ProcessorPc2PcInOut";
+		}
+
+		virtual void Process(
+			const CONST_PTR(Acc<SearchPointType>)& searchSurface,
+			const CONST_PTR(Pc<InputPointType>)& input,
+			const CONST_PTR(PcIndex)& filter,
+			Pc<OutputPointType>& output) const;
+
+		virtual void ProcessInOut(
+			const CONST_PTR(Acc<SearchPointType>)& searchSurface,
+			const PTR(Pc<InputPointType>)& inOut,
+			const CONST_PTR(PcIndex)& filter) const;
 	};
 
 	template<class InputPointType, class OutputType>
@@ -86,6 +121,16 @@ namespace RecRoom
 		SearchInputTypeProcessorPc2Pc() : ProcessorPc2Pc<InputPointType, InputPointType, OutputPointType>() 
 		{
 			name = "SearchInputTypeProcessorPc2Pc";
+		}
+	};
+
+	template<class InputPointType, class OutputPointType>
+	class SearchInputTypeProcessorPc2PcInOut : public ProcessorPc2PcInOut<InputPointType, InputPointType, OutputPointType>
+	{
+	public:
+		SearchInputTypeProcessorPc2PcInOut() : ProcessorPc2PcInOut<InputPointType, InputPointType, OutputPointType>()
+		{
+			name = "SearchInputTypeProcessorPc2PcInOut";
 		}
 	};
 
@@ -123,6 +168,23 @@ namespace RecRoom
 			Pc<OutputPointType>& output) const;
 	};
 
+	template<class InputPointType, class OutputPointType>
+	class SearchAnySurfaceProcessorPc2PcInOut : public SearchInputTypeProcessorPc2PcInOut<InputPointType, OutputPointType>
+	{
+	public:
+		SearchAnySurfaceProcessorPc2PcInOut() : SearchInputTypeProcessorPc2PcInOut<InputPointType, OutputPointType>()
+		{
+			name = "SearchAnySurfaceProcessorPc2PcInOut";
+		}
+
+	protected:
+		virtual bool ImplementCheck(
+			const CONST_PTR(Acc<InputPointType>)& searchSurface,
+			const CONST_PTR(Pc<InputPointType>)& input,
+			const CONST_PTR(PcIndex)& filter,
+			Pc<OutputPointType>& output) const;
+	};
+
 	template<class InputPointType, class OutputType>
 	class SearchInputSurfaceProcessorPc : public SearchInputTypeProcessorPc<InputPointType, OutputType>
 	{
@@ -147,6 +209,23 @@ namespace RecRoom
 		SearchInputSurfaceProcessorPc2Pc() : SearchInputTypeProcessorPc2Pc<InputPointType, OutputPointType>() 
 		{
 			name = "SearchInputSurfaceProcessorPc2Pc";
+		}
+
+	protected:
+		virtual bool ImplementCheck(
+			const CONST_PTR(Acc<InputPointType>)& searchSurface,
+			const CONST_PTR(Pc<InputPointType>)& input,
+			const CONST_PTR(PcIndex)& filter,
+			Pc<OutputPointType>& output) const;
+	};
+
+	template<class InputPointType, class OutputPointType>
+	class SearchInputSurfaceProcessorPc2PcInOut : public SearchInputTypeProcessorPc2PcInOut<InputPointType, OutputPointType>
+	{
+	public:
+		SearchInputSurfaceProcessorPc2PcInOut() : SearchInputTypeProcessorPc2PcInOut<InputPointType, OutputPointType>()
+		{
+			name = "SearchInputSurfaceProcessorPc2PcInOut";
 		}
 
 	protected:

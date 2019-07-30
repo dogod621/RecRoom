@@ -7,11 +7,11 @@ namespace RecRoom
 {
 	template<class InPointType, class OutPointType>
 	class InterpolatorPc 
-		: public SearchAnySurfaceProcessorPc2Pc<InPointType, OutPointType>
+		: public SearchAnySurfaceProcessorPc2PcInOut<InPointType, OutPointType>
 	{
 	public:
 		InterpolatorPc() 
-			: SearchAnySurfaceProcessorPc2Pc<InPointType, OutPointType>() 
+			: SearchAnySurfaceProcessorPc2PcInOut<InPointType, OutPointType>()
 		{
 			name = "InterpolatorPc";
 		}

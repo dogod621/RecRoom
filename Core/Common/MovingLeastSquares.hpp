@@ -291,7 +291,7 @@ namespace RecRoom
 			std::vector<float> nnSqrDists;
 
 			// Get the initial estimates of point positions and their neighborhoods
-			if (searchMethod->radiusSearch(inP, searchRadius, nnIndices, nnSqrDists))
+			if (searchMethod->radiusSearch(inP, searchRadius, nnIndices, nnSqrDists) > 0)
 			{
 				// Filter back face
 				PcIndex nnFrontIndices;

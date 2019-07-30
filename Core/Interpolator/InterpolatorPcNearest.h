@@ -19,6 +19,19 @@ namespace RecRoom
 			const CONST_PTR(Pc<InPointType>)& input,
 			const CONST_PTR(PcIndex)& filter,
 			Pc<OutPointType>& output) const;
+
+		inline virtual bool SearchPointValid(const InPointType& p) const
+		{
+			PRINT_WARNING("not used");
+			return true;
+		}
+
+		inline virtual bool InputPointValid(const InPointType& p) const
+		{
+			return pcl_isfinite(p.x) &&
+				pcl_isfinite(p.y) &&
+				pcl_isfinite(p.z);
+		}
 	};
 }
 

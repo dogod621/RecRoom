@@ -14,18 +14,20 @@ namespace RecRoom
 		output.clear();
 
 		output.resize(filter->size());
+
+		std::vector<int> nnIndices;
+		std::vector<float> nnSqrDists;
 #ifdef _OPENMP
-#pragma omp parallel for num_threads(numThreads)
+#pragma omp parallel for private (nnIndices, nnSqrDists) num_threads(numThreads)
 #endif
 		// Iterating over the entire index vector
 		for (int idx = 0; idx < static_cast<int> (filter->size()); ++idx)
 		{
 			int px = (*filter)[idx];
-			std::vector<int> ki;
-			std::vector<float> kd;
-			if (searchSurface->nearestKSearch(*input, px, 1, ki, kd) > 0)
+			if (searchSurface->nearestKSearch(*input, px, 1, nnIndices, nnSqrDists) > 0)
 			{
-				output[idx] = (*searchSurface->getInputCloud())[ki[0]];
+				const InPointType& p = (*searchSurface->getInputCloud())[nnIndices[0]];
+				output[idx] = p;
 				output[idx].x = (*input)[px].x;
 				output[idx].y = (*input)[px].y;
 				output[idx].z = (*input)[px].z;

@@ -48,6 +48,26 @@ namespace RecRoom
 			const CONST_PTR(PcIndex)& filter,
 			Pc<PointType>& output) const;
 
+		inline virtual bool InputPointValid(const PointType& p) const
+		{
+			return pcl_isfinite(p.x) &&
+				pcl_isfinite(p.y) &&
+				pcl_isfinite(p.z) &&
+				pcl_isfinite(p.normal_x) &&
+				pcl_isfinite(p.normal_y) &&
+				pcl_isfinite(p.normal_z);
+		}
+
+		inline virtual bool OutPointValid(const PointType& p) const
+		{
+			return pcl_isfinite(p.x) &&
+				pcl_isfinite(p.y) &&
+				pcl_isfinite(p.z) &&
+				pcl_isfinite(p.normal_x) &&
+				pcl_isfinite(p.normal_y) &&
+				pcl_isfinite(p.normal_z);
+		}
+
 	public:
 		double getSearchRadius() const { return searchRadius; }
 		int getOrder() const { return order; }

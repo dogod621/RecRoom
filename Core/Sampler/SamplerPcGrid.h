@@ -36,6 +36,12 @@ namespace RecRoom
 			const CONST_PTR(PcIndex)& filter,
 			Pc<PointType>& output) const;
 
+		inline virtual bool SearchPointValid(const PointType& p) const
+		{
+			PRINT_WARNING("not used");
+			return true;
+		}
+
 	public:
 		double getVoxelSize() const { return voxelSize; }
 		Eigen::Vector3d getMinAABB() const { return minAABB; }
@@ -79,6 +85,20 @@ namespace RecRoom
 			const CONST_PTR(Pc<PointType>)& input,
 			const CONST_PTR(PcIndex)& filter,
 			Pc<PointType>& output) const;
+
+		inline virtual bool InputPointValid(const PointType& p) const
+		{
+			return pcl_isfinite(p.x) &&
+				pcl_isfinite(p.y) &&
+				pcl_isfinite(p.z);
+		}
+
+		inline virtual bool OutPointValid(const PointType& p) const
+		{
+			return pcl_isfinite(p.x) &&
+				pcl_isfinite(p.y) &&
+				pcl_isfinite(p.z);
+		}
 
 	public:
 		MorphologyOperation getMorphologyOperation() const { return morphologyOperation; }

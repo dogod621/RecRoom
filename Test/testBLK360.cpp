@@ -84,10 +84,6 @@ void PrintHelp(int argc, char **argv)
 	std::cout << "EstimatorPc Parmameters:==================================================================================================================================" << std::endl << std::endl;
 	{
 		PRINT_HELP("\t", "searchRadius", "float ${voxelSize*5}", "The search radius at surface.");
-	}
-
-	std::cout << "EstimatorPcNormal/Albedo/NDF Parmameters:=================================================================================================================" << std::endl << std::endl;
-	{
 		PRINT_HELP("\t", "distInterParm", "float 0.4", "Interpolation parameter that is related to distance.");
 		PRINT_HELP("\t", "angleInterParm", "float 0.6", "Interpolation parameter that is related to orientation.");
 		PRINT_HELP("\t", "cutFalloff", "float 0.33", "Cut-off threshold that is related to distance fall-off.");
@@ -143,8 +139,7 @@ int main(int argc, char *argv[])
 		// Parse EstimatorPc Parmameters
 		double searchRadius = voxelSize*5.0;
 		pcl::console::parse_argument(argc, argv, "-searchRadius", searchRadius);
-		std::cout << "EstimatorPcNormal -searchRadius: " << searchRadius << std::endl;
-		std::cout << "EstimatorPcAlbedo -searchRadius: " << searchRadius << std::endl;
+		std::cout << "EstimatorPc -searchRadius: " << searchRadius << std::endl;
 
 		// Parse Main Parmameters
 		unsigned int async = 1;
@@ -204,7 +199,7 @@ int main(int argc, char *argv[])
 		std::cout << "FilterPcRemoveOutlier Parmameters -meanK: " << meanK << std::endl;
 		std::cout << "FilterPcRemoveOutlier Parmameters -stdMul: " << stdMul << std::endl;
 
-		// Parse EstimatorPcAlbedo Parmameters
+		// Parse EstimatorPc Parmameters
 		float distInterParm = 0.4f;
 		float angleInterParm = 0.6f;
 		float cutFalloff = 0.33f;
@@ -213,10 +208,10 @@ int main(int argc, char *argv[])
 		pcl::console::parse_argument(argc, argv, "-angleInterParm", angleInterParm);
 		pcl::console::parse_argument(argc, argv, "-cutFalloff", cutFalloff);
 		pcl::console::parse_argument(argc, argv, "-cutGrazing", cutGrazing);
-		std::cout << "EstimatorPcAlbedo -distInterParm: " << distInterParm << std::endl;
-		std::cout << "EstimatorPcAlbedo -angleInterParm: " << angleInterParm << std::endl;
-		std::cout << "EstimatorPcAlbedo -cutFalloff: " << cutFalloff << std::endl;
-		std::cout << "EstimatorPcAlbedo -cutGrazing: " << cutGrazing << std::endl;
+		std::cout << "EstimatorPc -distInterParm: " << distInterParm << std::endl;
+		std::cout << "EstimatorPc -angleInterParm: " << angleInterParm << std::endl;
+		std::cout << "EstimatorPc -cutFalloff: " << cutFalloff << std::endl;
+		std::cout << "EstimatorPc -cutGrazing: " << cutGrazing << std::endl;
 
 		// Parse SegmenterPcSVC Parmameters
 		float voxelResolution = voxelSize;
@@ -352,7 +347,7 @@ int main(int argc, char *argv[])
 				PTR(RecRoom::ReconstructorPcOC::Estimator)
 					normalEstimator(
 						new RecRoom::EstimatorPcNormal<RecRoom::PointMED, RecRoom::PointMED>(
-							searchRadius, scannerPc,
+							scannerPc, searchRadius,
 							distInterParm, cutFalloff));
 				reconstructorPC->setNormalEstimator(normalEstimator);
 			}
@@ -362,7 +357,7 @@ int main(int argc, char *argv[])
 				PTR(RecRoom::ReconstructorPcOC::Estimator)
 					albedoEstimator(
 						new RecRoom::EstimatorPcAlbedo<RecRoom::PointMED, RecRoom::PointMED>(
-							searchRadius, scannerPc, RecRoom::LinearSolver::EIGEN_SVD,
+							scannerPc, searchRadius,
 							3, 1, cutFalloff, cutGrazing));
 				reconstructorPC->setAlbedoEstimator(albedoEstimator);
 			}
@@ -371,8 +366,8 @@ int main(int argc, char *argv[])
 			{
 				PTR(RecRoom::ReconstructorPcOC::Estimator)
 					ndfEstimator(
-						new RecRoom::EstimatorPcNDF<RecRoom::PointMED, RecRoom::PointMED>(
-							searchRadius, scannerPc, RecRoom::NDF::SG,
+						new RecRoom::EstimatorPcSGNDF<RecRoom::PointMED, RecRoom::PointMED>(
+							scannerPc, searchRadius,
 							3, 1, cutFalloff, cutGrazing));
 				reconstructorPC->setSharpnessEstimator(ndfEstimator);
 			}
@@ -389,11 +384,11 @@ int main(int argc, char *argv[])
 
 			std::cout << "Create Mesher" << std::endl;
 			{
-				/*PTR(RecRoom::SamplerPc<RecRoom::PointREC>)
+				PTR(RecRoom::SamplerPc<RecRoom::PointREC>)
 					distinctSampler(
 						new RecRoom::SamplerPcBinaryGrid<RecRoom::PointREC>(
 							voxelSize, containerPcRAW->getMinAABB(), containerPcRAW->getMaxAABB(),
-							RecRoom::MorphologyOperation::DILATION, 5));
+							RecRoom::MorphologyOperation::DILATION, 5, 1));
 
 				PTR(RecRoom::SamplerPc<RecRoom::PointREC>)
 					preprocessSampler(
@@ -409,12 +404,12 @@ int main(int argc, char *argv[])
 					mesher(
 						new RecRoom::MesherPcGP3<RecRoom::PointREC>(
 							maxEdgeSize, mu, maxNumNei, minAngle, maxAngle, epsAngle, false, true,
-							preprocessSampler, preprocessFilter));*/
+							preprocessSampler, preprocessFilter));
 
-				PTR(RecRoom::ReconstructorPcOC::Mesher)
+				/*PTR(RecRoom::ReconstructorPcOC::Mesher)
 					mesher(
 						new RecRoom::MesherPcGP3<RecRoom::PointREC>(
-							maxEdgeSize, mu, maxNumNei, minAngle, maxAngle, epsAngle, false, true));
+							maxEdgeSize, mu, maxNumNei, minAngle, maxAngle, epsAngle, false, true));*/
 
 				reconstructorPC->setMesher(mesher);
 			}

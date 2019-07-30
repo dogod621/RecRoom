@@ -1,7 +1,8 @@
 #pragma once
 
-#include "EstimatorPc.h"
 #include "Scanner/ScannerPc.h"
+
+#include "EstimatorPc.h"
 
 namespace RecRoom
 {
@@ -9,15 +10,16 @@ namespace RecRoom
 	class EstimatorPcAlbedo : public EstimatorPc<InPointType, OutPointType>
 	{
 	public:
-		EstimatorPcAlbedo(double searchRadius,
+		EstimatorPcAlbedo(
 			const CONST_PTR(ScannerPc)& scanner,
-			const LinearSolver linearSolver = LinearSolver::EIGEN_SVD,
-			const float distInterParm = 0.4f, const float angleInterParm = 0.6f,
-			const float cutFalloff = 0.33f, const float cutGrazing = 0.26f)
-			: EstimatorPc<InPointType, OutPointType>(searchRadius),
-			scanner(scanner), linearSolver(linearSolver),
-			distInterParm(distInterParm), angleInterParm(angleInterParm), 
-			cutFalloff(cutFalloff), cutGrazing(cutGrazing) 
+			double searchRadius,
+			const float distInterParm = 3.0f, 
+			const float angleInterParm = 1.0f,
+			const float cutFalloff = 0.33f, 
+			const float cutGrazing = 0.26f,
+			const LinearSolver linearSolver = LinearSolver::EIGEN_SVD)
+			: EstimatorPc<InPointType, OutPointType>(scanner, searchRadius, distInterParm, angleInterParm, cutFalloff, cutGrazing, 4),
+			linearSolver(linearSolver)
 		{
 			name = "EstimatorPcAlbedo";
 
@@ -26,44 +28,47 @@ namespace RecRoom
 		}
 
 	protected:
-		virtual void ImplementProcess(
-			const CONST_PTR(Acc<InPointType>)& searchSurface,
-			const CONST_PTR(Pc<InPointType>)& input,
-			const CONST_PTR(PcIndex)& filter,
-			Pc<OutPointType>& output) const;
+		inline virtual bool ComputeAttribute(
+			const Pc<InPointType>& cloud,
+			const std::vector<ScanData>& scanDataSet, OutPointType& outPoint) const;
+
+		inline virtual void SetAttributeNAN(OutPointType& p) const
+		{
+			p.r = 0;
+			p.g = 0;
+			p.b = 0;
+			p.intensity = std::numeric_limits<float>::quiet_NaN();
+			p.normal_x = std::numeric_limits<float>::quiet_NaN();
+			p.normal_y = std::numeric_limits<float>::quiet_NaN();
+			p.normal_z = std::numeric_limits<float>::quiet_NaN();
+		}
+
+		inline virtual bool SearchPointValid(const InPointType& p) const
+		{
+			return pcl_isfinite(p.normal_x) &&
+				pcl_isfinite(p.normal_y) &&
+				pcl_isfinite(p.normal_z) &&
+				p.HasSerialNumber();
+		}
+
+		inline virtual bool OutPointValid(const OutPointType& p) const
+		{
+			return pcl_isfinite(p.intensity) &&
+				pcl_isfinite(p.normal_x) &&
+				pcl_isfinite(p.normal_y) &&
+				pcl_isfinite(p.normal_z);
+		}
 
 	public:
 		LinearSolver getLinearSolver() const { return linearSolver;  }
-		float getDistInterParm() const { return distInterParm; }
-		float getAngleInterParm() const { return angleInterParm; }
-		float getCutFalloff() const { return cutFalloff; }
-		float getCutGrazing() const { return cutGrazing; }
-		CONST_PTR(ScannerPc) getScanner() const { return scanner; }
 
 		void setLinearSolver(LinearSolver v) { linearSolver = v; }
-		void setDistInterParm(float v) { distInterParm = v; }
-		void setAngleInterParm(float v) { angleInterParm = v; }
-		void setCutFalloff(float v) { cutFalloff = v; }
-		void setCutGrazing(float v) { cutGrazing = v; }
-		void setScanner(CONST_PTR(ScannerPc) v)
-		{
-			if (!v)
-			{
-				THROW_EXCEPTION("scanner is not set");
-			}
-			else
-			{
-				scanner = v;
-			}
-		}
 
 	protected:
 		LinearSolver linearSolver;
-		float distInterParm;
-		float angleInterParm;
-		float cutFalloff;
-		float cutGrazing;
-		CONST_PTR(ScannerPc) scanner;
+
+	public:
+		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	};
 }
 

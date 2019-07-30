@@ -13,12 +13,24 @@ namespace RecRoom
 			name = "FilterPcRemoveOutlier";
 		}
 
-	public:
+	protected:
 		virtual void ImplementProcess(
 			const CONST_PTR(Acc<PointType>)& searchSurface,
 			const CONST_PTR(Pc<PointType>)& input,
 			const CONST_PTR(PcIndex)& filter,
 			PcIndex& output) const;
+
+		inline virtual bool SearchPointValid(const PointType& p) const
+		{
+			return true;
+		}
+
+		inline virtual bool InputPointValid(const PointType& p) const
+		{
+			return pcl_isfinite(p.x) &&
+				pcl_isfinite(p.y) &&
+				pcl_isfinite(p.z);
+		}
 
 	public:
 		int getMeanK() const { return meanK; }

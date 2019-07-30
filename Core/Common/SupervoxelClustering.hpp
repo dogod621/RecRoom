@@ -196,11 +196,9 @@ namespace RecRoom
 			float minPoints = 0.05f * (searchRadius) * (searchRadius)* M_PI / (voxelResolution * voxelResolution);
 			for (size_t i = 0; i < oriSeeds.size(); ++i)
 			{
-				int num = accCentroid->radiusSearch(oriSeeds[i], searchRadius, neighbors, sqrDistances);
-				int min_index = oriSeeds[i];
-				if (num > minPoints)
+				if (accCentroid->radiusSearch(oriSeeds[i], searchRadius, neighbors, sqrDistances) > minPoints)
 				{
-					seeds.push_back(min_index);
+					seeds.push_back(oriSeeds[i]);
 				}
 			}
 		}

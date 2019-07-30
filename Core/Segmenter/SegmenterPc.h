@@ -7,13 +7,19 @@ namespace RecRoom
 {
 	template<class PointType>
 	class SegmenterPc 
-		: public SearchInputSurfaceProcessorPc2Pc<PointType, PointType>
+		: public SearchInputSurfaceProcessorPc2PcInOut<PointType, PointType>
 	{
 	public:
 		SegmenterPc() 
-			: SearchInputSurfaceProcessorPc2Pc<PointType, PointType>() 
+			: SearchInputSurfaceProcessorPc2PcInOut<PointType, PointType>()
 		{
 			name = "SegmenterPc";
+		}
+
+	protected:
+		inline virtual bool OutPointValid(const PointType& p) const
+		{
+			return true;
 		}
 	};
 }

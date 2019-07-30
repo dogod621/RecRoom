@@ -14,7 +14,7 @@ namespace RecRoom
 			name = "FilterPcRemoveNonFinite";
 		}
 
-	public:
+	protected:
 		virtual bool ImplementCheck(
 			const CONST_PTR(Acc<PointType>)& searchSurface,
 			const CONST_PTR(Pc<PointType>)& input,
@@ -31,6 +31,12 @@ namespace RecRoom
 			const CONST_PTR(Pc<PointType>)& input,
 			const CONST_PTR(PcIndex)& filter,
 			PcIndex& output) const;
+
+		inline virtual bool SearchPointValid(const PointType& p) const
+		{
+			PRINT_WARNING("not used");
+			return true;
+		}
 	};
 }
 
