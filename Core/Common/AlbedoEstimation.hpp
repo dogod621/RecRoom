@@ -14,8 +14,11 @@ namespace RecRoom
 
 		A = Eigen::MatrixXf(scanDataSet.size() * 3, 3);
 		B = Eigen::MatrixXf(scanDataSet.size() * 3, 1);
-
 		int shifter = 0;
+		float r = 0.0;
+		float g = 0.0;
+		float b = 0.0;
+		float sumWeight = 0;
 		for (std::vector<ScanData>::const_iterator it = scanDataSet.begin(); it != scanDataSet.end(); ++it)
 		{
 			const InPointType& hitPoint = cloud[it->index];
@@ -30,6 +33,7 @@ namespace RecRoom
 
 			float dotNN = hitNormal.dot(it->laser.incidentDirection);
 			float weight = std::pow(((float)search_radius_ - it->distance2Center) / (float)search_radius_, distInterParm) * std::pow(dotNN, angleInterParm);
+			sumWeight += weight;
 
 			A(shifter, 0) = weight * it->laser.incidentDirection.x();
 			A(shifter, 1) = weight * it->laser.incidentDirection.y();
@@ -45,6 +49,10 @@ namespace RecRoom
 			A(shifter + 2, 1) = weight * hitBitangent.y();
 			A(shifter + 2, 2) = weight * hitBitangent.z();
 			B(shifter + 2, 0) = 0.0f;
+
+			r += weight * hitPoint.r;
+			g += weight * hitPoint.g;
+			b += weight * hitPoint.b;
 
 			shifter += 3;
 		}
@@ -87,6 +95,10 @@ namespace RecRoom
 				outPoint.normal_x = xVec.x();
 				outPoint.normal_y = xVec.y();
 				outPoint.normal_z = xVec.z();
+				outPoint.r = std::max(std::min((r / sumWeight), 255.0f), 0.0f);
+				outPoint.g = std::max(std::min((g / sumWeight), 255.0f), 0.0f);
+				outPoint.b = std::max(std::min((b / sumWeight), 255.0f), 0.0f);
+				
 				return true;
 			}
 			else

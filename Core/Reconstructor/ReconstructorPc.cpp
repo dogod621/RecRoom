@@ -88,9 +88,9 @@ namespace RecRoom
 		{
 			PRINT_WARNING("!WITH_PERPOINT_NORMAL, ignore. You must compile with INPUT_PERPOINT_NORMAL or OUTPUT_PERPOINT_NORMAL to enable this feature.");
 		}
-		else if (!WITH_PERPOINT_SERIAL_NUMBER)
+		else if (!WITH_INPUT_PERPOINT_SERIAL_NUMBER)
 		{
-			PRINT_WARNING("!WITH_PERPOINT_SERIAL_NUMBER, ignore. You must compile with INPUT_PERPOINT_SERIAL_NUMBER to enable this feature.");
+			PRINT_WARNING("!WITH_INPUT_PERPOINT_SERIAL_NUMBER, ignore. You must compile with INPUT_PERPOINT_SERIAL_NUMBER to enable this feature.");
 		}
 		else if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 		{
@@ -126,9 +126,13 @@ namespace RecRoom
 		{
 			PRINT_WARNING("!WITH_PERPOINT_NORMAL, ignore. You must compile with INPUT_PERPOINT_NORMAL or OUTPUT_PERPOINT_NORMAL to enable this feature.");
 		}
-		else if (!WITH_PERPOINT_SERIAL_NUMBER)
+		else if (!WITH_INPUT_PERPOINT_RGB)
 		{
-			PRINT_WARNING("!WITH_PERPOINT_SERIAL_NUMBER, ignore. You must compile with INPUT_PERPOINT_SERIAL_NUMBER to enable this feature.");
+			PRINT_WARNING("!WITH_INPUT_PERPOINT_RGB, ignore. You must compile with INPUT_PERPOINT_RGB to enable this feature.");
+		}
+		else if (!WITH_INPUT_PERPOINT_SERIAL_NUMBER)
+		{
+			PRINT_WARNING("!WITH_INPUT_PERPOINT_SERIAL_NUMBER, ignore. You must compile with INPUT_PERPOINT_SERIAL_NUMBER to enable this feature.");
 		}
 		else if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 		{
@@ -172,9 +176,9 @@ namespace RecRoom
 		{
 			PRINT_WARNING("!WITH_PERPOINT_NORMAL, ignore. You must compile with INPUT_PERPOINT_NORMAL or OUTPUT_PERPOINT_NORMAL to enable this feature.");
 		}
-		else if (!WITH_PERPOINT_SERIAL_NUMBER)
+		else if (!WITH_INPUT_PERPOINT_SERIAL_NUMBER)
 		{
-			PRINT_WARNING("!WITH_PERPOINT_SERIAL_NUMBER, ignore. You must compile with INPUT_PERPOINT_SERIAL_NUMBER to enable this feature.");
+			PRINT_WARNING("!WITH_INPUT_PERPOINT_SERIAL_NUMBER, ignore. You must compile with INPUT_PERPOINT_SERIAL_NUMBER to enable this feature.");
 		}
 		else if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 		{
@@ -248,9 +252,9 @@ namespace RecRoom
 		{
 			PRINT_WARNING("!WITH_PERPOINT_NORMAL, ignore. You must compile with INPUT_PERPOINT_NORMAL or OUTPUT_PERPOINT_NORMAL to enable this feature.");
 		}
-		else if (!WITH_PERPOINT_SERIAL_NUMBER)
+		else if (!WITH_INPUT_PERPOINT_SERIAL_NUMBER)
 		{
-			PRINT_WARNING("!WITH_PERPOINT_SERIAL_NUMBER, ignore. You must compile with INPUT_PERPOINT_SERIAL_NUMBER to enable this feature.");
+			PRINT_WARNING("!WITH_INPUT_PERPOINT_SERIAL_NUMBER, ignore. You must compile with INPUT_PERPOINT_SERIAL_NUMBER to enable this feature.");
 		}
 		else if (!WITH_PERPOINT_LABEL)
 		{
