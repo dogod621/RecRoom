@@ -327,7 +327,7 @@ namespace RecRoom
 	template <class PointType>
 	void BinaryVoxelGrid<PointType>::Dilation(std::size_t kernelSize, std::size_t iteration)
 	{
-		if ((kernelSize % 2) != 0)
+		if ((kernelSize % 2) != 1)
 			THROW_EXCEPTION("kernelSize must odd");
 		std::size_t extSize = kernelSize / 2;
 
