@@ -389,7 +389,6 @@ namespace RecRoom
 			{
 				correspondingInputIndices.reset(new PcIndex);
 				correspondingInputIndices->resize(distinctCloud->size());
-				output.resize(distinctCloud->size());
 
 #ifdef _OPENMP
 #pragma omp parallel for num_threads(numThreads)
@@ -411,7 +410,7 @@ namespace RecRoom
 
 						Eigen::Vector3d addPoint = (*distinctCloud)[px].getVector3fMap().template cast<double>();
 						MLSProjectionResults proj = mlsResults[inputIndex].projectPoint(addPoint, projectionMethod, 5 * numCoeff);
-						addProjectedPointNormal(inputIndex, proj.point, proj.normal, mlsResults[inputIndex].curvature, output[px], (*correspondingInputIndices)[px]);
+						addProjectedPointNormal(inputIndex, proj.point, proj.normal, mlsResults[inputIndex].curvature, output, (*correspondingInputIndices)[px]);
 					}
 				}
 			}
