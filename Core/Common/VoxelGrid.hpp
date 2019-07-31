@@ -9,7 +9,7 @@
 namespace RecRoom
 {
 	template <class PointType, class CenterType>
-	inline bool VoxelGrid<PointType, CenterType>::GetVoxelGridIndex(const PointType& p, VoxelGridIndex& voxelGridIndex) const
+	inline bool VoxelGrid<PointType, CenterType>::PointToIndex(const PointType& p, VoxelGridIndex& voxelGridIndex) const
 	{
 		if (pcl_isfinite(p.x) &&
 			pcl_isfinite(p.y) &&
@@ -35,7 +35,7 @@ namespace RecRoom
 	inline void VoxelGrid<PointType, CenterType>::AddPoint(const PointType& p)
 	{
 		VoxelGridIndex pID;
-		if (GetVoxelGridIndex(p, pID))
+		if (PointToIndex(p, pID))
 		{
 			Leaves::iterator it = leaves->find(pID);
 			if (it != leaves->end())
@@ -57,7 +57,7 @@ namespace RecRoom
 	inline void VoxelGrid<PointType, CenterType>::DeletePoint(const PointType& p)
 	{
 		VoxelGridIndex pID;
-		if (GetVoxelGridIndex(p, pID))
+		if (PointToIndex(p, pID))
 		{
 			Leaves::iterator it = leaves->find(pID);
 			if (it != leaves->end())
@@ -367,7 +367,7 @@ namespace RecRoom
 		for (std::vector<int>::const_iterator it = indices_->begin(); it != indices_->end(); ++it)
 		{
 			VoxelGridIndex voxelGridIndex;
-			if (GetVoxelGridIndex((*input_)[(*it)], voxelGridIndex))
+			if (PointToIndex((*input_)[(*it)], voxelGridIndex))
 				indexPairs.push_back(IndexPair(voxelGridIndex, *it));
 		}
 		std::sort(indexPairs.begin(), indexPairs.end());
@@ -396,37 +396,48 @@ namespace RecRoom
 		{
 			pcl::CentroidPoint<PointType> centroid;
 			for (std::size_t li = it->first; li < it->second; ++li)
-				centroid.add(input_->points[indexPairs[li].cloudPointIndex]);
-			centroid.get(output.points[index]);
+				centroid.add((*input_).points[indexPairs[li].cloudPointIndex]);
+			centroid.get(output[index]);
 
 			++index;
 		}
 	}
 
 	template <typename PointType>
-	void VNNGenerator<PointType>::Generate(std::vector<uint32_t>& cache, PcVNN& output)
+	void VNN<PointType>::setInputCloud(const PointCloudConstPtr& cloud, const IndicesConstPtr& indices = nullptr)
 	{
-		if (!initCompute())
-		{
-			THROW_EXCEPTION("!initCompute");
-			return;
-		}
+		pcVNN->clear();
+		cache.clear();
+		
+		PRINT_INFO("Build VNN - Start");
 
 		std::vector<IndexPair> indexPairs;
-		indexPairs.reserve(indices_->size());
-
-		for (std::vector<int>::const_iterator it = indices_->begin(); it != indices_->end(); ++it)
+		if (indices)
 		{
-			VoxelGridIndex voxelGridIndex;
-			if (GetVoxelGridIndex((*input_)[(*it)], voxelGridIndex))
-				indexPairs.push_back(IndexPair(voxelGridIndex, *it));
+			indexPairs.reserve(indices->size());
+			for (std::vector<int>::const_iterator it = indices->begin(); it != indices->end(); ++it)
+			{
+				VoxelGridIndex voxelGridIndex;
+				if (PointToIndex((*cloud)[(*it)], voxelGridIndex))
+					indexPairs.push_back(IndexPair(voxelGridIndex, *it));
+			}
+		}
+		else
+		{
+			indexPairs.reserve(cloud->size());
+			for (int px = 0; px < cloud->size(); ++px)
+			{
+				VoxelGridIndex voxelGridIndex;
+				if (PointToIndex((*cloud)[px], voxelGridIndex))
+					indexPairs.push_back(IndexPair(voxelGridIndex, px));
+			}
 		}
 		std::sort(indexPairs.begin(), indexPairs.end());
 
 		std::size_t total = 0;
 		std::size_t index = 0;
-		std::vector<std::pair<std::size_t, std::size_t>> firstAndLastIndices;
-		firstAndLastIndices.reserve(indexPairs.size());
+		pcVNN->reserve(indexPairs.size());
+		cache.reserve(indexPairs.size());
 		while (index < indexPairs.size())
 		{
 			std::size_t i = index + 1;
@@ -435,45 +446,27 @@ namespace RecRoom
 			if ((i - index) >= minPointsPerVoxel)
 			{
 				++total;
-				firstAndLastIndices.push_back(std::pair<std::size_t, std::size_t>(index, i));
+				PointVNN op = PointVNN(IndexToPoint(indexPairs[index].voxelGridIndex));
+				std::size_t startPos = cache.size();
+				for (std::size_t j = index; j < i; ++j)
+					cache.push_back(indexPairs[j].cloudPointIndex;);
+				op.k = cache.size() - startPos;
+				op.indices = &cache[startPos];
+				pcVNN->push_back(op);
 			}
 			index = i;
 		}
-		cache.clear();
-		output.resize(total);
+		std::stringstream ss;
+		ss << "Build VNN - End - vnnSize: " << pcVNN->size() << ", cacheSize:" << cache.size();
 
-		//
-		index = 0;
-		cache.reserve(indexPairs.size());
-		for (std::vector<std::pair<std::size_t, std::size_t>>::const_iterator it = firstAndLastIndices.begin(); it != firstAndLastIndices.end(); ++it)
-		{
-			float cx = 0.0f;
-			float cy = 0.0f;
-			float cz = 0.0f;
-			std::size_t startPos = cache.size();
-			for (std::size_t li = it->first; li < it->second; ++li)
-			{
-				int id = indexPairs[li].cloudPointIndex;
-				const PointType& pt = input_->points[id];
-				cx += pt.x;
-				cy += pt.y;
-				cz += pt.z;
-				cache.push_back(id);
-			}
+		PRINT_INFO(ss.str());
 
-			PointVNN& op = output.points[index];
-			op.k = cache.size() - startPos;
-			if (op.k > 0)
-			{
-				float cs = (float)op.k;
-				op.x = cx / cs;
-				op.y = cy / cs;
-				op.z = cz / cs;
-				op.indices = &cache[startPos];
-			}
+		PRINT_INFO("Build AccVNN - Start");
+		accVNN->setInputCloud(pcVNN);
+		PRINT_INFO("Build AccVNN - End");
 
-			++index;
-		}
+		input_ = cloud;
+		indices_ = indices;
 	}
 
 	template <typename PointType>

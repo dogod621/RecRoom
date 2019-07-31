@@ -104,7 +104,12 @@ namespace RecRoom
 			maxIndexZ = static_cast<std::size_t> (std::floor((maxAABB.z() - minAABB.z()) * invLeafSize[2]));
 		}
 
-		inline bool GetVoxelGridIndex(const PointType& p, VoxelGridIndex& voxelGridIndex) const;
+		inline bool PointToIndex(const PointType& p, VoxelGridIndex& voxelGridIndex) const;
+
+		inline virtual PointType IndexToPoint(const VoxelGridIndex& index) const
+		{
+			THROW_EXCEPTION("Interafce is not implement");
+		}
 
 		inline std::size_t Size() const
 		{
@@ -177,18 +182,21 @@ namespace RecRoom
 		{
 		}
 
+		inline virtual PointType IndexToPoint(const VoxelGridIndex& index) const
+		{
+			PointType p;
+			p.x = ((float)(index.idx) + 0.5f) * (float)(leafSize.x()) + minAABB.x();
+			p.y = ((float)(index.idy) + 0.5f) * (float)(leafSize.y()) + minAABB.y();
+			p.z = ((float)(index.idz) + 0.5f) * (float)(leafSize.z()) + minAABB.z();
+			return p;
+		}
+
 		inline virtual PTR(Pc<PointType>) GetPointCloud() const
 		{
 			PTR(Pc<PointType>) pc(new Pc<PointType>);
 			pc->reserve(leaves->size());
 			for (Leaves::const_iterator it = leaves->begin(); it != leaves->end(); ++it)
-			{
-				PointType p;
-				p.x = ((float)(it->first.idx) + 0.5f) * (float)(leafSize.x())+minAABB.x();
-				p.y = ((float)(it->first.idy) + 0.5f) * (float)(leafSize.y())+minAABB.y();
-				p.z = ((float)(it->first.idz) + 0.5f) * (float)(leafSize.z())+minAABB.z();
-				pc->push_back(p);
-			}
+				pc->push_back(IndexToPoint(it->first));
 			return pc;
 		}
 
@@ -258,18 +266,7 @@ namespace RecRoom
 	};
 
 	template <class PointType>
-	class VNNGenerator : public VoxelGridFilter<PointType>
-	{
-	public:
-		VNNGenerator(const Eigen::Vector3d& leafSize, const Eigen::Vector3d& minAABB, const Eigen::Vector3d& maxAABB)
-			: VoxelGridFilter<PointType>(leafSize, minAABB, maxAABB)
-		{}
-
-		void Generate(std::vector<uint32_t>& cache, PcVNN& output);
-	};
-
-	template <class PointType>
-	class VNN : public pcl::search::Search<PointType>
+	class VNN : public pcl::search::Search<PointType>, public BinaryVoxelGrid<PointType>
 	{
 	public:
 		typedef typename pcl::search::Search<PointType>::PointCloud PointCloud;
@@ -280,7 +277,7 @@ namespace RecRoom
 
 	public:
 		VNN(const Eigen::Vector3d& leafSize, const Eigen::Vector3d& minAABB, const Eigen::Vector3d& maxAABB) 
-			: pcl::search::Search<PointType>("VNN", false), cache(), pcVNN(new PcVNN), accVNN(new KDTreeVNN), vnnGen(leafSize, minAABB, maxAABB)
+			: pcl::search::Search<PointType>("VNN", false), cache(), pcVNN(new PcVNN), accVNN(new KDTreeVNN), BinaryVoxelGrid<PointType>(leafSize, minAABB, maxAABB)
 		{
 			diagVoxelSize = std::sqrt(
 				leafSize.x() * leafSize.x()+ 
@@ -290,24 +287,7 @@ namespace RecRoom
 
 		void setSortedResults(bool sorted_results) { THROW_EXCEPTION("Not support"); }
 
-		void setInputCloud(const PointCloudConstPtr& cloud, const IndicesConstPtr& indices = nullptr)
-		{
-			PRINT_INFO("Build VNN - Start");
-			vnnGen.setInputCloud(cloud);
-			if(indices)
-				vnnGen.setIndices(indices);
-			vnnGen.Generate(cache, *pcVNN);
-			std::stringstream ss;
-			ss << "Build VNN - End - vnnSize: " << pcVNN->size() << ", cacheSize:" << cache.size();
-			PRINT_INFO(ss.str());
-
-			PRINT_INFO("Build AccVNN - Start");
-			accVNN->setInputCloud(pcVNN);
-			PRINT_INFO("Build AccVNN - End");
-
-			input_ = cloud;
-			indices_ = indices;
-		}
+		void setInputCloud(const PointCloudConstPtr& cloud, const IndicesConstPtr& indices = nullptr);
 
 		int nearestKSearch(
 			const PointType& point, int k,
@@ -325,7 +305,6 @@ namespace RecRoom
 		PTR(PcVNN) pcVNN;
 		PTR(AccVNN) accVNN;
 		std::vector<uint32_t> cache;
-		VNNGenerator<PointType> vnnGen;
 	};
 }
 
