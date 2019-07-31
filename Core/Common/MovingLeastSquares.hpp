@@ -409,7 +409,7 @@ namespace RecRoom
 
 						Eigen::Vector3d addPoint = (*distinctCloud)[px].getVector3fMap().template cast<double>();
 						MLSProjectionResults proj = mlsResults[inputIndex].projectPoint(addPoint, projectionMethod, 5 * numCoeff);
-						addProjectedPointNormal(inputIndex, proj.point, proj.normal, mlsResults[inputIndex].curvature, output, *correspondingInputIndices);
+						addProjectedPointNormal(inputIndex, proj.point, proj.normal, mlsResults[inputIndex].curvature, output[px], (*correspondingInputIndices)[px]);
 					}
 				}
 #else
@@ -429,7 +429,7 @@ namespace RecRoom
 
 						Eigen::Vector3d addPoint = (*distinctCloud)[px].getVector3fMap().template cast<double>();
 						MLSProjectionResults proj = mlsResults[inputIndex].projectPoint(addPoint, projectionMethod, 5 * numCoeff);
-						addProjectedPointNormal(inputIndex, proj.point, proj.normal, mlsResults[inputIndex].curvature, output, *correspondingInputIndices);
+						addProjectedPointNormal(inputIndex, proj.point, proj.normal, mlsResults[inputIndex].curvature, output[px], (*correspondingInputIndices)[px]);
 					}
 				}
 #endif
