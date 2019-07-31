@@ -7,7 +7,7 @@ namespace RecRoom
 	template<class InPointType, class OutPointType>
 	class InterpolatorPcNearest : public InterpolatorPc<InPointType, OutPointType>, public ThreadAble
 	{
-	public:
+	protected:
 		static void InterpolationTask(
 			int id,
 			void* self,

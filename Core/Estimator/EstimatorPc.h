@@ -21,7 +21,7 @@ namespace RecRoom
 	class EstimatorPc 
 		: public SearchAnySurfaceProcessorPc2PcInOut<InPointType, OutPointType>, public ThreadAble
 	{
-	public:
+	protected:
 		static void EstimationTask(
 			int id,
 			void* self,

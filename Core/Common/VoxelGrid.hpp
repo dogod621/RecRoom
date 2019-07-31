@@ -100,6 +100,121 @@ namespace RecRoom
 		}
 	}
 
+	template <class PointType>
+	void BinaryVoxelGrid<PointType>::MarkBoundaryTask(
+		int id,
+		void* self_,
+		void* its_)
+	{
+		BinaryVoxelGrid<PointType>& self = (*(BinaryVoxelGrid<PointType>*)(self_));
+		std::vector<Leaves::iterator>& its = (*(std::vector<Leaves::iterator>*)(its_));
+
+		for (int idx = id; idx < static_cast<int> (its.size()); idx += self.numThreads)
+		{
+			Leaves::iterator& it = its[idx];
+
+			if (it->first.idx > 0)
+			{
+				if (it->first.idy > 0)
+				{
+					if (it->first.idz > 0)
+					{
+						if (self.leaves->find(VoxelGridIndex(
+							it->first.idx - 1,
+							it->first.idy - 1,
+							it->first.idz - 1)) == self.leaves->end())
+						{
+							it->second = true; continue;
+						}
+					}
+					if (it->first.idz < self.maxIndexZ)
+					{
+						if (self.leaves->find(VoxelGridIndex(
+							it->first.idx - 1,
+							it->first.idy - 1,
+							it->first.idz + 1)) == self.leaves->end())
+						{
+							it->second = true; continue;
+						}
+					}
+				}
+				if (it->first.idy < self.maxIndexY)
+				{
+					if (it->first.idz > 0)
+					{
+						if (self.leaves->find(VoxelGridIndex(
+							it->first.idx - 1,
+							it->first.idy + 1,
+							it->first.idz - 1)) == self.leaves->end())
+						{
+							it->second = true; continue;
+						}
+					}
+					if (it->first.idz < self.maxIndexZ)
+					{
+						if (self.leaves->find(VoxelGridIndex(
+							it->first.idx - 1,
+							it->first.idy + 1,
+							it->first.idz + 1)) == self.leaves->end())
+						{
+							it->second = true; continue;
+						}
+					}
+				}
+			}
+			if (it->first.idx < self.maxIndexX)
+			{
+				if (it->first.idy > 0)
+				{
+					if (it->first.idz > 0)
+					{
+						if (self.leaves->find(VoxelGridIndex(
+							it->first.idx + 1,
+							it->first.idy - 1,
+							it->first.idz - 1)) == self.leaves->end())
+						{
+							it->second = true; continue;
+						}
+					}
+					if (it->first.idz < self.maxIndexZ)
+					{
+						if (self.leaves->find(VoxelGridIndex(
+							it->first.idx + 1,
+							it->first.idy - 1,
+							it->first.idz + 1)) == self.leaves->end())
+						{
+							it->second = true; continue;
+						}
+					}
+				}
+				if (it->first.idy < self.maxIndexY)
+				{
+					if (it->first.idz > 0)
+					{
+						if (self.leaves->find(VoxelGridIndex(
+							it->first.idx + 1,
+							it->first.idy + 1,
+							it->first.idz - 1)) == self.leaves->end())
+						{
+							it->second = true; continue;
+						}
+					}
+					if (it->first.idz < self.maxIndexZ)
+					{
+						if (self.leaves->find(VoxelGridIndex(
+							it->first.idx + 1,
+							it->first.idy + 1,
+							it->first.idz + 1)) == self.leaves->end())
+						{
+							it->second = true; continue;
+						}
+					}
+				}
+			}
+
+			it->second = false;
+		}
+	}
 
 	template <class PointType>
 	inline void BinaryVoxelGrid<PointType>::AddPoint(const PointType& p)
@@ -214,14 +329,18 @@ namespace RecRoom
 	template <class PointType>
 	void BinaryVoxelGrid<PointType>::MarkBoundary()
 	{
+		std::vector<Leaves::iterator> its;
+		its.reserve(leaves->size());
+		for (Leaves::iterator it = leaves->begin(); it != leaves->end(); ++it)
+			its.push_back(it);
+
 #ifdef _OPENMP
 #pragma omp parallel for num_threads(numThreads)
-#else
-		PRINT_WARNING("OPENMP is not enabled");
-#endif
-		for (Leaves::iterator it = leaves->begin(); it != leaves->end(); ++it)
+		for (int idx = 0; idx < static_cast<int> (its.size()); ++idx)
 		{
-			if ( it->first.idx > 0 )
+			Leaves::iterator& it = its[idx];
+
+			if (it->first.idx > 0)
 			{
 				if (it->first.idy > 0)
 				{
@@ -322,6 +441,16 @@ namespace RecRoom
 
 			it->second = false;
 		}
+#else
+		PRINT_WARNING("OPENMP is not enabled, use std thread instead");
+		std::vector<std::thread> threads;
+		for (int i = 0; i < numThreads; i++)
+			threads.push_back(std::thread(BinaryVoxelGrid::MarkBoundaryTask, i,
+			(void*)(this),
+			(void*)(&its)));
+		for (auto& thread : threads)
+			thread.join();
+#endif
 	}
 
 	template <class PointType>
@@ -603,7 +732,7 @@ namespace RecRoom
 	{
 		pcVNN->clear();
 		cache.clear();
-		
+
 		PRINT_INFO("Build VNN - Start");
 
 		std::vector<IndexPair> indexPairs;

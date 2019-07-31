@@ -202,6 +202,12 @@ namespace RecRoom
 	template <class PointType>
 	class BinaryVoxelGrid : public VoxelGridBase<PointType, bool>, public ThreadAble
 	{
+	protected:
+		static void MarkBoundaryTask(
+			int id,
+			void* self,
+			void* its);
+
 	public:
 		using Leaf = VoxelGridBase<PointType, bool>::Leaf;
 		using Leaves = VoxelGridBase<PointType, bool>::Leaves;
