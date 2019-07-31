@@ -197,8 +197,15 @@ namespace RecRoom
 	}
 
 	template <typename InPointN, typename OutPointN>
-	void MovingLeastSquares<InPointN, OutPointN>::computeMLSPointNormal(int index, const PcIndex& nnIndices, Pc<OutPointN>& projectedPoints, PcIndex& correspondingInputIndices_, MLSResult &mlsResult) const
+	void MovingLeastSquares<InPointN, OutPointN>::computeMLSPointNormal(int index, const PcIndex& nnIndices, Pc<OutPointN>& projectedPoints, PcIndex& correspondingInputIndices_)
 	{
+		MLSResult mlsResult__;
+		MLSResult* mlsResult_ = &mlsResult__;
+		if (cacheMLSResults)
+			mlsResult_ = &mlsResults[index];
+
+		MLSResult& mlsResult = *mlsResult_;
+
 		mlsResult.computeMLSSurface<InPointN>(*input_, index, nnIndices, searchRadius, order);
 
 		switch (upsampleMethod)
@@ -273,14 +280,8 @@ namespace RecRoom
 		// Create temporaries for each thread in order to avoid synchronization
 		typename Pc<OutPointN>::CloudVectorType projectedPointSet(numThreads);
 		std::vector<PcIndex> correspondingInputIndicesSet(numThreads);
-#else
-		PRINT_WARNING("OPENMP is not enabled");
-#endif
 
-		// For all points
-#ifdef _OPENMP
 #pragma omp parallel for schedule (dynamic,1000) num_threads (numThreads)
-#endif
 		for (int idx = 0; idx < static_cast<int> (indices_->size()); ++idx)
 		{
 			// Get a plane approximating the local surface's tangent and project point onto it
@@ -311,43 +312,58 @@ namespace RecRoom
 				if (nnFrontIndices.size() >= 3)
 				{
 					// This thread's ID (range 0 to threads-1)
-#ifdef _OPENMP
 					const int tn = omp_get_thread_num();
-#else
-					Pc<OutPointN> projectedPoints;
-#endif
-
-#ifdef _OPENMP
-					if (cacheMLSResults)
-						computeMLSPointNormal(index, nnFrontIndices, projectedPointSet[tn], correspondingInputIndicesSet[tn], mlsResults[index]);
-					else
-					{
-						MLSResult temp;
-						computeMLSPointNormal(index, nnFrontIndices, projectedPointSet[tn], correspondingInputIndicesSet[tn], temp);
-					}
-
-#else
-					if (cacheMLSResults)
-						computeMLSPointNormal(index, nnFrontIndices, projectedPoints, *correspondingInputIndices, mlsResults[index]);
-					else
-					{
-						MLSResult temp;
-						computeMLSPointNormal(index, nnFrontIndices, projectedPoints, *correspondingInputIndices, temp);
-					}
-
-					// Append projected points to output
-					output.insert(output.end(), projectedPoints.begin(), projectedPoints.end());
-#endif
+					computeMLSPointNormal(index, nnFrontIndices, projectedPointSet[tn], correspondingInputIndicesSet[tn]);
 				}
 			}
 		}
 
-#ifdef _OPENMP
 		// Combine all threads' results into the output vectors
 		for (unsigned int tn = 0; tn < numThreads; ++tn)
 		{
 			output.insert(output.end(), projectedPoints[tn].begin(), projectedPoints[tn].end());
 			correspondingInputIndices->insert(correspondingInputIndices.end(), correspondingInputIndicesSet[tn].begin(), correspondingInputIndicesSet[tn].end());
+		}
+#else
+		PRINT_WARNING("OPENMP is not enabled");
+
+		for (int idx = 0; idx < static_cast<int> (indices_->size()); ++idx)
+		{
+			// Get a plane approximating the local surface's tangent and project point onto it
+			const int index = (*indices_)[idx];
+			const InPointN& inP = (*input_)[index];
+
+			// Allocate enough space to hold the results of nearest neighbor searches
+			// \note resize is irrelevant for a radiusSearch ().
+			PcIndex nnIndices;
+			std::vector<float> nnSqrDists;
+
+			// Get the initial estimates of point positions and their neighborhoods
+			if (searchMethod->radiusSearch(inP, searchRadius, nnIndices, nnSqrDists) > 0)
+			{
+				// Filter back face
+				PcIndex nnFrontIndices;
+				nnFrontIndices.reserve(nnSqrDists.size());
+				{
+					for (PcIndex::const_iterator it = nnIndices.begin(); it != nnIndices.end(); ++it)
+					{
+						const InPointN& neiP = (*input_)[(*it)];
+						if ((inP.normal_x * neiP.normal_x + inP.normal_y * neiP.normal_y + inP.normal_z * neiP.normal_z) > 0)
+							nnFrontIndices.push_back(*it);
+					}
+				}
+
+				// Check the number of nearest neighbors for normal estimation (and later for polynomial fit as well)
+				if (nnFrontIndices.size() >= 3)
+				{
+					// This thread's ID (range 0 to threads-1)
+					Pc<OutPointN> projectedPoints;
+					computeMLSPointNormal(index, nnFrontIndices, projectedPoints, *correspondingInputIndices);
+
+					// Append projected points to output
+					output.insert(output.end(), projectedPoints.begin(), projectedPoints.end());
+				}
+			}
 		}
 #endif
 
@@ -365,8 +381,6 @@ namespace RecRoom
 			{
 				correspondingInputIndices.reset(new PcIndex);
 				correspondingInputIndices->resize(distinctCloud->size());
-				Pc<OutPointN> projectedPoints;
-				projectedPoints.resize(distinctCloud->size());
 
 #ifdef _OPENMP
 #pragma omp parallel for num_threads(numThreads)
@@ -376,8 +390,8 @@ namespace RecRoom
 				for (int px = 0; px < static_cast<int> (distinctCloud->size()); ++px)
 				{
 					PcIndex nnIndices;
-					std::vector<float> nn_dists;
-					if (searchMethod->nearestKSearch((*distinctCloud)[px], 1, nnIndices, nn_dists) > 0)
+					std::vector<float> nnSqrDists;
+					if (searchMethod->nearestKSearch((*distinctCloud)[px], 1, nnIndices, nnSqrDists) > 0)
 					{
 						int inputIndex = nnIndices.front();
 
@@ -397,36 +411,6 @@ namespace RecRoom
 
 		case MLSUpsamplingMethod::MLSUpsamplingMethod_NONE:
 		{
-			break;
-		}
-
-		default:
-		{
-			{
-#ifdef _OPENMP
-#pragma omp parallel for num_threads(numThreads)
-#else
-				PRINT_WARNING("OPENMP is not enabled");
-#endif
-				for (int px = 0; px < static_cast<int> (output.size()); ++px)
-				{
-					PcIndex nnIndices;
-					std::vector<float> nn_dists;
-					if (searchMethod->nearestKSearch(output[px], 1, nnIndices, nn_dists) > 0)
-					{
-						int inputIndex = nnIndices.front();
-
-						// If the closest point did not have a valid MLS fitting result
-						// OR if it is too far away from the sampled point
-						if (mlsResults[inputIndex].valid == false)
-							continue;
-
-						Eigen::Vector3d addPoint = output[px].getVector3fMap().template cast<double>();
-						MLSProjectionResults proj = mlsResults[inputIndex].projectPoint(addPoint, projectionMethod, 5 * numCoeff);
-						addProjectedPointNormal(inputIndex, proj.point, proj.normal, mlsResults[inputIndex].curvature, output[px], (*correspondingInputIndices)[px]);
-					}
-				}
-			}
 			break;
 		}
 		}

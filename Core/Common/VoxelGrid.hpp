@@ -329,8 +329,6 @@ namespace RecRoom
 	template <class PointType>
 	void BinaryVoxelGrid<PointType>::MarkBoundary()
 	{
-		PRINT_INFO("MarkBoundary - Start");
-
 		std::vector<Leaves::iterator> its;
 		its.reserve(leaves->size());
 		for (Leaves::iterator it = leaves->begin(); it != leaves->end(); ++it)
@@ -453,8 +451,6 @@ namespace RecRoom
 		for (auto& thread : threads)
 			thread.join();
 #endif
-
-		PRINT_INFO("MarkBoundary - End");
 	}
 
 	template <class PointType>

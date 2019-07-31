@@ -470,7 +470,7 @@ namespace RecRoom
 		
 	protected:
 		void computeMLSPointNormal(
-			int index, const PcIndex &nnIndices, Pc<OutPointN>& projectedPoints, PcIndex& correspondingInputIndices_, MLSResult &mlsResult) const;
+			int index, const PcIndex &nnIndices, Pc<OutPointN>& projectedPoints, PcIndex& correspondingInputIndices_);
 
 		inline void addProjectedPointNormal(
 			int index, const Eigen::Vector3d &point, const Eigen::Vector3d &normal, double curvature, 
