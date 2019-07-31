@@ -469,6 +469,12 @@ namespace RecRoom
 		bool cacheMLSResults; // brief True if the mls results for the input cloud should be stored. note This is forced to true when using upsampling methods DISTINCT_CLOUD.
 		
 	protected:
+		static void GenerateMLSTask(
+			int id,
+			void* self,
+			void* projectedPointSet,
+			void* correspondingInputIndicesSet );
+
 		void computeMLSPointNormal(
 			int index, const PcIndex &nnIndices, Pc<OutPointN>& projectedPoints, PcIndex& correspondingInputIndices_);
 

@@ -274,15 +274,55 @@ namespace RecRoom
 	}
 
 	template <typename InPointN, typename OutPointN>
+	void MovingLeastSquares<InPointN, OutPointN>::GenerateMLSTask(
+		int id,
+		void* self_,
+		void* projectedPointSet_,
+		void* correspondingInputIndicesSet_)
+	{
+		MovingLeastSquares<InPointN, OutPointN>& self = (*(MovingLeastSquares<InPointN, OutPointN>*)(self_));
+		std::vector<Pc<OutPointN>>& projectedPointSet = (*(std::vector<Pc<OutPointN>>*)(projectedPointSet_));
+		std::vector<PcIndex>& correspondingInputIndicesSet = (*(std::vector<PcIndex>*)(correspondingInputIndicesSet_));
+
+		PcIndex nnIndices;
+		std::vector<float> nnSqrDists;
+		PcIndex nnFrontIndices;
+		for (int idx = id; idx < static_cast<int> (self.indices_->size()); idx += self.numThreads)
+		{
+			const int index = (*self.indices_)[idx];
+			const InPointN& inP = (*self.input_)[index];
+
+			if (self.searchMethod->radiusSearch(inP, self.searchRadius, nnIndices, nnSqrDists) > 0)
+			{
+				nnFrontIndices.clear();
+				nnFrontIndices.reserve(nnSqrDists.size());
+				for (PcIndex::const_iterator it = nnIndices.begin(); it != nnIndices.end(); ++it)
+				{
+					const InPointN& neiP = (*self.input_)[(*it)];
+					if ((inP.normal_x * neiP.normal_x + inP.normal_y * neiP.normal_y + inP.normal_z * neiP.normal_z) > 0)
+						nnFrontIndices.push_back(*it);
+				}
+
+				if (nnFrontIndices.size() >= 3)
+				{
+					self.computeMLSPointNormal(index, nnFrontIndices, projectedPointSet[id], correspondingInputIndicesSet[id]);
+				}
+			}
+		}
+	}
+
+	template <typename InPointN, typename OutPointN>
 	void MovingLeastSquares<InPointN, OutPointN>::performProcessing(Pc<OutPointN>& output)
 	{
-		PRINT_INFO("MovingLeastSquares - Start");
+		output.clear();
 
-#ifdef _OPENMP
+		PRINT_INFO("Generate MLS - Start");
+
 		// Create temporaries for each thread in order to avoid synchronization
-		typename Pc<OutPointN>::CloudVectorType projectedPointSet(numThreads);
+		std::vector<Pc<OutPointN>> projectedPointSet(numThreads);
 		std::vector<PcIndex> correspondingInputIndicesSet(numThreads);
 
+#ifdef _OPENMP
 #pragma omp parallel for schedule (dynamic,1000) num_threads (numThreads)
 		for (int idx = 0; idx < static_cast<int> (indices_->size()); ++idx)
 		{
@@ -301,13 +341,11 @@ namespace RecRoom
 				// Filter back face
 				PcIndex nnFrontIndices;
 				nnFrontIndices.reserve(nnSqrDists.size());
+				for (PcIndex::const_iterator it = nnIndices.begin(); it != nnIndices.end(); ++it)
 				{
-					for (PcIndex::const_iterator it = nnIndices.begin(); it != nnIndices.end(); ++it)
-					{
-						const InPointN& neiP = (*input_)[(*it)];
-						if ((inP.normal_x * neiP.normal_x + inP.normal_y * neiP.normal_y + inP.normal_z * neiP.normal_z) > 0)
-							nnFrontIndices.push_back(*it);
-					}
+					const InPointN& neiP = (*input_)[(*it)];
+					if ((inP.normal_x * neiP.normal_x + inP.normal_y * neiP.normal_y + inP.normal_z * neiP.normal_z) > 0)
+						nnFrontIndices.push_back(*it);
 				}
 
 				// Check the number of nearest neighbors for normal estimation (and later for polynomial fit as well)
@@ -320,56 +358,26 @@ namespace RecRoom
 			}
 		}
 
+		
+#else
+		PRINT_WARNING("OPENMP is not enabled, use std thread instead");
+		std::vector<std::thread> threads;
+		for (int i = 0; i < numThreads; i++)
+			threads.push_back(std::thread(MovingLeastSquares::GenerateMLSTask, i,
+				(void*)(this),
+				(void*)(&projectedPointSet),
+				(void*)(&correspondingInputIndicesSet)));
+		for (auto& thread : threads)
+			thread.join();
+#endif
+		PRINT_INFO("Generate MLS - End");
+
 		// Combine all threads' results into the output vectors
 		for (unsigned int tn = 0; tn < numThreads; ++tn)
 		{
-			output.insert(output.end(), projectedPoints[tn].begin(), projectedPoints[tn].end());
-			correspondingInputIndices->insert(correspondingInputIndices.end(), correspondingInputIndicesSet[tn].begin(), correspondingInputIndicesSet[tn].end());
+			output.insert(output.end(), projectedPointSet[tn].begin(), projectedPointSet[tn].end());
+			correspondingInputIndices->insert(correspondingInputIndices->end(), correspondingInputIndicesSet[tn].begin(), correspondingInputIndicesSet[tn].end());
 		}
-#else
-		PRINT_WARNING("OPENMP is not enabled");
-
-		for (int idx = 0; idx < static_cast<int> (indices_->size()); ++idx)
-		{
-			// Get a plane approximating the local surface's tangent and project point onto it
-			const int index = (*indices_)[idx];
-			const InPointN& inP = (*input_)[index];
-
-			// Allocate enough space to hold the results of nearest neighbor searches
-			// \note resize is irrelevant for a radiusSearch ().
-			PcIndex nnIndices;
-			std::vector<float> nnSqrDists;
-
-			// Get the initial estimates of point positions and their neighborhoods
-			if (searchMethod->radiusSearch(inP, searchRadius, nnIndices, nnSqrDists) > 0)
-			{
-				// Filter back face
-				PcIndex nnFrontIndices;
-				nnFrontIndices.reserve(nnSqrDists.size());
-				{
-					for (PcIndex::const_iterator it = nnIndices.begin(); it != nnIndices.end(); ++it)
-					{
-						const InPointN& neiP = (*input_)[(*it)];
-						if ((inP.normal_x * neiP.normal_x + inP.normal_y * neiP.normal_y + inP.normal_z * neiP.normal_z) > 0)
-							nnFrontIndices.push_back(*it);
-					}
-				}
-
-				// Check the number of nearest neighbors for normal estimation (and later for polynomial fit as well)
-				if (nnFrontIndices.size() >= 3)
-				{
-					// This thread's ID (range 0 to threads-1)
-					Pc<OutPointN> projectedPoints;
-					computeMLSPointNormal(index, nnFrontIndices, projectedPoints, *correspondingInputIndices);
-
-					// Append projected points to output
-					output.insert(output.end(), projectedPoints.begin(), projectedPoints.end());
-				}
-			}
-		}
-#endif
-		PRINT_INFO("MovingLeastSquares - End");
-
 
 		// Perform the distinct-cloud or voxel-grid upsampling
 		PRINT_INFO("Upsampling - Start");

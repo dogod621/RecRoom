@@ -423,12 +423,19 @@ int main(int argc, char *argv[])
 					preprocessFilter(
 						new RecRoom::FilterPcRemoveDuplicate<RecRoom::PointREC>(voxelSize*0.5));*/
 
+				//
 				PTR(RecRoom::ReconstructorPcOC::Mesher)
 					mesher(
 						new RecRoom::MesherPcGP3<RecRoom::PointREC>(
 							maxEdgeSize, mu, maxNumNei, minAngle, maxAngle, epsAngle, false, true));
 
+				PTR(RecRoom::SamplerPc<RecRoom::PointREC>)
+					mesherPreSampler(
+						new RecRoom::SamplerPcMLS<RecRoom::PointREC>(
+							searchRadius, 2));
+
 				reconstructorPC->setMesher(mesher);
+				reconstructorPC->setMesherPreSampler(mesherPreSampler);
 			}
 
 			//
