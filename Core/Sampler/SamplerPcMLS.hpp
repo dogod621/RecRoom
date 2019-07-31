@@ -52,19 +52,33 @@ namespace RecRoom
 			tarP.z = tempZ;
 			if (computeNormals)
 			{
-				if ((tempNX * srcP.normal_x + tempNY * srcP.normal_y + tempNZ * srcP.normal_z) > 0)
+				if (pcl_isfinite(tempNX) && pcl_isfinite(tempNY) && pcl_isfinite(tempNZ))
 				{
-					tarP.normal_x = tempNX;
-					tarP.normal_y = tempNY;
-					tarP.normal_z = tempNZ;
+					if (pcl_isfinite(srcP.normal_x) && pcl_isfinite(srcP.normal_y) && pcl_isfinite(srcP.normal_z))
+					{
+						if ((tempNX * srcP.normal_x + tempNY * srcP.normal_y + tempNZ * srcP.normal_z) > 0)
+						{
+							tarP.normal_x = tempNX;
+							tarP.normal_y = tempNY;
+							tarP.normal_z = tempNZ;
+						}
+						else
+						{
+							tarP.normal_x = -tempNX;
+							tarP.normal_y = -tempNY;
+							tarP.normal_z = -tempNZ;
+						}
+					}
+					else
+					{
+						tarP.normal_x = tempNX;
+						tarP.normal_y = tempNY;
+						tarP.normal_z = tempNZ;
+					}
 				}
-				else
-				{
-					tarP.normal_x = -tempNX;
-					tarP.normal_y = -tempNY;
-					tarP.normal_z = -tempNZ;
-				}
-				tarP.curvature = tempNC;
+
+				if (pcl_isfinite(tempNC))
+					tarP.curvature = tempNC;
 			}
 		}
 
