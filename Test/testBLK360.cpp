@@ -388,7 +388,7 @@ int main(int argc, char *argv[])
 					distinctSampler(
 						new RecRoom::SamplerPcBinaryGrid<RecRoom::PointREC>(
 							voxelSize, containerPcRAW->getMinAABB(), containerPcRAW->getMaxAABB(),
-							RecRoom::MorphologyOperation::DILATION, 5, 1));
+							RecRoom::MorphologyOperation::DILATION, 3, 1));
 
 				PTR(RecRoom::SamplerPc<RecRoom::PointREC>)
 					preprocessSampler(
