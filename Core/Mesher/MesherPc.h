@@ -29,20 +29,21 @@ namespace RecRoom
 		}
 
 	public:
-		virtual bool ImplementCheck(
-			const CONST_PTR(Acc<PointType>)& searchSurface,
-			const CONST_PTR(Pc<PointType>)& input,
-			const CONST_PTR(PcIndex)& filter,
-			Mesh& output) const
-		{
-			return true;
-		}
-
 		virtual void ImplementProcess(
 			const CONST_PTR(Acc<PointType>)& searchSurface,
 			const CONST_PTR(Pc<PointType>)& input,
 			const CONST_PTR(PcIndex)& filter,
 			Mesh& output) const;
+
+		inline virtual bool InputPointValid(const PointType& p) const
+		{
+			return pcl_isfinite(p.x) &&
+				pcl_isfinite(p.y) &&
+				pcl_isfinite(p.z) &&
+				pcl_isfinite(p.normal_x) &&
+				pcl_isfinite(p.normal_y) &&
+				pcl_isfinite(p.normal_z);
+		}
 
 	protected:
 		virtual void ToMesh(PTR(Acc<PointType>)& searchSurface, PTR(Pc<PointType>)& input, Mesh& output) const = 0;
