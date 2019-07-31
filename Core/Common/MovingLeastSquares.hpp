@@ -276,6 +276,8 @@ namespace RecRoom
 	template <typename InPointN, typename OutPointN>
 	void MovingLeastSquares<InPointN, OutPointN>::performProcessing(Pc<OutPointN>& output)
 	{
+		PRINT_INFO("MovingLeastSquares - Start");
+
 #ifdef _OPENMP
 		// Create temporaries for each thread in order to avoid synchronization
 		typename Pc<OutPointN>::CloudVectorType projectedPointSet(numThreads);
@@ -366,9 +368,15 @@ namespace RecRoom
 			}
 		}
 #endif
+		PRINT_INFO("MovingLeastSquares - End");
+
 
 		// Perform the distinct-cloud or voxel-grid upsampling
+		PRINT_INFO("Upsampling - Start");
+
 		performUpsampling(output);
+
+		PRINT_INFO("Upsampling - End");
 	}
 
 	template <typename InPointN, typename OutPointN>
@@ -381,6 +389,7 @@ namespace RecRoom
 			{
 				correspondingInputIndices.reset(new PcIndex);
 				correspondingInputIndices->resize(distinctCloud->size());
+				output.resize(distinctCloud->size());
 
 #ifdef _OPENMP
 #pragma omp parallel for num_threads(numThreads)
