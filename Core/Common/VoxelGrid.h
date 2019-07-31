@@ -200,7 +200,7 @@ namespace RecRoom
 	};
 
 	template <class PointType>
-	class BinaryVoxelGrid : public VoxelGridBase<PointType, bool>
+	class BinaryVoxelGrid : public VoxelGridBase<PointType, bool>, public ThreadAble
 	{
 	public:
 		using Leaf = VoxelGridBase<PointType, bool>::Leaf;
@@ -208,7 +208,7 @@ namespace RecRoom
 
 	public:
 		BinaryVoxelGrid(const Eigen::Vector3d& leafSize, const Eigen::Vector3d& minAABB, const Eigen::Vector3d& maxAABB)
-			: VoxelGridBase(leafSize, minAABB, maxAABB)
+			: VoxelGridBase(leafSize, minAABB, maxAABB), ThreadAble()
 		{
 		}
 
@@ -243,6 +243,8 @@ namespace RecRoom
 		inline virtual void DeletePointCloud(CONST_PTR(Pc<PointType>) input, CONST_PTR(PcIndex) filter = nullptr);
 
 	public:
+		void MarkBoundary();
+
 		void Dilation(std::size_t kernelSize = 1, std::size_t iteration = 1);
 
 		void Erosion(std::size_t kernelSize = 1, std::size_t iteration = 1);

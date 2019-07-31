@@ -212,6 +212,119 @@ namespace RecRoom
 	}
 
 	template <class PointType>
+	void BinaryVoxelGrid<PointType>::MarkBoundary()
+	{
+#ifdef _OPENMP
+#pragma omp parallel for num_threads(numThreads)
+#else
+		PRINT_WARNING("OPENMP is not enabled");
+#endif
+		for (Leaves::iterator it = leaves->begin(); it != leaves->end(); ++it)
+		{
+			if ( it->first.idx > 0 )
+			{
+				if (it->first.idy > 0)
+				{
+					if (it->first.idz > 0)
+					{
+						if (leaves->find(VoxelGridIndex(
+							it->first.idx - 1,
+							it->first.idy - 1,
+							it->first.idz - 1)) == leaves->end())
+						{
+							it->second = true; continue;
+						}
+					}
+					if (it->first.idz < maxIndexZ)
+					{
+						if (leaves->find(VoxelGridIndex(
+							it->first.idx - 1,
+							it->first.idy - 1,
+							it->first.idz + 1)) == leaves->end())
+						{
+							it->second = true; continue;
+						}
+					}
+				}
+				if (it->first.idy < maxIndexY)
+				{
+					if (it->first.idz > 0)
+					{
+						if (leaves->find(VoxelGridIndex(
+							it->first.idx - 1,
+							it->first.idy + 1,
+							it->first.idz - 1)) == leaves->end())
+						{
+							it->second = true; continue;
+						}
+					}
+					if (it->first.idz < maxIndexZ)
+					{
+						if (leaves->find(VoxelGridIndex(
+							it->first.idx - 1,
+							it->first.idy + 1,
+							it->first.idz + 1)) == leaves->end())
+						{
+							it->second = true; continue;
+						}
+					}
+				}
+			}
+			if (it->first.idx < maxIndexX)
+			{
+				if (it->first.idy > 0)
+				{
+					if (it->first.idz > 0)
+					{
+						if (leaves->find(VoxelGridIndex(
+							it->first.idx + 1,
+							it->first.idy - 1,
+							it->first.idz - 1)) == leaves->end())
+						{
+							it->second = true; continue;
+						}
+					}
+					if (it->first.idz < maxIndexZ)
+					{
+						if (leaves->find(VoxelGridIndex(
+							it->first.idx + 1,
+							it->first.idy - 1,
+							it->first.idz + 1)) == leaves->end())
+						{
+							it->second = true; continue;
+						}
+					}
+				}
+				if (it->first.idy < maxIndexY)
+				{
+					if (it->first.idz > 0)
+					{
+						if (leaves->find(VoxelGridIndex(
+							it->first.idx + 1,
+							it->first.idy + 1,
+							it->first.idz - 1)) == leaves->end())
+						{
+							it->second = true; continue;
+						}
+					}
+					if (it->first.idz < maxIndexZ)
+					{
+						if (leaves->find(VoxelGridIndex(
+							it->first.idx + 1,
+							it->first.idy + 1,
+							it->first.idz + 1)) == leaves->end())
+						{
+							it->second = true; continue;
+						}
+					}
+				}
+			}
+
+			it->second = false;
+		}
+	}
+
+	template <class PointType>
 	void BinaryVoxelGrid<PointType>::Dilation(std::size_t kernelSize, std::size_t iteration)
 	{
 		if ((kernelSize % 2) != 0)
@@ -227,77 +340,82 @@ namespace RecRoom
 
 		for (std::size_t itr = 0; itr < iteration; ++itr)
 		{
+			MarkBoundary();
+
 			for (Leaves::const_iterator it = leaves->begin(); it != leaves->end(); ++it)
 			{
-				// Iterator window
-				for (std::size_t siftX = 1; (siftX <= extSize) && (it->first.idx + siftX <= maxIndexX); ++siftX)
+				if (it->second)
 				{
-					for (std::size_t siftY = 1; (siftY <= extSize) && (it->first.idy + siftY <= maxIndexY); ++siftY)
+					// Iterator window
+					for (std::size_t siftX = 1; (siftX <= extSize) && (it->first.idx + siftX <= maxIndexX); ++siftX)
 					{
-						// + + +
-						for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz + siftZ <= maxIndexZ); ++siftZ)
-							AddPoint(VoxelGridIndex(
-								it->first.idx + siftX,
-								it->first.idy + siftY,
-								it->first.idz + siftZ));
+						for (std::size_t siftY = 1; (siftY <= extSize) && (it->first.idy + siftY <= maxIndexY); ++siftY)
+						{
+							// + + +
+							for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz + siftZ <= maxIndexZ); ++siftZ)
+								AddPoint(VoxelGridIndex(
+									it->first.idx + siftX,
+									it->first.idy + siftY,
+									it->first.idz + siftZ));
 
-						// + + -
-						for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz >= siftZ); ++siftZ)
-							AddPoint(VoxelGridIndex(
-								it->first.idx + siftX,
-								it->first.idy + siftY,
-								it->first.idz - siftZ));
+							// + + -
+							for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz >= siftZ); ++siftZ)
+								AddPoint(VoxelGridIndex(
+									it->first.idx + siftX,
+									it->first.idy + siftY,
+									it->first.idz - siftZ));
+						}
+						for (std::size_t siftY = 1; (siftY <= extSize) && (it->first.idy >= siftY); ++siftY)
+						{
+							// + - +
+							for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz + siftZ <= maxIndexZ); ++siftZ)
+								AddPoint(VoxelGridIndex(
+									it->first.idx + siftX,
+									it->first.idy - siftY,
+									it->first.idz + siftZ));
+
+							// + - -
+							for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz >= siftZ); ++siftZ)
+								AddPoint(VoxelGridIndex(
+									it->first.idx + siftX,
+									it->first.idy - siftY,
+									it->first.idz - siftZ));
+						}
 					}
-					for (std::size_t siftY = 1; (siftY <= extSize) && (it->first.idy >= siftY); ++siftY)
+					for (std::size_t siftX = 1; (siftX <= extSize) && (it->first.idx >= siftX); ++siftX)
 					{
-						// + - +
-						for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz + siftZ <= maxIndexZ); ++siftZ)
-							AddPoint(VoxelGridIndex(
-								it->first.idx + siftX,
-								it->first.idy - siftY,
-								it->first.idz + siftZ));
+						for (std::size_t siftY = 1; (siftY <= extSize) && (it->first.idy + siftY <= maxIndexY); ++siftY)
+						{
+							// - + +
+							for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz + siftZ <= maxIndexZ); ++siftZ)
+								AddPoint(VoxelGridIndex(
+									it->first.idx - siftX,
+									it->first.idy + siftY,
+									it->first.idz + siftZ));
 
-						// + - -
-						for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz >= siftZ); ++siftZ)
-							AddPoint(VoxelGridIndex(
-								it->first.idx + siftX,
-								it->first.idy - siftY,
-								it->first.idz - siftZ));
-					}
-				}
-				for (std::size_t siftX = 1; (siftX <= extSize) && (it->first.idx >= siftX); ++siftX)
-				{
-					for (std::size_t siftY = 1; (siftY <= extSize) && (it->first.idy + siftY <= maxIndexY); ++siftY)
-					{
-						// - + +
-						for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz + siftZ <= maxIndexZ); ++siftZ)
-							AddPoint(VoxelGridIndex(
-								it->first.idx - siftX,
-								it->first.idy + siftY,
-								it->first.idz + siftZ));
+							// - + -
+							for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz >= siftZ); ++siftZ)
+								AddPoint(VoxelGridIndex(
+									it->first.idx - siftX,
+									it->first.idy + siftY,
+									it->first.idz - siftZ));
+						}
+						for (std::size_t siftY = 1; (siftY <= extSize) && (it->first.idy >= siftY); ++siftY)
+						{
+							// - - +
+							for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz + siftZ <= maxIndexZ); ++siftZ)
+								AddPoint(VoxelGridIndex(
+									it->first.idx - siftX,
+									it->first.idy - siftY,
+									it->first.idz + siftZ));
 
-						// - + -
-						for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz >= siftZ); ++siftZ)
-							AddPoint(VoxelGridIndex(
-								it->first.idx - siftX,
-								it->first.idy + siftY,
-								it->first.idz - siftZ));
-					}
-					for (std::size_t siftY = 1; (siftY <= extSize) && (it->first.idy >= siftY); ++siftY)
-					{
-						// - - +
-						for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz + siftZ <= maxIndexZ); ++siftZ)
-							AddPoint(VoxelGridIndex(
-								it->first.idx - siftX,
-								it->first.idy - siftY,
-								it->first.idz + siftZ));
-
-						// - - -
-						for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz >= siftZ); ++siftZ)
-							AddPoint(VoxelGridIndex(
-								it->first.idx - siftX,
-								it->first.idy - siftY,
-								it->first.idz - siftZ));
+							// - - -
+							for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz >= siftZ); ++siftZ)
+								AddPoint(VoxelGridIndex(
+									it->first.idx - siftX,
+									it->first.idy - siftY,
+									it->first.idz - siftZ));
+						}
 					}
 				}
 			}
@@ -320,77 +438,82 @@ namespace RecRoom
 
 		for (std::size_t itr = 0; itr < iteration; ++itr)
 		{
+			MarkBoundary();
+
 			for (Leaves::const_iterator it = leaves->begin(); it != leaves->end(); ++it)
 			{
-				// Iterator window
-				for (std::size_t siftX = 1; (siftX <= extSize) && (it->first.idx + siftX <= maxIndexX); ++siftX)
+				if (it->second)
 				{
-					for (std::size_t siftY = 1; (siftY <= extSize) && (it->first.idy + siftY <= maxIndexY); ++siftY)
+					// Iterator window
+					for (std::size_t siftX = 1; (siftX <= extSize) && (it->first.idx + siftX <= maxIndexX); ++siftX)
 					{
-						// + + +
-						for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz + siftZ <= maxIndexZ); ++siftZ)
-							DeletePoint(VoxelGridIndex(
-								it->first.idx + siftX,
-								it->first.idy + siftY,
-								it->first.idz + siftZ));
+						for (std::size_t siftY = 1; (siftY <= extSize) && (it->first.idy + siftY <= maxIndexY); ++siftY)
+						{
+							// + + +
+							for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz + siftZ <= maxIndexZ); ++siftZ)
+								DeletePoint(VoxelGridIndex(
+									it->first.idx + siftX,
+									it->first.idy + siftY,
+									it->first.idz + siftZ));
 
-						// + + -
-						for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz >= siftZ); ++siftZ)
-							DeletePoint(VoxelGridIndex(
-								it->first.idx + siftX,
-								it->first.idy + siftY,
-								it->first.idz - siftZ));
+							// + + -
+							for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz >= siftZ); ++siftZ)
+								DeletePoint(VoxelGridIndex(
+									it->first.idx + siftX,
+									it->first.idy + siftY,
+									it->first.idz - siftZ));
+						}
+						for (std::size_t siftY = 1; (siftY <= extSize) && (it->first.idy >= siftY); ++siftY)
+						{
+							// + - +
+							for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz + siftZ <= maxIndexZ); ++siftZ)
+								DeletePoint(VoxelGridIndex(
+									it->first.idx + siftX,
+									it->first.idy - siftY,
+									it->first.idz + siftZ));
+
+							// + - -
+							for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz >= siftZ); ++siftZ)
+								DeletePoint(VoxelGridIndex(
+									it->first.idx + siftX,
+									it->first.idy - siftY,
+									it->first.idz - siftZ));
+						}
 					}
-					for (std::size_t siftY = 1; (siftY <= extSize) && (it->first.idy >= siftY); ++siftY)
+					for (std::size_t siftX = 1; (siftX <= extSize) && (it->first.idx >= siftX); ++siftX)
 					{
-						// + - +
-						for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz + siftZ <= maxIndexZ); ++siftZ)
-							DeletePoint(VoxelGridIndex(
-								it->first.idx + siftX,
-								it->first.idy - siftY,
-								it->first.idz + siftZ));
+						for (std::size_t siftY = 1; (siftY <= extSize) && (it->first.idy + siftY <= maxIndexY); ++siftY)
+						{
+							// - + +
+							for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz + siftZ <= maxIndexZ); ++siftZ)
+								DeletePoint(VoxelGridIndex(
+									it->first.idx - siftX,
+									it->first.idy + siftY,
+									it->first.idz + siftZ));
 
-						// + - -
-						for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz >= siftZ); ++siftZ)
-							DeletePoint(VoxelGridIndex(
-								it->first.idx + siftX,
-								it->first.idy - siftY,
-								it->first.idz - siftZ));
-					}
-				}
-				for (std::size_t siftX = 1; (siftX <= extSize) && (it->first.idx >= siftX); ++siftX)
-				{
-					for (std::size_t siftY = 1; (siftY <= extSize) && (it->first.idy + siftY <= maxIndexY); ++siftY)
-					{
-						// - + +
-						for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz + siftZ <= maxIndexZ); ++siftZ)
-							DeletePoint(VoxelGridIndex(
-								it->first.idx - siftX,
-								it->first.idy + siftY,
-								it->first.idz + siftZ));
+							// - + -
+							for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz >= siftZ); ++siftZ)
+								DeletePoint(VoxelGridIndex(
+									it->first.idx - siftX,
+									it->first.idy + siftY,
+									it->first.idz - siftZ));
+						}
+						for (std::size_t siftY = 1; (siftY <= extSize) && (it->first.idy >= siftY); ++siftY)
+						{
+							// - - +
+							for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz + siftZ <= maxIndexZ); ++siftZ)
+								DeletePoint(VoxelGridIndex(
+									it->first.idx - siftX,
+									it->first.idy - siftY,
+									it->first.idz + siftZ));
 
-						// - + -
-						for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz >= siftZ); ++siftZ)
-							DeletePoint(VoxelGridIndex(
-								it->first.idx - siftX,
-								it->first.idy + siftY,
-								it->first.idz - siftZ));
-					}
-					for (std::size_t siftY = 1; (siftY <= extSize) && (it->first.idy >= siftY); ++siftY)
-					{
-						// - - +
-						for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz + siftZ <= maxIndexZ); ++siftZ)
-							DeletePoint(VoxelGridIndex(
-								it->first.idx - siftX,
-								it->first.idy - siftY,
-								it->first.idz + siftZ));
-
-						// - - -
-						for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz >= siftZ); ++siftZ)
-							DeletePoint(VoxelGridIndex(
-								it->first.idx - siftX,
-								it->first.idy - siftY,
-								it->first.idz - siftZ));
+							// - - -
+							for (std::size_t siftZ = 1; (siftZ <= extSize) && (it->first.idz >= siftZ); ++siftZ)
+								DeletePoint(VoxelGridIndex(
+									it->first.idx - siftX,
+									it->first.idy - siftY,
+									it->first.idz - siftZ));
+						}
 					}
 				}
 			}
