@@ -8,8 +8,6 @@ namespace RecRoom
 	class MesherPcGP : public MesherPc<PointType>
 	{
 	public:
-		using Sampler = MesherPc<PointType>::Sampler;
-		using Filter = MesherPc<PointType>::Filter;
 		using Interpolator = MesherPc<PointType>::Interpolator;
 		using InterpolatorNearest = MesherPc<PointType>::InterpolatorNearest;
 
@@ -19,11 +17,9 @@ namespace RecRoom
 			int maxBinarySearchLevel = 10,
 			int maxNumNei = 50,
 			int paddingSize = 3,
-			CONST_PTR(Sampler) preprocessSampler = nullptr,
-			CONST_PTR(Filter) preprocessFilter = nullptr,
 			CONST_PTR(Interpolator) fieldInterpolator = CONST_PTR(Interpolator)(new InterpolatorNearest))
 			: resolution(resolution), maxBinarySearchLevel(maxBinarySearchLevel), maxNumNei(maxNumNei), paddingSize(paddingSize),
-			MesherPc<PointType>(preprocessSampler, preprocessFilter, fieldInterpolator) 
+			MesherPc<PointType>(fieldInterpolator) 
 		{
 			name = "MesherPcGP";
 		}

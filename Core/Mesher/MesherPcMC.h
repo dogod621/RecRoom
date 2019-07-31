@@ -8,8 +8,6 @@ namespace RecRoom
 	class MesherPcMC : public MesherPc<PointType>
 	{
 	public:
-		using Sampler = MesherPc<PointType>::Sampler;
-		using Filter = MesherPc<PointType>::Filter;
 		using Interpolator = MesherPc<PointType>::Interpolator;
 		using InterpolatorNearest = MesherPc<PointType>::InterpolatorNearest;
 
@@ -18,13 +16,11 @@ namespace RecRoom
 			float percentageExtendGrid = 0.0f,
 			float isoLevel = 0.0f,
 			int gridRes = 50,
-			CONST_PTR(Sampler) preprocessSampler = nullptr,
-			CONST_PTR(Filter) preprocessFilter = nullptr,
 			CONST_PTR(Interpolator) fieldInterpolator = CONST_PTR(Interpolator)(new InterpolatorNearest))
 			: percentageExtendGrid(percentageExtendGrid),
 			isoLevel(isoLevel),
 			gridRes(gridRes),
-			MesherPc<PointType>(preprocessSampler, preprocessFilter, fieldInterpolator) 
+			MesherPc<PointType>(fieldInterpolator) 
 		{
 			name = "MesherPcGP3";
 		}
@@ -48,16 +44,18 @@ namespace RecRoom
 	class MesherPcMCRBF : public MesherPcMC<PointType>
 	{
 	public:
+		using Interpolator = MesherPcMC<PointType>::Interpolator;
+		using InterpolatorNearest = MesherPcMC<PointType>::InterpolatorNearest;
+
+	public:
 		MesherPcMCRBF(
 			float offSurfaceEpsilon = 0.1f,
 			float percentageExtendGrid = 0.0f,
 			float isoLevel = 0.0f,
 			int gridRes = 50,
-			CONST_PTR(Sampler) preprocessSampler = nullptr,
-			CONST_PTR(Filter) preprocessFilter = nullptr,
 			CONST_PTR(Interpolator) fieldInterpolator = CONST_PTR(Interpolator)(new InterpolatorNearest))
 			: offSurfaceEpsilon(offSurfaceEpsilon),
-			MesherPcMC<PointType>(percentageExtendGrid, isoLevel, gridRes, preprocessSampler, preprocessFilter, fieldInterpolator) {}
+			MesherPcMC<PointType>(percentageExtendGrid, isoLevel, gridRes, fieldInterpolator) {}
 
 	protected:
 		virtual void ToMesh(PTR(Acc<PointType>)& searchSurface, PTR(Pc<PointType>)& input, Mesh& output) const;
@@ -75,16 +73,18 @@ namespace RecRoom
 	class MesherPcMCHoppe : public MesherPcMC<PointType>
 	{
 	public:
+		using Interpolator = MesherPcMC<PointType>::Interpolator;
+		using InterpolatorNearest = MesherPcMC<PointType>::InterpolatorNearest;
+
+	public:
 		MesherPcMCHoppe(
 			float distIgnore = -1.0f,
 			float percentageExtendGrid = 0.0f,
 			float isoLevel = 0.0f,
 			int gridRes = 50,
-			CONST_PTR(Sampler) preprocessSampler = nullptr,
-			CONST_PTR(Filter) preprocessFilter = nullptr,
 			CONST_PTR(Interpolator) fieldInterpolator = CONST_PTR(Interpolator)(new InterpolatorNearest))
 			: distIgnore(distIgnore),
-			MesherPcMC<PointType>(percentageExtendGrid, isoLevel, gridRes, preprocessSampler, preprocessFilter, fieldInterpolator) {}
+			MesherPcMC<PointType>(percentageExtendGrid, isoLevel, gridRes, fieldInterpolator) {}
 
 	protected:
 		virtual void ToMesh(PTR(Acc<PointType>)& searchSurface, PTR(Pc<PointType>)& input, Mesh& output) const;

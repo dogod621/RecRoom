@@ -11,7 +11,6 @@ namespace RecRoom
 	class SamplerPcMLS : public SamplerPc<PointType>
 	{
 	public:
-		using Sampler = SamplerPc<PointType>;
 		using Interpolator = InterpolatorPc<PointType, PointType>;
 		using InterpolatorNearest = InterpolatorPcNearest<PointType, PointType>;
 
@@ -22,7 +21,7 @@ namespace RecRoom
 			MLSProjectionMethod projectionMethod = MLSProjectionMethod::SIMPLE,
 			MLSUpsamplingMethod upsampleMethod = MLSUpsamplingMethod::MLSUpsamplingMethod_NONE,
 			bool computeNormals = true,
-			CONST_PTR(Sampler) distinctSampler = nullptr,
+			CONST_PTR(Pc<PointType>) distinctCloud = nullptr,
 			CONST_PTR(Interpolator) fieldInterpolator = CONST_PTR(Interpolator)(new InterpolatorNearest))
 			: SamplerPc<PointType>() ,
 			searchRadius(searchRadius), 
@@ -30,7 +29,7 @@ namespace RecRoom
 			projectionMethod(projectionMethod), 
 			upsampleMethod(upsampleMethod),
 			computeNormals(computeNormals), 
-			distinctSampler(distinctSampler),
+			distinctCloud(distinctCloud),
 			fieldInterpolator(fieldInterpolator)
 		{
 			name = "SamplerPcMLS";
@@ -60,12 +59,19 @@ namespace RecRoom
 
 		inline virtual bool OutPointValid(const PointType& p) const
 		{
+			if (computeNormals)
+			{
+				return pcl_isfinite(p.x) &&
+					pcl_isfinite(p.y) &&
+					pcl_isfinite(p.z) &&
+					pcl_isfinite(p.normal_x) &&
+					pcl_isfinite(p.normal_y) &&
+					pcl_isfinite(p.normal_z) &&
+					pcl_isfinite(p.curvature);
+			}
 			return pcl_isfinite(p.x) &&
 				pcl_isfinite(p.y) &&
-				pcl_isfinite(p.z) &&
-				pcl_isfinite(p.normal_x) &&
-				pcl_isfinite(p.normal_y) &&
-				pcl_isfinite(p.normal_z);
+				pcl_isfinite(p.z);
 		}
 
 	public:
@@ -75,7 +81,7 @@ namespace RecRoom
 		MLSUpsamplingMethod getUpsampleMethod() const { return upsampleMethod; }
 		unsigned int getThreads() const { return threads; }
 		bool getComputeNormals() const { return computeNormals; }
-		CONST_PTR(Sampler) getDistinctSampler() const { return distinctSampler; };
+		CONST_PTR(Pc<PointType>) getDistinctSampler() const { return distinctCloud; };
 		CONST_PTR(Interpolator) getFieldInterpolator() const { return fieldInterpolator; };
 
 		void setSearchRadius(double v) { searchRadius = v; }
@@ -84,7 +90,7 @@ namespace RecRoom
 		void setUpsampleMethod(MLSUpsamplingMethod v) { upsampleMethod = v; }
 		void setThreads(unsigned int v) { threads = v; }
 		void setComputeNormals(bool v) { computeNormals = v; }
-		void setDistinctSampler(const CONST_PTR(Sampler)& v) { distinctSampler = v; };
+		void setDistinctSampler(const CONST_PTR(Pc<PointType>)& v) { distinctCloud = v; };
 		void setFieldInterpolator(const CONST_PTR(Interpolator)& v)
 		{
 			if (!v)
@@ -104,7 +110,7 @@ namespace RecRoom
 		MLSUpsamplingMethod upsampleMethod;
 		unsigned int threads;
 		bool computeNormals;
-		CONST_PTR(Sampler) distinctSampler;
+		CONST_PTR(Pc<PointType>) distinctCloud;
 		CONST_PTR(Interpolator) fieldInterpolator;
 	};
 }

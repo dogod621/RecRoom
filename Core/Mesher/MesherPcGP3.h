@@ -8,8 +8,6 @@ namespace RecRoom
 	class MesherPcGP3 : public MesherPc<PointType>
 	{
 	public:
-		using Sampler = MesherPc<PointType>::Sampler;
-		using Filter = MesherPc<PointType>::Filter;
 		using Interpolator = MesherPc<PointType>::Interpolator;
 		using InterpolatorNearest = MesherPc<PointType>::InterpolatorNearest;
 
@@ -23,13 +21,11 @@ namespace RecRoom
 			double epsAngle = M_PI / 4.0,
 			bool consistent = false,
 			bool consistentOrdering = true,
-			CONST_PTR(Sampler) preprocessSampler = nullptr,
-			CONST_PTR(Filter) preprocessFilter = nullptr,
 			CONST_PTR(Interpolator) fieldInterpolator = CONST_PTR(Interpolator)(new InterpolatorNearest))
 			: searchRadius(searchRadius), mu(mu), maxNumNei(maxNumNei), 
 			minAngle(minAngle), maxAngle(maxAngle), epsAngle(epsAngle), 
 			consistent(consistent), consistentOrdering(consistentOrdering), 
-			MesherPc<PointType>(preprocessSampler, preprocessFilter, fieldInterpolator) 
+			MesherPc<PointType>(fieldInterpolator) 
 		{
 			name = "MesherPcGP3";
 		}

@@ -28,7 +28,9 @@ namespace RecRoom
 		albedoEstimator(nullptr),
 		sharpnessEstimator(nullptr),
 		segmenter(nullptr),
-		mesher(nullptr)
+		mesher(nullptr),
+		mesherPreFilter(nullptr),
+		mesherPreSampler(nullptr)
 	{
 		if (!scanner)
 			THROW_EXCEPTION("scanner is not set");
@@ -874,10 +876,29 @@ namespace RecRoom
 		pcREC->resize(pcMED->size());
 		for (std::size_t px = 0; px < pcMED->size(); ++px)
 			(*pcREC)[px] = (*pcMED)[px];
-
 		PTR(AccREC) accREC(new KDTreeREC);
 		accREC->setInputCloud(pcREC);
-		mesher->Process(accREC, pcREC, nullptr, *mesh);
+
+		//
+		if (mesherPreSampler)
+		{
+			PTR(PcREC) pcREC2(new PcREC);
+			mesherPreSampler->Process(accREC, pcREC, nullptr, *pcREC2);
+
+			PTR(AccREC) accREC2(new KDTreeREC);
+			accREC2->setInputCloud(pcREC2);
+			pcREC = pcREC2;
+			accREC = accREC2;
+		}
+
+		//
+		PTR(PcIndex) filterREC(new PcIndex);
+		filterREC = nullptr;
+		if (mesherPreFilter)
+			mesherPreFilter->Process(accREC, pcREC, nullptr, *filterREC);
+
+		//
+		mesher->Process(accREC, pcREC, filterREC, *mesh);
 	}
 }
 

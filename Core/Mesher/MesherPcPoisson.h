@@ -8,8 +8,6 @@ namespace RecRoom
 	class MesherPcPoisson : public MesherPc<PointType>
 	{
 	public:
-		using Sampler = MesherPc<PointType>::Sampler;
-		using Filter = MesherPc<PointType>::Filter;
 		using Interpolator = MesherPc<PointType>::Interpolator;
 		using InterpolatorNearest = MesherPc<PointType>::InterpolatorNearest;
 
@@ -26,13 +24,11 @@ namespace RecRoom
 			bool outputPolygons = false,
 			bool manifold = true,
 			int degree = 2,
-			CONST_PTR(Sampler) preprocessSampler = nullptr,
-			CONST_PTR(Filter) preprocessFilter = nullptr,
 			CONST_PTR(Interpolator) fieldInterpolator = CONST_PTR(Interpolator)(new InterpolatorNearest))
 			: depth(depth), minDepth(minDepth), pointWeight(pointWeight), scale(scale), solverDivide(solverDivide),
 			isoDivide(isoDivide), samplesPerNode(samplesPerNode), confidence(confidence), outputPolygons(outputPolygons),
 			manifold(manifold), degree(degree), 
-			MesherPc<PointType>(preprocessSampler, preprocessFilter, fieldInterpolator) 
+			MesherPc<PointType>(fieldInterpolator) 
 		{
 			name = "MesherPcPoisson";
 		}

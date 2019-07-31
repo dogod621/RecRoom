@@ -33,9 +33,11 @@ namespace RecRoom
 		using Filter = FilterPc<PointMED>;
 		using Interpolator = InterpolatorPc<PointMED, PointMED>;
 		using Mesher = MesherPc<PointREC>;
+		using MesherPreFilter = FilterPc<PointREC>;
+		using MesherPreSampler = SamplerPc<PointREC>;
 		using Sampler = SamplerPc<PointMED>;
 		using Segmenter = SegmenterPc<PointMED>;
-
+		
 	public:
 		ReconstructorPc(
 			boost::filesystem::path filePath,
@@ -100,7 +102,9 @@ namespace RecRoom
 		void setSharpnessEstimator(const CONST_PTR(Estimator)& v) { sharpnessEstimator = v; }
 		void setSegmenter(const CONST_PTR(Segmenter)& v) { segmenter = v; }
 		void setMesher(const CONST_PTR(Mesher)& v) { mesher = v;}
-		
+		void setMeshPreFilter(const CONST_PTR(MesherPreFilter)& v) { mesherPreFilter = v; }
+		void setMesherPreSampler(const CONST_PTR(MesherPreSampler)& v) { mesherPreSampler = v; }
+
 	protected:
 		bool useVNN;
 		float resVNN;
@@ -118,7 +122,11 @@ namespace RecRoom
 		CONST_PTR(Estimator) albedoEstimator;
 		CONST_PTR(Estimator) sharpnessEstimator;
 		CONST_PTR(Segmenter) segmenter;
+		CONST_PTR(Sampler) preprocessSampler;
+		CONST_PTR(Filter) preprocessFilter;
 		CONST_PTR(Mesher) mesher;
+		CONST_PTR(MesherPreFilter) mesherPreFilter;
+		CONST_PTR(MesherPreSampler) mesherPreSampler;
 
 		virtual void Load();
 		virtual void Dump() const;

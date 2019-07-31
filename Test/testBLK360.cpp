@@ -384,7 +384,14 @@ int main(int argc, char *argv[])
 
 			std::cout << "Create Mesher" << std::endl;
 			{
-				PTR(RecRoom::SamplerPc<RecRoom::PointREC>)
+				//
+				/*PTR(RecRoom::ReconstructorPcOC::Mesher)
+					mesher(
+						new RecRoom::MesherPcGP3<RecRoom::PointREC>(
+							maxEdgeSize, mu, maxNumNei, minAngle, maxAngle, epsAngle, false, true));*/
+
+				//
+				/*PTR(RecRoom::SamplerPc<RecRoom::PointREC>)
 					distinctSampler(
 						new RecRoom::SamplerPcBinaryGrid<RecRoom::PointREC>(
 							voxelSize, containerPcRAW->getMinAABB(), containerPcRAW->getMaxAABB(),
@@ -404,12 +411,22 @@ int main(int argc, char *argv[])
 					mesher(
 						new RecRoom::MesherPcGP3<RecRoom::PointREC>(
 							maxEdgeSize, mu, maxNumNei, minAngle, maxAngle, epsAngle, false, true,
-							preprocessSampler, preprocessFilter));
+							preprocessSampler, preprocessFilter));*/
 
-				/*PTR(RecRoom::ReconstructorPcOC::Mesher)
+				//
+				/*PTR(RecRoom::SamplerPc<RecRoom::PointREC>)
+					preprocessSampler(
+						new RecRoom::SamplerPcMLS<RecRoom::PointREC>(
+							searchRadius, 5));
+
+				PTR(RecRoom::FilterPc<RecRoom::PointREC>)
+					preprocessFilter(
+						new RecRoom::FilterPcRemoveDuplicate<RecRoom::PointREC>(voxelSize*0.5));*/
+
+				PTR(RecRoom::ReconstructorPcOC::Mesher)
 					mesher(
 						new RecRoom::MesherPcGP3<RecRoom::PointREC>(
-							maxEdgeSize, mu, maxNumNei, minAngle, maxAngle, epsAngle, false, true));*/
+							maxEdgeSize, mu, maxNumNei, minAngle, maxAngle, epsAngle, false, true));
 
 				reconstructorPC->setMesher(mesher);
 			}

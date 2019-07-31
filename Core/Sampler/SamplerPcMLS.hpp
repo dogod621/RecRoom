@@ -15,16 +15,10 @@ namespace RecRoom
 
 		if (upsampleMethod == MLSUpsamplingMethod::DISTINCT_CLOUD)
 		{
-			if (distinctSampler)
-			{
-				PTR(Pc<PointType>) distinctCloud (new Pc<PointType>);
-				distinctSampler->Process(searchSurface, input, filter, *distinctCloud);
+			if (distinctCloud)
 				mls.setDistinctCloud(distinctCloud);
-			}
 			else
-			{
-				THROW_EXCEPTION("Use DISTINCT_CLOUD but not set distinctSampler.")
-			}
+				THROW_EXCEPTION("Use DISTINCT_CLOUD but not set distinctCloud.");
 		}
 
 		mls.setSearchMethod(boost::const_pointer_cast<Acc<PointType>>(searchSurface)); // trick, already ensure it won't be modified 
@@ -49,6 +43,7 @@ namespace RecRoom
 			float tempNX = tarP.normal_x;
 			float tempNY = tarP.normal_y;
 			float tempNZ = tarP.normal_z;
+			float tempNC = tarP.curvature;
 
 			tarP = srcP;
 
@@ -69,6 +64,7 @@ namespace RecRoom
 					tarP.normal_y = -tempNY;
 					tarP.normal_z = -tempNZ;
 				}
+				tarP.curvature = tempNC;
 			}
 		}
 
