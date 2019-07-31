@@ -394,9 +394,6 @@ namespace RecRoom
 
 #ifdef _OPENMP
 #pragma omp parallel for num_threads(numThreads)
-#else
-				PRINT_WARNING("OPENMP is not enabled");
-#endif
 				for (int px = 0; px < static_cast<int> (distinctCloud->size()); ++px)
 				{
 					PcIndex nnIndices;
@@ -415,6 +412,27 @@ namespace RecRoom
 						addProjectedPointNormal(inputIndex, proj.point, proj.normal, mlsResults[inputIndex].curvature, output, *correspondingInputIndices);
 					}
 				}
+#else
+				PRINT_WARNING("OPENMP is not enabled");
+				for (int px = 0; px < static_cast<int> (distinctCloud->size()); ++px)
+				{
+					PcIndex nnIndices;
+					std::vector<float> nnSqrDists;
+					if (searchMethod->nearestKSearch((*distinctCloud)[px], 1, nnIndices, nnSqrDists) > 0)
+					{
+						int inputIndex = nnIndices.front();
+
+						// If the closest point did not have a valid MLS fitting result
+						// OR if it is too far away from the sampled point
+						if (mlsResults[inputIndex].valid == false)
+							continue;
+
+						Eigen::Vector3d addPoint = (*distinctCloud)[px].getVector3fMap().template cast<double>();
+						MLSProjectionResults proj = mlsResults[inputIndex].projectPoint(addPoint, projectionMethod, 5 * numCoeff);
+						addProjectedPointNormal(inputIndex, proj.point, proj.normal, mlsResults[inputIndex].curvature, output, *correspondingInputIndices);
+					}
+				}
+#endif
 			}
 			break;
 		}

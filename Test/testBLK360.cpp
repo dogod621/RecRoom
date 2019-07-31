@@ -393,7 +393,7 @@ int main(int argc, char *argv[])
 				PTR(RecRoom::SamplerPc<RecRoom::PointREC>)
 					preprocessSampler(
 						new RecRoom::SamplerPcMLS<RecRoom::PointREC>(
-							searchRadius, 2, RecRoom::MLSProjectionMethod::SIMPLE, RecRoom::MLSUpsamplingMethod::DISTINCT_CLOUD, true, 
+							searchRadius, 5, RecRoom::MLSProjectionMethod::SIMPLE, RecRoom::MLSUpsamplingMethod::DISTINCT_CLOUD, true, 
 							distinctSampler ));
 
 				PTR(RecRoom::FilterPc<RecRoom::PointREC>)

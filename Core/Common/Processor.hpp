@@ -66,7 +66,11 @@ namespace RecRoom
 
 		PTR(PcIndex) filter2 = GenFilter(input, filter);
 
-		PRINT_INFO(name + " - Start");
+		{
+			std::stringstream ss;
+			ss << name << " - End - Start: " << filter2->size() ;
+			PRINT_INFO(ss.str());
+		}
 
 		if (ImplementCheck(searchSurface, input, filter, output))
 			ImplementProcess(searchSurface, input, filter2, output);
@@ -94,7 +98,11 @@ namespace RecRoom
 
 		output.clear();
 
-		PRINT_INFO(name + " - Start");
+		{
+			std::stringstream ss;
+			ss << name << " - End - Start: " << filter2->size();
+			PRINT_INFO(ss.str());
+		}
 
 		if (ImplementCheck(searchSurface, input, filter, output))
 			ImplementProcess(searchSurface, input, filter2, output);
@@ -136,7 +144,11 @@ namespace RecRoom
 		if (output.size() != filter2->size())
 			output.resize(filter2->size());
 
-		PRINT_INFO(name + " - Start");
+		{
+			std::stringstream ss;
+			ss << name << " - End - Start: " << filter2->size();
+			PRINT_INFO(ss.str());
+		}
 
 		if (ImplementCheck(searchSurface, input, filter, output))
 			ImplementProcess(searchSurface, input, filter2, output);
@@ -184,7 +196,11 @@ namespace RecRoom
 		for (std::size_t px = 0; px < temp1.size(); ++px)
 			temp2[px] = temp1[px];
 
-		PRINT_INFO(name + " - Start");
+		{
+			std::stringstream ss;
+			ss << name << " - End - Start: " << filter2->size();
+			PRINT_INFO(ss.str());
+		}
 
 		if (ImplementCheck(searchSurface, inOut, filter, temp2))
 			ImplementProcess(searchSurface, inOut, filter2, temp2);
