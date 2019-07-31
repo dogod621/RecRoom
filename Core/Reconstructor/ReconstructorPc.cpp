@@ -1,3 +1,9 @@
+#include <vtkSmartPointer.h>
+#include <vtkFillHolesFilter.h>
+#include <vtkPolyDataNormals.h>
+#include <vtkCleanPolyData.h>
+#include <pcl/surface/vtk_smoothing/vtk_utils.h>
+
 #include <pcl/io/pcd_io.h>
 #include <pcl/io/png_io.h>
 #include <pcl/io/ply_io.h>
@@ -321,6 +327,40 @@ namespace RecRoom
 		else
 		{
 			PRINT_WARNING("mesher is not set, ignore it");
+		}
+	}
+
+	void ReconstructorPc::RecReMesh(float holeSize)
+	{
+		if (status & ReconstructStatus::REMESH)
+		{
+			PRINT_WARNING("Aready reconstructed, ignore.");
+		}
+		else if (!WITH_PERPOINT_NORMAL)
+		{
+			PRINT_WARNING("!WITH_PERPOINT_NORMAL, ignore. You must compile with INPUT_PERPOINT_NORMAL or OUTPUT_PERPOINT_NORMAL to enable this feature.");
+		}
+		else if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("POINT_CLOUD is not reconstructed yet, ignore.");
+		}
+		else if ((status & ReconstructStatus::PC_NORMAL) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("PC_NORMAL is not reconstructed yet, ignore.");
+		}
+		else if ((status & ReconstructStatus::MESH) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("MESH is not reconstructed yet, ignore.");
+		}
+		else if (pcMED->empty())
+		{
+			PRINT_WARNING("pcMED is empty, ignore.");
+		}
+		else
+		{
+			ImplementRecReMesh(holeSize);
+			status = (ReconstructStatus)(status | ReconstructStatus::REMESH);
+			Dump();
 		}
 	}
 
@@ -899,6 +939,23 @@ namespace RecRoom
 
 		//
 		mesher->Process(accREC, pcREC, filterREC, *mesh);
+	}
+
+	void ReconstructorPc::ImplementRecReMesh(float holeSize)
+	{
+		vtkSmartPointer<vtkPolyData> vtkMesh;
+		pcl::VTKUtils::mesh2vtk(*mesh, vtkMesh);
+
+		vtkSmartPointer<vtkFillHolesFilter> fillHolesFilter =
+			vtkSmartPointer<vtkFillHolesFilter>::New();
+
+		fillHolesFilter->SetInputData(vtkMesh);
+		fillHolesFilter->SetHoleSize(holeSize);
+		fillHolesFilter->Update();
+
+		vtkSmartPointer<vtkPolyData> polyData = fillHolesFilter->GetOutput();
+
+		pcl::VTKUtils::vtk2mesh(polyData, *mesh);
 	}
 }
 

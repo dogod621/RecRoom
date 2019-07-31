@@ -23,7 +23,8 @@ namespace RecRoom
 		PC_SHARPNESS = 1 << 4,
 		PC_SEGMENT = 1 << 5,
 		SEG_MATERIAL = 1 << 6,
-		MESH = 1 << 7
+		MESH = 1 << 7,
+		REMESH = 1 << 8
 	};
 
 	class ReconstructorPc : public DumpAble
@@ -54,6 +55,7 @@ namespace RecRoom
 		void RecPcSegment();
 		void RecSegMaterial();
 		void RecMesh();
+		void RecReMesh(float holeSize);
 		void VisualSegNDFs();
 		void VisualRecAtts();
 
@@ -65,6 +67,7 @@ namespace RecRoom
 		virtual void ImplementRecPcSegment();
 		virtual void ImplementRecSegMaterial() = 0;
 		virtual void ImplementRecMesh();
+		virtual void ImplementRecReMesh(float holeSize);
 
 	public:
 		bool getUseVNN() const { return useVNN; }

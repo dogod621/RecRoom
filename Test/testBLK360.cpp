@@ -53,6 +53,7 @@ void PrintHelp(int argc, char **argv)
 		PRINT_HELP("\t", "recPcSegment", "", "Reconstruct point cloud segment.");
 		PRINT_HELP("\t", "recSegMaterial", "", "Reconstruct segment material.");
 		PRINT_HELP("\t", "recMesh", "", "Reconstruct mesh.");
+		PRINT_HELP("\t", "recReMesh", "", "Reconstruct refinded mesh.");
 		PRINT_HELP("\t", "visSegNDFs", "", "Plot segment NDFs after reconstruction.");
 		PRINT_HELP("\t", "visRecAtts", "", "Plot reconstruction result after reconstruction.");
 	}
@@ -120,6 +121,11 @@ void PrintHelp(int argc, char **argv)
 		PRINT_HELP("\t", "minAngle", "float 15.0", "The preferred minimum angle in degrees for the triangles.");
 		PRINT_HELP("\t", "maxAngle", "float 120.0", "The maximum angle in degrees for the triangles.");
 		PRINT_HELP("\t", "epsAngle", "float 45.0", "Maximum surface angle in degrees.");
+	}
+
+	std::cout << "ReMesh Parmameters:=======================================================================================================================================" << std::endl << std::endl;
+	{
+		PRINT_HELP("\t", "holeSize", "float ${maxEdgeSize}", "");
 	}
 
 	std::cout << "==========================================================================================================================================================" << std::endl << std::endl;
@@ -272,6 +278,11 @@ int main(int argc, char *argv[])
 		minAngle *= M_PI / 180.0;
 		maxAngle *= M_PI / 180.0;
 		epsAngle *= M_PI / 180.0;
+
+		// Parse ReMesh Parmameters
+		double holeSize = maxEdgeSize;
+		pcl::console::parse_argument(argc, argv, "-holeSize", holeSize);
+		std::cout << "ReMesh -holeSize: " << holeSize << std::endl;
 
 		// Start
 		try
@@ -427,15 +438,15 @@ int main(int argc, char *argv[])
 				PTR(RecRoom::ReconstructorPcOC::Mesher)
 					mesher(
 						new RecRoom::MesherPcGP3<RecRoom::PointREC>(
-							maxEdgeSize, mu, maxNumNei, minAngle, maxAngle, epsAngle, false, true));
+							maxEdgeSize, mu, maxNumNei, minAngle, maxAngle, epsAngle, true, true));
 
-				PTR(RecRoom::SamplerPc<RecRoom::PointREC>)
+				/*PTR(RecRoom::SamplerPc<RecRoom::PointREC>)
 					mesherPreSampler(
 						new RecRoom::SamplerPcMLS<RecRoom::PointREC>(
-							searchRadius, 2));
+							searchRadius, 2));*/
 
 				reconstructorPC->setMesher(mesher);
-				reconstructorPC->setMesherPreSampler(mesherPreSampler);
+				//reconstructorPC->setMesherPreSampler(mesherPreSampler);
 			}
 
 			//
@@ -472,6 +483,11 @@ int main(int argc, char *argv[])
 			if (pcl::console::find_switch(argc, argv, "-recMesh"))
 			{
 				reconstructorPC->RecMesh();
+			}
+
+			if(pcl::console::find_switch(argc, argv, "-recReMesh"))
+			{
+				reconstructorPC->RecReMesh(holeSize);
 			}
 
 			if (pcl::console::find_switch(argc, argv, "-visSegNDFs"))
