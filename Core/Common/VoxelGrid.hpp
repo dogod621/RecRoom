@@ -8,8 +8,8 @@
 
 namespace RecRoom
 {
-	template <class PointType, class CenterType>
-	inline bool VoxelGrid<PointType, CenterType>::PointToIndex(const PointType& p, VoxelGridIndex& voxelGridIndex) const
+	template <class PointType, class Leaf>
+	inline bool VoxelGridBase<PointType, Leaf>::PointToIndex(const PointType& p, VoxelGridIndex& voxelGridIndex) const
 	{
 		if (pcl_isfinite(p.x) &&
 			pcl_isfinite(p.y) &&
@@ -31,8 +31,38 @@ namespace RecRoom
 		return false;
 	}
 
-	template <class PointType, class CenterType>
-	inline void VoxelGrid<PointType, CenterType>::AddPoint(const PointType& p)
+	template <class PointType, class Leaf>
+	inline void VoxelGridBase<PointType, Leaf>::AddPointCloud(CONST_PTR(Pc<PointType>) input, CONST_PTR(PcIndex) filter)
+	{
+		if (filter)
+		{
+			for (PcIndex::const_iterator it = filter->begin(); it != filter->end(); ++it)
+				AddPoint((*input)[(*it)]);
+		}
+		else
+		{
+			for (Pc<PointType>::const_iterator it = input->begin(); it != input->end(); ++it)
+				AddPoint(*it);
+		}
+	}
+
+	template <class PointType, class Leaf>
+	inline void VoxelGridBase<PointType, Leaf>::DeletePointCloud(CONST_PTR(Pc<PointType>) input, CONST_PTR(PcIndex) filter)
+	{
+		if (filter)
+		{
+			for (PcIndex::const_iterator it = filter->begin(); it != filter->end(); ++it)
+				DeletePoint((*input)[(*it)]);
+		}
+		else
+		{
+			for (Pc<PointType>::const_iterator it = input->begin(); it != input->end(); ++it)
+				DeletePoint(*it);
+		}
+	}
+
+	template <class PointType>
+	inline void VoxelGrid<PointType>::AddPoint(const PointType& p)
 	{
 		VoxelGridIndex pID;
 		if (PointToIndex(p, pID))
@@ -47,14 +77,13 @@ namespace RecRoom
 				Leaf toInsert;
 				InitLeaf(toInsert);
 				UpdateLeafAddPoint(toInsert, p);
-				//leaves->insert(std::pair<const VoxelGridIndex, Leaf>(pID, toInsert));
 				(*leaves)[pID] = toInsert;
 			}
 		}
 	}
 
-	template <class PointType, class CenterType>
-	inline void VoxelGrid<PointType, CenterType>::DeletePoint(const PointType& p)
+	template <class PointType>
+	inline void VoxelGrid<PointType>::DeletePoint(const PointType& p)
 	{
 		VoxelGridIndex pID;
 		if (PointToIndex(p, pID))
@@ -71,52 +100,33 @@ namespace RecRoom
 		}
 	}
 
-	template <class PointType, class CenterType>
-	inline void VoxelGrid<PointType, CenterType>::AddPointCloud(CONST_PTR(Pc<PointType>) input, CONST_PTR(PcIndex) filter)
+
+	template <class PointType>
+	inline void BinaryVoxelGrid<PointType>::AddPoint(const PointType& p)
 	{
-		if (filter)
+		VoxelGridIndex pID;
+		if (PointToIndex(p, pID))
 		{
-			for (PcIndex::const_iterator it = filter->begin(); it != filter->end(); ++it)
-				AddPoint((*input)[(*it)]);
-		}
-		else
-		{
-			for (Pc<PointType>::const_iterator it = input->begin(); it != input->end(); ++it)
-				AddPoint(*it);
+			(*leaves)[pID] = true;
 		}
 	}
 
-	template <class PointType, class CenterType>
-	inline void VoxelGrid<PointType, CenterType>::DeletePointCloud(CONST_PTR(Pc<PointType>) input, CONST_PTR(PcIndex) filter)
+	template <class PointType>
+	inline void BinaryVoxelGrid<PointType>::DeletePoint(const PointType& p)
 	{
-		if (filter)
+		VoxelGridIndex pID;
+		if (PointToIndex(p, pID))
 		{
-			for (PcIndex::const_iterator it = filter->begin(); it != filter->end(); ++it)
-				DeletePoint((*input)[(*it)]);
-		}
-		else
-		{
-			for (Pc<PointType>::iterator it = input->begin(); it != input->end(); ++it)
-				DeletePoint(*it);
+			Leaves::iterator it = leaves->find(pID);
+			if (it != leaves->end())
+				leaves->erase(it);
 		}
 	}
 
 	template <class PointType>
 	inline void BinaryVoxelGrid<PointType>::AddPoint(const VoxelGridIndex& pID)
 	{
-		Leaves::iterator it = leaves->find(pID);
-		if (it != leaves->end())
-		{
-			it->second.size += 1;
-		}
-		else
-		{
-			Leaf toInsert;
-			InitLeaf(toInsert);
-			toInsert.size += 1;
-			//leaves->insert(std::pair<const VoxelGridIndex, Leaf>(pID, toInsert));
-			(*leaves)[pID] = toInsert;
-		}
+		(*leaves)[pID] = true;
 	}
 
 	template <class PointType>
@@ -124,18 +134,80 @@ namespace RecRoom
 	{
 		Leaves::iterator it = leaves->find(pID);
 		if (it != leaves->end())
+			leaves->erase(it);
+	}
+
+	template <class PointType>
+	inline void BinaryVoxelGrid<PointType>::AddPointCloud(CONST_PTR(Pc<PointType>) input, CONST_PTR(PcIndex) filter)
+	{
+		std::vector<IndexPair> indexPairs;
+		if (filter)
 		{
-			if (it->second.size == 0)
+			indexPairs.reserve(filter->size());
+			for (std::vector<int>::const_iterator it = filter->begin(); it != filter->end(); ++it)
 			{
-				THROW_EXCEPTION("This should not be happened.");
+				VoxelGridIndex voxelGridIndex;
+				if (PointToIndex((*input)[(*it)], voxelGridIndex))
+					indexPairs.push_back(IndexPair(voxelGridIndex, *it));
 			}
-
-			it->second.size -= 1;
-
-			if (it->second.size == 0)
+		}
+		else
+		{
+			indexPairs.reserve(input->size());
+			for (int px = 0; px < input->size(); ++px)
 			{
-				leaves->erase(it);
+				VoxelGridIndex voxelGridIndex;
+				if (PointToIndex((*input)[px], voxelGridIndex))
+					indexPairs.push_back(IndexPair(voxelGridIndex, px));
 			}
+		}
+		std::sort(indexPairs.begin(), indexPairs.end());
+
+		std::size_t index = 0;
+		while (index < indexPairs.size())
+		{
+			std::size_t i = index + 1;
+			while ((i < indexPairs.size()) && (indexPairs[i] == indexPairs[index]))
+				++i;
+			AddPoint(indexPairs[index].voxelGridIndex);
+			index = i;
+		}
+	}
+
+	template <class PointType>
+	inline void BinaryVoxelGrid<PointType>::DeletePointCloud(CONST_PTR(Pc<PointType>) input, CONST_PTR(PcIndex) filter)
+	{
+		std::vector<IndexPair> indexPairs;
+		if (filter)
+		{
+			indexPairs.reserve(filter->size());
+			for (std::vector<int>::const_iterator it = filter->begin(); it != filter->end(); ++it)
+			{
+				VoxelGridIndex voxelGridIndex;
+				if (PointToIndex((*input)[(*it)], voxelGridIndex))
+					indexPairs.push_back(IndexPair(voxelGridIndex, *it));
+			}
+		}
+		else
+		{
+			indexPairs.reserve(input->size());
+			for (int px = 0; px < input->size(); ++px)
+			{
+				VoxelGridIndex voxelGridIndex;
+				if (PointToIndex((*input)[px], voxelGridIndex))
+					indexPairs.push_back(IndexPair(voxelGridIndex, px));
+			}
+		}
+		std::sort(indexPairs.begin(), indexPairs.end());
+
+		std::size_t index = 0;
+		while (index < indexPairs.size())
+		{
+			std::size_t i = index + 1;
+			while ((i < indexPairs.size()) && (indexPairs[i] == indexPairs[index]))
+				++i;
+			DeletePoint(indexPairs[index].voxelGridIndex);
+			index = i;
 		}
 	}
 

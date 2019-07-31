@@ -58,30 +58,15 @@ namespace RecRoom
 		}
 	};
 
-	template <class CenterType>
-	struct VoxelGridLeaf
-	{
-		CenterType center;
-		std::size_t size;
-
-		VoxelGridLeaf(std::size_t size = 0)
-			: size(size)
-		{}
-
-		VoxelGridLeaf(CenterType center, std::size_t size = 0)
-			: center(center), size(size)
-		{}
-	};
-
-	template <class PointType, class CenterType>
-	class VoxelGrid
+	template <class PointType, class LeafType>
+	class VoxelGridBase
 	{
 	public:
-		using Leaf = VoxelGridLeaf<CenterType>;
+		using Leaf = LeafType;
 		using Leaves = std::map<const VoxelGridIndex, Leaf>;
 
 	public:
-		VoxelGrid(const Eigen::Vector3d& leafSize, const Eigen::Vector3d& minAABB, const Eigen::Vector3d& maxAABB)
+		VoxelGridBase(const Eigen::Vector3d& leafSize, const Eigen::Vector3d& minAABB, const Eigen::Vector3d& maxAABB)
 			: leafSize(leafSize), minAABB(minAABB), maxAABB(maxAABB), leaves(new Leaves)
 		{
 			if (!(leafSize.x() > 0.0))
@@ -106,54 +91,28 @@ namespace RecRoom
 
 		inline bool PointToIndex(const PointType& p, VoxelGridIndex& voxelGridIndex) const;
 
-		inline virtual PointType IndexToPoint(const VoxelGridIndex& index) const
-		{
-			THROW_EXCEPTION("Interafce is not implement");
-		}
-
 		inline std::size_t Size() const
 		{
 			return leaves->size();
 		}
 
-		inline void AddPoint(const PointType& p);
-
-		inline void DeletePoint(const PointType& p);
-
-		inline void AddPointCloud(CONST_PTR(Pc<PointType>) input, CONST_PTR(PcIndex) filter = nullptr);
-
-		inline void DeletePointCloud(CONST_PTR(Pc<PointType>) input, CONST_PTR(PcIndex) filter = nullptr);
-
-		inline virtual PTR(Pc<PointType>) GetPointCloud() const
+		inline virtual void AddPoint(const PointType& p)
 		{
 			THROW_EXCEPTION("Interafce is not implement");
 		}
 
-	protected:
-		inline virtual void InitLeaf(Leaf& leaf) const 
-		{ 
-			{ // Implement here 
-				THROW_EXCEPTION("Interafce is not implement");
-			}
-			leaf.size = 0; 
-		}
-		inline virtual void UpdateLeafAddPoint(Leaf& leaf, const PointType& point)
+		inline virtual void DeletePoint(const PointType& p)
 		{
-			{ // Implement here 
-				THROW_EXCEPTION("Interafce is not implement");
-			}
-			leaf.size += 1;
+			THROW_EXCEPTION("Interafce is not implement");
 		}
-		inline virtual void UpdateLeafDeletePoint(Leaf& leaf, const PointType& point)
+
+		inline virtual void AddPointCloud(CONST_PTR(Pc<PointType>) input, CONST_PTR(PcIndex) filter = nullptr);
+
+		inline virtual void DeletePointCloud(CONST_PTR(Pc<PointType>) input, CONST_PTR(PcIndex) filter = nullptr);
+
+		inline virtual PTR(Pc<PointType>) GetPointCloud() const
 		{
-			if (leaf.size == 0)
-			{
-				THROW_EXCEPTION("This should not be happened.");
-			}
-			{ // Implement here 
-				THROW_EXCEPTION("Interafce is not implement");
-			}
-			leaf.size -= 1;
+			THROW_EXCEPTION("Interafce is not implement");
 		}
 
 	protected:
@@ -170,19 +129,90 @@ namespace RecRoom
 	};
 
 	template <class PointType>
-	class BinaryVoxelGrid : public VoxelGrid<PointType, bool>
+	struct VoxelGridLeaf
+	{
+		PointType center;
+		std::size_t size;
+
+		VoxelGridLeaf(std::size_t size = 0)
+			: size(size)
+		{}
+
+		VoxelGridLeaf(PointType center, std::size_t size = 0)
+			: center(center), size(size)
+		{}
+	};
+
+	template <class PointType>
+	class VoxelGrid : public VoxelGridBase<PointType, VoxelGridLeaf<PointType>>
 	{
 	public:
-		using Leaf = VoxelGrid<PointType, bool>::Leaf;
-		using Leaves = VoxelGrid<PointType, bool>::Leaves;
+		using Leaf = VoxelGridBase<PointType, VoxelGridLeaf<PointType>>::Leaf;
+		using Leaves = VoxelGridBase<PointType, VoxelGridLeaf<PointType>>::Leaves;
+
+	public:
+		VoxelGrid(const Eigen::Vector3d& leafSize, const Eigen::Vector3d& minAABB, const Eigen::Vector3d& maxAABB)
+			: VoxelGridBase<PointType, VoxelGridLeaf<PointType>>(leafSize, minAABB, maxAABB)
+		{}
+
+		inline virtual void AddPoint(const PointType& p);
+
+		inline virtual void DeletePoint(const PointType& p);
+
+		inline virtual PTR(Pc<PointType>) GetPointCloud() const
+		{
+			PTR(Pc<PointType>) pc(new Pc<PointType>);
+			pc->reserve(leaves->size());
+			for (Leaves::const_iterator it = leaves->begin(); it != leaves->end(); ++it)
+				pc->push_back(it->second.center);
+			return pc;
+		}
+
+	protected:
+		inline virtual void InitLeaf(Leaf& leaf) const
+		{
+			{
+				THROW_EXCEPTION("Interafce is not implement"); // implement here
+			}
+			leaf.size = 0;
+		}
+		inline virtual void UpdateLeafAddPoint(Leaf& leaf, const PointType& point)
+		{
+			{
+				THROW_EXCEPTION("Interafce is not implement"); // implement here
+			}
+			leaf.size += 1;
+		}
+		inline virtual void UpdateLeafDeletePoint(Leaf& leaf, const PointType& point)
+		{
+			if (leaf.size == 0)
+			{
+				THROW_EXCEPTION("This should not be happened.");
+			}
+			{
+				THROW_EXCEPTION("Interafce is not implement"); // implement here
+			}
+			leaf.size -= 1;
+		}
+
+	public:
+		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+	};
+
+	template <class PointType>
+	class BinaryVoxelGrid : public VoxelGridBase<PointType, bool>
+	{
+	public:
+		using Leaf = VoxelGridBase<PointType, bool>::Leaf;
+		using Leaves = VoxelGridBase<PointType, bool>::Leaves;
 
 	public:
 		BinaryVoxelGrid(const Eigen::Vector3d& leafSize, const Eigen::Vector3d& minAABB, const Eigen::Vector3d& maxAABB)
-			: VoxelGrid(leafSize, minAABB, maxAABB)
+			: VoxelGridBase(leafSize, minAABB, maxAABB)
 		{
 		}
 
-		inline virtual PointType IndexToPoint(const VoxelGridIndex& index) const
+		inline PointType IndexToPoint(const VoxelGridIndex& index) const
 		{
 			PointType p;
 			p.x = ((float)(index.idx) + 0.5f) * (float)(leafSize.x()) + minAABB.x();
@@ -200,10 +230,19 @@ namespace RecRoom
 			return pc;
 		}
 
+		inline virtual void AddPoint(const PointType& p);
+
+		inline virtual void DeletePoint(const PointType& p);
+
 		inline void AddPoint(const VoxelGridIndex& pID);
 
 		inline void DeletePoint(const VoxelGridIndex& pID);
 
+		inline virtual void AddPointCloud(CONST_PTR(Pc<PointType>) input, CONST_PTR(PcIndex) filter = nullptr);
+
+		inline virtual void DeletePointCloud(CONST_PTR(Pc<PointType>) input, CONST_PTR(PcIndex) filter = nullptr);
+
+	public:
 		void Dilation(std::size_t kernelSize = 1, std::size_t iteration = 1);
 
 		void Erosion(std::size_t kernelSize = 1, std::size_t iteration = 1);
@@ -212,35 +251,16 @@ namespace RecRoom
 
 		void Closing(std::size_t kernelSize = 1, std::size_t iteration = 1);
 
-	protected:
-		inline virtual void InitLeaf(Leaf& leaf) const
-		{
-			leaf.size = 0;
-		}
-		inline virtual void UpdateLeafAddPoint(Leaf& leaf, const PointType& point)
-		{
-			leaf.size += 1;
-		}
-
-		inline virtual void UpdateLeafDeletePoint(Leaf& leaf, const PointType& point)
-		{
-			if (leaf.size == 0)
-			{
-				THROW_EXCEPTION("This should not be happened.");
-			}
-			leaf.size -= 1;
-		}
-
 	public:
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	};
 
 	template <class PointType>
-	class VoxelGridFilter : public pcl::Filter<PointType>, public VoxelGrid<PointType, bool>
+	class VoxelGridFilter : public pcl::Filter<PointType>, public VoxelGridBase<PointType, bool>
 	{
 	public:
-		using Leaf = VoxelGrid<PointType, bool>::Leaf;
-		using Leaves = VoxelGrid<PointType, bool>::Leaves;
+		using Leaf = VoxelGridBase<PointType, bool>::Leaf;
+		using Leaves = VoxelGridBase<PointType, bool>::Leaves;
 
 	protected:
 		using pcl::Filter<PointType>::filter_name_;
@@ -251,7 +271,7 @@ namespace RecRoom
 
 	public:
 		VoxelGridFilter(const Eigen::Vector3d& leafSize, const Eigen::Vector3d& minAABB, const Eigen::Vector3d& maxAABB, std::size_t minPointsPerVoxel = 0)
-			: pcl::Filter<PointType>(), VoxelGrid<PointType, bool>(leafSize, minAABB, maxAABB), minPointsPerVoxel(minPointsPerVoxel)
+			: pcl::Filter<PointType>(), VoxelGridBase<PointType, bool>(leafSize, minAABB, maxAABB), minPointsPerVoxel(minPointsPerVoxel)
 		{
 			filter_name_ = "VoxelGridFilter";
 		}
