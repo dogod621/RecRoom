@@ -120,7 +120,7 @@ namespace RecRoom
 		}
 	}
 
-	template <typename InPointN, typename OutPointN> 
+	template <typename InPointN, typename OutPointN>
 	void MovingLeastSquares<InPointN, OutPointN>::process(Pc<OutPointN>& output)
 	{
 		// Reset or initialize the collection of indices
@@ -135,7 +135,7 @@ namespace RecRoom
 		output.points.clear();
 
 		// Check if distinctCloud was set
-		if (upsampleMethod == MLSUpsamplingMethod::DISTINCT_CLOUD )
+		if (upsampleMethod == MLSUpsamplingMethod::DISTINCT_CLOUD)
 		{
 			if (!distinctCloud)
 			{
@@ -146,7 +146,7 @@ namespace RecRoom
 			{
 				PTR(PcIndex) filterNAN(new PcIndex);
 				fNAN.Process(nullptr, distinctCloud, nullptr, *filterNAN);
-				PTR(Pc<InPointN>) temp (new Pc<InPointN>);
+				PTR(Pc<InPointN>) temp(new Pc<InPointN>);
 				{
 					pcl::ExtractIndices<InPointN> extract;
 					extract.setInputCloud(distinctCloud);
@@ -273,6 +273,8 @@ namespace RecRoom
 		// Create temporaries for each thread in order to avoid synchronization
 		typename Pc<OutPointN>::CloudVectorType projectedPointSet(numThreads);
 		std::vector<PcIndex> correspondingInputIndicesSet(numThreads);
+#else
+		PRINT_WARNING("OPENMP is not enabled");
 #endif
 
 		// For all points
@@ -358,7 +360,7 @@ namespace RecRoom
 	{
 		switch (upsampleMethod)
 		{
-		case (MLSUpsamplingMethod::DISTINCT_CLOUD):
+		case MLSUpsamplingMethod::DISTINCT_CLOUD:
 		{
 			{
 				correspondingInputIndices.reset(new PcIndex);
@@ -368,6 +370,8 @@ namespace RecRoom
 
 #ifdef _OPENMP
 #pragma omp parallel for num_threads(numThreads)
+#else
+				PRINT_WARNING("OPENMP is not enabled");
 #endif
 				for (int px = 0; px < static_cast<int> (distinctCloud->size()); ++px)
 				{
@@ -390,8 +394,41 @@ namespace RecRoom
 			}
 			break;
 		}
-		default:
+
+		case MLSUpsamplingMethod::MLSUpsamplingMethod_NONE:
+		{
 			break;
+		}
+
+		default:
+		{
+			{
+#ifdef _OPENMP
+#pragma omp parallel for num_threads(numThreads)
+#else
+				PRINT_WARNING("OPENMP is not enabled");
+#endif
+				for (int px = 0; px < static_cast<int> (output.size()); ++px)
+				{
+					PcIndex nnIndices;
+					std::vector<float> nn_dists;
+					if (searchMethod->nearestKSearch(output[px], 1, nnIndices, nn_dists) > 0)
+					{
+						int inputIndex = nnIndices.front();
+
+						// If the closest point did not have a valid MLS fitting result
+						// OR if it is too far away from the sampled point
+						if (mlsResults[inputIndex].valid == false)
+							continue;
+
+						Eigen::Vector3d addPoint = output[px].getVector3fMap().template cast<double>();
+						MLSProjectionResults proj = mlsResults[inputIndex].projectPoint(addPoint, projectionMethod, 5 * numCoeff);
+						addProjectedPointNormal(inputIndex, proj.point, proj.normal, mlsResults[inputIndex].curvature, output[px], (*correspondingInputIndices)[px]);
+					}
+				}
+			}
+			break;
+		}
 		}
 	}
 }

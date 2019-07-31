@@ -11,40 +11,25 @@ namespace RecRoom
 		const CONST_PTR(PcIndex)& filter,
 		Pc<PointType> & output) const
 	{
-		PTR(Acc<PointType>) searchSurface2;
-		PTR(Pc<PointType>) input2;
-		PTR(PcIndex) filter2;
+		MovingLeastSquares<PointType, PointType> mls(searchRadius, order, projectionMethod, upsampleMethod, computeNormals);
+
+		if (upsampleMethod == MLSUpsamplingMethod::DISTINCT_CLOUD)
 		{
-			if (upsampleMethod == MLSUpsamplingMethod::DISTINCT_CLOUD)
+			if (distinctSampler)
 			{
-				if (distinctSampler)
-				{
-					searchSurface2 = PTR(Acc<PointType>)(new KDTree<PointType>);
-					input2 = PTR(Pc<PointType>)(new Pc<PointType>);
-					filter2 = nullptr;
-
-					distinctSampler->Process(searchSurface, input, filter, *input2);
-
-					searchSurface2->setInputCloud(input2);
-				}
-				else
-				{
-					THROW_EXCEPTION("Use DISTINCT_CLOUD but not set distinctSampler.")
-				}
+				PTR(Pc<PointType>) distinctCloud (new Pc<PointType>);
+				distinctSampler->Process(searchSurface, input, filter, *distinctCloud);
+				mls.setDistinctCloud(distinctCloud);
 			}
 			else
 			{
-				searchSurface2 = boost::const_pointer_cast<Acc<PointType>>(searchSurface);
-				input2 = boost::const_pointer_cast<Pc<PointType>>(input);
-				filter2 = boost::const_pointer_cast<PcIndex>(filter);
+				THROW_EXCEPTION("Use DISTINCT_CLOUD but not set distinctSampler.")
 			}
 		}
 
-		MovingLeastSquares<PointType, PointType> mls(searchRadius, order, projectionMethod, upsampleMethod, computeNormals);
-
 		mls.setSearchMethod(boost::const_pointer_cast<Acc<PointType>>(searchSurface)); // trick, already ensure it won't be modified 
+		mls.setInputCloud(input);
 		mls.setIndices(filter);
-
 		mls.process(output);
 
 		// Interpolate missing field
