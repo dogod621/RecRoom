@@ -122,7 +122,7 @@ namespace RecRoom
 			}
 		}
 #else
-		PRINT_WARNING("OPENMP is not enabled, us std thread instead")
+		PRINT_WARNING("OPENMP is not enabled, use std thread instead");
 		std::vector<std::thread> threads;
 		for (int i = 0; i < numThreads; i++)
 			threads.push_back(std::thread(EstimatorPc::EstimationTask, i, 

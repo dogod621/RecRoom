@@ -8,6 +8,15 @@ namespace RecRoom
 	class InterpolatorPcNearest : public InterpolatorPc<InPointType, OutPointType>, public ThreadAble
 	{
 	public:
+		static void InterpolationTask(
+			int id,
+			void* self,
+			void* searchSurface,
+			void* input,
+			void* filter,
+			void* output);
+
+	public:
 		InterpolatorPcNearest() : ThreadAble(), InterpolatorPc<InPointType, OutPointType>()
 		{
 			name = "InterpolatorPcNearest";
