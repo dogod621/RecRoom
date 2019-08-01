@@ -4,6 +4,8 @@
 #include <vtkCleanPolyData.h>
 #include <pcl/surface/vtk_smoothing/vtk_utils.h>
 
+#include <pcl/filters/extract_indices.h>
+#include <pcl/filters/impl/extract_indices.hpp>
 #include <pcl/io/pcd_io.h>
 #include <pcl/io/png_io.h>
 #include <pcl/io/ply_io.h>
@@ -22,23 +24,23 @@ namespace RecRoom
 		boost::filesystem::path filePath_,
 		const CONST_PTR(ScannerPc)& scanner,
 		const PTR(ContainerPcNDF)& containerPcNDF,
-		const CONST_PTR(InterpolatorMED)& fieldInterpolatorMED,
-		const CONST_PTR(InterpolatorREC)& fieldInterpolatorREC,
+		const CONST_PTR(Interpolator)& fieldInterpolator,
+		const CONST_PTR(MeshInterpolator)& meshFieldInterpolator,
 		bool useVNN,
 		float resVNN)
 		: DumpAble("ReconstructorPc", filePath_), status(ReconstructStatus::ReconstructStatus_UNKNOWN), scanner(scanner), containerPcNDF(containerPcNDF), useVNN(useVNN), resVNN(resVNN),
-		pcMED(new PcMED), mesh(new Mesh),
+		pcMED(new PcMED), pcREC(new PcREC), mesh(new Mesh),
 		downSampler(nullptr),
-		fieldInterpolatorMED(fieldInterpolatorMED),
-		fieldInterpolatorREC(fieldInterpolatorREC),
-		outlierRemover(nullptr),
+		fieldInterpolator(fieldInterpolator),
 		normalEstimator(nullptr),
 		albedoEstimator(nullptr),
 		sharpnessEstimator(nullptr),
 		segmenter(nullptr),
 		mesher(nullptr),
-		mesherPreFilter(nullptr),
-		mesherPreSampler(nullptr)
+		meshOutlierRemover(nullptr),
+		meshFilter(nullptr),
+		meshFieldInterpolator(meshFieldInterpolator),
+		meshSampler(nullptr)
 	{
 		if (!scanner)
 			THROW_EXCEPTION("scanner is not set");
@@ -57,12 +59,14 @@ namespace RecRoom
 		//
 		if (!pcMED)
 			THROW_EXCEPTION("pcMED is not created?");
+		if (!pcREC)
+			THROW_EXCEPTION("pcREC is not created?");
 		if (!mesh)
 			THROW_EXCEPTION("mesh is not created?");
-		if (!fieldInterpolatorMED)
-			THROW_EXCEPTION("fieldInterpolatorMED is not created?");
-		if (!fieldInterpolatorREC)
-			THROW_EXCEPTION("fieldInterpolatorREC is not created?")
+		if (!fieldInterpolator)
+			THROW_EXCEPTION("fieldInterpolator is not created?");
+		if (!meshFieldInterpolator)
+			THROW_EXCEPTION("meshFieldInterpolator is not created?")
 	}
 
 	void ReconstructorPc::RecPointCloud()
@@ -77,13 +81,6 @@ namespace RecRoom
 			pcMED->clear();
 
 			ImplementRecPointCloud();
-
-			/*if (downSampler)
-			{
-				PTR(AccMED) accMED(new KDTreeMED);
-				accMED->setInputCloud(pcMED);
-				downSampler->ProcessInOut(accMED, pcMED, nullptr);
-			}*/
 
 			status = (ReconstructStatus)(status | ReconstructStatus::POINT_CLOUD);
 			Dump();
@@ -300,6 +297,37 @@ namespace RecRoom
 		}
 	}
 
+	void ReconstructorPc::RecMeshPreprocess()
+	{
+		if (status & ReconstructStatus::MESH_PREPROCESS)
+		{
+			PRINT_WARNING("Aready reconstructed, ignore.");
+		}
+		else if (!WITH_PERPOINT_NORMAL)
+		{
+			PRINT_WARNING("!WITH_PERPOINT_NORMAL, ignore. You must compile with INPUT_PERPOINT_NORMAL or OUTPUT_PERPOINT_NORMAL to enable this feature.");
+		}
+		else if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("POINT_CLOUD is not reconstructed yet, ignore.");
+		}
+		else if ((status & ReconstructStatus::PC_NORMAL) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("PC_NORMAL is not reconstructed yet, ignore.");
+		}
+		else if (pcMED->empty())
+		{
+			PRINT_WARNING("pcMED is empty, ignore.");
+		}
+		else
+		{
+			pcREC->clear();
+			ImplementRecMeshPreprocess();
+			status = (ReconstructStatus)(status | ReconstructStatus::MESH_PREPROCESS);
+			Dump();
+		}
+	}
+
 	void ReconstructorPc::RecMesh()
 	{
 		if (status & ReconstructStatus::MESH)
@@ -318,9 +346,13 @@ namespace RecRoom
 		{
 			PRINT_WARNING("PC_NORMAL is not reconstructed yet, ignore.");
 		}
-		else if (pcMED->empty())
+		else if ((status & ReconstructStatus::MESH_PREPROCESS) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 		{
-			PRINT_WARNING("pcMED is empty, ignore.");
+			PRINT_WARNING("MESH_PREPROCESS is not reconstructed yet, ignore.");
+		}
+		else if (pcREC->empty())
+		{
+			PRINT_WARNING("pcREC is empty, ignore.");
 		}
 		else if(mesher)
 		{
@@ -334,9 +366,9 @@ namespace RecRoom
 		}
 	}
 
-	void ReconstructorPc::RecReMesh(float holeSize)
+	void ReconstructorPc::RecMeshPostprocess(float holeSize)
 	{
-		if (status & ReconstructStatus::REMESH)
+		if (status & ReconstructStatus::MESH_POSTPROCESS)
 		{
 			PRINT_WARNING("Aready reconstructed, ignore.");
 		}
@@ -352,18 +384,22 @@ namespace RecRoom
 		{
 			PRINT_WARNING("PC_NORMAL is not reconstructed yet, ignore.");
 		}
+		else if ((status & ReconstructStatus::MESH_PREPROCESS) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("MESH_PREPROCESS is not reconstructed yet, ignore.");
+		}
 		else if ((status & ReconstructStatus::MESH) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 		{
 			PRINT_WARNING("MESH is not reconstructed yet, ignore.");
 		}
-		else if (pcMED->empty())
+		else if (pcREC->empty())
 		{
-			PRINT_WARNING("pcMED is empty, ignore.");
+			PRINT_WARNING("pcREC is empty, ignore.");
 		}
 		else
 		{
-			ImplementRecReMesh(holeSize);
-			status = (ReconstructStatus)(status | ReconstructStatus::REMESH);
+			ImplementRecMeshPostprocess(holeSize);
+			status = (ReconstructStatus)(status | ReconstructStatus::MESH_POSTPROCESS);
 			Dump();
 		}
 	}
@@ -527,7 +563,7 @@ namespace RecRoom
 				}
 
 				// 
-				fieldInterpolatorMED->ProcessInOut(accMED, pcRec, nullptr);
+				fieldInterpolator->ProcessInOut(accMED, pcRec, nullptr);
 			}
 
 			//
@@ -856,6 +892,8 @@ namespace RecRoom
 		DumpAble::Load();
 		if (boost::filesystem::exists(filePath / boost::filesystem::path("pcMED.pcd")))
 			pcl::io::loadPCDFile((filePath / boost::filesystem::path("pcMED.pcd")).string(), *pcMED);
+		if (boost::filesystem::exists(filePath / boost::filesystem::path("pcREC.pcd")))
+			pcl::io::loadPCDFile((filePath / boost::filesystem::path("pcREC.pcd")).string(), *pcREC);
 		if (boost::filesystem::exists(filePath / boost::filesystem::path("mesh.ply")))
 		{
 			//pcl::io::load((filePath / boost::filesystem::path("mesh.ply")).string(), *mesh);
@@ -869,6 +907,8 @@ namespace RecRoom
 		DumpAble::Dump();
 		if (pcMED->size() > 0)
 			pcl::io::savePCDFile((filePath / boost::filesystem::path("pcMED.pcd")).string(), *pcMED, true);
+		if (pcREC->size() > 0)
+			pcl::io::savePCDFile((filePath / boost::filesystem::path("pcREC.pcd")).string(), *pcREC, true);
 		if (!mesh->cloud.data.empty())
 		{
 			SaveAsPLY((filePath / boost::filesystem::path("mesh.ply")).string(), *mesh, 5, false);
@@ -914,20 +954,25 @@ namespace RecRoom
 		segmenter->ProcessInOut(accMED, pcMED, nullptr);
 	}
 
-	void ReconstructorPc::ImplementRecMesh()
+	void ReconstructorPc::ImplementRecMeshPreprocess()
 	{
-		PTR(PcREC) pcREC(new PcREC);
 		pcREC->resize(pcMED->size());
 		for (std::size_t px = 0; px < pcMED->size(); ++px)
 			(*pcREC)[px] = (*pcMED)[px];
+
 		PTR(AccREC) accREC(new KDTreeREC);
 		accREC->setInputCloud(pcREC);
 
-		//
-		if (mesherPreSampler)
+		if (meshOutlierRemover)
 		{
+			PTR(PcIndex) filterREC(new PcIndex);
+			meshOutlierRemover->Process(accREC, pcREC, nullptr, *filterREC);
 			PTR(PcREC) pcREC2(new PcREC);
-			mesherPreSampler->Process(accREC, pcREC, nullptr, *pcREC2);
+			pcl::ExtractIndices<PointREC> extract;
+			extract.setInputCloud(pcREC);
+			extract.setIndices(filterREC);
+			extract.setNegative(false);
+			extract.filter(*pcREC2);
 
 			PTR(AccREC) accREC2(new KDTreeREC);
 			accREC2->setInputCloud(pcREC2);
@@ -935,23 +980,42 @@ namespace RecRoom
 			accREC = accREC2;
 		}
 
-		//
-		PTR(PcIndex) filterREC(new PcIndex);
-		filterREC = nullptr;
-		if (mesherPreFilter)
-			mesherPreFilter->Process(accREC, pcREC, nullptr, *filterREC);
+		if (meshSampler)
+		{
+			PTR(PcREC) pcREC2(new PcREC);
+			meshSampler->Process(accREC, pcREC, nullptr, *pcREC2);
 
-		//
-		mesher->Process(accREC, pcREC, filterREC, *mesh);
+			PTR(AccREC) accREC2(new KDTreeREC);
+			accREC2->setInputCloud(pcREC2);
+			pcREC = pcREC2;
+			accREC = accREC2;
+		}
+
+		if (meshFilter)
+		{
+			PTR(PcIndex) filterREC(new PcIndex);
+			meshFilter->Process(accREC, pcREC, nullptr, *filterREC);
+
+			PTR(PcREC) pcREC2(new PcREC);
+			pcl::ExtractIndices<PointREC> extract;
+			extract.setInputCloud(pcREC);
+			extract.setIndices(filterREC);
+			extract.setNegative(false);
+			extract.filter(*pcREC2);
+			pcREC = pcREC2;
+		}
 	}
 
-	void ReconstructorPc::ImplementRecReMesh(float holeSize)
+	void ReconstructorPc::ImplementRecMesh()
+	{
+		PTR(AccREC) accREC(new KDTreeREC);
+		accREC->setInputCloud(pcREC);
+		mesher->Process(accREC, pcREC, nullptr, *mesh);
+	}
+
+	void ReconstructorPc::ImplementRecMeshPostprocess(float holeSize)
 	{
 		//
-		PTR(PcREC) pcREC(new PcREC);
-		pcREC->resize(pcMED->size());
-		for (std::size_t px = 0; px < pcMED->size(); ++px)
-			(*pcREC)[px] = (*pcMED)[px];
 		PTR(AccREC) accREC(new KDTreeREC);
 		accREC->setInputCloud(pcREC);
 
@@ -1007,7 +1071,7 @@ namespace RecRoom
 		}
 
 		Pc<PointREC> temp;
-		fieldInterpolatorREC->Process(accREC, vertexREC, nullptr, temp);
+		meshFieldInterpolator->Process(accREC, vertexREC, nullptr, temp);
 
 		for (std::size_t px = 0; px < temp.size(); ++px)
 		{

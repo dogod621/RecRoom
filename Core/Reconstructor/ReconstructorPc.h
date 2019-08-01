@@ -23,8 +23,9 @@ namespace RecRoom
 		PC_SHARPNESS = 1 << 4,
 		PC_SEGMENT = 1 << 5,
 		SEG_MATERIAL = 1 << 6,
-		MESH = 1 << 7,
-		REMESH = 1 << 8
+		MESH_PREPROCESS = 1 << 7,
+		MESH = 1 << 8,
+		MESH_POSTPROCESS = 1 << 9
 	};
 
 	class ReconstructorPc : public DumpAble
@@ -32,21 +33,22 @@ namespace RecRoom
 	public:
 		using Estimator = EstimatorPc<PointMED, PointMED>;
 		using Filter = FilterPc<PointMED>;
-		using InterpolatorMED = InterpolatorPc<PointMED, PointMED>;
-		using InterpolatorREC = InterpolatorPc<PointREC, PointREC>;
-		using Mesher = MesherPc<PointREC>;
-		using MesherPreFilter = FilterPc<PointREC>;
-		using MesherPreSampler = SamplerPc<PointREC>;
+		using Interpolator = InterpolatorPc<PointMED, PointMED>;
 		using Sampler = SamplerPc<PointMED>;
 		using Segmenter = SegmenterPc<PointMED>;
+
+		using Mesher = MesherPc<PointREC>;
+		using MeshFilter = FilterPc<PointREC>;
+		using MeshInterpolator = InterpolatorPc<PointREC, PointREC>;
+		using MeshSampler = SamplerPc<PointREC>;
 		
 	public:
 		ReconstructorPc(
 			boost::filesystem::path filePath,
 			const CONST_PTR(ScannerPc)& scanner,
 			const PTR(ContainerPcNDF)& containerPcNDF,
-			const CONST_PTR(InterpolatorMED)& fieldInterpolatorMED = CONST_PTR(InterpolatorMED)(new InterpolatorPcNearest<PointMED, PointMED>),
-			const CONST_PTR(InterpolatorREC)& fieldInterpolatorREC = CONST_PTR(InterpolatorREC)(new InterpolatorPcNearest<PointREC, PointREC>),
+			const CONST_PTR(Interpolator)& fieldInterpolator = CONST_PTR(Interpolator)(new InterpolatorPcNearest<PointMED, PointMED>),
+			const CONST_PTR(MeshInterpolator)& meshFieldInterpolator = CONST_PTR(MeshInterpolator)(new InterpolatorPcNearest<PointREC, PointREC>),
 			bool useVNN = true,
 			float resVNN = 0.01f);
 
@@ -57,8 +59,9 @@ namespace RecRoom
 		void RecPcSharpness();
 		void RecPcSegment();
 		void RecSegMaterial();
+		void RecMeshPreprocess();
 		void RecMesh();
-		void RecReMesh(float holeSize);
+		void RecMeshPostprocess(float holeSize);
 		void VisualSegNDFs();
 		void VisualRecAtts();
 
@@ -69,8 +72,9 @@ namespace RecRoom
 		virtual void ImplementRecPcSharpness() = 0;
 		virtual void ImplementRecPcSegment();
 		virtual void ImplementRecSegMaterial() = 0;
+		virtual void ImplementRecMeshPreprocess();
 		virtual void ImplementRecMesh();
-		virtual void ImplementRecReMesh(float holeSize);
+		virtual void ImplementRecMeshPostprocess(float holeSize);
 
 	public:
 		bool getUseVNN() const { return useVNN; }
@@ -82,56 +86,39 @@ namespace RecRoom
 		PTR(ContainerPcNDF) getContainerPcNDF() const { return containerPcNDF; }
 
 		CONST_PTR(Sampler) getDownSampler() const { return downSampler; }
-		CONST_PTR(InterpolatorMED) getFieldInterpolatorMED() const { return fieldInterpolatorMED; }
-		CONST_PTR(InterpolatorREC) getFieldInterpolatorREC() const { return fieldInterpolatorREC; }
-		CONST_PTR(Filter) getOutlierRemover() const { return outlierRemover; }
+		CONST_PTR(Interpolator) getFieldInterpolator() const { return fieldInterpolator; }
 		CONST_PTR(Estimator) getNormalEstimator() const { return normalEstimator; }
 		CONST_PTR(Estimator) getAlbedoEstimator() const { return albedoEstimator; }
 		CONST_PTR(Estimator) getSharpnessEstimator() const { return sharpnessEstimator; }
 		CONST_PTR(Segmenter) getSegmenter() const { return segmenter; }
 		CONST_PTR(Mesher) getMesher() const { return mesher; }
+		CONST_PTR(MeshFilter) getMeshOutlierRemover() const { return meshOutlierRemover; }
+		CONST_PTR(MeshFilter) getMeshFilter() const { return meshFilter; }
+		CONST_PTR(MeshInterpolator) getMeshFieldInterpolator() const { return meshFieldInterpolator; }
+		CONST_PTR(MeshSampler) getMeshSampler() const { return meshSampler; }
 
 		void setDownSampler(const CONST_PTR(Sampler)& v) 
 		{ 
 			downSampler = v; 
 			PTR(Sampler) downSamplerTemp = boost::const_pointer_cast<Sampler>(downSampler);
 			if (downSamplerTemp)
-				downSamplerTemp->setFieldInterpolator(fieldInterpolatorMED);
+				downSamplerTemp->setFieldInterpolator(fieldInterpolator);
 		}
-		void setFieldInterpolatorMED(const CONST_PTR(InterpolatorMED)& v)
+		void setFieldInterpolator(const CONST_PTR(Interpolator)& v)
 		{ 
 			if (!v)
 			{
-				THROW_EXCEPTION("fieldInterpolatorMED is not set");
+				THROW_EXCEPTION("fieldInterpolator is not set");
 			}
 			else
 			{
-				fieldInterpolatorMED = v;
+				fieldInterpolator = v;
 
 				PTR(Sampler) downSamplerTemp = boost::const_pointer_cast<Sampler>(downSampler);
 				if (downSamplerTemp)
-					downSamplerTemp->setFieldInterpolator(fieldInterpolatorMED);
+					downSamplerTemp->setFieldInterpolator(fieldInterpolator);
 			}
 		}
-		void setFieldInterpolatorREC(const CONST_PTR(InterpolatorREC)& v)
-		{
-			if (!v)
-			{
-				THROW_EXCEPTION("fieldInterpolatorREC is not set");
-			}
-			else
-			{
-				fieldInterpolatorREC = v;
-				PTR(Mesher) mesherTemp = boost::const_pointer_cast<Mesher>(mesher);
-				PTR(MesherPreSampler) mesherPreSamplerTemp = boost::const_pointer_cast<MesherPreSampler>(mesherPreSampler);
-
-				if (mesherTemp)
-					mesherTemp->setFieldInterpolator(fieldInterpolatorREC);
-				if (mesherPreSamplerTemp)
-					mesherPreSamplerTemp->setFieldInterpolator(fieldInterpolatorREC);
-			}
-		}
-		void setOutlierRemover(const CONST_PTR(Filter)& v) { outlierRemover = v; }
 		void setNormalEstimator(const CONST_PTR(Estimator)& v) { normalEstimator = v; }
 		void setAlbedoEstimator(const CONST_PTR(Estimator)& v) { albedoEstimator = v; }
 		void setSharpnessEstimator(const CONST_PTR(Estimator)& v) { sharpnessEstimator = v; }
@@ -141,15 +128,34 @@ namespace RecRoom
 			mesher = v;
 			PTR(Mesher) mesherTemp = boost::const_pointer_cast<Mesher>(mesher);
 			if (mesherTemp)
-				mesherTemp->setFieldInterpolator(fieldInterpolatorREC);
+				mesherTemp->setFieldInterpolator(meshFieldInterpolator);
 		}
-		void setMeshPreFilter(const CONST_PTR(MesherPreFilter)& v) { mesherPreFilter = v; }
-		void setMesherPreSampler(const CONST_PTR(MesherPreSampler)& v) 
+		void setMeshOutlierRemover(const CONST_PTR(MeshFilter)& v) { meshOutlierRemover = v; }
+		void setMeshFilter(const CONST_PTR(MeshFilter)& v) { meshFilter = v; }
+		void setMeshFieldInterpolator(const CONST_PTR(MeshInterpolator)& v)
 		{
-			mesherPreSampler = v; 
-			PTR(MesherPreSampler) mesherPreSamplerTemp = boost::const_pointer_cast<MesherPreSampler>(mesherPreSampler);
-			if (mesherPreSamplerTemp)
-				mesherPreSamplerTemp->setFieldInterpolator(fieldInterpolatorREC);
+			if (!v)
+			{
+				THROW_EXCEPTION("meshFieldInterpolator is not set");
+			}
+			else
+			{
+				meshFieldInterpolator = v;
+				PTR(Mesher) mesherTemp = boost::const_pointer_cast<Mesher>(mesher);
+				PTR(MeshSampler) meshSamplerTemp = boost::const_pointer_cast<MeshSampler>(meshSampler);
+
+				if (mesherTemp)
+					mesherTemp->setFieldInterpolator(meshFieldInterpolator);
+				if (meshSamplerTemp)
+					meshSamplerTemp->setFieldInterpolator(meshFieldInterpolator);
+			}
+		}
+		void setMeshSampler(const CONST_PTR(MeshSampler)& v) 
+		{
+			meshSampler = v; 
+			PTR(MeshSampler) meshSamplerTemp = boost::const_pointer_cast<MeshSampler>(meshSampler);
+			if (meshSamplerTemp)
+				meshSamplerTemp->setFieldInterpolator(meshFieldInterpolator);
 		}
 
 	protected:
@@ -157,24 +163,24 @@ namespace RecRoom
 		float resVNN;
 		ReconstructStatus status;
 		PTR(PcMED) pcMED;
+		PTR(PcREC) pcREC;
 		PTR(Mesh) mesh;
 
 		CONST_PTR(ScannerPc) scanner; 
 		PTR(ContainerPcNDF) containerPcNDF;
 
 		CONST_PTR(Sampler) downSampler;
-		CONST_PTR(InterpolatorMED) fieldInterpolatorMED;
-		CONST_PTR(InterpolatorREC) fieldInterpolatorREC;
-		CONST_PTR(Filter) outlierRemover;
+		CONST_PTR(Interpolator) fieldInterpolator;
 		CONST_PTR(Estimator) normalEstimator;
 		CONST_PTR(Estimator) albedoEstimator;
 		CONST_PTR(Estimator) sharpnessEstimator;
 		CONST_PTR(Segmenter) segmenter;
-		CONST_PTR(Sampler) preprocessSampler;
-		CONST_PTR(Filter) preprocessFilter;
+		
 		CONST_PTR(Mesher) mesher;
-		CONST_PTR(MesherPreFilter) mesherPreFilter;
-		CONST_PTR(MesherPreSampler) mesherPreSampler;
+		CONST_PTR(MeshFilter) meshOutlierRemover;
+		CONST_PTR(MeshFilter) meshFilter;
+		CONST_PTR(MeshInterpolator) meshFieldInterpolator;
+		CONST_PTR(MeshSampler) meshSampler;
 
 		virtual void Load();
 		virtual void Dump() const;

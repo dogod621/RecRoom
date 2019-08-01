@@ -52,8 +52,9 @@ void PrintHelp(int argc, char **argv)
 		PRINT_HELP("\t", "recPcSharpness", "", "Reconstruct point cloud sharpness.");
 		PRINT_HELP("\t", "recPcSegment", "", "Reconstruct point cloud segment.");
 		PRINT_HELP("\t", "recSegMaterial", "", "Reconstruct segment material.");
+		PRINT_HELP("\t", "recMeshPreprocess", "", "Reconstruct preprocessed mesh.");
 		PRINT_HELP("\t", "recMesh", "", "Reconstruct mesh.");
-		PRINT_HELP("\t", "recReMesh", "", "Reconstruct refinded mesh.");
+		PRINT_HELP("\t", "recMeshPostprocess", "", "Reconstruct postprocessed mesh.");
 		PRINT_HELP("\t", "visSegNDFs", "", "Plot segment NDFs after reconstruction.");
 		PRINT_HELP("\t", "visRecAtts", "", "Plot reconstruction result after reconstruction.");
 	}
@@ -76,12 +77,6 @@ void PrintHelp(int argc, char **argv)
 		PRINT_HELP("\t", "voxelSize", "float 0.01", "Gird unit size in meters.");
 	}
 
-	std::cout << "FilterPcRemoveOutlier Parmameters:========================================================================================================================" << std::endl << std::endl;
-	{
-		PRINT_HELP("\t", "meanK", "int 50", "The number of points to use for mean distance estimation.");
-		PRINT_HELP("\t", "stdMul", "float 1.0", "The standard deviation multiplier for the distance threshold calculation.");
-	}
-	
 	std::cout << "EstimatorPc Parmameters:==================================================================================================================================" << std::endl << std::endl;
 	{
 		PRINT_HELP("\t", "searchRadius", "float ${voxelSize*5}", "The search radius at surface.");
@@ -90,8 +85,6 @@ void PrintHelp(int argc, char **argv)
 		PRINT_HELP("\t", "cutFalloff", "float 0.33", "Cut-off threshold that is related to distance fall-off.");
 		PRINT_HELP("\t", "cutGrazing", "float 0.26", "Cut-off threshold that is related to grazing level.");
 	}
-
-	std::cout << "==========================================================================================================================================================" << std::endl << std::endl;
 	
 	std::cout << "SegmenterPcSVC Parmameters:===============================================================================================================================" << std::endl << std::endl;
 	{
@@ -103,6 +96,12 @@ void PrintHelp(int argc, char **argv)
 		PRINT_HELP("\t", "normalImportance", "float 1.0", "Distance importance of normal.");
 		PRINT_HELP("\t", "sharpnessImportance", "float 5.0", "Distance importance of sharpnessImportance.");
 
+	}
+
+	std::cout << "MeshOutlierRemover Parmameters:===========================================================================================================================" << std::endl << std::endl;
+	{
+		PRINT_HELP("\t", "meanK", "int 50", "The number of points to use for mean distance estimation.");
+		PRINT_HELP("\t", "stdMul", "float 2.0", "The standard deviation multiplier for the distance threshold calculation.");
 	}
 
 	/*std::cout << "MesherPcMCHoppe Parmameters:============================================================================================================================" << std::endl << std::endl;
@@ -123,7 +122,7 @@ void PrintHelp(int argc, char **argv)
 		PRINT_HELP("\t", "epsAngle", "float 45.0", "Maximum surface angle in degrees.");
 	}
 
-	std::cout << "ReMesh Parmameters:=======================================================================================================================================" << std::endl << std::endl;
+	std::cout << "MeshPostprocess Parmameters:=======================================================================================================================================" << std::endl << std::endl;
 	{
 		PRINT_HELP("\t", "holeSize", "float ${maxEdgeSize}", "");
 	}
@@ -197,14 +196,6 @@ int main(int argc, char *argv[])
 		pcl::console::parse_argument(argc, argv, "-colorThresh", colorThresh);
 		std::cout << "ScannerPcBLK360 Parmameters -colorThresh: " << colorThresh << std::endl;
 
-		// Parse FilterPcRemoveOutlier Parmameters
-		int meanK = 50; 
-		double stdMul = 1.0;
-		pcl::console::parse_argument(argc, argv, "-meanK", meanK);
-		pcl::console::parse_argument(argc, argv, "-stdMul", stdMul);
-		std::cout << "FilterPcRemoveOutlier Parmameters -meanK: " << meanK << std::endl;
-		std::cout << "FilterPcRemoveOutlier Parmameters -stdMul: " << stdMul << std::endl;
-
 		// Parse EstimatorPc Parmameters
 		float distInterParm = 0.4f;
 		float angleInterParm = 0.6f;
@@ -218,6 +209,14 @@ int main(int argc, char *argv[])
 		std::cout << "EstimatorPc -angleInterParm: " << angleInterParm << std::endl;
 		std::cout << "EstimatorPc -cutFalloff: " << cutFalloff << std::endl;
 		std::cout << "EstimatorPc -cutGrazing: " << cutGrazing << std::endl;
+
+		// Parse MeshOutlierRemover Parmameters
+		int meanK = 50;
+		double stdMul = 2.0;
+		pcl::console::parse_argument(argc, argv, "-meanK", meanK);
+		pcl::console::parse_argument(argc, argv, "-stdMul", stdMul);
+		std::cout << "FilterPcRemoveOutlier Parmameters -meanK: " << meanK << std::endl;
+		std::cout << "FilterPcRemoveOutlier Parmameters -stdMul: " << stdMul << std::endl;
 
 		// Parse SegmenterPcSVC Parmameters
 		float voxelResolution = voxelSize;
@@ -279,10 +278,10 @@ int main(int argc, char *argv[])
 		maxAngle *= M_PI / 180.0;
 		epsAngle *= M_PI / 180.0;
 
-		// Parse ReMesh Parmameters
+		// Parse MeshPostprocess Parmameters
 		double holeSize = maxEdgeSize;
 		pcl::console::parse_argument(argc, argv, "-holeSize", holeSize);
-		std::cout << "ReMesh -holeSize: " << holeSize << std::endl;
+		std::cout << "MeshPostprocess -holeSize: " << holeSize << std::endl;
 
 		// Start
 		try
@@ -344,15 +343,6 @@ int main(int argc, char *argv[])
 				reconstructorPC->setDownSampler(downSampler);
 			}
 
-			std::cout << "Create OutlierRemover" << std::endl;
-			{
-				std::cout << "Not used" << std::endl;
-				/*PTR(RecRoom::ReconstructorPcOC::Filter)
-					outlierRemover(
-						new RecRoom::FilterPcRemoveOutlier<RecRoom::PointMED>(meanK, stdMul));
-				reconstructorPC->setOutlierRemover(outlierRemover);*/
-			}
-
 			std::cout << "Create NormalEstimator" << std::endl;
 			{
 				PTR(RecRoom::ReconstructorPcOC::Estimator)
@@ -393,13 +383,23 @@ int main(int argc, char *argv[])
 				reconstructorPC->setSegmenter(segmenter);
 			}
 
-			std::cout << "Create Mesher" << std::endl;
+			std::cout << "Create MeshOutlierRemover" << std::endl;
 			{
+				PTR(RecRoom::ReconstructorPcOC::MeshFilter)
+					meshOutlierRemover(
+						new RecRoom::FilterPcRemoveOutlier<RecRoom::PointREC>(meanK, stdMul));
+				reconstructorPC->setMeshOutlierRemover(meshOutlierRemover);
+			}
+
+			{
+				
+
+
 				//
 				/*PTR(RecRoom::ReconstructorPcOC::Mesher)
 					mesher(
-						new RecRoom::MesherPcGP3<RecRoom::PointREC>(
-							maxEdgeSize, mu, maxNumNei, minAngle, maxAngle, epsAngle, false, true));*/
+					new RecRoom::MesherPcGP3<RecRoom::PointREC>(
+						maxEdgeSize, mu, maxNumNei, minAngle, maxAngle, epsAngle, false, true));*/
 
 				//
 				/*PTR(RecRoom::SamplerPc<RecRoom::PointREC>)
@@ -411,7 +411,7 @@ int main(int argc, char *argv[])
 				PTR(RecRoom::SamplerPc<RecRoom::PointREC>)
 					preprocessSampler(
 						new RecRoom::SamplerPcMLS<RecRoom::PointREC>(
-							searchRadius, 5, RecRoom::MLSProjectionMethod::SIMPLE, RecRoom::MLSUpsamplingMethod::DISTINCT_CLOUD, true, 
+							searchRadius, 5, RecRoom::MLSProjectionMethod::SIMPLE, RecRoom::MLSUpsamplingMethod::DISTINCT_CLOUD, true,
 							distinctSampler ));
 
 				PTR(RecRoom::FilterPc<RecRoom::PointREC>)
@@ -434,19 +434,23 @@ int main(int argc, char *argv[])
 					preprocessFilter(
 						new RecRoom::FilterPcRemoveDuplicate<RecRoom::PointREC>(voxelSize*0.5));*/
 
-				//
+
+				/*PTR(RecRoom::SamplerPc<RecRoom::PointREC>)
+					mesherPreSampler(
+						new RecRoom::SamplerPcMLS<RecRoom::PointREC>(
+							searchRadius * 2, 2));*/
+
+				//reconstructorPC->setMesherPreSampler(mesherPreSampler);
+			}
+
+			std::cout << "Create Mesher" << std::endl;
+			{
 				PTR(RecRoom::ReconstructorPcOC::Mesher)
 					mesher(
 						new RecRoom::MesherPcGP3<RecRoom::PointREC>(
 							maxEdgeSize, mu, maxNumNei, minAngle, maxAngle, epsAngle, true, true));
 
-				PTR(RecRoom::SamplerPc<RecRoom::PointREC>)
-					mesherPreSampler(
-						new RecRoom::SamplerPcMLS<RecRoom::PointREC>(
-							searchRadius * 2, 2));
-
 				reconstructorPC->setMesher(mesher);
-				reconstructorPC->setMesherPreSampler(mesherPreSampler);
 			}
 
 			//
@@ -480,14 +484,19 @@ int main(int argc, char *argv[])
 				reconstructorPC->RecSegMaterial();
 			}
 
+			if (pcl::console::find_switch(argc, argv, "-recMeshPreprocess"))
+			{
+				reconstructorPC->RecMeshPreprocess();
+			}
+
 			if (pcl::console::find_switch(argc, argv, "-recMesh"))
 			{
 				reconstructorPC->RecMesh();
 			}
 
-			if(pcl::console::find_switch(argc, argv, "-recReMesh"))
+			if(pcl::console::find_switch(argc, argv, "-recMeshPostprocess"))
 			{
-				reconstructorPC->RecReMesh(holeSize);
+				reconstructorPC->RecMeshPostprocess(holeSize);
 			}
 
 			if (pcl::console::find_switch(argc, argv, "-visSegNDFs"))

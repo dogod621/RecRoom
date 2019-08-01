@@ -15,8 +15,9 @@ namespace RecRoom
 		else if (v == "PC_SHARPNESS") return ReconstructStatus::PC_SHARPNESS;
 		else if (v == "PC_SEGMENT") return ReconstructStatus::PC_SEGMENT;
 		else if (v == "SEG_MATERIAL") return ReconstructStatus::SEG_MATERIAL;
+		else if (v == "MESH_PREPROCESS") return ReconstructStatus::MESH_PREPROCESS;
 		else if (v == "MESH") return ReconstructStatus::MESH;
-		else if (v == "REMESH") return ReconstructStatus::REMESH;
+		else if (v == "MESH_POSTPROCESS") return ReconstructStatus::MESH_POSTPROCESS;
 		else return ReconstructStatus::ReconstructStatus_UNKNOWN;
 	}
 
@@ -31,8 +32,9 @@ namespace RecRoom
 		case ReconstructStatus::PC_SHARPNESS: return std::string("PC_SHARPNESS"); break;
 		case ReconstructStatus::PC_SEGMENT: return std::string("PC_SEGMENT"); break;
 		case ReconstructStatus::SEG_MATERIAL: return std::string("SEG_MATERIAL"); break;
+		case ReconstructStatus::MESH_PREPROCESS: return std::string("MESH_PREPROCESS"); break;
 		case ReconstructStatus::MESH: return std::string("MESH"); break;
-		case ReconstructStatus::REMESH: return std::string("REMESH"); break;
+		case ReconstructStatus::MESH_POSTPROCESS: return std::string("MESH_POSTPROCESS"); break;
 		default: return std::string("UNKNOWN"); break;
 		}
 	}
@@ -56,8 +58,9 @@ namespace RecRoom
 		if (v & ReconstructStatus::PC_SHARPNESS) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::PC_SHARPNESS));
 		if (v & ReconstructStatus::PC_SEGMENT) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::PC_SEGMENT));
 		if (v & ReconstructStatus::SEG_MATERIAL) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::SEG_MATERIAL));
+		if (v & ReconstructStatus::MESH_PREPROCESS) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::MESH_PREPROCESS));
 		if (v & ReconstructStatus::MESH) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::MESH));
-		if (v & ReconstructStatus::REMESH) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::REMESH));
+		if (v & ReconstructStatus::MESH_POSTPROCESS) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::MESH_POSTPROCESS));
 		return j;
 	}
 }

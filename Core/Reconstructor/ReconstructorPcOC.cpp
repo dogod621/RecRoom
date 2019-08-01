@@ -139,7 +139,7 @@ namespace RecRoom
 		}
 
 		//
-		if (global.ptrReconstructorPcOC()->getOutlierRemover())
+		/*if (global.ptrReconstructorPcOC()->getOutlierRemover())
 		{
 			PcIndex orIndices;
 			global.ptrReconstructorPcOC()->getOutlierRemover()->Process(data.pcRecAcc, data.pcRec, nullptr, orIndices);
@@ -155,7 +155,7 @@ namespace RecRoom
 				orIndices.begin(), orIndices.end(),
 				data.pcRecIdx->begin());
 			data.pcRecIdx->resize(it - data.pcRecIdx->begin());
-		}
+		}*/
 		return 0;
 	}
 
@@ -274,7 +274,7 @@ namespace RecRoom
 
 					PcMED temp;
 
-					global.ptrReconstructorPcOC()->getFieldInterpolatorMED()->Process(validAcc, data.pcRec, inValidFilter, temp);
+					global.ptrReconstructorPcOC()->getFieldInterpolator()->Process(validAcc, data.pcRec, inValidFilter, temp);
 
 					for (std::size_t idx = 0; idx < inValidFilter->size(); ++idx)
 					{
@@ -301,7 +301,7 @@ namespace RecRoom
 		{
 			PcMED temp;
 
-			global.ptrReconstructorPcOC()->getFieldInterpolatorMED()->Process(data.pcRecAcc, data.pcRaw, nullptr, temp);
+			global.ptrReconstructorPcOC()->getFieldInterpolator()->Process(data.pcRecAcc, data.pcRaw, nullptr, temp);
 
 			for (std::size_t px = 0; px < data.pcRaw->size(); ++px)
 			{
@@ -345,7 +345,7 @@ namespace RecRoom
 
 					PcMED temp;
 
-					global.ptrReconstructorPcOC()->getFieldInterpolatorMED()->Process(validAcc, data.pcRec, inValidFilter, temp);
+					global.ptrReconstructorPcOC()->getFieldInterpolator()->Process(validAcc, data.pcRec, inValidFilter, temp);
 
 					for (std::size_t idx = 0; idx < inValidFilter->size(); ++idx)
 					{
@@ -382,7 +382,7 @@ namespace RecRoom
 		{
 			PcMED temp;
 
-			global.ptrReconstructorPcOC()->getFieldInterpolatorMED()->Process(data.pcRecAcc, data.pcRaw, nullptr, temp);
+			global.ptrReconstructorPcOC()->getFieldInterpolator()->Process(data.pcRecAcc, data.pcRaw, nullptr, temp);
 
 			for (std::size_t px = 0; px < data.pcRaw->size(); ++px)
 			{
@@ -430,7 +430,7 @@ namespace RecRoom
 
 					PcMED temp;
 
-					global.ptrReconstructorPcOC()->getFieldInterpolatorMED()->Process(validAcc, data.pcRec, inValidFilter, temp);
+					global.ptrReconstructorPcOC()->getFieldInterpolator()->Process(validAcc, data.pcRec, inValidFilter, temp);
 
 					for (std::size_t idx = 0; idx < inValidFilter->size(); ++idx)
 					{
@@ -465,7 +465,7 @@ namespace RecRoom
 		{
 			PcMED temp;
 
-			global.ptrReconstructorPcOC()->getFieldInterpolatorMED()->Process(data.pcRecAcc, data.pcRaw, data.pcRawIdx, temp);
+			global.ptrReconstructorPcOC()->getFieldInterpolator()->Process(data.pcRecAcc, data.pcRaw, data.pcRawIdx, temp);
 
 #ifdef PERPOINT_NORMAL
 #ifdef PERPOINT_LABEL
