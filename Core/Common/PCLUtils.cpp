@@ -1,5 +1,4 @@
 #include <fstream>
-#include <pcl/point_types.h>
 
 #include "PCLUtils.h"
 
@@ -456,6 +455,45 @@ namespace RecRoom
 		}
 
 		return 0;
+	}	
+
+	void SyncMeshNormal(Mesh& mesh)
+	{
+		Pc<pcl::PointNormal> vertices;
+		pcl::fromPCLPointCloud2(mesh.cloud, vertices);
+
+		for (std::vector<pcl::Vertices>::iterator polyIT = mesh.polygons.begin(); polyIT != mesh.polygons.end(); ++polyIT)
+		{
+			switch (polyIT->vertices.size())
+			{
+			case 3:
+			{
+				uint32_t& a = polyIT->vertices[0];
+				uint32_t& b = polyIT->vertices[1];
+				uint32_t& c = polyIT->vertices[2];
+
+				const pcl::PointNormal& va = vertices[a];
+				const pcl::PointNormal& vb = vertices[b];
+				const pcl::PointNormal& vc = vertices[c];
+
+				Eigen::Vector3f tn = (va.getVector3fMap() - vb.getVector3fMap()).cross(va.getVector3fMap() - vc.getVector3fMap());
+
+				if ((tn.dot(va.getNormalVector3fMap()) + tn.dot(vb.getNormalVector3fMap()) + tn.dot(vc.getNormalVector3fMap())) < 0)
+				{
+					uint32_t temp = b;
+					b = c;
+					c = temp;
+				}
+
+				break;
+			}
+			default:
+			{
+				PRINT_WARNING("polygon vertices size is not support");
+				break;
+			}
+			}
+		}
 	}
 };
 

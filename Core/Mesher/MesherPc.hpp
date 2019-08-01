@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Common/PCLUtils.h"
+
 #include "MesherPc.h"
 
 namespace RecRoom
@@ -81,5 +83,8 @@ namespace RecRoom
 
 			pcl::toPCLPointCloud2(*pcVertex2, output.cloud);
 		}
+
+		//
+		SyncMeshNormal(output);
 	}
 }

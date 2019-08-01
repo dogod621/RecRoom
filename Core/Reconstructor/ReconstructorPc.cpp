@@ -1058,6 +1058,8 @@ namespace RecRoom
 		}
 
 		pcl::toPCLPointCloud2(*vertexREC, mesh->cloud);
+
+		SyncMeshNormal(*mesh);
 	}
 }
 
