@@ -1056,6 +1056,8 @@ namespace RecRoom
 			if (pcl_isfinite(tempNC))
 				tarP.curvature = tempNC;
 		}
+
+		pcl::toPCLPointCloud2(*vertexREC, mesh->cloud);
 	}
 }
 
