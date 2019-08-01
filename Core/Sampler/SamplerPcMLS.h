@@ -11,8 +11,8 @@ namespace RecRoom
 	class SamplerPcMLS : public SamplerPc<PointType>
 	{
 	public:
-		using Interpolator = InterpolatorPc<PointType, PointType>;
-		using InterpolatorNearest = InterpolatorPcNearest<PointType, PointType>;
+		using Interpolator = SamplerPc<PointType>::Interpolator;
+		using InterpolatorNearest = SamplerPc<PointType>::InterpolatorNearest;
 
 	public:
 		SamplerPcMLS(
@@ -23,21 +23,15 @@ namespace RecRoom
 			bool computeNormals = true,
 			CONST_PTR(Pc<PointType>) distinctCloud = nullptr,
 			CONST_PTR(Interpolator) fieldInterpolator = CONST_PTR(Interpolator)(new InterpolatorNearest))
-			: SamplerPc<PointType>() ,
+			: SamplerPc<PointType>(fieldInterpolator) ,
 			searchRadius(searchRadius), 
 			order(order),
 			projectionMethod(projectionMethod), 
 			upsampleMethod(upsampleMethod),
 			computeNormals(computeNormals), 
 			distinctCloud(distinctCloud),
-			fieldInterpolator(fieldInterpolator)
 		{
 			name = "SamplerPcMLS";
-
-			if (!fieldInterpolator)
-			{
-				THROW_EXCEPTION("fieldInterpolator is not set");
-			}
 		}
 
 	protected:
@@ -82,7 +76,6 @@ namespace RecRoom
 		unsigned int getThreads() const { return threads; }
 		bool getComputeNormals() const { return computeNormals; }
 		CONST_PTR(Pc<PointType>) getDistinctSampler() const { return distinctCloud; };
-		CONST_PTR(Interpolator) getFieldInterpolator() const { return fieldInterpolator; };
 
 		void setSearchRadius(double v) { searchRadius = v; }
 		void setOrder(int v) { order = v; }
@@ -91,17 +84,6 @@ namespace RecRoom
 		void setThreads(unsigned int v) { threads = v; }
 		void setComputeNormals(bool v) { computeNormals = v; }
 		void setDistinctSampler(const CONST_PTR(Pc<PointType>)& v) { distinctCloud = v; };
-		void setFieldInterpolator(const CONST_PTR(Interpolator)& v)
-		{
-			if (!v)
-			{
-				THROW_EXCEPTION("fieldInterpolator is not set");
-			}
-			else
-			{
-				fieldInterpolator = v;
-			}
-		};
 
 	protected:
 		double searchRadius;
@@ -111,7 +93,6 @@ namespace RecRoom
 		unsigned int threads;
 		bool computeNormals;
 		CONST_PTR(Pc<PointType>) distinctCloud;
-		CONST_PTR(Interpolator) fieldInterpolator;
 	};
 }
 

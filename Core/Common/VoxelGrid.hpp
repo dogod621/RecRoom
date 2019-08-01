@@ -771,7 +771,6 @@ namespace RecRoom
 		}
 		std::sort(indexPairs.begin(), indexPairs.end());
 
-		std::size_t total = 0;
 		std::size_t index = 0;
 		pcVNN->reserve(indexPairs.size());
 		cache.reserve(indexPairs.size());
@@ -780,13 +779,11 @@ namespace RecRoom
 			std::size_t i = index + 1;
 			while ((i < indexPairs.size()) && (indexPairs[i] == indexPairs[index]))
 				++i;
-			if ((i - index) >= minPointsPerVoxel)
 			{
-				++total;
 				PointVNN op = PointVNN(IndexToPoint(indexPairs[index].voxelGridIndex));
 				std::size_t startPos = cache.size();
 				for (std::size_t j = index; j < i; ++j)
-					cache.push_back(indexPairs[j].cloudPointIndex;);
+					cache.push_back(indexPairs[j].cloudPointIndex);
 				op.k = cache.size() - startPos;
 				op.indices = &cache[startPos];
 				pcVNN->push_back(op);

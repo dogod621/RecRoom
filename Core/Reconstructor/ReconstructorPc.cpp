@@ -13,7 +13,6 @@
 
 #include "Common/PCLUtils.h"
 #include "Filter/FilterPcRemoveDuplicate.h"
-#include "Interpolator/InterpolatorPcNearest.h"
 
 #include "ReconstructorPc.h"
 
@@ -23,12 +22,15 @@ namespace RecRoom
 		boost::filesystem::path filePath_,
 		const CONST_PTR(ScannerPc)& scanner,
 		const PTR(ContainerPcNDF)& containerPcNDF,
+		const CONST_PTR(InterpolatorMED)& fieldInterpolatorMED,
+		const CONST_PTR(InterpolatorREC)& fieldInterpolatorREC,
 		bool useVNN,
 		float resVNN)
 		: DumpAble("ReconstructorPc", filePath_), status(ReconstructStatus::ReconstructStatus_UNKNOWN), scanner(scanner), containerPcNDF(containerPcNDF), useVNN(useVNN), resVNN(resVNN),
 		pcMED(new PcMED), mesh(new Mesh),
 		downSampler(nullptr),
-		interpolator(new InterpolatorPcNearest<PointMED, PointMED>),
+		fieldInterpolatorMED(fieldInterpolatorMED),
+		fieldInterpolatorREC(fieldInterpolatorREC),
 		outlierRemover(nullptr),
 		normalEstimator(nullptr),
 		albedoEstimator(nullptr),
@@ -54,11 +56,13 @@ namespace RecRoom
 
 		//
 		if (!pcMED)
-			THROW_EXCEPTION("pcMED is not created?")
+			THROW_EXCEPTION("pcMED is not created?");
 		if (!mesh)
-			THROW_EXCEPTION("mesh is not created?")
-		if(!interpolator)
-			THROW_EXCEPTION("interpolator is not created?")
+			THROW_EXCEPTION("mesh is not created?");
+		if (!fieldInterpolatorMED)
+			THROW_EXCEPTION("fieldInterpolatorMED is not created?");
+		if (!fieldInterpolatorREC)
+			THROW_EXCEPTION("fieldInterpolatorREC is not created?")
 	}
 
 	void ReconstructorPc::RecPointCloud()
@@ -522,8 +526,8 @@ namespace RecRoom
 					(*pcRec) = (*pcRaw);
 				}
 
-				// Upsampling
-				interpolator->ProcessInOut(accMED, pcRec, nullptr);
+				// 
+				fieldInterpolatorMED->ProcessInOut(accMED, pcRec, nullptr);
 			}
 
 			//
@@ -943,6 +947,35 @@ namespace RecRoom
 
 	void ReconstructorPc::ImplementRecReMesh(float holeSize)
 	{
+		//
+		PTR(PcREC) pcREC(new PcREC);
+		pcREC->resize(pcMED->size());
+		for (std::size_t px = 0; px < pcMED->size(); ++px)
+			(*pcREC)[px] = (*pcMED)[px];
+		PTR(AccREC) accREC(new KDTreeREC);
+		accREC->setInputCloud(pcREC);
+
+		//
+		PTR(Pc<PointREC>) vertexREC(new Pc<PointREC>);
+		pcl::fromPCLPointCloud2(mesh->cloud, *vertexREC);
+
+		PTR(Pc<pcl::PointNormal>) vertexPN(new Pc<pcl::PointNormal>);
+		vertexPN->resize(vertexREC->size());
+		for (std::size_t px = 0; px < vertexREC->size(); ++px)
+		{
+			pcl::PointNormal& tarP = (*vertexPN)[px];
+			PointREC& srcP = (*vertexREC)[px];
+
+			tarP.x = srcP.x;
+			tarP.y = srcP.y;
+			tarP.z = srcP.z;
+			tarP.normal_x = srcP.normal_x;
+			tarP.normal_y = srcP.normal_y;
+			tarP.normal_z = srcP.normal_z;
+			tarP.curvature = srcP.curvature;
+		}
+		pcl::toPCLPointCloud2(*vertexPN, mesh->cloud);
+
 		vtkSmartPointer<vtkPolyData> vtkMesh;
 		pcl::VTKUtils::mesh2vtk(*mesh, vtkMesh);
 
@@ -956,6 +989,73 @@ namespace RecRoom
 		vtkSmartPointer<vtkPolyData> polyData = fillHolesFilter->GetOutput();
 
 		pcl::VTKUtils::vtk2mesh(polyData, *mesh);
+		pcl::fromPCLPointCloud2(mesh->cloud, *vertexPN);
+
+		vertexREC->resize(vertexPN->size());
+		for (std::size_t px = 0; px < vertexREC->size(); ++px)
+		{
+			PointREC& tarP = (*vertexREC)[px];
+			pcl::PointNormal& srcP = (*vertexPN)[px];
+
+			tarP.x = srcP.x;
+			tarP.y = srcP.y;
+			tarP.z = srcP.z;
+			tarP.normal_x = srcP.normal_x;
+			tarP.normal_y = srcP.normal_y;
+			tarP.normal_z = srcP.normal_z;
+			tarP.curvature = srcP.curvature;
+		}
+
+		Pc<PointREC> temp;
+		fieldInterpolatorREC->Process(accREC, vertexREC, nullptr, temp);
+
+		for (std::size_t px = 0; px < temp.size(); ++px)
+		{
+			PointREC& tarP = (*vertexREC)[px];
+			PointREC& srcP = temp[px];
+
+			float tempX = tarP.x;
+			float tempY = tarP.y;
+			float tempZ = tarP.z;
+			float tempNX = tarP.normal_x;
+			float tempNY = tarP.normal_y;
+			float tempNZ = tarP.normal_z;
+			float tempNC = tarP.curvature;
+
+			tarP = srcP;
+
+			tarP.x = tempX;
+			tarP.y = tempY;
+			tarP.z = tempZ;
+
+			if (pcl_isfinite(tempNX) && pcl_isfinite(tempNY) && pcl_isfinite(tempNZ))
+			{
+				if (pcl_isfinite(srcP.normal_x) && pcl_isfinite(srcP.normal_y) && pcl_isfinite(srcP.normal_z))
+				{
+					if ((tempNX * srcP.normal_x + tempNY * srcP.normal_y + tempNZ * srcP.normal_z) > 0)
+					{
+						tarP.normal_x = tempNX;
+						tarP.normal_y = tempNY;
+						tarP.normal_z = tempNZ;
+					}
+					else
+					{
+						tarP.normal_x = -tempNX;
+						tarP.normal_y = -tempNY;
+						tarP.normal_z = -tempNZ;
+					}
+				}
+				else
+				{
+					tarP.normal_x = tempNX;
+					tarP.normal_y = tempNY;
+					tarP.normal_z = tempNZ;
+				}
+			}
+
+			if (pcl_isfinite(tempNC))
+				tarP.curvature = tempNC;
+		}
 	}
 }
 

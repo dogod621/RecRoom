@@ -312,7 +312,8 @@ namespace RecRoom
 			if (numMaterials > 0)
 			{
 				file << "\nelement material " << numMaterials;
-				file << "\nproperty float SGBandwidth";
+				file << "\nproperty float specular_coeff";
+				file << "\nproperty float specular_power";
 			}
 
 			file << "\nend_header\n";
@@ -386,6 +387,7 @@ namespace RecRoom
 				{
 					float zero = 0;
 					file.write(reinterpret_cast<const char*> (&zero), sizeof(float));
+					file.write(reinterpret_cast<const char*> (&zero), sizeof(float));
 				}
 			}
 			else
@@ -446,7 +448,7 @@ namespace RecRoom
 				// Write down materials
 				for (size_t i = 0; i < numMaterials; i++)
 				{
-					file << 0 << '\n';
+					file << 0 << " " << 0 << '\n';
 				}
 			}
 

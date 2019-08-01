@@ -9,8 +9,14 @@ namespace RecRoom
 	class SamplerPcGrid : public SamplerPc<PointType>
 	{
 	public:
-		SamplerPcGrid(double voxelSize, const Eigen::Vector3d& minAABB, const Eigen::Vector3d& maxAABB, double tooCloseRatio = 0.5)
-			: SamplerPc<PointType>(), voxelSize(voxelSize), minAABB(minAABB), maxAABB(maxAABB), tooCloseRatio(tooCloseRatio)
+		using Interpolator = SamplerPc<PointType>::Interpolator;
+		using InterpolatorNearest = SamplerPc<PointType>::InterpolatorNearest;
+
+	public:
+		SamplerPcGrid(
+			double voxelSize, const Eigen::Vector3d& minAABB, const Eigen::Vector3d& maxAABB, double tooCloseRatio = 0.5,
+			CONST_PTR(Interpolator) fieldInterpolator = CONST_PTR(Interpolator)(new InterpolatorNearest))
+			: SamplerPc<PointType>(fieldInterpolator), voxelSize(voxelSize), minAABB(minAABB), maxAABB(maxAABB), tooCloseRatio(tooCloseRatio)
 		{
 			name = "SamplerPcGrid";
 
@@ -72,9 +78,14 @@ namespace RecRoom
 	class SamplerPcBinaryGrid : public SamplerPcGrid<PointType>
 	{
 	public:
+		using Interpolator = SamplerPcGrid<PointType>::Interpolator;
+		using InterpolatorNearest = SamplerPcGrid<PointType>::InterpolatorNearest;
+
+	public:
 		SamplerPcBinaryGrid(double voxelSize, const Eigen::Vector3d& minAABB, const Eigen::Vector3d& maxAABB,
-			MorphologyOperation morphologyOperation = MorphologyOperation::MorphologyOperation_NONE, std::size_t kernelSize = 0, std::size_t iteration = 0 )
-			: SamplerPcGrid<PointType>(voxelSize, minAABB, maxAABB, -1.0), morphologyOperation(morphologyOperation), kernelSize(kernelSize), iteration(iteration)
+			MorphologyOperation morphologyOperation = MorphologyOperation::MorphologyOperation_NONE, std::size_t kernelSize = 0, std::size_t iteration = 0,
+			CONST_PTR(Interpolator) fieldInterpolator = CONST_PTR(Interpolator)(new InterpolatorNearest))
+			: SamplerPcGrid<PointType>(voxelSize, minAABB, maxAABB, -1.0, fieldInterpolator), morphologyOperation(morphologyOperation), kernelSize(kernelSize), iteration(iteration)
 		{
 			name = "SamplerPcBinaryGrid";
 		}

@@ -7,7 +7,7 @@
 
 #include "Estimator/EstimatorPc.h"
 #include "Filter/FilterPc.h"
-#include "Interpolator/InterpolatorPc.h"
+#include "Interpolator/InterpolatorPcNearest.h"
 #include "Mesher/MesherPc.h"
 #include "Sampler/SamplerPc.h"
 #include "Segmenter/SegmenterPc.h"
@@ -32,7 +32,8 @@ namespace RecRoom
 	public:
 		using Estimator = EstimatorPc<PointMED, PointMED>;
 		using Filter = FilterPc<PointMED>;
-		using Interpolator = InterpolatorPc<PointMED, PointMED>;
+		using InterpolatorMED = InterpolatorPc<PointMED, PointMED>;
+		using InterpolatorREC = InterpolatorPc<PointREC, PointREC>;
 		using Mesher = MesherPc<PointREC>;
 		using MesherPreFilter = FilterPc<PointREC>;
 		using MesherPreSampler = SamplerPc<PointREC>;
@@ -44,6 +45,8 @@ namespace RecRoom
 			boost::filesystem::path filePath,
 			const CONST_PTR(ScannerPc)& scanner,
 			const PTR(ContainerPcNDF)& containerPcNDF,
+			const CONST_PTR(InterpolatorMED)& fieldInterpolatorMED = CONST_PTR(InterpolatorMED)(new InterpolatorPcNearest<PointMED, PointMED>),
+			const CONST_PTR(InterpolatorREC)& fieldInterpolatorREC = CONST_PTR(InterpolatorREC)(new InterpolatorPcNearest<PointREC, PointREC>),
 			bool useVNN = true,
 			float resVNN = 0.01f);
 
@@ -79,7 +82,8 @@ namespace RecRoom
 		PTR(ContainerPcNDF) getContainerPcNDF() const { return containerPcNDF; }
 
 		CONST_PTR(Sampler) getDownSampler() const { return downSampler; }
-		CONST_PTR(Interpolator) getInterpolator() const { return interpolator; }
+		CONST_PTR(InterpolatorMED) getFieldInterpolatorMED() const { return fieldInterpolatorMED; }
+		CONST_PTR(InterpolatorREC) getFieldInterpolatorREC() const { return fieldInterpolatorREC; }
 		CONST_PTR(Filter) getOutlierRemover() const { return outlierRemover; }
 		CONST_PTR(Estimator) getNormalEstimator() const { return normalEstimator; }
 		CONST_PTR(Estimator) getAlbedoEstimator() const { return albedoEstimator; }
@@ -87,16 +91,44 @@ namespace RecRoom
 		CONST_PTR(Segmenter) getSegmenter() const { return segmenter; }
 		CONST_PTR(Mesher) getMesher() const { return mesher; }
 
-		void setDownSampler(const CONST_PTR(Sampler)& v) { downSampler = v; }
-		void setInterpolator(const CONST_PTR(Interpolator)& v) 
+		void setDownSampler(const CONST_PTR(Sampler)& v) 
+		{ 
+			downSampler = v; 
+			PTR(Sampler) downSamplerTemp = boost::const_pointer_cast<Sampler>(downSampler);
+			if (downSamplerTemp)
+				downSamplerTemp->setFieldInterpolator(fieldInterpolatorMED);
+		}
+		void setFieldInterpolatorMED(const CONST_PTR(InterpolatorMED)& v)
 		{ 
 			if (!v)
 			{
-				THROW_EXCEPTION("interpolator is not set");
+				THROW_EXCEPTION("fieldInterpolatorMED is not set");
 			}
 			else
 			{
-				interpolator = v;
+				fieldInterpolatorMED = v;
+
+				PTR(Sampler) downSamplerTemp = boost::const_pointer_cast<Sampler>(downSampler);
+				if (downSamplerTemp)
+					downSamplerTemp->setFieldInterpolator(fieldInterpolatorMED);
+			}
+		}
+		void setFieldInterpolatorREC(const CONST_PTR(InterpolatorREC)& v)
+		{
+			if (!v)
+			{
+				THROW_EXCEPTION("fieldInterpolatorREC is not set");
+			}
+			else
+			{
+				fieldInterpolatorREC = v;
+				PTR(Mesher) mesherTemp = boost::const_pointer_cast<Mesher>(mesher);
+				PTR(MesherPreSampler) mesherPreSamplerTemp = boost::const_pointer_cast<MesherPreSampler>(mesherPreSampler);
+
+				if (mesherTemp)
+					mesherTemp->setFieldInterpolator(fieldInterpolatorREC);
+				if (mesherPreSamplerTemp)
+					mesherPreSamplerTemp->setFieldInterpolator(fieldInterpolatorREC);
 			}
 		}
 		void setOutlierRemover(const CONST_PTR(Filter)& v) { outlierRemover = v; }
@@ -104,9 +136,21 @@ namespace RecRoom
 		void setAlbedoEstimator(const CONST_PTR(Estimator)& v) { albedoEstimator = v; }
 		void setSharpnessEstimator(const CONST_PTR(Estimator)& v) { sharpnessEstimator = v; }
 		void setSegmenter(const CONST_PTR(Segmenter)& v) { segmenter = v; }
-		void setMesher(const CONST_PTR(Mesher)& v) { mesher = v;}
+		void setMesher(const CONST_PTR(Mesher)& v) 
+		{ 
+			mesher = v;
+			PTR(Mesher) mesherTemp = boost::const_pointer_cast<Mesher>(mesher);
+			if (mesherTemp)
+				mesherTemp->setFieldInterpolator(fieldInterpolatorREC);
+		}
 		void setMeshPreFilter(const CONST_PTR(MesherPreFilter)& v) { mesherPreFilter = v; }
-		void setMesherPreSampler(const CONST_PTR(MesherPreSampler)& v) { mesherPreSampler = v; }
+		void setMesherPreSampler(const CONST_PTR(MesherPreSampler)& v) 
+		{
+			mesherPreSampler = v; 
+			PTR(MesherPreSampler) mesherPreSamplerTemp = boost::const_pointer_cast<MesherPreSampler>(mesherPreSampler);
+			if (mesherPreSamplerTemp)
+				mesherPreSamplerTemp->setFieldInterpolator(fieldInterpolatorREC);
+		}
 
 	protected:
 		bool useVNN;
@@ -119,7 +163,8 @@ namespace RecRoom
 		PTR(ContainerPcNDF) containerPcNDF;
 
 		CONST_PTR(Sampler) downSampler;
-		CONST_PTR(Interpolator) interpolator;
+		CONST_PTR(InterpolatorMED) fieldInterpolatorMED;
+		CONST_PTR(InterpolatorREC) fieldInterpolatorREC;
 		CONST_PTR(Filter) outlierRemover;
 		CONST_PTR(Estimator) normalEstimator;
 		CONST_PTR(Estimator) albedoEstimator;

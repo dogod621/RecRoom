@@ -262,7 +262,7 @@ namespace RecRoom
 		{
 			PcMED temp;
 
-			global.ptrReconstructorPcOC()->getInterpolator()->Process(data.pcRecAcc, data.pcRaw, nullptr, temp);
+			global.ptrReconstructorPcOC()->getFieldInterpolatorMED()->Process(data.pcRecAcc, data.pcRaw, nullptr, temp);
 
 			for (std::size_t px = 0; px < data.pcRaw->size(); ++px)
 			{
@@ -294,7 +294,7 @@ namespace RecRoom
 		{
 			PcMED temp;
 
-			global.ptrReconstructorPcOC()->getInterpolator()->Process(data.pcRecAcc, data.pcRaw, nullptr, temp);
+			global.ptrReconstructorPcOC()->getFieldInterpolatorMED()->Process(data.pcRecAcc, data.pcRaw, nullptr, temp);
 
 			for (std::size_t px = 0; px < data.pcRaw->size(); ++px)
 			{
@@ -337,7 +337,7 @@ namespace RecRoom
 		{
 			PcMED temp;
 
-			global.ptrReconstructorPcOC()->getInterpolator()->Process(data.pcRecAcc, data.pcRaw, data.pcRawIdx, temp);
+			global.ptrReconstructorPcOC()->getFieldInterpolatorMED()->Process(data.pcRecAcc, data.pcRaw, data.pcRawIdx, temp);
 
 #ifdef PERPOINT_NORMAL
 #ifdef PERPOINT_LABEL
