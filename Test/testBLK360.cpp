@@ -124,7 +124,14 @@ void PrintHelp(int argc, char **argv)
 
 	std::cout << "MeshPostprocess Parmameters:=======================================================================================================================================" << std::endl << std::endl;
 	{
-		PRINT_HELP("\t", "holeSize", "float ${maxEdgeSize}", "");
+		PRINT_HELP("\t", "holeSize", "float ${maxEdgeSize}", "VTK hole fill size, set negtive to disable the process.");
+		PRINT_HELP("\t", "laplacianNumIter", "int 20", "VTK laplacian smoothing, set the number of iterations for the smoothing filter.");
+		PRINT_HELP("\t", "laplacianRelaxationFactor", "float 0.01", "VTK laplacian smoothing, specify the relaxation factor for Laplacian smoothing.");
+		PRINT_HELP("\t", "laplacianConvergence", "float 0.0", "VTK laplacian smoothing, specify a convergence criterion for the iteration process.");
+		PRINT_HELP("\t", "laplacianSmoothFeatureEdge", "int 0", "VTK laplacian smoothing option,  turn on/off smoothing along sharp interior edges.");
+		PRINT_HELP("\t", "laplacianFeatureAngle", "float 45.0f", "VTK laplacian smoothing, specify the feature angle for sharp edge identification.");
+		PRINT_HELP("\t", "laplacianSmoothBoundary", "int 1", "VTK laplacian smoothing option, turn on/off the smoothing of vertices on the boundary of the mesh.");
+		PRINT_HELP("\t", "laplacianEdgeAngle", "float 15.0f", "VTK laplacian smoothing, specify the edge angle to control smoothing along edges (either interior or boundary).");
 	}
 
 	std::cout << "==========================================================================================================================================================" << std::endl << std::endl;
@@ -280,8 +287,29 @@ int main(int argc, char *argv[])
 
 		// Parse MeshPostprocess Parmameters
 		double holeSize = maxEdgeSize;
+		int laplacianNumIter = 20;
+		float laplacianRelaxationFactor = 0.01f; 
+		float laplacianConvergence = 0.0;
+		int laplacianSmoothFeatureEdge = 0;
+		float laplacianFeatureAngle = 45.f;
+		int laplacianSmoothBoundary = 1;
+		float laplacianEdgeAngle = 15.f;
 		pcl::console::parse_argument(argc, argv, "-holeSize", holeSize);
+		pcl::console::parse_argument(argc, argv, "-laplacianNumIter", laplacianNumIter);
+		pcl::console::parse_argument(argc, argv, "-laplacianRelaxationFactor", laplacianRelaxationFactor);
+		pcl::console::parse_argument(argc, argv, "-laplacianConvergence", laplacianConvergence);
+		pcl::console::parse_argument(argc, argv, "-laplacianSmoothFeatureEdge", laplacianSmoothFeatureEdge);
+		pcl::console::parse_argument(argc, argv, "-laplacianFeatureAngle", laplacianFeatureAngle);
+		pcl::console::parse_argument(argc, argv, "-laplacianSmoothBoundary", laplacianSmoothBoundary);
+		pcl::console::parse_argument(argc, argv, "-laplacianEdgeAngle", laplacianEdgeAngle);
 		std::cout << "MeshPostprocess -holeSize: " << holeSize << std::endl;
+		std::cout << "MeshPostprocess -laplacianNumIter: " << laplacianNumIter << std::endl;
+		std::cout << "MeshPostprocess -laplacianRelaxationFactor: " << laplacianRelaxationFactor << std::endl;
+		std::cout << "MeshPostprocess -laplacianConvergence: " << laplacianConvergence << std::endl;
+		std::cout << "MeshPostprocess -laplacianSmoothFeatureEdge: " << laplacianSmoothFeatureEdge << std::endl;
+		std::cout << "MeshPostprocess -laplacianFeatureAngle: " << laplacianFeatureAngle << std::endl;
+		std::cout << "MeshPostprocess -laplacianSmoothBoundary: " << laplacianSmoothBoundary << std::endl;
+		std::cout << "MeshPostprocess -laplacianEdgeAngle: " << laplacianEdgeAngle << std::endl;
 
 		// Start
 		try
@@ -391,6 +419,15 @@ int main(int argc, char *argv[])
 				reconstructorPC->setMeshOutlierRemover(meshOutlierRemover);
 			}
 
+			/*std::cout << "Create MeshSampler" << std::endl;
+			{
+				PTR(RecRoom::SamplerPc<RecRoom::PointREC>)
+					meshSampler(
+						new RecRoom::SamplerPcMLS<RecRoom::PointREC>(searchRadius * 2, 2));
+				reconstructorPC->setMeshSampler(meshSampler);
+			}*/
+
+
 			{
 				
 
@@ -496,7 +533,10 @@ int main(int argc, char *argv[])
 
 			if(pcl::console::find_switch(argc, argv, "-recMeshPostprocess"))
 			{
-				reconstructorPC->RecMeshPostprocess(holeSize);
+				reconstructorPC->RecMeshPostprocess(holeSize,
+					laplacianNumIter, laplacianRelaxationFactor, laplacianConvergence,
+					laplacianSmoothFeatureEdge, laplacianFeatureAngle,
+					laplacianSmoothBoundary, laplacianEdgeAngle);
 			}
 
 			if (pcl::console::find_switch(argc, argv, "-visSegNDFs"))

@@ -3,6 +3,7 @@
 #include <vtkPolyDataNormals.h>
 #include <vtkCleanPolyData.h>
 #include <pcl/surface/vtk_smoothing/vtk_utils.h>
+#include <pcl/surface/vtk_smoothing/vtk_mesh_smoothing_laplacian.h>
 
 #include <pcl/filters/extract_indices.h>
 #include <pcl/filters/impl/extract_indices.hpp>
@@ -366,7 +367,10 @@ namespace RecRoom
 		}
 	}
 
-	void ReconstructorPc::RecMeshPostprocess(float holeSize)
+	void ReconstructorPc::RecMeshPostprocess(float holeSize,
+		int laplacianNumIter, float laplacianRelaxationFactor, float laplacianConvergence,
+		bool laplacianSmoothFeatureEdge, float laplacianFeatureAngle,
+		bool laplacianSmoothBoundary, float laplacianEdgeAngle)
 	{
 		if (status & ReconstructStatus::MESH_POSTPROCESS)
 		{
@@ -398,7 +402,10 @@ namespace RecRoom
 		}
 		else
 		{
-			ImplementRecMeshPostprocess(holeSize);
+			ImplementRecMeshPostprocess(holeSize,
+				laplacianNumIter, laplacianRelaxationFactor, laplacianConvergence,
+				laplacianSmoothFeatureEdge, laplacianFeatureAngle,
+				laplacianSmoothBoundary, laplacianEdgeAngle);
 			status = (ReconstructStatus)(status | ReconstructStatus::MESH_POSTPROCESS);
 			Dump();
 		}
@@ -1013,7 +1020,11 @@ namespace RecRoom
 		mesher->Process(accREC, pcREC, nullptr, *mesh);
 	}
 
-	void ReconstructorPc::ImplementRecMeshPostprocess(float holeSize)
+	void ReconstructorPc::ImplementRecMeshPostprocess(
+		float holeSize, 
+		int laplacianNumIter, float laplacianRelaxationFactor, float laplacianConvergence,
+		bool laplacianSmoothFeatureEdge, float laplacianFeatureAngle,
+		bool laplacianSmoothBoundary, float laplacianEdgeAngle )
 	{
 		//
 		PTR(AccREC) accREC(new KDTreeREC);
@@ -1040,21 +1051,42 @@ namespace RecRoom
 		}
 		pcl::toPCLPointCloud2(*vertexPN, mesh->cloud);
 
-		vtkSmartPointer<vtkPolyData> vtkMesh;
-		pcl::VTKUtils::mesh2vtk(*mesh, vtkMesh);
+		if (holeSize > 0.0)
+		{
+			vtkSmartPointer<vtkPolyData> vtkMesh;
+			pcl::VTKUtils::mesh2vtk(*mesh, vtkMesh);
 
-		vtkSmartPointer<vtkFillHolesFilter> fillHolesFilter =
-			vtkSmartPointer<vtkFillHolesFilter>::New();
+			vtkSmartPointer<vtkFillHolesFilter> fillHolesFilter =
+				vtkSmartPointer<vtkFillHolesFilter>::New();
 
-		fillHolesFilter->SetInputData(vtkMesh);
-		fillHolesFilter->SetHoleSize(holeSize);
-		fillHolesFilter->Update();
+			fillHolesFilter->SetInputData(vtkMesh);
+			fillHolesFilter->SetHoleSize(holeSize);
+			fillHolesFilter->Update();
 
-		vtkSmartPointer<vtkPolyData> polyData = fillHolesFilter->GetOutput();
+			vtkSmartPointer<vtkPolyData> polyData = fillHolesFilter->GetOutput();
 
-		pcl::VTKUtils::vtk2mesh(polyData, *mesh);
+			pcl::VTKUtils::vtk2mesh(polyData, *mesh);
+		}
+
+		if (laplacianNumIter > 0)
+		{
+			//
+			pcl::MeshSmoothingLaplacianVTK vtk;
+			vtk.setInputMesh(mesh);
+			vtk.setNumIter(laplacianNumIter);
+			vtk.setRelaxationFactor(laplacianRelaxationFactor);
+			vtk.setConvergence(laplacianConvergence);
+			vtk.setFeatureEdgeSmoothing(laplacianSmoothFeatureEdge);
+			vtk.setFeatureAngle(laplacianFeatureAngle);
+			vtk.setBoundarySmoothing(laplacianSmoothBoundary);
+			vtk.setEdgeAngle(laplacianEdgeAngle);
+			vtk.process(*mesh);
+		}
+
+		//
 		pcl::fromPCLPointCloud2(mesh->cloud, *vertexPN);
 
+		//
 		vertexREC->resize(vertexPN->size());
 		for (std::size_t px = 0; px < vertexREC->size(); ++px)
 		{

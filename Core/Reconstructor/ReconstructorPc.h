@@ -61,7 +61,10 @@ namespace RecRoom
 		void RecSegMaterial();
 		void RecMeshPreprocess();
 		void RecMesh();
-		void RecMeshPostprocess(float holeSize);
+		void RecMeshPostprocess(float holeSize = -1.0,
+			int laplacianNumIter = 20, float laplacianRelaxationFactor = 0.01f, float laplacianConvergence = 0.0,
+			bool laplacianSmoothFeatureEdge = false, float laplacianFeatureAngle = 45.f,
+			bool laplacianSmoothBoundary = true, float laplacianEdgeAngle = 15.f);
 		void VisualSegNDFs();
 		void VisualRecAtts();
 
@@ -74,7 +77,10 @@ namespace RecRoom
 		virtual void ImplementRecSegMaterial() = 0;
 		virtual void ImplementRecMeshPreprocess();
 		virtual void ImplementRecMesh();
-		virtual void ImplementRecMeshPostprocess(float holeSize);
+		virtual void ImplementRecMeshPostprocess(float holeSize,
+			int laplacianNumIter, float laplacianRelaxationFactor, float laplacianConvergence,
+			bool laplacianSmoothFeatureEdge, float laplacianFeatureAngle,
+			bool laplacianSmoothBoundary, float laplacianEdgeAngle);
 
 	public:
 		bool getUseVNN() const { return useVNN; }
