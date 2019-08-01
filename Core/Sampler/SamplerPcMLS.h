@@ -29,7 +29,7 @@ namespace RecRoom
 			projectionMethod(projectionMethod), 
 			upsampleMethod(upsampleMethod),
 			computeNormals(computeNormals), 
-			distinctCloud(distinctCloud),
+			distinctCloud(distinctCloud)
 		{
 			name = "SamplerPcMLS";
 		}

@@ -440,13 +440,13 @@ int main(int argc, char *argv[])
 						new RecRoom::MesherPcGP3<RecRoom::PointREC>(
 							maxEdgeSize, mu, maxNumNei, minAngle, maxAngle, epsAngle, true, true));
 
-				/*PTR(RecRoom::SamplerPc<RecRoom::PointREC>)
+				PTR(RecRoom::SamplerPc<RecRoom::PointREC>)
 					mesherPreSampler(
 						new RecRoom::SamplerPcMLS<RecRoom::PointREC>(
-							searchRadius, 2));*/
+							searchRadius * 2, 2));
 
 				reconstructorPC->setMesher(mesher);
-				//reconstructorPC->setMesherPreSampler(mesherPreSampler);
+				reconstructorPC->setMesherPreSampler(mesherPreSampler);
 			}
 
 			//
