@@ -41,6 +41,7 @@ namespace RecRoom
 			const CONST_PTR(PcIndex)& filter,
 			Pc<PointType>& output) const;
 
+	public:
 		inline virtual bool InputPointValid(const PointType& p) const
 		{
 			return pcl_isfinite(p.x) &&

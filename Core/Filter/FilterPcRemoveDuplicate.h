@@ -21,6 +21,7 @@ namespace RecRoom
 			const CONST_PTR(PcIndex)& filter,
 			PcIndex& output) const;
 
+	public:
 		inline virtual bool SearchPointValid(const PointType& p) const
 		{
 			PRINT_WARNING("not used");

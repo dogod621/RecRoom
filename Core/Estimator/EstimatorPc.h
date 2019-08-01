@@ -107,6 +107,7 @@ namespace RecRoom
 			THROW_EXCEPTION("Interface is not implemented");
 		}
 
+	public:
 		inline virtual bool SearchPointValid(const InPointType& p) const
 		{
 			THROW_EXCEPTION("Interface is not implemented");

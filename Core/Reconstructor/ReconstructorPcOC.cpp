@@ -251,6 +251,45 @@ namespace RecRoom
 		{
 			global.ptrReconstructorPcOC()->getNormalEstimator()->ProcessInOut(
 				data.pcRawAcc, data.pcRec, data.pcRecIdx);
+
+			// NAN fill
+			if (!data.pcRec->is_dense)
+			{
+				PTR(PcIndex) validFilter(new PcIndex);
+				PTR(PcIndex) inValidFilter(new PcIndex);
+				validFilter->reserve(data.pcRecIdx->size());
+				inValidFilter->reserve(data.pcRecIdx->size());
+				for (PcIndex::const_iterator it = data.pcRecIdx->begin(); it != data.pcRecIdx->end(); ++it)
+				{
+					if (global.ptrReconstructorPcOC()->getNormalEstimator()->OutPointValid((*data.pcRec)[*it]))
+						validFilter->push_back(*it);
+					else
+						inValidFilter->push_back(*it);
+				}
+
+				if ((validFilter->size() > 0) && (inValidFilter->size() > 0))
+				{
+					PTR(AccMED) validAcc(new KDTreeMED);
+					validAcc->setInputCloud(data.pcRec, validFilter);
+
+					PcMED temp;
+
+					global.ptrReconstructorPcOC()->getFieldInterpolatorMED()->Process(validAcc, data.pcRec, inValidFilter, temp);
+
+					for (std::size_t idx = 0; idx < inValidFilter->size(); ++idx)
+					{
+						PointMED& tarP = (*data.pcRec)[(*inValidFilter)[idx]];
+						PointMED& srcP = temp[idx];
+
+#ifdef PERPOINT_NORMAL
+						tarP.normal_x = srcP.normal_x;
+						tarP.normal_y = srcP.normal_y;
+						tarP.normal_z = srcP.normal_z;
+						tarP.curvature = srcP.curvature;
+#endif
+					}
+				}
+			}
 		}
 		return 0;
 	}
@@ -283,6 +322,55 @@ namespace RecRoom
 
 			global.ptrReconstructorPcOC()->getAlbedoEstimator()->ProcessInOut(
 				data.pcRawAcc, data.pcRec, data.pcRecIdx);
+
+			// NAN fill
+			if (!data.pcRec->is_dense)
+			{
+				PTR(PcIndex) validFilter(new PcIndex);
+				PTR(PcIndex) inValidFilter(new PcIndex);
+				validFilter->reserve(data.pcRecIdx->size());
+				inValidFilter->reserve(data.pcRecIdx->size());
+				for (PcIndex::const_iterator it = data.pcRecIdx->begin(); it != data.pcRecIdx->end(); ++it)
+				{
+					if (global.ptrReconstructorPcOC()->getAlbedoEstimator()->OutPointValid((*data.pcRec)[*it]))
+						validFilter->push_back(*it);
+					else
+						inValidFilter->push_back(*it);
+				}
+
+				if ((validFilter->size() > 0) && (inValidFilter->size() > 0))
+				{
+					PTR(AccMED) validAcc(new KDTreeMED);
+					validAcc->setInputCloud(data.pcRec, validFilter);
+
+					PcMED temp;
+
+					global.ptrReconstructorPcOC()->getFieldInterpolatorMED()->Process(validAcc, data.pcRec, inValidFilter, temp);
+
+					for (std::size_t idx = 0; idx < inValidFilter->size(); ++idx)
+					{
+						PointMED& tarP = (*data.pcRec)[(*inValidFilter)[idx]];
+						PointMED& srcP = temp[idx];
+
+#ifdef PERPOINT_RGB
+						tarP.r = srcP.r;
+						tarP.g = srcP.g;
+						tarP.b = srcP.b;
+#endif
+
+#ifdef PERPOINT_INTENSITY
+						tarP.intensity = srcP.intensity;
+#endif
+
+#ifdef PERPOINT_NORMAL
+						tarP.normal_x = srcP.normal_x;
+						tarP.normal_y = srcP.normal_y;
+						tarP.normal_z = srcP.normal_z;
+						tarP.curvature = srcP.curvature;
+#endif
+					}
+				}
+			}
 		}
 		return 0;
 	}
@@ -319,6 +407,46 @@ namespace RecRoom
 
 			global.ptrReconstructorPcOC()->getSharpnessEstimator()->ProcessInOut(
 				data.pcRawAcc, data.pcRec, data.pcRecIdx);
+
+			// NAN fill
+			if (!data.pcRec->is_dense)
+			{
+				PTR(PcIndex) validFilter(new PcIndex);
+				PTR(PcIndex) inValidFilter(new PcIndex);
+				validFilter->reserve(data.pcRecIdx->size());
+				inValidFilter->reserve(data.pcRecIdx->size());
+				for (PcIndex::const_iterator it = data.pcRecIdx->begin(); it != data.pcRecIdx->end(); ++it)
+				{
+					if (global.ptrReconstructorPcOC()->getSharpnessEstimator()->OutPointValid((*data.pcRec)[*it]))
+						validFilter->push_back(*it);
+					else
+						inValidFilter->push_back(*it);
+				}
+
+				if ((validFilter->size() > 0) && (inValidFilter->size() > 0))
+				{
+					PTR(AccMED) validAcc(new KDTreeMED);
+					validAcc->setInputCloud(data.pcRec, validFilter);
+
+					PcMED temp;
+
+					global.ptrReconstructorPcOC()->getFieldInterpolatorMED()->Process(validAcc, data.pcRec, inValidFilter, temp);
+
+					for (std::size_t idx = 0; idx < inValidFilter->size(); ++idx)
+					{
+						PointMED& tarP = (*data.pcRec)[(*inValidFilter)[idx]];
+						PointMED& srcP = temp[idx];
+
+#ifdef PERPOINT_INTENSITY
+						tarP.intensity = srcP.intensity;
+#endif
+
+#ifdef PERPOINT_SHARPNESS
+						tarP.sharpness = srcP.sharpness;
+#endif
+					}
+				}
+			}
 		}
 		return 0;
 	}

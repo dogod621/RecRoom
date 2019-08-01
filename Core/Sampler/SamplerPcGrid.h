@@ -42,6 +42,7 @@ namespace RecRoom
 			const CONST_PTR(PcIndex)& filter,
 			Pc<PointType>& output) const;
 
+	public:
 		inline virtual bool SearchPointValid(const PointType& p) const
 		{
 			PRINT_WARNING("not used");
@@ -97,6 +98,7 @@ namespace RecRoom
 			const CONST_PTR(PcIndex)& filter,
 			Pc<PointType>& output) const;
 
+	public:
 		inline virtual bool InputPointValid(const PointType& p) const
 		{
 			return pcl_isfinite(p.x) &&

@@ -47,6 +47,7 @@ namespace RecRoom
 			p.curvature = std::numeric_limits<float>::quiet_NaN();
 		}
 
+	public:
 		inline virtual bool SearchPointValid(const InPointType& p) const
 		{
 			return pcl_isfinite(p.x) &&

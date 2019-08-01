@@ -16,7 +16,7 @@ namespace RecRoom
 			name = "SegmenterPc";
 		}
 
-	protected:
+	public:
 		inline virtual bool OutPointValid(const PointType& p) const
 		{
 			return true;

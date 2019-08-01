@@ -37,6 +37,7 @@ namespace RecRoom
 			const CONST_PTR(PcIndex)& filter,
 			OutputType& output) const = 0;
 
+	public:
 		inline virtual bool SearchPointValid(const SearchPointType& p) const
 		{
 			return pcl::isFinite(p);
@@ -47,6 +48,7 @@ namespace RecRoom
 			return pcl::isFinite(p);
 		}
 
+	protected:
 		inline virtual int OutputSize(OutputType& output) const
 		{
 			return 0;
@@ -71,12 +73,13 @@ namespace RecRoom
 			const CONST_PTR(PcIndex)& filter,
 			Pc<OutputPointType>& output) const;
 
-	protected:
+	public:
 		inline virtual bool OutPointValid(const OutputPointType& p) const
 		{
 			return pcl::isFinite(p);
 		}
 
+	protected:
 		virtual int OutputSize(Pc<OutputPointType>& output) const
 		{
 			return output.size();
