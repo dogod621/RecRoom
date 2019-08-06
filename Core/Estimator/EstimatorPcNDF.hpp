@@ -145,8 +145,8 @@ namespace RecRoom
 			}
 		}*/
 
-		const int numInitSharpness = 16;
-		const int numInitDiffuseRatio = 8;
+		const int numInitSharpness = 32;
+		const int numInitDiffuseRatio = 32;
 
 		float epsInitSharpness = (maxSharpness - minSharpness) / (float)(numInitSharpness);
 		float epsInitDiffuseRatio = 1.0 / (float)(numInitDiffuseRatio);
@@ -174,7 +174,7 @@ namespace RecRoom
 			}
 		}
 
-		Eigen::VectorXd lowerBound(3);
+		/*Eigen::VectorXd lowerBound(3);
 		Eigen::VectorXd upperBound(3);
 		lowerBound << 0.0, minSharpness, 0.0;
 		upperBound << 512.0, maxSharpness, 1.0;
@@ -188,6 +188,6 @@ namespace RecRoom
 		outPoint.sharpness = optX(1);
 		outPoint.diffuseRatio = optX(2);
 
-		return OutPointValid(outPoint);
+		return OutPointValid(outPoint);*/
 	}
 }

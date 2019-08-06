@@ -237,12 +237,12 @@ namespace RecRoom
 		W = Eigen::MatrixXd::Zero(DIM, 0);
 		M = Eigen::MatrixXd::Zero(0, 0);
 
-		auto noConvergence = [&](Eigen::VectorXd& x, Eigen::VectorXd& g)->bool 
+		/*auto noConvergence = [&](Eigen::VectorXd& x, Eigen::VectorXd& g)->bool 
 		{
 			return (((x - g).cwiseMax(lowerBound).cwiseMin(upperBound) - x).lpNorm<Eigen::Infinity>() >= Options_.tol);
-		};
+		};*/
 
-		while (noConvergence(x, g) && (k < Options_.maxIter))
+		while (/*noConvergence(x, g) &&*/ (k < Options_.maxIter))
 		{
 			double f_old = f;
 			Eigen::VectorXd x_old = x;
@@ -301,9 +301,14 @@ namespace RecRoom
 				M = MM.inverse();
 			}
 
-			Eigen::VectorXd ttt = Eigen::MatrixXd::Zero(1, 1);
+			/*Eigen::VectorXd ttt = Eigen::MatrixXd::Zero(1, 1);
 			ttt(0) = f_old - f;
 			if (ttt.norm() < Options_.tol) 
+			{
+				// successive function values too similar
+				break;
+			}*/
+			if (std::abs((f_old - f)/ f_old) < Options_.tol)
 			{
 				// successive function values too similar
 				break;

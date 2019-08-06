@@ -542,9 +542,21 @@ namespace RecRoom
 			PcMED pcVisRec;
 			std::vector<ColorHDR> pcVisRawRGB;
 			std::vector<ColorHDR> pcVisRecRGB;
+			Pc<pcl::PointXYZINormal> pcVis1;
+			Pc<pcl::PointXYZRGBL> pcVis2;
 			std::size_t width = scanner->ScanImageWidth() / 4;
 			std::size_t height = scanner->ScanImageHeight() / 4;
 			{
+				pcVis1.width = width;
+				pcVis1.height = height;
+				pcVis1.is_dense = false;
+				pcVis1.resize(width*height);
+
+				pcVis2.width = width;
+				pcVis2.height = height;
+				pcVis2.is_dense = false;
+				pcVis2.resize(width*height);
+
 				pcVisRaw.width = width;
 				pcVisRaw.height = height;
 				pcVisRaw.is_dense = false;
@@ -702,40 +714,49 @@ namespace RecRoom
 
 			// Z
 			{
+				for (std::size_t px = 0; px < pcVis1.size(); ++px)
+					pcVis1[px].z = pcVisRaw[px].z;
+				
 				std::stringstream fileName;
 				fileName << it->serialNumber << "_raw_Depth.png";
 
 				pcl::PCLImage image;
-				pcl::io::PointCloudImageExtractorFromZField<PointMED> pcie;
+				pcl::io::PointCloudImageExtractorFromZField<pcl::PointXYZINormal> pcie;
 				pcie.setPaintNaNsWithBlack(true);
 				pcie.setScalingMethod(pcie.SCALING_FULL_RANGE);
-				if (!pcie.extract(pcVisRaw, image))
+				if (!pcie.extract(pcVis1, image))
 					THROW_EXCEPTION("Failed to extract an image from Depth field .");
 				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
 
 			{
+				for (std::size_t px = 0; px < pcVis1.size(); ++px)
+					pcVis1[px].z = pcVisRec[px].z;
+
 				std::stringstream fileName;
 				fileName << it->serialNumber << "_rec_Depth.png";
 
 				pcl::PCLImage image;
-				pcl::io::PointCloudImageExtractorFromZField<PointMED> pcie;
+				pcl::io::PointCloudImageExtractorFromZField<pcl::PointXYZINormal> pcie;
 				pcie.setPaintNaNsWithBlack(true);
 				pcie.setScalingMethod(pcie.SCALING_FULL_RANGE);
-				if (!pcie.extract(pcVisRec, image))
+				if (!pcie.extract(pcVis1, image))
 					THROW_EXCEPTION("Failed to extract an image from Depth field .");
 				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
 
 #ifdef WITH_INPUT_PERPOINT_RGB
 			{
+				for (std::size_t px = 0; px < pcVis2.size(); ++px)
+					pcVis2[px].rgba = pcVisRaw[px].rgba;
+
 				std::stringstream fileName;
 				fileName << it->serialNumber << "_raw_RGB.png";
 
 				pcl::PCLImage image;
-				pcl::io::PointCloudImageExtractorFromRGBField<PointMED> pcie;
+				pcl::io::PointCloudImageExtractorFromRGBField<pcl::PointXYZRGBL> pcie;
 				pcie.setPaintNaNsWithBlack(true);
-				if (!pcie.extract(pcVisRaw, image))
+				if (!pcie.extract(pcVis2, image))
 					THROW_EXCEPTION("Failed to extract an image from RGB field .");
 				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
@@ -743,13 +764,16 @@ namespace RecRoom
 
 #ifdef WITH_OUTPUT_PERPOINT_RGB
 			{
+				for (std::size_t px = 0; px < pcVis2.size(); ++px)
+					pcVis2[px].rgba = pcVisRec[px].rgba;
+
 				std::stringstream fileName;
 				fileName << it->serialNumber << "_rec_RGB.png";
 
 				pcl::PCLImage image;
-				pcl::io::PointCloudImageExtractorFromRGBField<PointMED> pcie;
+				pcl::io::PointCloudImageExtractorFromRGBField<pcl::PointXYZRGBL> pcie;
 				pcie.setPaintNaNsWithBlack(true);
-				if (!pcie.extract(pcVisRec, image))
+				if (!pcie.extract(pcVis2, image))
 					THROW_EXCEPTION("Failed to extract an image from RGB field .");
 				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
@@ -757,15 +781,18 @@ namespace RecRoom
 
 #ifdef WITH_INPUT_PERPOINT_INTENSITY
 			{
+				for (std::size_t px = 0; px < pcVis1.size(); ++px)
+					pcVis1[px].intensity = pcVisRaw[px].intensity;
+
 				std::stringstream fileName;
 				fileName << it->serialNumber << "_raw_Intensity.png";
 
 				pcl::PCLImage image;
-				pcl::io::PointCloudImageExtractorFromIntensityField<PointMED> pcie;
+				pcl::io::PointCloudImageExtractorFromIntensityField<pcl::PointXYZINormal> pcie;
 				pcie.setPaintNaNsWithBlack(true);
 				pcie.setScalingMethod(pcie.SCALING_FIXED_FACTOR);
 				pcie.setScalingFactor(255.f);
-				if (!pcie.extract(pcVisRaw, image))
+				if (!pcie.extract(pcVis1, image))
 					THROW_EXCEPTION("Failed to extract an image from Intensity field .");
 				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
@@ -773,15 +800,18 @@ namespace RecRoom
 
 #ifdef WITH_OUTPUT_PERPOINT_INTENSITY
 			{
+				for (std::size_t px = 0; px < pcVis1.size(); ++px)
+					pcVis1[px].intensity = pcVisRec[px].intensity;
+
 				std::stringstream fileName;
 				fileName << it->serialNumber << "_rec_Intensity.png";
 
 				pcl::PCLImage image;
-				pcl::io::PointCloudImageExtractorFromIntensityField<PointMED> pcie;
+				pcl::io::PointCloudImageExtractorFromIntensityField<pcl::PointXYZINormal> pcie;
 				pcie.setPaintNaNsWithBlack(true);
 				pcie.setScalingMethod(pcie.SCALING_FIXED_FACTOR);
 				pcie.setScalingFactor(255.f);
-				if (!pcie.extract(pcVisRec, image))
+				if (!pcie.extract(pcVis1, image))
 					THROW_EXCEPTION("Failed to extract an image from Intensity field .");
 				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
@@ -789,13 +819,21 @@ namespace RecRoom
 
 #ifdef WITH_INPUT_PERPOINT_NORMAL
 			{
+				for (std::size_t px = 0; px < pcVis1.size(); ++px)
+				{
+					pcVis1[px].normal_x = pcVisRaw[px].normal_x;
+					pcVis1[px].normal_y = pcVisRaw[px].normal_y;
+					pcVis1[px].normal_z = pcVisRaw[px].normal_z;
+					pcVis1[px].curvature = pcVisRaw[px].curvature;
+				}
+
 				std::stringstream fileName;
 				fileName << it->serialNumber << "_raw_Normal.png";
 
 				pcl::PCLImage image;
-				pcl::io::PointCloudImageExtractorFromNormalField<PointMED> pcie;
+				pcl::io::PointCloudImageExtractorFromNormalField<pcl::PointXYZINormal> pcie;
 				pcie.setPaintNaNsWithBlack(true);
-				if (!pcie.extract(pcVisRaw, image))
+				if (!pcie.extract(pcVis1, image))
 					THROW_EXCEPTION("Failed to extract an image from Normal field .");
 				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
@@ -804,10 +842,10 @@ namespace RecRoom
 				fileName << it->serialNumber << "_raw_Curvature.png";
 
 				pcl::PCLImage image;
-				pcl::io::PointCloudImageExtractorFromCurvatureField<PointMED> pcie;
+				pcl::io::PointCloudImageExtractorFromCurvatureField<pcl::PointXYZINormal> pcie;
 				pcie.setPaintNaNsWithBlack(true);
 				pcie.setScalingMethod(pcie.SCALING_FULL_RANGE);
-				if (!pcie.extract(pcVisRaw, image))
+				if (!pcie.extract(pcVis1, image))
 					THROW_EXCEPTION("Failed to extract an image from Curvature field .");
 				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
@@ -815,13 +853,21 @@ namespace RecRoom
 
 #ifdef WITH_OUTPUT_PERPOINT_NORMAL
 			{
+				for (std::size_t px = 0; px < pcVis1.size(); ++px)
+				{
+					pcVis1[px].normal_x = pcVisRec[px].normal_x;
+					pcVis1[px].normal_y = pcVisRec[px].normal_y;
+					pcVis1[px].normal_z = pcVisRec[px].normal_z;
+					pcVis1[px].curvature = pcVisRec[px].curvature;
+				}
+
 				std::stringstream fileName;
 				fileName << it->serialNumber << "_rec_Normal.png";
 
 				pcl::PCLImage image;
-				pcl::io::PointCloudImageExtractorFromNormalField<PointMED> pcie;
+				pcl::io::PointCloudImageExtractorFromNormalField<pcl::PointXYZINormal> pcie;
 				pcie.setPaintNaNsWithBlack(true);
-				if (!pcie.extract(pcVisRec, image))
+				if (!pcie.extract(pcVis1, image))
 					THROW_EXCEPTION("Failed to extract an image from Normal field .");
 				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
@@ -830,10 +876,10 @@ namespace RecRoom
 				fileName << it->serialNumber << "_rec_Curvature.png";
 
 				pcl::PCLImage image;
-				pcl::io::PointCloudImageExtractorFromCurvatureField<PointMED> pcie;
+				pcl::io::PointCloudImageExtractorFromCurvatureField<pcl::PointXYZINormal> pcie;
 				pcie.setPaintNaNsWithBlack(true);
 				pcie.setScalingMethod(pcie.SCALING_FULL_RANGE);
-				if (!pcie.extract(pcVisRec, image))
+				if (!pcie.extract(pcVis1, image))
 					THROW_EXCEPTION("Failed to extract an image from Curvature field .");
 				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
@@ -841,14 +887,17 @@ namespace RecRoom
 
 #ifdef WITH_INPUT_PERPOINT_SERIAL_NUMBER
 			{
+				for (std::size_t px = 0; px < pcVis2.size(); ++px)
+					pcVis2[px].label = pcVisRaw[px].label;
+
 				std::stringstream fileName;
 				fileName << it->serialNumber << "_raw_SerialNumber.png";
 
 				pcl::PCLImage image;
-				pcl::io::PointCloudImageExtractorFromLabelField<PointMED> pcie;
-				pcie.setColorMode(pcl::io::PointCloudImageExtractorFromLabelField<PointMED>::COLORS_RGB_GLASBEY);
+				pcl::io::PointCloudImageExtractorFromLabelField<pcl::PointXYZRGBL> pcie;
+				pcie.setColorMode(pcl::io::PointCloudImageExtractorFromLabelField<pcl::PointXYZRGBL>::COLORS_RGB_GLASBEY);
 				pcie.setPaintNaNsWithBlack(true);
-				if (!pcie.extract(pcVisRaw, image))
+				if (!pcie.extract(pcVis2, image))
 					THROW_EXCEPTION("Failed to extract an image from Label field .");
 				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
@@ -856,15 +905,18 @@ namespace RecRoom
 
 #ifdef WITH_OUTPUT_PERPOINT_LABEL
 			{
+				for (std::size_t px = 0; px < pcVis2.size(); ++px)
+					pcVis2[px].label = pcVisRec[px].label;
+
 				std::stringstream fileName;
 				fileName << it->serialNumber << "_rec_Label.png";
 
 				pcl::PCLImage image;
 				//pcl::io::PointCloudImageExtractorFromLabelField<PointVisAtt> pcie;
-				pcl::io::PointCloudImageExtractorFromLabelField<PointMED> pcie;
-				pcie.setColorMode(pcl::io::PointCloudImageExtractorFromLabelField<PointMED>::COLORS_RGB_GLASBEY);
+				pcl::io::PointCloudImageExtractorFromLabelField<pcl::PointXYZRGBL> pcie;
+				pcie.setColorMode(pcl::io::PointCloudImageExtractorFromLabelField<pcl::PointXYZRGBL>::COLORS_RGB_GLASBEY);
 				pcie.setPaintNaNsWithBlack(true);
-				if (!pcie.extract(pcVisRec, image))
+				if (!pcie.extract(pcVis2, image))
 					THROW_EXCEPTION("Failed to extract an image from Label field .");
 				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
@@ -873,43 +925,37 @@ namespace RecRoom
 			//
 #ifdef WITH_OUTPUT_PERPOINT_SHARPNESS
 			{
-				for (std::size_t px = 0; px < pcVisRaw.size(); ++px)
-				{
-					PointMED& pVisRec = pcVisRec[px];
-					pVisRec.z = pVisRec.sharpness;
-				}
+				for (std::size_t px = 0; px < pcVis1.size(); ++px)
+					pcVis1[px].intensity = pcVisRec[px].sharpness;
 
 				std::stringstream fileName;
 				fileName << it->serialNumber << "_rec_Sharpness.png";
 
 
 				pcl::PCLImage image;
-				pcl::io::PointCloudImageExtractorFromZField<PointMED> pcie;
+				pcl::io::PointCloudImageExtractorFromIntensityField<pcl::PointXYZINormal> pcie;
 				pcie.setPaintNaNsWithBlack(true);
 				pcie.setScalingMethod(pcie.SCALING_FULL_RANGE);
 				//pcie.setScalingFactor(6.0);
-				if (!pcie.extract(pcVisRec, image))
+				if (!pcie.extract(pcVis1, image))
 					THROW_EXCEPTION("Failed to extract an image from Sharpness field .");
 				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
 
 			{
-				for (std::size_t px = 0; px < pcVisRaw.size(); ++px)
-				{
-					PointMED& pVisRec = pcVisRec[px];
-					pVisRec.z = pVisRec.diffuseRatio;
-				}
+				for (std::size_t px = 0; px < pcVis1.size(); ++px)
+					pcVis1[px].intensity = pcVisRec[px].diffuseRatio;
 
 				std::stringstream fileName;
 				fileName << it->serialNumber << "_rec_DiffuseRatio.png";
 
 
 				pcl::PCLImage image;
-				pcl::io::PointCloudImageExtractorFromZField<PointMED> pcie;
+				pcl::io::PointCloudImageExtractorFromIntensityField<pcl::PointXYZINormal> pcie;
 				pcie.setPaintNaNsWithBlack(true);
-				pcie.setScalingMethod(pcie.SCALING_FIXED_FACTOR);
-				pcie.setScalingFactor(255.0);
-				if (!pcie.extract(pcVisRec, image))
+				pcie.setScalingMethod(pcie.SCALING_FULL_RANGE);
+				//pcie.setScalingFactor(255.0);
+				if (!pcie.extract(pcVis1, image))
 					THROW_EXCEPTION("Failed to extract an image from DiffuseRatio field .");
 				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
