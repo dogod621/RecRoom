@@ -139,6 +139,7 @@ namespace RecRoom
 		int rgb_index = getFieldIndex(mesh.cloud, "rgb");
 		int intensity_index = getFieldIndex(mesh.cloud, "intensity");
 		int sharpness_index = getFieldIndex(mesh.cloud, "sharpness");
+		int diffuseRatio_index = getFieldIndex(mesh.cloud, "diffuseRatio");
 		int label_index = getFieldIndex(mesh.cloud, "label");
 		
 		std::vector<float> x;
@@ -151,6 +152,7 @@ namespace RecRoom
 		std::vector<uint32_t> rgba;
 		std::vector<float> intensity;
 		std::vector<float> sharpness;
+		std::vector<float> diffuseRatio;
 		std::vector<uint32_t> label;
 
 		// number of points
@@ -280,6 +282,14 @@ namespace RecRoom
 					return -2;
 			}
 
+			if (diffuseRatio_index != -1)
+			{
+				file << "\nproperty float diffuseRatio";
+				if (!Copy(numPoints, pointSize, mesh.cloud.data,
+					mesh.cloud.fields[diffuseRatio_index], pcl::PCLPointField::FLOAT32, &diffuseRatio))
+					return -2;
+			}
+
 			if (label_index != -1)
 			{
 				file << "\nproperty int material_index";
@@ -367,6 +377,8 @@ namespace RecRoom
 
 					if (sharpness_index != -1) file.write(reinterpret_cast<const char*> (&sharpness[i]), sizeof(float));
 					
+					if (diffuseRatio_index != -1) file.write(reinterpret_cast<const char*> (&diffuseRatio[i]), sizeof(float));
+
 					if (label_index != -1) file.write(reinterpret_cast<const char*> (&label[i]), sizeof(float));
 
 					file << '\n';
@@ -430,6 +442,8 @@ namespace RecRoom
 
 					if (sharpness_index != -1) file << sharpness[i] << " ";
 
+					if (diffuseRatio_index != -1) file << diffuseRatio[i] << " ";
+					
 					if (label_index != -1) file << label[i] << " ";
 
 					file << '\n';

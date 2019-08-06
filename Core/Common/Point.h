@@ -139,11 +139,11 @@ namespace RecRoom
 
 // Sharpness
 #ifdef OUTPUT_PERPOINT_SHARPNESS
-#	define REC_ADD_SHARPNESS				float sharpness;
-#	define REC_REGISTER_SHARPNESS			(float, sharpness, sharpness)
-#	define REC_ISFINITE_SHARPNESS			&& pcl_isfinite(p.sharpness)
-#	define REC_INIT_SHARPNESS				sharpness = 0.f;
-#	define REC_COPY_SHARPNESS				sharpness = p.sharpness; 
+#	define REC_ADD_SHARPNESS				float sharpness; float diffuseRatio;
+#	define REC_REGISTER_SHARPNESS			(float, sharpness, sharpness) (float, diffuseRatio, diffuseRatio)
+#	define REC_ISFINITE_SHARPNESS			&& pcl_isfinite(p.sharpness) && pcl_isfinite(p.diffuseRatio)
+#	define REC_INIT_SHARPNESS				sharpness = 0.f; diffuseRatio = 1.f;
+#	define REC_COPY_SHARPNESS				sharpness = p.sharpness; diffuseRatio = p.diffuseRatio;
 #else
 #	define REC_ADD_SHARPNESS
 #	define REC_REGISTER_SHARPNESS
@@ -153,11 +153,11 @@ namespace RecRoom
 #endif
 
 #ifdef PERPOINT_SHARPNESS
-#	define MED_ADD_SHARPNESS				float sharpness;
-#	define MED_REGISTER_SHARPNESS			(float, sharpness, sharpness)
-#	define MED_ISFINITE_SHARPNESS			&& pcl_isfinite(p.sharpness)
-#	define MED_INIT_SHARPNESS				sharpness = 0.f;
-#	define MED_COPY_SHARPNESS				sharpness = p.sharpness; 
+#	define MED_ADD_SHARPNESS				float sharpness; float diffuseRatio;
+#	define MED_REGISTER_SHARPNESS			(float, sharpness, sharpness) (float, diffuseRatio, diffuseRatio)
+#	define MED_ISFINITE_SHARPNESS			&& pcl_isfinite(p.sharpness) && pcl_isfinite(p.diffuseRatio)
+#	define MED_INIT_SHARPNESS				sharpness = 0.f; diffuseRatio = 1.f;
+#	define MED_COPY_SHARPNESS				sharpness = p.sharpness; diffuseRatio = p.diffuseRatio;
 #else
 #	define MED_ADD_SHARPNESS
 #	define MED_REGISTER_SHARPNESS

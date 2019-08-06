@@ -890,6 +890,27 @@ namespace RecRoom
 					THROW_EXCEPTION("Failed to extract an image from Sharpness field .");
 				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
+
+			{
+				for (std::size_t px = 0; px < pcVisRaw.size(); ++px)
+				{
+					PointMED& pVisRec = pcVisRec[px];
+					pVisRec.z = pVisRec.diffuseRatio;
+				}
+
+				std::stringstream fileName;
+				fileName << it->serialNumber << "_rec_DiffuseRatio.png";
+
+
+				pcl::PCLImage image;
+				pcl::io::PointCloudImageExtractorFromZField<PointMED> pcie;
+				pcie.setPaintNaNsWithBlack(true);
+				pcie.setScalingMethod(pcie.SCALING_FIXED_FACTOR);
+				pcie.setScalingFactor(1.0);
+				if (!pcie.extract(pcVisRec, image))
+					THROW_EXCEPTION("Failed to extract an image from DiffuseRatio field .");
+				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
+			}
 #endif
 		}
 	}

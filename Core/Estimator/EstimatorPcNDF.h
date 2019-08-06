@@ -31,7 +31,7 @@ namespace RecRoom
 			const float cutFalloff = 0.33f,
 			const float cutGrazing = 0.26f)
 			: EstimatorPc<InPointType, OutPointType>(scanner, searchRadius, distInterParm, angleInterParm, cutFalloff, cutGrazing, 4),
-			minSharpness(0.0f), maxSharpness(1.0f), threshSNR(90.f)
+			minSharpness(0.0f), maxSharpness(1.0f)
 		{
 			name = "EstimatorPcNDF";
 		}
@@ -45,6 +45,7 @@ namespace RecRoom
 		{
 			p.intensity = std::numeric_limits<float>::quiet_NaN();
 			p.sharpness = std::numeric_limits<float>::quiet_NaN();
+			p.diffuseRatio = std::numeric_limits<float>::quiet_NaN();
 		}
 
 	public:
@@ -59,23 +60,22 @@ namespace RecRoom
 		inline virtual bool OutPointValid(const OutPointType& p) const
 		{
 			return pcl_isfinite(p.intensity) &&
-				pcl_isfinite(p.sharpness);
+				pcl_isfinite(p.sharpness) &&
+				pcl_isfinite(p.diffuseRatio);
 		}
 
 	protected:
-		inline virtual float Distribution(const Eigen::Vector3f& tanDir, float sharpness) const = 0;
+		inline virtual float Distribution(const Eigen::Vector3f& tanDir, float intensity, float sharpness, float diffuseRatio) const = 0;
 
-		inline void EvaluateMSE(const std::vector<NDFSample>& samples, float sharpness, float meanIntensity, float sumWeight,
+		inline void EvaluateMSE(const std::vector<NDFSample>& samples, float sharpness, float diffuseRatio, float meanIntensity, 
 			std::vector<float>& ndfValues, float& intensity, float& mse) const
 		{
 			float meanNDF = 0.0;
 			for (int i = 0; i < samples.size(); ++i)
 			{
-				ndfValues[i] = Distribution(samples[i].tanDir, sharpness);
+				ndfValues[i] = Distribution(samples[i].tanDir, 1.0, sharpness, diffuseRatio);
 				meanNDF += samples[i].weight * ndfValues[i];
 			}
-			meanNDF /= sumWeight;
-
 			intensity = meanIntensity / meanNDF;
 			mse = 0.0f;
 			for (int i = 0; i < samples.size(); ++i)
@@ -84,13 +84,11 @@ namespace RecRoom
 				float diff = samples[i].intensity - ndfValues[i];
 				mse += samples[i].weight * diff * diff;
 			}
-			mse /= sumWeight;
 		}
 
 	protected:
 		float minSharpness;
 		float maxSharpness;
-		float threshSNR;
 
 	public:
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -112,13 +110,13 @@ namespace RecRoom
 			name = "EstimatorPcSGNDF";
 
 			minSharpness = 0.0f;
-			maxSharpness = 6.0f;
+			maxSharpness = 10.0f;
 		}
 
 	protected:
-		inline virtual float Distribution(const Eigen::Vector3f& tanDir, float sharpness) const
+		inline virtual float Distribution(const Eigen::Vector3f& tanDir, float intensity, float sharpness, float diffuseRatio) const
 		{
-			return std::exp(sharpness * (tanDir.z() - 1.0f));
+			return intensity * (diffuseRatio + (1.0f - diffuseRatio) * std::exp(sharpness * (tanDir.z() - 1.0f)));
 		}
 
 	public:

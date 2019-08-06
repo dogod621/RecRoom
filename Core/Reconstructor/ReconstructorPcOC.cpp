@@ -443,6 +443,7 @@ namespace RecRoom
 
 #ifdef PERPOINT_SHARPNESS
 						tarP.sharpness = srcP.sharpness;
+						tarP.diffuseRatio = srcP.diffuseRatio;
 #endif
 					}
 				}
