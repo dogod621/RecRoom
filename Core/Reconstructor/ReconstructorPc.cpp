@@ -908,7 +908,7 @@ namespace RecRoom
 				pcl::io::PointCloudImageExtractorFromZField<PointMED> pcie;
 				pcie.setPaintNaNsWithBlack(true);
 				pcie.setScalingMethod(pcie.SCALING_FIXED_FACTOR);
-				pcie.setScalingFactor(1.0);
+				pcie.setScalingFactor(255.0);
 				if (!pcie.extract(pcVisRec, image))
 					THROW_EXCEPTION("Failed to extract an image from DiffuseRatio field .");
 				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);

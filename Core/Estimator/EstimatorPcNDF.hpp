@@ -31,6 +31,7 @@ namespace RecRoom
 		double sharpness = x(1);
 		double diffuseRatio = x(2);
 
+		g = Eigen::VectorXd(3);
 		g(0) = 0.0;
 		g(1) = 0.0;
 		g(2) = 0.0;
