@@ -645,6 +645,7 @@ namespace RecRoom
 
 #ifdef WITH_OUTPUT_PERPOINT_SHARPNESS
 					pVisRec.sharpness += pRec.sharpness;
+					pVisRec.diffuseRatio += pRec.diffuseRatio;
 #endif
 				}
 			}
@@ -694,6 +695,7 @@ namespace RecRoom
 
 #ifdef WITH_OUTPUT_PERPOINT_SHARPNESS
 					pVisRec.sharpness /= pVisRec.x;
+					pVisRec.diffuseRatio /= pVisRec.x;
 #endif
 				}
 			}
