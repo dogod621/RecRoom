@@ -84,6 +84,7 @@ namespace RecRoom
 						hitTangent.dot(hafway),
 						hitBitangent.dot(hafway),
 						hitNormal.dot(hafway)),
+					hitPoint.intensity,
 					intensity, weight));
 				temp.push_back(hitPoint.serialNumber);
 			}
@@ -102,12 +103,13 @@ namespace RecRoom
 		for (int testInitSharpness = 0; testInitSharpness < numInitSharpness; ++testInitSharpness)
 		{
 			float testSharpness = ((float)testInitSharpness + 0.5f) * epsInitSharpness;
+			float testIntensity;
 			float testSpecularIntensity;
-			float testMSE = Evaluate_SpecularIntensity_MSE(samples, center.intensity, testSharpness, testSpecularIntensity);
+			float testMSE = Evaluate_Intensity_SpecularIntensity_MSE(samples, testIntensity, testSharpness, testSpecularIntensity);
 
 			if (testMSE < bestMSE)
 			{
-				outPoint.intensity = center.intensity;
+				outPoint.intensity = testIntensity;
 				outPoint.sharpness = testSharpness;
 				outPoint.specularIntensity = testSpecularIntensity;
 
@@ -151,10 +153,22 @@ namespace RecRoom
 		optX << outPoint.intensity, outPoint.sharpness, outPoint.specularIntensity;
 
 		solver.Solve(optX, SG_Distribution_ObjValue, SG_Distributio_ObjGradient, (void*)(&samples));
+
 		outPoint.intensity = optX(0);
 		outPoint.sharpness = optX(1);
 		outPoint.specularIntensity = optX(2);
 
-		return OutPointValid(outPoint);
+		if (!OutPointValid(outPoint))
+			return false;
+
+		if( (optX(0) < lowerBound(0)) ||
+			(optX(0) > upperBound(0)) || 
+			(optX(1) < lowerBound(1)) ||
+			(optX(1) > upperBound(1)) ||
+			(optX(2) < lowerBound(2)) ||
+			(optX(2) > upperBound(2)))
+			return false;
+
+		return true;
 	}
 }

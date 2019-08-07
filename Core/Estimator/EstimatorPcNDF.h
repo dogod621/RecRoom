@@ -9,11 +9,12 @@ namespace RecRoom
 	struct NDFSample
 	{
 		Eigen::Vector3f tanDir;
+		float initAlbedo;
 		float intensity;
 		float weight;
 
-		NDFSample(const Eigen::Vector3f& tanDir = Eigen::Vector3f(0.0f, 0.0f, 1.0f), float intensity = 0.0f, float weight = 0.0f)
-			: tanDir(tanDir), intensity(intensity), weight(weight)
+		NDFSample(const Eigen::Vector3f& tanDir = Eigen::Vector3f(0.0f, 0.0f, 1.0f), float initAlbedo = 0.0f, float intensity = 0.0f, float weight = 0.0f)
+			: tanDir(tanDir), initAlbedo(initAlbedo), intensity(intensity), weight(weight)
 		{}
 
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -54,6 +55,7 @@ namespace RecRoom
 			return pcl_isfinite(p.normal_x) &&
 				pcl_isfinite(p.normal_y) &&
 				pcl_isfinite(p.normal_z) &&
+				pcl_isfinite(p.intensity) &&
 				p.HasSerialNumber();
 		}
 
@@ -86,20 +88,36 @@ namespace RecRoom
 			return mse;
 		}
 
-		inline float Evaluate_SpecularIntensity_MSE(const std::vector<NDFSample>& samples, float intensity, float sharpness, float& specularIntensity) const
+		inline float Evaluate_Intensity_SpecularIntensity_MSE(const std::vector<NDFSample>& samples, float& intensity, float sharpness, float& specularIntensity) const
 		{
-			std::vector<float> specularValues(samples.size());
-			std::vector<float> specularSamples(samples.size());
 			float meanSpecularValues = 0;
 			float meanSpecularSamples = 0;
 			for (int i = 0; i < samples.size(); ++i)
 			{
-				specularValues[i] = Distribution(samples[i].tanDir, 0.0f, sharpness, 1.0f);
-				specularSamples[i] = std::max(samples[i].intensity - intensity, 0.0f);
-				meanSpecularValues += samples[i].weight * specularValues[i];
-				meanSpecularSamples += samples[i].weight * specularSamples[i];
+				float specularValues = Distribution(samples[i].tanDir, 0.0f, sharpness, 1.0f);
+				float specularSamples = std::max(samples[i].intensity - samples[i].initAlbedo, 0.0f);
+				meanSpecularValues += samples[i].weight * specularValues;
+				meanSpecularSamples += samples[i].weight * specularSamples;
 			}
-			specularIntensity = meanSpecularSamples / meanSpecularValues;
+			if (meanSpecularSamples > 0.0f)
+				specularIntensity = meanSpecularSamples / meanSpecularValues;
+			else
+				specularIntensity = 0.0f;
+
+			float meanDiffuseValues = 0;
+			float meanDiffuseSamples = 0;
+			for (int i = 0; i < samples.size(); ++i)
+			{
+				float specularValues = Distribution(samples[i].tanDir, 0.0f, sharpness, specularIntensity);
+				float diffuseSamples = std::max(samples[i].intensity - specularValues, 0.0f);
+				meanDiffuseValues += samples[i].weight;
+				meanDiffuseSamples += samples[i].weight * diffuseSamples;
+			}
+			if (meanDiffuseSamples > 0.0f)
+				intensity = meanDiffuseSamples / meanDiffuseValues;
+			else
+				intensity = 0.0f;
+
 			float mse = 0.0f;
 			for (int i = 0; i < samples.size(); ++i)
 			{
