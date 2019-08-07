@@ -97,7 +97,7 @@ namespace RecRoom
 		if (std::distance(temp.begin(), std::unique(temp.begin(), temp.end())) < minRequireNumData)
 			return false;
 
-		const int numInitSharpness = 256;
+		const int numInitSharpness = 32;
 		float epsInitSharpness = (maxSharpness - minSharpness) / (float)(numInitSharpness);
 		float bestMSE = std::numeric_limits<float>::max();
 		for (int testInitSharpness = 0; testInitSharpness < numInitSharpness; ++testInitSharpness)
@@ -143,7 +143,7 @@ namespace RecRoom
 			}
 		}*/
 
-		/*Eigen::VectorXd lowerBound(3);
+		Eigen::VectorXd lowerBound(3);
 		Eigen::VectorXd upperBound(3);
 		lowerBound << 0.0, minSharpness, 0.0;
 		upperBound << 512.0, maxSharpness, 512.0;
@@ -167,7 +167,7 @@ namespace RecRoom
 			(optX(1) > upperBound(1)) ||
 			(optX(2) < lowerBound(2)) ||
 			(optX(2) > upperBound(2)))
-			return false;*/
+			return false;
 
 		return true;
 	}
