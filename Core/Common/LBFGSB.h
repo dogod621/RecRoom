@@ -21,7 +21,7 @@ namespace RecRoom
 		int maxIter;
 		int m;
 
-		Options() : tol(1e-4), functol(1e-8), constrtol(1e-2), maxIter(1e4), m(10)
+		Options() : tol(1e-6), functol(1e-8), constrtol(1e-2), maxIter(1e4), m(10)
 		{}
 	};
 

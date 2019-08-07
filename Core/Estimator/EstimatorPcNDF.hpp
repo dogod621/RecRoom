@@ -17,7 +17,8 @@ namespace RecRoom
 		double r = 0.0;
 		for (std::vector<NDFSample>::iterator it = samples.begin(); it != samples.end(); ++it)
 		{
-			double diff = it->intensity - (intensity + specularIntensity * std::exp(sharpness * (it->tanDir.z() - 1.0)));
+			double nFun = std::exp(sharpness * (it->tanDir.z() - 1.0));
+			double diff = it->intensity - (intensity + specularIntensity * nFun);
 			r += it->weight * diff * diff;
 		}
 		return r;
@@ -95,7 +96,7 @@ namespace RecRoom
 		if (std::distance(temp.begin(), std::unique(temp.begin(), temp.end())) < minRequireNumData)
 			return false;
 
-		const int numInitSharpness = 256;
+		const int numInitSharpness = 32;
 		float epsInitSharpness = (maxSharpness - minSharpness) / (float)(numInitSharpness);
 		float bestMSE = std::numeric_limits<float>::max();
 		for (int testInitSharpness = 0; testInitSharpness < numInitSharpness; ++testInitSharpness)
@@ -140,10 +141,10 @@ namespace RecRoom
 			}
 		}*/
 
-		/*Eigen::VectorXd lowerBound(3);
+		Eigen::VectorXd lowerBound(3);
 		Eigen::VectorXd upperBound(3);
 		lowerBound << 0.0, minSharpness, 0.0;
-		upperBound << 512.0, maxSharpness, 1.0;
+		upperBound << 512.0, maxSharpness, 512.0;
 		LBFGSB solver(lowerBound, upperBound);
 		
 		Eigen::VectorXd optX(3);
@@ -153,8 +154,6 @@ namespace RecRoom
 		outPoint.intensity = optX(0);
 		outPoint.sharpness = optX(1);
 		outPoint.specularIntensity = optX(2);
-
-		return OutPointValid(outPoint);*/
 
 		return OutPointValid(outPoint);
 	}

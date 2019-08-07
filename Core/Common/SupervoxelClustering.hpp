@@ -101,18 +101,22 @@ namespace RecRoom
 			{
 				Voxel<PointCINS>& voxel = ((*jt)->getData());
 
-				//TODO this is a shortcut, really we should always recompute distance
-				if (voxel.parent == this) continue;
-
-				//If distance is less than previous, we remove it from its parent's list and change the parent to this and distance (we *steal* it!)
-				float dist = parent->Distance(centroid, voxel);
-				if (dist < voxel.distance)
+				if (voxel.parent == this)
 				{
-					voxel.distance = dist;
-					if (voxel.parent)
-						(voxel.parent)->RemoveLeaf(*jt);
-					voxel.parent = this;
-					newOwned.push_back(*jt);
+					continue; //TODO this is a shortcut, really we should always recompute distance
+				}
+				else
+				{
+					//If distance is less than previous, we remove it from its parent's list and change the parent to this and distance (we *steal* it!)
+					float dist = parent->Distance(centroid, voxel);
+					if (dist < voxel.distance)
+					{
+						voxel.distance = dist;
+						if (voxel.parent)
+							(voxel.parent)->RemoveLeaf(*jt);
+						voxel.parent = this;
+						newOwned.push_back(*jt);
+					}
 				}
 			}
 		}
@@ -121,6 +125,42 @@ namespace RecRoom
 		for (std::vector<OATLeaf<PointCINS>*>::iterator it = newOwned.begin(); it != newOwned.end(); ++it)
 		{
 			leaves.insert(*it);
+		}
+	}
+
+	template<class PointCINS>
+	void Supervoxel<PointCINS>::DropMembers()
+	{
+		for (OATLeaves<PointCINS>::iterator it = leaves.begin(); it != leaves.end(); ++it)
+		{
+			Voxel<PointCINS>& voxel = ((*it)->getData());
+			voxel.distance = std::numeric_limits<float>::max();
+
+			for (boost::ptr_list<Supervoxel<PointCINS>>::iterator jt = parent->supervoxels.begin(); jt != parent->supervoxels.end(); ++jt)
+			{
+				if (&(*jt) != this)
+				{
+					float dist = parent->Distance(jt->centroid, voxel);
+					if (dist < voxel.distance)
+					{
+						voxel.distance = dist;
+						if (voxel.parent != this)
+							(voxel.parent)->RemoveLeaf(*it);
+						voxel.parent = &(*jt);
+						jt->leaves.insert(*it);
+					}
+				}
+			}
+		}
+	}
+
+	template<class PointCINS>
+	void Supervoxel<PointCINS>::UpdateDistance()
+	{
+		for (OATLeaves<PointCINS>::iterator it = leaves.begin(); it != leaves.end(); ++it)
+		{
+			Voxel<PointCINS>& voxel = ((*it)->getData());
+			voxel.distance = parent->Distance(centroid, voxel);
 		}
 	}
 
@@ -143,7 +183,7 @@ namespace RecRoom
 
 		{
 			CreateSupervoxels(InitialSeeds());
-			ExpandSupervoxels(static_cast<int> (1.8f * seedResolution / voxelResolution));
+			ExpandSupervoxels(numIter);
 		}
 
 		for (Pc<PointCINS>::iterator it = pcLabel.begin(); it != pcLabel.end(); ++it)
@@ -249,6 +289,29 @@ namespace RecRoom
 					++it;
 				}
 			}
+
+			// Update Distance
+			for (boost::ptr_list<Supervoxel<PointCINS>>::iterator it = supervoxels.begin(); it != supervoxels.end(); ++it)
+			{
+				it->UpdateDistance();
+			}
+		}
+
+		for (boost::ptr_list<Supervoxel<PointCINS>>::iterator it = supervoxels.begin(); it != supervoxels.end();)
+		{
+			if (it->size() < minSize)
+			{
+				it->DropMembers();
+				it = supervoxels.erase(it);
+
+				// Update Distance
+				for (boost::ptr_list<Supervoxel<PointCINS>>::iterator jt = supervoxels.begin(); jt != supervoxels.end(); ++jt)
+				{
+					jt->UpdateDistance();
+				}
+			}
+			else
+				++it;
 		}
 	}
 }

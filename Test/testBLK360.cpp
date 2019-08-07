@@ -95,7 +95,7 @@ void PrintHelp(int argc, char **argv)
 		PRINT_HELP("\t", "intensityImportance", "float 5.0", "Distance importance of intensity.");
 		PRINT_HELP("\t", "normalImportance", "float 1.0", "Distance importance of normal.");
 		PRINT_HELP("\t", "sharpnessImportance", "float 5.0", "Distance importance of sharpnessImportance.");
-
+		PRINT_HELP("\t", "minSize", "int 250", "Minimum segment size.");
 	}
 
 	std::cout << "MeshOutlierRemover Parmameters:===========================================================================================================================" << std::endl << std::endl;
@@ -233,6 +233,7 @@ int main(int argc, char *argv[])
 		float intensityImportance = 5.0f;
 		float normalImportance = 1.0f;
 		float sharpnessImportance = 5.0f;
+		int minSize = 250;
 		pcl::console::parse_argument(argc, argv, "-voxelResolution", voxelResolution);
 		pcl::console::parse_argument(argc, argv, "-seedResolution", seedResolution);
 		pcl::console::parse_argument(argc, argv, "-xyzImportance", xyzImportance);
@@ -240,6 +241,7 @@ int main(int argc, char *argv[])
 		pcl::console::parse_argument(argc, argv, "-intensityImportance", intensityImportance);
 		pcl::console::parse_argument(argc, argv, "-normalImportance", normalImportance);
 		pcl::console::parse_argument(argc, argv, "-sharpnessImportance", sharpnessImportance);
+		pcl::console::parse_argument(argc, argv, "-minSize", minSize);
 		std::cout << "SegmenterPcSVC -voxelResolution: " << voxelResolution << std::endl;
 		std::cout << "SegmenterPcSVC -seedResolution: " << seedResolution << std::endl;
 		std::cout << "SegmenterPcSVC -xyzImportance: " << xyzImportance << std::endl;
@@ -247,6 +249,7 @@ int main(int argc, char *argv[])
 		std::cout << "SegmenterPcSVC -intensityImportance: " << intensityImportance << std::endl;
 		std::cout << "SegmenterPcSVC -normalImportance: " << normalImportance << std::endl;
 		std::cout << "SegmenterPcSVC -sharpnessImportance: " << sharpnessImportance << std::endl;
+		std::cout << "SegmenterPcSVC -minSize: " << minSize << std::endl;
 
 		// Parse MesherPcMCHoppe Parmameters
 		/*float distIgnore = -1.0f;
@@ -407,7 +410,7 @@ int main(int argc, char *argv[])
 					segmenter(
 						new RecRoom::SegmenterPcSVC<RecRoom::PointMED>(
 							voxelResolution, seedResolution,
-							xyzImportance, rgbImportance, intensityImportance, normalImportance, sharpnessImportance));
+							xyzImportance, rgbImportance, intensityImportance, normalImportance, sharpnessImportance, minSize));
 				reconstructorPC->setSegmenter(segmenter);
 			}
 

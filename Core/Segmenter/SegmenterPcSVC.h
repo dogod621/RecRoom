@@ -9,9 +9,11 @@ namespace RecRoom
 	{
 	public:
 		SegmenterPcSVC(float voxelResolution, float seedResolution, 
-			float xyzImportance = 0.4f, float rgbImportance = 0.4f, float intensityImportance = 5.0f, float normalImportance = 1.0f, float sharpnessImportance = 5.0)
+			float xyzImportance = 0.4f, float rgbImportance = 0.4f, float intensityImportance = 5.0f, float normalImportance = 1.0f, float sharpnessImportance = 5.0,
+			std::size_t minSize = 1, std::size_t numIter = 0)
 			: SegmenterPc<PointType>(), voxelResolution(voxelResolution), seedResolution(seedResolution),
-			xyzImportance(xyzImportance), rgbImportance(rgbImportance), intensityImportance(intensityImportance),  normalImportance(normalImportance), sharpnessImportance(sharpnessImportance)
+			xyzImportance(xyzImportance), rgbImportance(rgbImportance), intensityImportance(intensityImportance),  normalImportance(normalImportance), sharpnessImportance(sharpnessImportance),
+			minSize(minSize), numIter(numIter)
 		{
 			name = "SegmenterPc";
 		}
@@ -42,6 +44,8 @@ namespace RecRoom
 		float getIntensityImportance() const { return intensityImportance; }
 		float getNormalImportance() const { return normalImportance; }
 		float getSharpnessImportance() const { return sharpnessImportance; }
+		std::size_t getMinSize() const { return minSize; }
+		std::size_t getNumIter() const { return numIter; }
 
 		void setVoxelResolution(float v) { voxelResolution = v; }
 		void setSeedResolution(float v) { seedResolution = v; }
@@ -50,6 +54,8 @@ namespace RecRoom
 		void setIntensityImportance(float v) { intensityImportance = v; }
 		void setNormalImportance(float v) { normalImportance = v; }
 		void setSharpnessImportance(float v) { sharpnessImportance = v; }
+		void setMinSize(std::size_t v) { minSize = v; }
+		void setNumIter(std::size_t v) { numIter = v; }
 
 	protected:
 		float voxelResolution;
@@ -60,6 +66,9 @@ namespace RecRoom
 		float intensityImportance;
 		float normalImportance;
 		float sharpnessImportance;
+
+		std::size_t minSize;
+		std::size_t numIter;
 	};
 }
 

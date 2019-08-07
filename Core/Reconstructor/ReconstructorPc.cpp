@@ -1028,6 +1028,40 @@ namespace RecRoom
 		PTR(AccMED) accMED(new KDTreeMED);
 		accMED->setInputCloud(pcMED);
 		segmenter->ProcessInOut(accMED, pcMED, nullptr);
+
+		// fill
+		{
+			PTR(PcIndex) validFilter(new PcIndex);
+			PTR(PcIndex) inValidFilter(new PcIndex);
+			validFilter->reserve(pcMED->size());
+			inValidFilter->reserve(pcMED->size());
+			for (int px = 0; px < pcMED->size(); ++px)
+			{
+				if (segmenter->OutPointValid((*pcMED)[px]))
+					validFilter->push_back(px);
+				else
+					inValidFilter->push_back(px);
+			}
+
+			if ((validFilter->size() > 0) && (inValidFilter->size() > 0))
+			{
+				PTR(AccMED) validAcc(new KDTreeMED);
+				validAcc->setInputCloud(pcMED, validFilter);
+
+				PcMED temp;
+				fieldInterpolator->Process(validAcc, pcMED, inValidFilter, temp);
+
+				for (std::size_t idx = 0; idx < inValidFilter->size(); ++idx)
+				{
+					PointMED& tarP = (*pcMED)[(*inValidFilter)[idx]];
+					PointMED& srcP = temp[idx];
+
+#ifdef PERPOINT_LABEL
+					tarP.label = srcP.label;
+#endif
+				}
+			}
+		}
 	}
 
 	void ReconstructorPc::ImplementRecMeshPreprocess()

@@ -19,7 +19,7 @@ namespace RecRoom
 	public:
 		inline virtual bool OutPointValid(const PointType& p) const
 		{
-			return true;
+			return p.HasLabel();
 		}
 	};
 }

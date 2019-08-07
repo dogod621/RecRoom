@@ -188,6 +188,10 @@ namespace RecRoom
 
 		void Expand();
 
+		void UpdateDistance();
+
+		void DropMembers();
+
 		void Update()
 		{
 			centroid.xyz = Eigen::Vector3f::Zero();
@@ -226,10 +230,17 @@ namespace RecRoom
 
 	public:
 		SupervoxelClustering(float voxelResolution, float seedResolution,
-			float xyzImportance = 0.4f, float rgbImportance = 0.4f, float intensityImportance = 5.0f, float normalImportance = 1.0f, float sharpnessImportance = 5.0f)
+			float xyzImportance = 0.4f, float rgbImportance = 0.4f, float intensityImportance = 5.0f, float normalImportance = 1.0f, float sharpnessImportance = 5.0f,
+			std::size_t minSize = 1, std::size_t numIter = 0)
 			: voxelResolution(voxelResolution), seedResolution(seedResolution),
-			xyzImportance(xyzImportance), rgbImportance(rgbImportance), intensityImportance(intensityImportance), normalImportance(normalImportance), sharpnessImportance(sharpnessImportance),
-			oat(new OAT<PointCINS>(voxelResolution)), pcCentroid(), accCentroid(new pcl::search::KdTree<PointCINS>) {}
+			xyzImportance(xyzImportance), rgbImportance(rgbImportance), intensityImportance(intensityImportance), normalImportance(normalImportance), sharpnessImportance(sharpnessImportance), minSize(minSize), numIter(numIter),
+			oat(new OAT<PointCINS>(voxelResolution)), pcCentroid(), accCentroid(new pcl::search::KdTree<PointCINS>) 
+		{
+			if (this->numIter == 0)
+			{
+				this->numIter = (2.0f * this->seedResolution / this->voxelResolution);
+			}
+		}
 
 		virtual void setInputCloud(const CONST_PTR(Pc<PointCINS>)& cloud)
 		{
@@ -294,6 +305,8 @@ namespace RecRoom
 		float intensityImportance;
 		float normalImportance;
 		float sharpnessImportance;
+		std::size_t minSize;
+		std::size_t numIter;
 
 		//Make boost::ptr_list can access the private class Supervoxel
 		friend void boost::checked_delete<>(const RecRoom::Supervoxel<PointCINS>*);

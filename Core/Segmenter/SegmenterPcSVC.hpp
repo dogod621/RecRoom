@@ -15,7 +15,7 @@ namespace RecRoom
 	{
 		SupervoxelClustering<PointType> super(
 			voxelResolution, seedResolution,
-			xyzImportance, rgbImportance, intensityImportance, normalImportance, sharpnessImportance);
+			xyzImportance, rgbImportance, intensityImportance, normalImportance, sharpnessImportance, minSize, numIter);
 
 		super.setInputCloud(input);
 
