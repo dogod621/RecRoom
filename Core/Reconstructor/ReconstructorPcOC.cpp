@@ -390,7 +390,7 @@ namespace RecRoom
 				PointMED& srcP = temp[px];
 
 #ifdef PERPOINT_INTENSITY
-				tarP.intensity = srcP.intensity;
+				tarP.rgb = srcP.intensity;
 #endif
 
 #ifdef PERPOINT_NORMAL

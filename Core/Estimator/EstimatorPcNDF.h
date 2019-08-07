@@ -55,7 +55,7 @@ namespace RecRoom
 			return pcl_isfinite(p.normal_x) &&
 				pcl_isfinite(p.normal_y) &&
 				pcl_isfinite(p.normal_z) &&
-				pcl_isfinite(p.intensity) &&
+				pcl_isfinite(p.rgb) &&
 				p.HasSerialNumber();
 		}
 
