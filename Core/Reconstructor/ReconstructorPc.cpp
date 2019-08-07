@@ -248,9 +248,9 @@ namespace RecRoom
 		}
 	}
 
-	void ReconstructorPc::RecSegMaterial()
+	void ReconstructorPc::RecSegNDF()
 	{
-		if (status & ReconstructStatus::SEG_MATERIAL)
+		if (status & ReconstructStatus::SEG_NDF)
 		{
 			PRINT_WARNING("Aready reconstructed, ignore.");
 		}
@@ -289,6 +289,56 @@ namespace RecRoom
 		else if (pcMED->empty())
 		{
 			PRINT_WARNING("pcMED is empty, ignore.");
+		}
+		else
+		{
+			ImplementRecSegNDF();
+			status = (ReconstructStatus)(status | ReconstructStatus::SEG_NDF);
+			Dump();
+		}
+	}
+
+	void ReconstructorPc::RecSegMaterial()
+	{
+		if (status & ReconstructStatus::SEG_MATERIAL)
+		{
+			PRINT_WARNING("Aready reconstructed, ignore.");
+		}
+		else if (!WITH_INPUT_PERPOINT_INTENSITY)
+		{
+			PRINT_WARNING("!WITH_INPUT_PERPOINT_INTENSITY, ignore. You must compile with INPUT_PERPOINT_INTENSITY to enable this feature.");
+		}
+		else if (!WITH_PERPOINT_NORMAL)
+		{
+			PRINT_WARNING("!WITH_PERPOINT_NORMAL, ignore. You must compile with INPUT_PERPOINT_NORMAL or OUTPUT_PERPOINT_NORMAL to enable this feature.");
+		}
+		else if (!WITH_INPUT_PERPOINT_SERIAL_NUMBER)
+		{
+			PRINT_WARNING("!WITH_INPUT_PERPOINT_SERIAL_NUMBER, ignore. You must compile with INPUT_PERPOINT_SERIAL_NUMBER to enable this feature.");
+		}
+		else if (!WITH_PERPOINT_LABEL)
+		{
+			PRINT_WARNING("!WITH_PERPOINT_LABEL, ignore. You must compile with OUTPUT_PERPOINT_LABEL to enable this feature.");
+		}
+		else if (containerPcNDF->Size() != 0)
+		{
+			PRINT_WARNING("containerPcLF is already used, ignore");
+		}
+		else if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("POINT_CLOUD is not reconstructed yet, ignore.");
+		}
+		else if ((status & ReconstructStatus::PC_SEGMENT) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("PC_SEGMENT is not reconstructed yet, ignore.");
+		}
+		else if ((status & ReconstructStatus::PC_NORMAL) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("PC_NORMAL is not reconstructed yet, ignore.");
+		}
+		else if ((status & ReconstructStatus::SEG_NDF) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("SEG_NDF is not reconstructed yet, ignore.");
 		}
 		else
 		{
@@ -1062,6 +1112,11 @@ namespace RecRoom
 				}
 			}
 		}
+	}
+
+	void ReconstructorPc::ImplementRecSegMaterial()
+	{
+		THROW_EXCEPTION("Not done yet");
 	}
 
 	void ReconstructorPc::ImplementRecMeshPreprocess()

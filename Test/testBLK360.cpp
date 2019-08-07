@@ -51,6 +51,7 @@ void PrintHelp(int argc, char **argv)
 		PRINT_HELP("\t", "recPcAlbedo", "", "Reconstruct point cloud albedo.");
 		PRINT_HELP("\t", "recPcSharpness", "", "Reconstruct point cloud sharpness.");
 		PRINT_HELP("\t", "recPcSegment", "", "Reconstruct point cloud segment.");
+		PRINT_HELP("\t", "recSegNDF", "", "Reconstruct segment NDF.");
 		PRINT_HELP("\t", "recSegMaterial", "", "Reconstruct segment material.");
 		PRINT_HELP("\t", "recMeshPreprocess", "", "Reconstruct preprocessed mesh.");
 		PRINT_HELP("\t", "recMesh", "", "Reconstruct mesh.");
@@ -517,6 +518,11 @@ int main(int argc, char *argv[])
 			if (pcl::console::find_switch(argc, argv, "-recPcSegment"))
 			{
 				reconstructorPC->RecPcSegment();
+			}
+
+			if (pcl::console::find_switch(argc, argv, "-recSegNDF"))
+			{
+				reconstructorPC->RecSegNDF();
 			}
 
 			if (pcl::console::find_switch(argc, argv, "-recSegMaterial"))

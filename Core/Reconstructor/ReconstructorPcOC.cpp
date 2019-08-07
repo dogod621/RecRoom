@@ -582,7 +582,7 @@ namespace RecRoom
 			asyncSize);
 	}
 
-	void ReconstructorPcOC::ImplementRecSegMaterial()
+	void ReconstructorPcOC::ImplementRecSegNDF()
 	{
 		AsyncGlobal_Rec global(this);
 

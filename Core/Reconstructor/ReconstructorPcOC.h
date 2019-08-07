@@ -34,7 +34,7 @@ namespace RecRoom
 		virtual void ImplementRecPcNormal();
 		virtual void ImplementRecPcAlbedo();
 		virtual void ImplementRecPcSharpness();
-		virtual void ImplementRecSegMaterial();
+		virtual void ImplementRecSegNDF();
 	};
 }
 

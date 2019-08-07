@@ -14,6 +14,7 @@ namespace RecRoom
 		else if (v == "PC_ALBEDO") return ReconstructStatus::PC_ALBEDO;
 		else if (v == "PC_SHARPNESS") return ReconstructStatus::PC_SHARPNESS;
 		else if (v == "PC_SEGMENT") return ReconstructStatus::PC_SEGMENT;
+		else if (v == "SEG_NDF") return ReconstructStatus::SEG_NDF;
 		else if (v == "SEG_MATERIAL") return ReconstructStatus::SEG_MATERIAL;
 		else if (v == "MESH_PREPROCESS") return ReconstructStatus::MESH_PREPROCESS;
 		else if (v == "MESH") return ReconstructStatus::MESH;
@@ -31,6 +32,7 @@ namespace RecRoom
 		case ReconstructStatus::PC_ALBEDO: return std::string("PC_ALBEDO"); break;
 		case ReconstructStatus::PC_SHARPNESS: return std::string("PC_SHARPNESS"); break;
 		case ReconstructStatus::PC_SEGMENT: return std::string("PC_SEGMENT"); break;
+		case ReconstructStatus::SEG_NDF: return std::string("SEG_NDF"); break;
 		case ReconstructStatus::SEG_MATERIAL: return std::string("SEG_MATERIAL"); break;
 		case ReconstructStatus::MESH_PREPROCESS: return std::string("MESH_PREPROCESS"); break;
 		case ReconstructStatus::MESH: return std::string("MESH"); break;
@@ -57,6 +59,7 @@ namespace RecRoom
 		if (v & ReconstructStatus::PC_ALBEDO) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::PC_ALBEDO));
 		if (v & ReconstructStatus::PC_SHARPNESS) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::PC_SHARPNESS));
 		if (v & ReconstructStatus::PC_SEGMENT) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::PC_SEGMENT));
+		if (v & ReconstructStatus::SEG_NDF) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::SEG_NDF));
 		if (v & ReconstructStatus::SEG_MATERIAL) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::SEG_MATERIAL));
 		if (v & ReconstructStatus::MESH_PREPROCESS) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::MESH_PREPROCESS));
 		if (v & ReconstructStatus::MESH) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::MESH));

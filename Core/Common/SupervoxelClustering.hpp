@@ -186,6 +186,14 @@ namespace RecRoom
 			ExpandSupervoxels(numIter);
 		}
 
+		uint32_t counter = 0;
+		std::map<uint32_t, uint32_t> mapLabel;
+		for (boost::ptr_list<Supervoxel<PointCINS>>::iterator it = supervoxels.begin(); it != supervoxels.end(); ++it)
+		{
+			mapLabel[it->label] = counter;
+			counter++;
+		}
+
 		for (Pc<PointCINS>::iterator it = pcLabel.begin(); it != pcLabel.end(); ++it)
 		{
 			it->hasLabel = -1;
@@ -194,7 +202,7 @@ namespace RecRoom
 
 				Voxel<PointCINS>& voxel = oat->getLeafContainerAtPoint(*it)->getData();
 				if (voxel.parent)
-					it->label = voxel.parent->label;
+					it->label = mapLabel[voxel.parent->label];
 			}
 		}
 

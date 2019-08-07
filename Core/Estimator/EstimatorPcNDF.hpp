@@ -74,10 +74,10 @@ namespace RecRoom
 			if (hafwayNorm > std::numeric_limits<float>::epsilon())
 			{
 				hafway /= hafwayNorm;
-				float dotLN = hitNormal.dot(it->laser.incidentDirection);
+				//float dotLN = hitNormal.dot(it->laser.incidentDirection);
 				float weight = DistInterWeight(searchRadius, it->distance2Center, distInterParm) * AngleInterWeight(hitNormal, it->laser.incidentDirection, angleInterParm);
-				float intensity = it->laser.intensity / (it->laser.beamFalloff * dotLN);
-				//float intensity = it->laser.intensity / it->laser.beamFalloff;
+				//float intensity = it->laser.intensity / (it->laser.beamFalloff * dotLN);
+				float intensity = it->laser.intensity / it->laser.beamFalloff;
 				sumWeight += weight;
 				samples.push_back(NDFSample(
 					Eigen::Vector3f(

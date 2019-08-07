@@ -22,10 +22,11 @@ namespace RecRoom
 		PC_ALBEDO = 1 << 3,
 		PC_SHARPNESS = 1 << 4,
 		PC_SEGMENT = 1 << 5,
-		SEG_MATERIAL = 1 << 6,
-		MESH_PREPROCESS = 1 << 7,
-		MESH = 1 << 8,
-		MESH_POSTPROCESS = 1 << 9
+		SEG_NDF = 1 << 6,
+		SEG_MATERIAL = 1 << 7,
+		MESH_PREPROCESS = 1 << 8,
+		MESH = 1 << 9,
+		MESH_POSTPROCESS = 1 << 10
 	};
 
 	class ReconstructorPc : public DumpAble
@@ -58,6 +59,7 @@ namespace RecRoom
 		void RecPcAlbedo();
 		void RecPcSharpness();
 		void RecPcSegment();
+		void RecSegNDF();
 		void RecSegMaterial();
 		void RecMeshPreprocess();
 		void RecMesh();
@@ -74,7 +76,8 @@ namespace RecRoom
 		virtual void ImplementRecPcAlbedo() = 0;
 		virtual void ImplementRecPcSharpness() = 0;
 		virtual void ImplementRecPcSegment();
-		virtual void ImplementRecSegMaterial() = 0;
+		virtual void ImplementRecSegNDF() = 0;
+		virtual void ImplementRecSegMaterial();
 		virtual void ImplementRecMeshPreprocess();
 		virtual void ImplementRecMesh();
 		virtual void ImplementRecMeshPostprocess(float holeSize,
