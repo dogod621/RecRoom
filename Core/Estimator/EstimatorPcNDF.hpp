@@ -189,5 +189,7 @@ namespace RecRoom
 		outPoint.diffuseRatio = optX(2);
 
 		return OutPointValid(outPoint);*/
+
+		return OutPointValid(outPoint);
 	}
 }
