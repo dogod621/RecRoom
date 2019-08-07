@@ -6,7 +6,7 @@ namespace RecRoom
 {
 	template<class InPointType, class OutPointType>
 	inline bool EstimatorPcNormal<InPointType, OutPointType>::ComputeAttribute(
-		const Pc<InPointType>& cloud,
+		const Pc<InPointType>& cloud, const InPointType& center,
 		const std::vector<ScanData>& scanDataSet, OutPointType& outPoint) const
 	{
 		float accu[9] = {

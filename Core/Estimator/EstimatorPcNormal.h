@@ -20,7 +20,7 @@ namespace RecRoom
 
 	protected:
 		inline virtual bool ComputeAttribute(
-			const Pc<InPointType>& cloud,
+			const Pc<InPointType>& cloud, const InPointType& center,
 			const std::vector<ScanData>& scanDataSet, OutPointType& outPoint) const;
 
 		inline virtual float DistInterWeight(float searchRadius, float distance, float interParm) const

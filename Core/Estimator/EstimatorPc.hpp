@@ -36,7 +36,7 @@ namespace RecRoom
 				//
 				if (self.CollectScanData(*searchSurface.getInputCloud(), nnIndices, nnSqrDists, scanDataSet))
 				{
-					if (!self.ComputeAttribute(*searchSurface.getInputCloud(), scanDataSet, outPoint))
+					if (!self.ComputeAttribute(*searchSurface.getInputCloud(), inPoint, scanDataSet, outPoint))
 					{
 						//PRINT_WARNING("ComputeAttribute failed");
 						self.SetAttributeNAN(outPoint);
@@ -106,7 +106,7 @@ namespace RecRoom
 				//
 				if (CollectScanData(*searchSurface->getInputCloud(), nnIndices, nnSqrDists, scanDataSet))
 				{
-					if (!ComputeAttribute(*searchSurface->getInputCloud(), scanDataSet, outPoint))
+					if (!ComputeAttribute(*searchSurface->getInputCloud(), inPoint, scanDataSet, outPoint))
 					{
 						//PRINT_WARNING("ComputeAttribute failed");
 						SetAttributeNAN(outPoint);

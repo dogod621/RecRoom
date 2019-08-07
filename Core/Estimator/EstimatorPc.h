@@ -74,7 +74,7 @@ namespace RecRoom
 			std::vector<ScanData>& scanDataSet) const;
 
 		inline virtual bool ComputeAttribute(
-			const Pc<InPointType>& cloud,
+			const Pc<InPointType>& cloud, const InPointType& center,
 			const std::vector<ScanData>& scanDataSet, OutPointType& outPoint) const 
 		{
 			THROW_EXCEPTION("Interface is not implemented");

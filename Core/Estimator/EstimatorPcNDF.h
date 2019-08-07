@@ -30,7 +30,7 @@ namespace RecRoom
 			const float angleInterParm = 1.0f,
 			const float cutFalloff = 0.33f,
 			const float cutGrazing = 0.26f)
-			: EstimatorPc<InPointType, OutPointType>(scanner, searchRadius, distInterParm, angleInterParm, cutFalloff, cutGrazing, 4),
+			: EstimatorPc<InPointType, OutPointType>(scanner, searchRadius, distInterParm, angleInterParm, cutFalloff, cutGrazing, 6),
 			minSharpness(0.0f), maxSharpness(1.0f)
 		{
 			name = "EstimatorPcNDF";
@@ -38,14 +38,14 @@ namespace RecRoom
 
 	protected:
 		inline virtual bool ComputeAttribute(
-			const Pc<InPointType>& cloud,
+			const Pc<InPointType>& cloud, const InPointType& center,
 			const std::vector<ScanData>& scanDataSet, OutPointType& outPoint) const;
 
 		inline virtual void SetAttributeNAN(OutPointType& p) const
 		{
 			p.intensity = std::numeric_limits<float>::quiet_NaN();
 			p.sharpness = std::numeric_limits<float>::quiet_NaN();
-			p.diffuseRatio = std::numeric_limits<float>::quiet_NaN();
+			p.specularIntensity = std::numeric_limits<float>::quiet_NaN();
 		}
 
 	public:
@@ -57,33 +57,56 @@ namespace RecRoom
 				p.HasSerialNumber();
 		}
 
+		inline virtual bool InputPointValid(const InPointType& p) const
+		{
+			return pcl_isfinite(p.x) &&
+				pcl_isfinite(p.y) &&
+				pcl_isfinite(p.z) &&
+				pcl_isfinite(p.intensity);
+		}
+
 		inline virtual bool OutPointValid(const OutPointType& p) const
 		{
 			return pcl_isfinite(p.intensity) &&
 				pcl_isfinite(p.sharpness) &&
-				pcl_isfinite(p.diffuseRatio);
+				pcl_isfinite(p.specularIntensity);
 		}
 
 	protected:
-		inline virtual float Distribution(const Eigen::Vector3f& tanDir, float intensity, float sharpness, float diffuseRatio) const = 0;
+		inline virtual float Distribution(const Eigen::Vector3f& tanDir, float intensity, float sharpness, float specularIntensity) const = 0;
 
-		inline void EvaluateMSE(const std::vector<NDFSample>& samples, float sharpness, float diffuseRatio, float meanIntensity, 
-			std::vector<float>& ndfValues, float& intensity, float& mse) const
+		inline float Evaluate_MSE(const std::vector<NDFSample>& samples, float intensity, float sharpness, float specularIntensity) const
 		{
-			float meanNDF = 0.0;
+			float mse = 0.0f;
 			for (int i = 0; i < samples.size(); ++i)
 			{
-				ndfValues[i] = Distribution(samples[i].tanDir, 1.0, sharpness, diffuseRatio);
-				meanNDF += samples[i].weight * ndfValues[i];
-			}
-			intensity = meanIntensity / meanNDF;
-			mse = 0.0f;
-			for (int i = 0; i < samples.size(); ++i)
-			{
-				ndfValues[i] *= intensity;
-				float diff = samples[i].intensity - ndfValues[i];
+				float diff = samples[i].intensity - Distribution(samples[i].tanDir, intensity, sharpness, specularIntensity);
 				mse += samples[i].weight * diff * diff;
 			}
+			return mse;
+		}
+
+		inline float Evaluate_SpecularIntensity_MSE(const std::vector<NDFSample>& samples, float intensity, float sharpness, float& specularIntensity) const
+		{
+			std::vector<float> specularValues(samples.size());
+			std::vector<float> specularSamples(samples.size());
+			float meanSpecularValues = 0;
+			float meanSpecularSamples = 0;
+			for (int i = 0; i < samples.size(); ++i)
+			{
+				specularValues[i] = Distribution(samples[i].tanDir, 0.0f, sharpness, 1.0f);
+				specularSamples[i] = std::max(samples[i].intensity - intensity, 0.0f);
+				meanSpecularValues += samples[i].weight * specularValues[i];
+				meanSpecularSamples += samples[i].weight * specularSamples[i];
+			}
+			specularIntensity = meanSpecularSamples / meanSpecularValues;
+			float mse = 0.0f;
+			for (int i = 0; i < samples.size(); ++i)
+			{
+				float diff = samples[i].intensity - Distribution(samples[i].tanDir, intensity, sharpness, specularIntensity);
+				mse += samples[i].weight * diff * diff;
+			}
+			return mse;
 		}
 
 	protected:
@@ -114,9 +137,9 @@ namespace RecRoom
 		}
 
 	protected:
-		inline virtual float Distribution(const Eigen::Vector3f& tanDir, float intensity, float sharpness, float diffuseRatio) const
+		inline virtual float Distribution(const Eigen::Vector3f& tanDir, float intensity, float sharpness, float specularIntensity) const
 		{
-			return intensity * (diffuseRatio + (1.0f - diffuseRatio) * std::exp(sharpness * (tanDir.z() - 1.0f)));
+			return intensity + specularIntensity * std::exp(sharpness * (tanDir.z() - 1.0f));
 		}
 
 	public:

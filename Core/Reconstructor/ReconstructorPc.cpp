@@ -657,7 +657,7 @@ namespace RecRoom
 
 #ifdef WITH_OUTPUT_PERPOINT_SHARPNESS
 					pVisRec.sharpness += pRec.sharpness;
-					pVisRec.diffuseRatio += pRec.diffuseRatio;
+					pVisRec.specularIntensity += pRec.specularIntensity;
 #endif
 				}
 			}
@@ -707,7 +707,7 @@ namespace RecRoom
 
 #ifdef WITH_OUTPUT_PERPOINT_SHARPNESS
 					pVisRec.sharpness /= pVisRec.x;
-					pVisRec.diffuseRatio /= pVisRec.x;
+					pVisRec.specularIntensity /= pVisRec.x;
 #endif
 				}
 			}
@@ -944,10 +944,10 @@ namespace RecRoom
 
 			{
 				for (std::size_t px = 0; px < pcVis1.size(); ++px)
-					pcVis1[px].intensity = pcVisRec[px].diffuseRatio;
+					pcVis1[px].intensity = pcVisRec[px].specularIntensity;
 
 				std::stringstream fileName;
-				fileName << it->serialNumber << "_rec_DiffuseRatio.png";
+				fileName << it->serialNumber << "_rec_SpecularIntensity.png";
 
 
 				pcl::PCLImage image;
@@ -956,7 +956,7 @@ namespace RecRoom
 				pcie.setScalingMethod(pcie.SCALING_FULL_RANGE);
 				//pcie.setScalingFactor(255.0);
 				if (!pcie.extract(pcVis1, image))
-					THROW_EXCEPTION("Failed to extract an image from DiffuseRatio field .");
+					THROW_EXCEPTION("Failed to extract an image from SpecularIntensity field .");
 				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
 #endif

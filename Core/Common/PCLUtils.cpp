@@ -139,7 +139,7 @@ namespace RecRoom
 		int rgb_index = getFieldIndex(mesh.cloud, "rgb");
 		int intensity_index = getFieldIndex(mesh.cloud, "intensity");
 		int sharpness_index = getFieldIndex(mesh.cloud, "sharpness");
-		int diffuseRatio_index = getFieldIndex(mesh.cloud, "diffuseRatio");
+		int specularIntensity_index = getFieldIndex(mesh.cloud, "specularIntensity");
 		int label_index = getFieldIndex(mesh.cloud, "label");
 		
 		std::vector<float> x;
@@ -152,7 +152,7 @@ namespace RecRoom
 		std::vector<uint32_t> rgba;
 		std::vector<float> intensity;
 		std::vector<float> sharpness;
-		std::vector<float> diffuseRatio;
+		std::vector<float> specularIntensity;
 		std::vector<uint32_t> label;
 
 		// number of points
@@ -282,11 +282,11 @@ namespace RecRoom
 					return -2;
 			}
 
-			if (diffuseRatio_index != -1)
+			if (specularIntensity_index != -1)
 			{
-				file << "\nproperty float diffuseRatio";
+				file << "\nproperty float specularIntensity";
 				if (!Copy(numPoints, pointSize, mesh.cloud.data,
-					mesh.cloud.fields[diffuseRatio_index], pcl::PCLPointField::FLOAT32, &diffuseRatio))
+					mesh.cloud.fields[specularIntensity_index], pcl::PCLPointField::FLOAT32, &specularIntensity))
 					return -2;
 			}
 
@@ -377,7 +377,7 @@ namespace RecRoom
 
 					if (sharpness_index != -1) file.write(reinterpret_cast<const char*> (&sharpness[i]), sizeof(float));
 					
-					if (diffuseRatio_index != -1) file.write(reinterpret_cast<const char*> (&diffuseRatio[i]), sizeof(float));
+					if (specularIntensity_index != -1) file.write(reinterpret_cast<const char*> (&specularIntensity[i]), sizeof(float));
 
 					if (label_index != -1) file.write(reinterpret_cast<const char*> (&label[i]), sizeof(float));
 
@@ -442,7 +442,7 @@ namespace RecRoom
 
 					if (sharpness_index != -1) file << sharpness[i] << " ";
 
-					if (diffuseRatio_index != -1) file << diffuseRatio[i] << " ";
+					if (specularIntensity_index != -1) file << specularIntensity[i] << " ";
 					
 					if (label_index != -1) file << label[i] << " ";
 
