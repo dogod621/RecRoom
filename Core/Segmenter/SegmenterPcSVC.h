@@ -9,10 +9,10 @@ namespace RecRoom
 	{
 	public:
 		SegmenterPcSVC(float voxelResolution, float seedResolution, 
-			float xyzImportance = 0.4f, float rgbImportance = 0.4f, float intensityImportance = 5.0f, float normalImportance = 1.0f, float sharpnessImportance = 5.0,
+			float xyzImportance = 0.4f, float rgbImportance = 0.4f, float normalImportance = 1.0f, float diffuseAlbedoImportance = 5.0f, float specularSharpnessImportance = 5.0,
 			std::size_t minSize = 1, std::size_t numIter = 0)
 			: SegmenterPc<PointType>(), voxelResolution(voxelResolution), seedResolution(seedResolution),
-			xyzImportance(xyzImportance), rgbImportance(rgbImportance), intensityImportance(intensityImportance),  normalImportance(normalImportance), sharpnessImportance(sharpnessImportance),
+			xyzImportance(xyzImportance), rgbImportance(rgbImportance),  normalImportance(normalImportance), diffuseAlbedoImportance(diffuseAlbedoImportance), specularSharpnessImportance(specularSharpnessImportance),
 			minSize(minSize), numIter(numIter)
 		{
 			name = "SegmenterPc";
@@ -41,9 +41,9 @@ namespace RecRoom
 		float getSeedResolution() const { return seedResolution; }
 		float getXYZImportance() const { return xyzImportance; }
 		float getRGBImportance() const { return rgbImportance; }
-		float getIntensityImportance() const { return intensityImportance; }
 		float getNormalImportance() const { return normalImportance; }
-		float getSharpnessImportance() const { return sharpnessImportance; }
+		float getDiffuseAlbedoImportance() const { return diffuseAlbedoImportance; }
+		float getSpecularSharpnessImportance() const { return specularSharpnessImportance; }
 		std::size_t getMinSize() const { return minSize; }
 		std::size_t getNumIter() const { return numIter; }
 
@@ -51,9 +51,9 @@ namespace RecRoom
 		void setSeedResolution(float v) { seedResolution = v; }
 		float setXYZImportance(float v)  { xyzImportance = v; }
 		float setRGBImportance(float v)  { rgbImportance = v; }
-		void setIntensityImportance(float v) { intensityImportance = v; }
 		void setNormalImportance(float v) { normalImportance = v; }
-		void setSharpnessImportance(float v) { sharpnessImportance = v; }
+		void setDiffuseAlbedoImportance(float v) { diffuseAlbedoImportance = v; }
+		void setSpecularSharpnessImportance(float v) { specularSharpnessImportance = v; }
 		void setMinSize(std::size_t v) { minSize = v; }
 		void setNumIter(std::size_t v) { numIter = v; }
 
@@ -63,9 +63,9 @@ namespace RecRoom
 
 		float xyzImportance;
 		float rgbImportance;
-		float intensityImportance;
 		float normalImportance;
-		float sharpnessImportance;
+		float diffuseAlbedoImportance;
+		float specularSharpnessImportance;
 
 		std::size_t minSize;
 		std::size_t numIter;

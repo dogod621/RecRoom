@@ -281,12 +281,10 @@ namespace RecRoom
 						PointMED& tarP = (*data.pcRec)[(*inValidFilter)[idx]];
 						PointMED& srcP = temp[idx];
 
-#ifdef PERPOINT_NORMAL
 						tarP.normal_x = srcP.normal_x;
 						tarP.normal_y = srcP.normal_y;
 						tarP.normal_z = srcP.normal_z;
 						tarP.curvature = srcP.curvature;
-#endif
 					}
 				}
 			}
@@ -294,8 +292,8 @@ namespace RecRoom
 		return 0;
 	}
 
-	// Async Reconstruct Attribute - Albedo
-	int BStep_RecPcAlbedo(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
+	// Async Reconstruct Attribute - Diffuse
+	int BStep_RecPcDiffuse(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
 	{
 		if (!data.pcRecIdx->empty())
 		{
@@ -308,19 +306,15 @@ namespace RecRoom
 				PointMED& tarP = (*data.pcRaw)[px];
 				PointMED& srcP = temp[px];
 
-#ifdef PERPOINT_NORMAL
 				tarP.normal_x = srcP.normal_x;
 				tarP.normal_y = srcP.normal_y;
 				tarP.normal_z = srcP.normal_z;
 				tarP.curvature = srcP.curvature;
-#endif
 
-#ifdef PERPOINT_LABEL
 				tarP.label = srcP.label;
-#endif
 			}
 
-			global.ptrReconstructorPcOC()->getAlbedoEstimator()->ProcessInOut(
+			global.ptrReconstructorPcOC()->getDiffuseEstimator()->ProcessInOut(
 				data.pcRawAcc, data.pcRec, data.pcRecIdx);
 
 			// NAN fill
@@ -332,7 +326,7 @@ namespace RecRoom
 				inValidFilter->reserve(data.pcRecIdx->size());
 				for (PcIndex::const_iterator it = data.pcRecIdx->begin(); it != data.pcRecIdx->end(); ++it)
 				{
-					if (global.ptrReconstructorPcOC()->getAlbedoEstimator()->OutPointValid((*data.pcRec)[*it]))
+					if (global.ptrReconstructorPcOC()->getDiffuseEstimator()->OutPointValid((*data.pcRec)[*it]))
 						validFilter->push_back(*it);
 					else
 						inValidFilter->push_back(*it);
@@ -352,22 +346,16 @@ namespace RecRoom
 						PointMED& tarP = (*data.pcRec)[(*inValidFilter)[idx]];
 						PointMED& srcP = temp[idx];
 
-#ifdef PERPOINT_RGB
 						tarP.r = srcP.r;
 						tarP.g = srcP.g;
 						tarP.b = srcP.b;
-#endif
 
-#ifdef PERPOINT_INTENSITY
-						tarP.intensity = srcP.intensity;
-#endif
-
-#ifdef PERPOINT_NORMAL
 						tarP.normal_x = srcP.normal_x;
 						tarP.normal_y = srcP.normal_y;
 						tarP.normal_z = srcP.normal_z;
 						tarP.curvature = srcP.curvature;
-#endif
+
+						tarP.diffuseAlbedo = srcP.diffuseAlbedo;
 					}
 				}
 			}
@@ -375,8 +363,8 @@ namespace RecRoom
 		return 0;
 	}
 
-	// Async Reconstruct Attribute - Sharpness
-	int BStep_RecPcSharpness(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
+	// Async Reconstruct Attribute - Specular
+	int BStep_RecPcSpecular(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
 	{
 		if (!data.pcRecIdx->empty())
 		{
@@ -389,23 +377,17 @@ namespace RecRoom
 				PointMED& tarP = (*data.pcRaw)[px];
 				PointMED& srcP = temp[px];
 
-#ifdef PERPOINT_INTENSITY
-				tarP.rgb = srcP.intensity;
-#endif
-
-#ifdef PERPOINT_NORMAL
 				tarP.normal_x = srcP.normal_x;
 				tarP.normal_y = srcP.normal_y;
 				tarP.normal_z = srcP.normal_z;
 				tarP.curvature = srcP.curvature;
-#endif
 
-#ifdef PERPOINT_LABEL
+				tarP.diffuseAlbedo = srcP.diffuseAlbedo;
+
 				tarP.label = srcP.label;
-#endif
 			}
 
-			global.ptrReconstructorPcOC()->getSharpnessEstimator()->ProcessInOut(
+			global.ptrReconstructorPcOC()->getSpecularEstimator()->ProcessInOut(
 				data.pcRawAcc, data.pcRec, data.pcRecIdx);
 
 			// NAN fill
@@ -417,7 +399,7 @@ namespace RecRoom
 				inValidFilter->reserve(data.pcRecIdx->size());
 				for (PcIndex::const_iterator it = data.pcRecIdx->begin(); it != data.pcRecIdx->end(); ++it)
 				{
-					if (global.ptrReconstructorPcOC()->getSharpnessEstimator()->OutPointValid((*data.pcRec)[*it]))
+					if (global.ptrReconstructorPcOC()->getSpecularEstimator()->OutPointValid((*data.pcRec)[*it]))
 						validFilter->push_back(*it);
 					else
 						inValidFilter->push_back(*it);
@@ -437,14 +419,11 @@ namespace RecRoom
 						PointMED& tarP = (*data.pcRec)[(*inValidFilter)[idx]];
 						PointMED& srcP = temp[idx];
 
-#ifdef PERPOINT_INTENSITY
 						tarP.intensity = srcP.intensity;
-#endif
 
-#ifdef PERPOINT_SHARPNESS
-						tarP.sharpness = srcP.sharpness;
-						tarP.specularIntensity = srcP.specularIntensity;
-#endif
+						tarP.diffuseAlbedo = srcP.diffuseAlbedo;
+						tarP.specularAlbedo = srcP.specularAlbedo;
+						tarP.specularSharpness = srcP.specularSharpness;
 					}
 				}
 			}
@@ -468,9 +447,6 @@ namespace RecRoom
 
 			global.ptrReconstructorPcOC()->getFieldInterpolator()->Process(data.pcRecAcc, data.pcRaw, data.pcRawIdx, temp);
 
-#ifdef PERPOINT_NORMAL
-#ifdef PERPOINT_LABEL
-
 			for (std::size_t idx = 0; idx < data.pcRawIdx->size(); ++idx)
 			{
 				PointMED& tarP = (*data.pcRaw)[(*data.pcRawIdx)[idx]];
@@ -483,8 +459,6 @@ namespace RecRoom
 				tarP.label = srcP.label;
 			}
 
-
-#ifdef PERPOINT_SERIAL_NUMBER
 			PTR(PcNDF) pcNDF(new PcNDF);
 			pcNDF->reserve(data.pcRawIdx->size());
 			for (PcIndex::const_iterator it = data.pcRawIdx->begin(); it != data.pcRawIdx->end(); ++it)
@@ -519,9 +493,6 @@ namespace RecRoom
 				}
 			}
 			global.ptrReconstructorPcOC()->getContainerPcNDF()->Merge(pcNDF);
-#endif
-#endif
-#endif
 		}
 		return 0;
 	}
@@ -554,7 +525,7 @@ namespace RecRoom
 			asyncSize);
 	}
 
-	void ReconstructorPcOC::ImplementRecPcAlbedo()
+	void ReconstructorPcOC::ImplementRecPcDiffuse()
 	{
 		AsyncGlobal_Rec global(this);
 
@@ -564,11 +535,11 @@ namespace RecRoom
 
 		AsyncProcess<AsyncGlobal_Rec, AsyncQuery_Rec, AsyncData_Rec>(
 			global, queries,
-			AStep_RecPcAtt, BStep_RecPcAlbedo, CStep_RecPcAtt,
+			AStep_RecPcAtt, BStep_RecPcDiffuse, CStep_RecPcAtt,
 			asyncSize);
 	}
 
-	void ReconstructorPcOC::ImplementRecPcSharpness()
+	void ReconstructorPcOC::ImplementRecPcSpecular()
 	{
 		AsyncGlobal_Rec global(this);
 
@@ -578,7 +549,7 @@ namespace RecRoom
 
 		AsyncProcess<AsyncGlobal_Rec, AsyncQuery_Rec, AsyncData_Rec>(
 			global, queries,
-			AStep_RecPcAtt, BStep_RecPcSharpness, CStep_RecPcAtt,
+			AStep_RecPcAtt, BStep_RecPcSpecular, CStep_RecPcAtt,
 			asyncSize);
 	}
 

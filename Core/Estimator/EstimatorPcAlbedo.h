@@ -37,16 +37,17 @@ namespace RecRoom
 			p.r = 0;
 			p.g = 0;
 			p.b = 0;
-			p.intensity = std::numeric_limits<float>::quiet_NaN();
 			p.normal_x = std::numeric_limits<float>::quiet_NaN();
 			p.normal_y = std::numeric_limits<float>::quiet_NaN();
 			p.normal_z = std::numeric_limits<float>::quiet_NaN();
+			p.diffuseAlbedo = std::numeric_limits<float>::quiet_NaN();
 		}
 
 	public:
 		inline virtual bool SearchPointValid(const InPointType& p) const
 		{
-			return pcl_isfinite(p.normal_x) &&
+			return pcl_isfinite(p.intensity) &&
+				pcl_isfinite(p.normal_x) &&
 				pcl_isfinite(p.normal_y) &&
 				pcl_isfinite(p.normal_z) &&
 				p.HasSerialNumber();
@@ -54,10 +55,10 @@ namespace RecRoom
 
 		inline virtual bool OutPointValid(const OutPointType& p) const
 		{
-			return pcl_isfinite(p.intensity) &&
-				pcl_isfinite(p.normal_x) &&
+			return pcl_isfinite(p.normal_x) &&
 				pcl_isfinite(p.normal_y) &&
-				pcl_isfinite(p.normal_z);
+				pcl_isfinite(p.normal_z) && 
+				pcl_isfinite(p.diffuseAlbedo);
 		}
 
 	public:

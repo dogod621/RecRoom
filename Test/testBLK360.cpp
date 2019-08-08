@@ -48,8 +48,8 @@ void PrintHelp(int argc, char **argv)
 		PRINT_HELP("\t", "printScannerInfo", "", "Print scanner information.");
 		PRINT_HELP("\t", "recPointCloud", "", "Reconstruct point cloud.");
 		PRINT_HELP("\t", "recPcNormal", "", "Reconstruct point cloud normal.");
-		PRINT_HELP("\t", "recPcAlbedo", "", "Reconstruct point cloud albedo.");
-		PRINT_HELP("\t", "recPcSharpness", "", "Reconstruct point cloud sharpness.");
+		PRINT_HELP("\t", "recPcDiffuse", "", "Reconstruct point cloud diffuse.");
+		PRINT_HELP("\t", "recPcSpecular", "", "Reconstruct point cloud specular.");
 		PRINT_HELP("\t", "recPcSegment", "", "Reconstruct point cloud segment.");
 		PRINT_HELP("\t", "recSegNDF", "", "Reconstruct segment NDF.");
 		PRINT_HELP("\t", "recSegMaterial", "", "Reconstruct segment material.");
@@ -93,9 +93,9 @@ void PrintHelp(int argc, char **argv)
 		PRINT_HELP("\t", "seedResolution", "float ${voxelSize*50}", "Seed unit size in meters.");
 		PRINT_HELP("\t", "xyzImportance", "float 0.4", "Distance importance of XYZ.");
 		PRINT_HELP("\t", "rgbImportance", "float 0.4", "Distance importance of RGB.");
-		PRINT_HELP("\t", "intensityImportance", "float 5.0", "Distance importance of intensity.");
 		PRINT_HELP("\t", "normalImportance", "float 1.0", "Distance importance of normal.");
-		PRINT_HELP("\t", "sharpnessImportance", "float 5.0", "Distance importance of sharpnessImportance.");
+		PRINT_HELP("\t", "diffuseAlbedoImportance", "float 5.0", "Distance importance of diffuseAlbedoImportance.");
+		PRINT_HELP("\t", "specularSharpnessImportance", "float 5.0", "Distance importance of specularSharpnessImportance.");
 		PRINT_HELP("\t", "minSize", "int 250", "Minimum segment size.");
 	}
 
@@ -231,25 +231,25 @@ int main(int argc, char *argv[])
 		float seedResolution = voxelSize * 50.f;
 		float xyzImportance = 0.4f;
 		float rgbImportance = 0.4f;
-		float intensityImportance = 5.0f;
 		float normalImportance = 1.0f;
-		float sharpnessImportance = 5.0f;
+		float diffuseAlbedoImportance = 5.0f;
+		float specularSharpnessImportance = 5.0f;
 		int minSize = 250;
 		pcl::console::parse_argument(argc, argv, "-voxelResolution", voxelResolution);
 		pcl::console::parse_argument(argc, argv, "-seedResolution", seedResolution);
 		pcl::console::parse_argument(argc, argv, "-xyzImportance", xyzImportance);
 		pcl::console::parse_argument(argc, argv, "-rgbImportance", rgbImportance);
-		pcl::console::parse_argument(argc, argv, "-intensityImportance", intensityImportance);
 		pcl::console::parse_argument(argc, argv, "-normalImportance", normalImportance);
-		pcl::console::parse_argument(argc, argv, "-sharpnessImportance", sharpnessImportance);
+		pcl::console::parse_argument(argc, argv, "-diffuseAlbedoImportance", diffuseAlbedoImportance);
+		pcl::console::parse_argument(argc, argv, "-specularSharpnessImportance", specularSharpnessImportance);
 		pcl::console::parse_argument(argc, argv, "-minSize", minSize);
 		std::cout << "SegmenterPcSVC -voxelResolution: " << voxelResolution << std::endl;
 		std::cout << "SegmenterPcSVC -seedResolution: " << seedResolution << std::endl;
 		std::cout << "SegmenterPcSVC -xyzImportance: " << xyzImportance << std::endl;
 		std::cout << "SegmenterPcSVC -rgbImportance: " << rgbImportance << std::endl;
-		std::cout << "SegmenterPcSVC -intensityImportance: " << intensityImportance << std::endl;
 		std::cout << "SegmenterPcSVC -normalImportance: " << normalImportance << std::endl;
-		std::cout << "SegmenterPcSVC -sharpnessImportance: " << sharpnessImportance << std::endl;
+		std::cout << "SegmenterPcSVC -diffuseAlbedoImportance: " << diffuseAlbedoImportance << std::endl;
+		std::cout << "SegmenterPcSVC -specularSharpnessImportance: " << specularSharpnessImportance << std::endl;
 		std::cout << "SegmenterPcSVC -minSize: " << minSize << std::endl;
 
 		// Parse MesherPcMCHoppe Parmameters
@@ -392,7 +392,7 @@ int main(int argc, char *argv[])
 						new RecRoom::EstimatorPcAlbedo<RecRoom::PointMED, RecRoom::PointMED>(
 							scannerPc, searchRadius,
 							3, 1, cutFalloff, cutGrazing));
-				reconstructorPC->setAlbedoEstimator(albedoEstimator);
+				reconstructorPC->setDiffuseEstimator(albedoEstimator);
 			}
 
 			std::cout << "Create NDFEstimator" << std::endl;
@@ -402,7 +402,7 @@ int main(int argc, char *argv[])
 						new RecRoom::EstimatorPcSGNDF<RecRoom::PointMED, RecRoom::PointMED>(
 							scannerPc, searchRadius,
 							1, 0.5, cutFalloff, cutGrazing));
-				reconstructorPC->setSharpnessEstimator(ndfEstimator);
+				reconstructorPC->setSpecularEstimator(ndfEstimator);
 			}
 
 			std::cout << "Create Segmenter" << std::endl;
@@ -411,7 +411,7 @@ int main(int argc, char *argv[])
 					segmenter(
 						new RecRoom::SegmenterPcSVC<RecRoom::PointMED>(
 							voxelResolution, seedResolution,
-							xyzImportance, rgbImportance, intensityImportance, normalImportance, sharpnessImportance, minSize));
+							xyzImportance, rgbImportance, normalImportance, diffuseAlbedoImportance, specularSharpnessImportance, minSize));
 				reconstructorPC->setSegmenter(segmenter);
 			}
 
@@ -505,14 +505,14 @@ int main(int argc, char *argv[])
 				reconstructorPC->RecPcNormal();
 			}
 
-			if (pcl::console::find_switch(argc, argv, "-recPcAlbedo"))
+			if (pcl::console::find_switch(argc, argv, "-recPcDiffuse"))
 			{
-				reconstructorPC->RecPcAlbedo();
+				reconstructorPC->RecPcDiffuse();
 			}
 
-			if (pcl::console::find_switch(argc, argv, "-recPcSharpness"))
+			if (pcl::console::find_switch(argc, argv, "-recPcSpecular"))
 			{
-				reconstructorPC->RecPcSharpness();
+				reconstructorPC->RecPcSpecular();
 			}
 
 			if (pcl::console::find_switch(argc, argv, "-recPcSegment"))

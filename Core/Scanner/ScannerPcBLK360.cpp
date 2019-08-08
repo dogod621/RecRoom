@@ -32,7 +32,6 @@ namespace RecRoom
 
 	bool ScannerPcBLK360::ToScanLaser(const PointRAW& scanPoint, ScanLaser& scanLaser) const
 	{
-#ifdef INPUT_PERPOINT_SERIAL_NUMBER
 		if (!scanPoint.HasSerialNumber())
 		{
 			PRINT_WARNING("!scanPoint.HasSerialNumber(), ignore");
@@ -40,8 +39,6 @@ namespace RecRoom
 		}
 
 		const ScanMeta& scanMeta = getScanMeta(scanPoint.serialNumber);
-
-#		ifdef INPUT_PERPOINT_INTENSITY
 
 		scanLaser.incidentDirection = Eigen::Vector3f(scanMeta.position.x(), scanMeta.position.y(), scanMeta.position.z()) - Eigen::Vector3f(scanPoint.x, scanPoint.y, scanPoint.z);
 		float hitDistance = scanLaser.incidentDirection.norm();
@@ -56,15 +53,6 @@ namespace RecRoom
 		scanLaser.beamFalloff = 1.0f;
 		scanLaser.intensity = scanPoint.intensity;
 		return true;
-
-#		else
-		PRINT_WARNING("INPUT_PERPOINT_INTENSITY is not definded");
-		return false;
-#		endif
-#else
-		PRINT_WARNING("INPUT_PERPOINT_SERIAL_NUMBER is not definded");
-		return false;
-#endif
 	}
 
 	void ScannerPcBLK360::Load(const nlohmann::json& j)

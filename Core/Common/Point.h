@@ -6,240 +6,14 @@
 
 namespace RecRoom
 {
-	// Macros
-
-	// RGB
-#ifdef INPUT_PERPOINT_RGB
-#	define RAW_ADD_RGB						PCL_ADD_RGB;
-#	define RAW_REGISTER_RGB					(uint32_t, rgba, rgba)
-#	define RAW_ISFINITE_RGB
-#	define RAW_INIT_RGB						r = g = b = 0; a = 255;
-#	define RAW_COPY_RGB						rgba = p.rgba;
-#else
-#	define RAW_ADD_RGB
-#	define RAW_REGISTER_RGB
-#	define RAW_ISFINITE_RGB
-#	define RAW_INIT_RGB
-#	define RAW_COPY_RGB
-#endif
-
-#ifdef OUTPUT_PERPOINT_RGB
-#	define REC_ADD_RGB						PCL_ADD_RGB;
-#	define REC_REGISTER_RGB					(uint32_t, rgba, rgba)
-#	define REC_ISFINITE_RGB
-#	define REC_INIT_RGB						r = g = b = 0; a = 255;
-#	define REC_COPY_RGB						rgba = p.rgba;
-#else
-#	define REC_ADD_RGB
-#	define REC_REGISTER_RGB
-#	define REC_ISFINITE_RGB
-#	define REC_INIT_RGB
-#	define REC_COPY_RGB
-#endif
-
-#ifdef PERPOINT_RGB
-#	define MED_ADD_RGB						PCL_ADD_RGB;
-#	define MED_REGISTER_RGB					(uint32_t, rgba, rgba)
-#	define MED_ISFINITE_RGB
-#	define MED_INIT_RGB						r = g = b = 0; a = 255;
-#	define MED_COPY_RGB						rgba = p.rgba;
-#else
-#	define MED_ADD_RGB
-#	define MED_REGISTER_RGB
-#	define MED_ISFINITE_RGB
-#	define MED_INIT_RGB
-#	define MED_COPY_RGB
-#endif
-
-// Intensity
-#ifdef INPUT_PERPOINT_INTENSITY
-#	define RAW_ADD_INTENSITY				PCL_ADD_INTENSITY;
-#	define RAW_REGISTER_INTENSITY			(float, intensity, intensity)
-#	define RAW_ISFINITE_INTENSITY			&& pcl_isfinite(p.intensity)
-#	define RAW_INIT_INTENSITY				intensity = 0.f;
-#	define RAW_COPY_INTENSITY				intensity = p.intensity;
-#else
-#	define RAW_ADD_INTENSITY
-#	define RAW_REGISTER_INTENSITY
-#	define RAW_ISFINITE_INTENSITY
-#	define RAW_INIT_INTENSITY
-#	define RAW_COPY_INTENSITY
-#endif
-
-#ifdef OUTPUT_PERPOINT_INTENSITY
-#	define REC_ADD_INTENSITY				PCL_ADD_INTENSITY;
-#	define REC_REGISTER_INTENSITY			(float, intensity, intensity)
-#	define REC_ISFINITE_INTENSITY			&& pcl_isfinite(p.intensity)
-#	define REC_INIT_INTENSITY				intensity = 0.f;
-#	define REC_COPY_INTENSITY				intensity = p.intensity;
-#else
-#	define REC_ADD_INTENSITY
-#	define REC_REGISTER_INTENSITY
-#	define REC_ISFINITE_INTENSITY
-#	define REC_INIT_INTENSITY
-#	define REC_COPY_INTENSITY
-#endif
-
-#ifdef PERPOINT_INTENSITY
-#	define MED_ADD_INTENSITY				PCL_ADD_INTENSITY;
-#	define MED_REGISTER_INTENSITY			(float, intensity, intensity)
-#	define MED_ISFINITE_INTENSITY			&& pcl_isfinite(p.intensity)
-#	define MED_INIT_INTENSITY				intensity = 0.f;
-#	define MED_COPY_INTENSITY				intensity = p.intensity;
-#else
-#	define MED_ADD_INTENSITY
-#	define MED_REGISTER_INTENSITY
-#	define MED_ISFINITE_INTENSITY
-#	define MED_INIT_INTENSITY
-#	define MED_COPY_INTENSITY
-#endif
-
-	// Normal
-#ifdef INPUT_PERPOINT_NORMAL
-#	define RAW_ADD_NORMAL					PCL_ADD_NORMAL4D; float curvature;
-#	define RAW_REGISTER_NORMAL				(float, normal_x, normal_x) (float, normal_y, normal_y) (float, normal_z, normal_z) (float, curvature, curvature)
-#	define RAW_ISFINITE_NORMAL				&& pcl_isfinite(p.normal_x) && pcl_isfinite(p.normal_y) && pcl_isfinite(p.normal_z)
-#	define RAW_INIT_NORMAL					normal_x = normal_y = normal_z = data_n[3] = curvature = 0.f;
-#	define RAW_COPY_NORMAL					normal_x = p.normal_x; normal_y = p.normal_y; normal_z = p.normal_z; data_n[3] = 0.f; curvature = p.curvature;							
-#else
-#	define RAW_ADD_NORMAL
-#	define RAW_REGISTER_NORMAL
-#	define RAW_ISFINITE_NORMAL
-#	define RAW_INIT_NORMAL
-#	define RAW_COPY_NORMAL
-#endif
-
-#ifdef OUTPUT_PERPOINT_NORMAL
-#	define REC_ADD_NORMAL					PCL_ADD_NORMAL4D; float curvature;
-#	define REC_REGISTER_NORMAL				(float, normal_x, normal_x) (float, normal_y, normal_y) (float, normal_z, normal_z) (float, curvature, curvature)
-#	define REC_ISFINITE_NORMAL				&& pcl_isfinite(p.normal_x) && pcl_isfinite(p.normal_y) && pcl_isfinite(p.normal_z)
-#	define REC_INIT_NORMAL					normal_x = normal_y = normal_z = data_n[3] = curvature = 0.f;
-#	define REC_COPY_NORMAL					normal_x = p.normal_x; normal_y = p.normal_y; normal_z = p.normal_z; data_n[3] = 0.f; curvature = p.curvature;
-#else
-#	define REC_ADD_NORMAL
-#	define REC_REGISTER_NORMAL
-#	define REC_ISFINITE_NORMAL
-#	define REC_INIT_NORMAL
-#	define REC_COPY_NORMAL
-#endif
-
-#ifdef PERPOINT_NORMAL
-#	define MED_ADD_NORMAL					PCL_ADD_NORMAL4D; float curvature;
-#	define MED_REGISTER_NORMAL				(float, normal_x, normal_x) (float, normal_y, normal_y) (float, normal_z, normal_z) (float, curvature, curvature)
-#	define MED_ISFINITE_NORMAL				&& pcl_isfinite(p.normal_x) && pcl_isfinite(p.normal_y) && pcl_isfinite(p.normal_z)
-#	define MED_INIT_NORMAL					normal_x = normal_y = normal_z = data_n[3] = curvature = 0.f;
-#	define MED_COPY_NORMAL					normal_x = p.normal_x; normal_y = p.normal_y; normal_z = p.normal_z; data_n[3] = 0.f; curvature = p.curvature;
-#else
-#	define MED_ADD_NORMAL
-#	define MED_REGISTER_NORMAL
-#	define MED_ISFINITE_NORMAL
-#	define MED_INIT_NORMAL
-#	define MED_COPY_NORMAL
-#endif
-
-// Sharpness
-#ifdef OUTPUT_PERPOINT_SHARPNESS
-#	define REC_ADD_SHARPNESS				float sharpness; float specularIntensity;
-#	define REC_REGISTER_SHARPNESS			(float, sharpness, sharpness) (float, specularIntensity, specularIntensity)
-#	define REC_ISFINITE_SHARPNESS			&& pcl_isfinite(p.sharpness) && pcl_isfinite(p.specularIntensity)
-#	define REC_INIT_SHARPNESS				sharpness = 0.f; specularIntensity = 1.f;
-#	define REC_COPY_SHARPNESS				sharpness = p.sharpness; specularIntensity = p.specularIntensity;
-#else
-#	define REC_ADD_SHARPNESS
-#	define REC_REGISTER_SHARPNESS
-#	define REC_ISFINITE_SHARPNESS
-#	define REC_INIT_SHARPNESS
-#	define REC_COPY_SHARPNESS
-#endif
-
-#ifdef PERPOINT_SHARPNESS
-#	define MED_ADD_SHARPNESS				float sharpness; float specularIntensity;
-#	define MED_REGISTER_SHARPNESS			(float, sharpness, sharpness) (float, specularIntensity, specularIntensity)
-#	define MED_ISFINITE_SHARPNESS			&& pcl_isfinite(p.sharpness) && pcl_isfinite(p.specularIntensity)
-#	define MED_INIT_SHARPNESS				sharpness = 0.f; specularIntensity = 1.f;
-#	define MED_COPY_SHARPNESS				sharpness = p.sharpness; specularIntensity = p.specularIntensity;
-#else
-#	define MED_ADD_SHARPNESS
-#	define MED_REGISTER_SHARPNESS
-#	define MED_ISFINITE_SHARPNESS
-#	define MED_INIT_SHARPNESS
-#	define MED_COPY_SHARPNESS
-#endif
-
-// Scan serial number
-#ifdef INPUT_PERPOINT_SERIAL_NUMBER
-#	define RAW_ADD_SERIAL_NUMBER			union { uint32_t serialNumber; int32_t hasSerialNumber; };
-#	define RAW_REGISTER_SERIAL_NUMBER		(uint32_t, serialNumber, serialNumber)
-#	define RAW_ISFINITE_SERIAL_NUMBER
-#	define RAW_INIT_SERIAL_NUMBER			hasSerialNumber = -1;
-#	define RAW_COPY_SERIAL_NUMBER			serialNumber = p.serialNumber;
-#	define RAW_HAS_SERIAL_NUMBER			inline bool HasSerialNumber() const { return (hasSerialNumber != -1); }
-#else
-#	define RAW_ADD_SERIAL_NUMBER
-#	define RAW_REGISTER_SERIAL_NUMBER
-#	define RAW_ISFINITE_SERIAL_NUMBER
-#	define RAW_INIT_SERIAL_NUMBER
-#	define RAW_COPY_SERIAL_NUMBER
-#	define RAW_HAS_SERIAL_NUMBER
-#endif
-
-#ifdef PERPOINT_SERIAL_NUMBER
-#	define MED_ADD_SERIAL_NUMBER			union { uint32_t serialNumber; int32_t hasSerialNumber; };
-#	define MED_REGISTER_SERIAL_NUMBER		(uint32_t, serialNumber, serialNumber)
-#	define MED_ISFINITE_SERIAL_NUMBER
-#	define MED_INIT_SERIAL_NUMBER			hasSerialNumber = -1;
-#	define MED_COPY_SERIAL_NUMBER			serialNumber = p.serialNumber;
-#	define MED_HAS_SERIAL_NUMBER			inline bool HasSerialNumber() const { return (hasSerialNumber != -1); }
-#else
-#	define MED_ADD_SERIAL_NUMBER
-#	define MED_REGISTER_SERIAL_NUMBER
-#	define MED_ISFINITE_SERIAL_NUMBER
-#	define MED_INIT_SERIAL_NUMBER
-#	define MED_COPY_SERIAL_NUMBER
-#	define MED_HAS_SERIAL_NUMBER
-#endif
-
-// Label
-#ifdef OUTPUT_PERPOINT_LABEL
-#	define REC_ADD_LABEL					union { uint32_t label; int32_t hasLabel; };
-#	define REC_REGISTER_LABEL				(uint32_t, label, label)
-#	define REC_ISFINITE_LABEL
-#	define REC_INIT_LABEL					hasLabel = -1;
-#	define REC_COPY_LABEL					label = p.label;
-#	define REC_HAS_LABEL					inline bool HasLabel() const { return (hasLabel != -1); }
-#else
-#	define REC_ADD_LABEL
-#	define REC_REGISTER_LABEL
-#	define REC_ISFINITE_LABEL
-#	define REC_INIT_LABEL
-#	define REC_COPY_LABEL
-#	define REC_HAS_LABEL
-#endif
-
-#ifdef PERPOINT_LABEL
-#	define MED_ADD_LABEL					union { uint32_t label; int32_t hasLabel; };
-#	define MED_REGISTER_LABEL				(uint32_t, label, label)
-#	define MED_ISFINITE_LABEL
-#	define MED_INIT_LABEL					hasLabel = -1;
-#	define MED_COPY_LABEL					label = p.label;
-#	define MED_HAS_LABEL					inline bool HasLabel() const { return (hasLabel != -1); }
-#else
-#	define MED_ADD_LABEL
-#	define MED_REGISTER_LABEL
-#	define MED_ISFINITE_LABEL
-#	define MED_INIT_LABEL
-#	define MED_COPY_LABEL
-#	define MED_HAS_LABEL
-#endif
-
 	//
 	struct EIGEN_ALIGN16 _PointRAW
 	{
 		PCL_ADD_POINT4D;
-		RAW_ADD_RGB;
-		RAW_ADD_INTENSITY;
-		RAW_ADD_NORMAL;
-		RAW_ADD_SERIAL_NUMBER;
+		PCL_ADD_RGB;
+		PCL_ADD_INTENSITY;
+		float curvature;
+		union { uint32_t serialNumber; int32_t hasSerialNumber; };
 
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	};
@@ -247,11 +21,13 @@ namespace RecRoom
 	struct EIGEN_ALIGN16 _PointREC
 	{
 		PCL_ADD_POINT4D;
-		REC_ADD_RGB;
-		REC_ADD_INTENSITY;
-		REC_ADD_NORMAL;
-		REC_ADD_SHARPNESS;
-		REC_ADD_LABEL;
+		PCL_ADD_RGB;
+		PCL_ADD_NORMAL4D; 
+		float curvature;
+		float diffuseAlbedo;
+		float specularAlbedo;
+		float specularSharpness;
+		union { uint32_t label; int32_t hasLabel; };
 
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	};
@@ -259,12 +35,15 @@ namespace RecRoom
 	struct EIGEN_ALIGN16 _PointMED
 	{
 		PCL_ADD_POINT4D;
-		MED_ADD_RGB;
-		MED_ADD_INTENSITY;
-		MED_ADD_NORMAL;
-		MED_ADD_SHARPNESS;
-		MED_ADD_SERIAL_NUMBER;
-		MED_ADD_LABEL;
+		PCL_ADD_RGB;
+		PCL_ADD_INTENSITY;
+		PCL_ADD_NORMAL4D;
+		float curvature;
+		float diffuseAlbedo;
+		float specularAlbedo;
+		float specularSharpness;
+		union { uint32_t serialNumber; int32_t hasSerialNumber; };
+		union { uint32_t label; int32_t hasLabel; };
 
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 	};
@@ -303,19 +82,17 @@ namespace RecRoom
 		inline PointRAW()
 		{
 			x = y = z = 0.0f; data[3] = 1.f;
-			RAW_INIT_RGB;
-			RAW_INIT_INTENSITY;
-			RAW_INIT_NORMAL;
-			RAW_INIT_SERIAL_NUMBER;
+			r = g = b = 0; a = 255;
+			intensity = 0.f;
+			hasSerialNumber = -1;
 		}
 
 		inline PointRAW(const PointRAW& p)
 		{
 			x = p.x; y = p.y; z = p.z; data[3] = 1.0f;
-			RAW_COPY_RGB;
-			RAW_COPY_INTENSITY;
-			RAW_COPY_NORMAL;
-			RAW_COPY_SERIAL_NUMBER;
+			rgba = p.rgba;
+			intensity = p.intensity;
+			serialNumber = p.serialNumber;
 		}
 
 		inline PointRAW(const PointREC& p);
@@ -324,7 +101,7 @@ namespace RecRoom
 		inline PointRAW& operator = (const PointREC &p);
 		inline PointRAW& operator = (const PointMED &p);
 
-		RAW_HAS_SERIAL_NUMBER;
+		inline bool HasSerialNumber() const { return (hasSerialNumber != -1); }
 	};
 
 	struct PointREC : public _PointREC
@@ -332,21 +109,23 @@ namespace RecRoom
 		inline PointREC()
 		{
 			x = y = z = 0.0f; data[3] = 1.f;
-			REC_INIT_RGB;
-			REC_INIT_INTENSITY;
-			REC_INIT_NORMAL;
-			REC_INIT_SHARPNESS;
-			REC_INIT_LABEL;
+			r = g = b = 0; a = 255;
+			normal_x = normal_y = normal_z = data_n[3] = curvature = 0.f;
+			diffuseAlbedo = 0.0f;
+			specularAlbedo = 0.f;
+			specularSharpness = 0.0f;
+			hasLabel = -1;
 		}
 
 		inline PointREC(const PointREC& p)
 		{
 			x = p.x; y = p.y; z = p.z; data[3] = 1.0f;
-			REC_COPY_RGB;
-			REC_COPY_INTENSITY;
-			REC_COPY_NORMAL;
-			REC_COPY_SHARPNESS;
-			REC_COPY_LABEL;
+			rgba = p.rgba;
+			normal_x = p.normal_x; normal_y = p.normal_y; normal_z = p.normal_z; data_n[3] = 0.f; curvature = p.curvature;
+			diffuseAlbedo = p.diffuseAlbedo;
+			specularAlbedo = p.specularAlbedo;
+			specularSharpness = p.specularSharpness;
+			label = p.label;
 		}
 
 		inline PointREC(const PointRAW& p);
@@ -355,7 +134,7 @@ namespace RecRoom
 		inline PointREC& operator = (const PointRAW &p);
 		inline PointREC& operator = (const PointMED &p);
 
-		REC_HAS_LABEL;
+		inline bool HasLabel() const { return (hasLabel != -1); }
 	};
 
 	struct PointMED : public _PointMED
@@ -363,23 +142,27 @@ namespace RecRoom
 		inline PointMED()
 		{
 			x = y = z = 0.0f; data[3] = 1.f;
-			MED_INIT_RGB;
-			MED_INIT_INTENSITY;
-			MED_INIT_NORMAL;
-			MED_INIT_SHARPNESS;
-			MED_INIT_SERIAL_NUMBER;
-			MED_INIT_LABEL;
+			r = g = b = 0; a = 255;
+			intensity = 0.f;
+			normal_x = normal_y = normal_z = data_n[3] = curvature = 0.f;
+			diffuseAlbedo = 0.0f;
+			specularAlbedo = 0.f;
+			specularSharpness = 0.0f;
+			hasSerialNumber = -1;
+			hasLabel = -1;
 		}
 
 		inline PointMED(const PointMED& p)
 		{
 			x = p.x; y = p.y; z = p.z; data[3] = 1.0f;
-			MED_COPY_RGB;
-			MED_COPY_INTENSITY;
-			MED_COPY_NORMAL;
-			MED_COPY_SHARPNESS;
-			MED_COPY_SERIAL_NUMBER;
-			MED_COPY_LABEL;
+			rgba = p.rgba;
+			intensity = p.intensity;
+			normal_x = p.normal_x; normal_y = p.normal_y; normal_z = p.normal_z; data_n[3] = 0.f; curvature = p.curvature;
+			diffuseAlbedo = p.diffuseAlbedo;
+			specularAlbedo = p.specularAlbedo;
+			specularSharpness = p.specularSharpness;
+			serialNumber = p.serialNumber;
+			label = p.label;
 		}
 
 		inline PointMED(const PointRAW& p);
@@ -388,8 +171,8 @@ namespace RecRoom
 		inline PointMED& operator = (const PointRAW &p);
 		inline PointMED& operator = (const PointREC &p);
 
-		MED_HAS_SERIAL_NUMBER; 
-		MED_HAS_LABEL;
+		inline bool HasSerialNumber() const { return (hasSerialNumber != -1); }
+		inline bool HasLabel() const { return (hasLabel != -1); }
 	};
 
 	struct PointVNN : public _PointVNN
@@ -483,31 +266,29 @@ namespace RecRoom
 //
 POINT_CLOUD_REGISTER_POINT_STRUCT(RecRoom::PointRAW,
 (float, x, x) (float, y, y) (float, z, z)
-RAW_REGISTER_RGB
-RAW_REGISTER_INTENSITY
-RAW_REGISTER_NORMAL
-RAW_REGISTER_SERIAL_NUMBER
+(uint32_t, rgba, rgba)
+(float, intensity, intensity)
+(uint32_t, serialNumber, serialNumber)
 )
 POINT_CLOUD_REGISTER_POINT_WRAPPER(RecRoom::PointRAW, RecRoom::PointRAW)
 
 POINT_CLOUD_REGISTER_POINT_STRUCT(RecRoom::PointREC,
 (float, x, x) (float, y, y) (float, z, z)
-REC_REGISTER_RGB
-REC_REGISTER_INTENSITY
-REC_REGISTER_NORMAL
-REC_REGISTER_SHARPNESS
-REC_REGISTER_LABEL
+(uint32_t, rgba, rgba)
+(float, normal_x, normal_x) (float, normal_y, normal_y) (float, normal_z, normal_z) (float, curvature, curvature)
+(float, diffuseAlbedo, diffuseAlbedo) (float, specularAlbedo, specularAlbedo) (float, specularSharpness, specularSharpness)
+(uint32_t, label, label)
 )
 POINT_CLOUD_REGISTER_POINT_WRAPPER(RecRoom::PointREC, RecRoom::PointREC)
 
 POINT_CLOUD_REGISTER_POINT_STRUCT(RecRoom::PointMED,
 (float, x, x) (float, y, y) (float, z, z)
-MED_REGISTER_RGB
-MED_REGISTER_INTENSITY
-MED_REGISTER_NORMAL
-MED_REGISTER_SHARPNESS
-MED_REGISTER_SERIAL_NUMBER
-MED_REGISTER_LABEL
+(uint32_t, rgba, rgba)
+(float, intensity, intensity)
+(float, normal_x, normal_x) (float, normal_y, normal_y) (float, normal_z, normal_z) (float, curvature, curvature)
+(float, diffuseAlbedo, diffuseAlbedo) (float, specularAlbedo, specularAlbedo) (float, specularSharpness, specularSharpness)
+(uint32_t, serialNumber, serialNumber)
+(uint32_t, label, label)
 )
 POINT_CLOUD_REGISTER_POINT_WRAPPER(RecRoom::PointMED, RecRoom::PointMED)
 

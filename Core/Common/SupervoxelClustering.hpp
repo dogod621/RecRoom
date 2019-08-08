@@ -20,14 +20,14 @@ namespace RecRoom
 		point.g = std::min(std::max(rgb[1], 0.f), 255.f);
 		point.b = std::min(std::max(rgb[2], 0.f), 255.f);
 
-		point.intensity = intensity;
-
 		point.normal_x = normal[0];
 		point.normal_y = normal[1];
 		point.normal_z = normal[2];
 		point.curvature = curvature;
 
-		point.sharpness = sharpness;
+		point.diffuseAlbedo = diffuseAlbedo;
+
+		point.specularSharpness = specularSharpness;
 
 		return point;
 	}
@@ -39,12 +39,12 @@ namespace RecRoom
 
 		rgb += voxel.rgb;
 
-		intensity += voxel.intensity;
-
 		normal += voxel.normal;
 		curvature += voxel.curvature;
 
-		sharpness += voxel.sharpness;
+		diffuseAlbedo += voxel.diffuseAlbedo;
+
+		specularSharpness += voxel.specularSharpness;
 
 		return *this;
 	}
@@ -60,14 +60,14 @@ namespace RecRoom
 		rgb[1] += point.g;
 		rgb[2] += point.b;
 
-		intensity += point.intensity;
-
 		normal[0] += point.normal_x;
 		normal[1] += point.normal_y;
 		normal[2] += point.normal_z;
 		curvature += point.curvature;
 
-		sharpness += point.sharpness;
+		diffuseAlbedo += point.diffuseAlbedo;
+
+		specularSharpness += point.specularSharpness;
 
 		return *this;
 	}
@@ -79,12 +79,12 @@ namespace RecRoom
 
 		rgb /= n;
 
-		intensity /= n;
-
 		normal.normalize();
 		curvature /= n;
 
-		sharpness /= n;
+		diffuseAlbedo /= n;
+
+		specularSharpness /= n;
 
 		return *this;
 	}

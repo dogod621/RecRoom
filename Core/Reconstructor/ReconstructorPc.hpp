@@ -11,8 +11,8 @@ namespace RecRoom
 	{
 		if (v == "POINT_CLOUD") return ReconstructStatus::POINT_CLOUD;
 		else if (v == "PC_NORMAL") return ReconstructStatus::PC_NORMAL;
-		else if (v == "PC_ALBEDO") return ReconstructStatus::PC_ALBEDO;
-		else if (v == "PC_SHARPNESS") return ReconstructStatus::PC_SHARPNESS;
+		else if (v == "PC_DIFFUSE") return ReconstructStatus::PC_DIFFUSE;
+		else if (v == "PC_SPECULAR") return ReconstructStatus::PC_SPECULAR;
 		else if (v == "PC_SEGMENT") return ReconstructStatus::PC_SEGMENT;
 		else if (v == "SEG_NDF") return ReconstructStatus::SEG_NDF;
 		else if (v == "SEG_MATERIAL") return ReconstructStatus::SEG_MATERIAL;
@@ -29,8 +29,8 @@ namespace RecRoom
 		{
 		case ReconstructStatus::POINT_CLOUD: return std::string("POINT_CLOUD"); break;
 		case ReconstructStatus::PC_NORMAL: return std::string("PC_NORMAL"); break;
-		case ReconstructStatus::PC_ALBEDO: return std::string("PC_ALBEDO"); break;
-		case ReconstructStatus::PC_SHARPNESS: return std::string("PC_SHARPNESS"); break;
+		case ReconstructStatus::PC_DIFFUSE: return std::string("PC_DIFFUSE"); break;
+		case ReconstructStatus::PC_SPECULAR: return std::string("PC_SPECULAR"); break;
 		case ReconstructStatus::PC_SEGMENT: return std::string("PC_SEGMENT"); break;
 		case ReconstructStatus::SEG_NDF: return std::string("SEG_NDF"); break;
 		case ReconstructStatus::SEG_MATERIAL: return std::string("SEG_MATERIAL"); break;
@@ -56,8 +56,8 @@ namespace RecRoom
 		nlohmann::json j;
 		if (v & ReconstructStatus::POINT_CLOUD) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::POINT_CLOUD));
 		if (v & ReconstructStatus::PC_NORMAL) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::PC_NORMAL));
-		if (v & ReconstructStatus::PC_ALBEDO) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::PC_ALBEDO));
-		if (v & ReconstructStatus::PC_SHARPNESS) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::PC_SHARPNESS));
+		if (v & ReconstructStatus::PC_DIFFUSE) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::PC_DIFFUSE));
+		if (v & ReconstructStatus::PC_SPECULAR) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::PC_SPECULAR));
 		if (v & ReconstructStatus::PC_SEGMENT) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::PC_SEGMENT));
 		if (v & ReconstructStatus::SEG_NDF) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::SEG_NDF));
 		if (v & ReconstructStatus::SEG_MATERIAL) j.push_back(Convert<std::string, ReconstructStatus>(ReconstructStatus::SEG_MATERIAL));

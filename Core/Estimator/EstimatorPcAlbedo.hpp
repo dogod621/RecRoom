@@ -89,7 +89,7 @@ namespace RecRoom
 			float xVecNorm = xVec.norm();
 			if (xVecNorm > std::numeric_limits<float>::epsilon())
 			{
-				outPoint.intensity = xVecNorm;
+				outPoint.diffuseAlbedo = xVecNorm;
 				xVec /= xVecNorm;
 				outPoint.normal_x = xVec.x();
 				outPoint.normal_y = xVec.y();

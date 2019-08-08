@@ -36,7 +36,7 @@ namespace RecRoom
 	public:
 		Voxel()
 			: id(-1), parent(nullptr), distance(std::numeric_limits<float>::max()),
-			xyz(0.0f, 0.0f, 0.0f), rgb(0.0f, 0.0f, 0.0f), intensity(0.0f), normal(0.0f, 0.0f, 0.0f, 0.0f), curvature(0.0f), sharpness(0.0f) {}
+			xyz(0.0f, 0.0f, 0.0f), rgb(0.0f, 0.0f, 0.0f), normal(0.0f, 0.0f, 0.0f, 0.0f), curvature(0.0f), diffuseAlbedo(0.0f), specularSharpness(0.0f) {}
 
 	public:
 		operator PointCINS() const;
@@ -51,10 +51,10 @@ namespace RecRoom
 		
 		Eigen::Vector3f xyz;
 		Eigen::Vector3f rgb;
-		float intensity;
 		Eigen::Vector4f normal;
 		float curvature;
-		float sharpness;
+		float diffuseAlbedo;
+		float specularSharpness;
 
 	public:
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -196,10 +196,10 @@ namespace RecRoom
 		{
 			centroid.xyz = Eigen::Vector3f::Zero();
 			centroid.rgb = Eigen::Vector3f::Zero();
-			centroid.intensity = 0.f;
 			centroid.normal = Eigen::Vector4f::Zero();
 			centroid.curvature = 0.0f;
-			centroid.sharpness = 0.f;
+			centroid.diffuseAlbedo = 0.f;
+			centroid.specularSharpness = 0.f;
 			for (OATLeaves<PointCINS>::iterator it = leaves.begin(); it != leaves.end(); ++it)
 				centroid += (*it)->getData();
 			centroid /= static_cast<float> (leaves.size());
@@ -230,10 +230,10 @@ namespace RecRoom
 
 	public:
 		SupervoxelClustering(float voxelResolution, float seedResolution,
-			float xyzImportance = 0.4f, float rgbImportance = 0.4f, float intensityImportance = 5.0f, float normalImportance = 1.0f, float sharpnessImportance = 5.0f,
+			float xyzImportance = 0.4f, float rgbImportance = 0.4f, float normalImportance = 1.0f, float diffuseAlbedoImportance = 5.0f, float specularSharpnessImportance = 5.0f,
 			std::size_t minSize = 1, std::size_t numIter = 0)
 			: voxelResolution(voxelResolution), seedResolution(seedResolution),
-			xyzImportance(xyzImportance), rgbImportance(rgbImportance), intensityImportance(intensityImportance), normalImportance(normalImportance), sharpnessImportance(sharpnessImportance), minSize(minSize), numIter(numIter),
+			xyzImportance(xyzImportance), rgbImportance(rgbImportance), normalImportance(normalImportance), diffuseAlbedoImportance(diffuseAlbedoImportance), specularSharpnessImportance(specularSharpnessImportance), minSize(minSize), numIter(numIter),
 			oat(new OAT<PointCINS>(voxelResolution)), pcCentroid(), accCentroid(new pcl::search::KdTree<PointCINS>) 
 		{
 			if (this->numIter == 0)
@@ -285,9 +285,9 @@ namespace RecRoom
 			float dist = xyzImportance * (v1.xyz - v2.xyz).norm() / seedResolution;
 
 			dist += rgbImportance * ((v1.rgb / 255.0f) - (v2.rgb / 255.0f)).norm();
-			dist += intensityImportance * std::abs(v1.intensity - v2.intensity) / 255.0f;
 			dist += normalImportance * (1.0f - std::abs(v1.normal.dot(v2.normal)));
-			dist += sharpnessImportance * std::abs(v1.sharpness - v2.sharpness);
+			dist += diffuseAlbedoImportance * std::abs(v1.diffuseAlbedo - v2.diffuseAlbedo) / 255.0f;
+			dist += specularSharpnessImportance * std::abs(v1.specularSharpness - v2.specularSharpness);
 
 			return  dist;
 		}
@@ -302,9 +302,9 @@ namespace RecRoom
 
 		float xyzImportance;
 		float rgbImportance;
-		float intensityImportance;
 		float normalImportance;
-		float sharpnessImportance;
+		float diffuseAlbedoImportance;
+		float specularSharpnessImportance;
 		std::size_t minSize;
 		std::size_t numIter;
 

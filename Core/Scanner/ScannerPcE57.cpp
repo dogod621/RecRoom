@@ -83,12 +83,12 @@ namespace RecRoom
 						// E57 cannot contain normal
 						scanMeta.hasPointNormal = false;
 
-						if (proto.isDefined("colorRed") && proto.isDefined("colorGreen") && proto.isDefined("colorBlue") && WITH_INPUT_PERPOINT_RGB)
+						if (proto.isDefined("colorRed") && proto.isDefined("colorGreen") && proto.isDefined("colorBlue"))
 						{
 							scanMeta.hasPointRGB = true;
 						}
 
-						if (proto.isDefined("intensity") && WITH_INPUT_PERPOINT_INTENSITY)
+						if (proto.isDefined("intensity"))
 						{
 							scanMeta.hasPointI = true;
 						}
@@ -252,7 +252,6 @@ namespace RecRoom
 					sp.z = xyz.z();
 				}
 
-#ifdef INPUT_PERPOINT_RGB
 				if (scanMeta.hasPointRGB)
 				{
 					sp.r = rBuffer[px];
@@ -265,18 +264,14 @@ namespace RecRoom
 					sp.g = 255;
 					sp.b = 255;
 				}
-#endif
 
-#ifdef INPUT_PERPOINT_INTENSITY
 				if (scanMeta.hasPointI)
 				{
 					sp.intensity = iBuffer[px];
 				}
-#endif
 
-#ifdef INPUT_PERPOINT_SERIAL_NUMBER
 				sp.serialNumber = (uint32_t)scanMeta.serialNumber;
-#endif
+
 				if (Valid(sp))
 					pc.push_back(sp);
 			}

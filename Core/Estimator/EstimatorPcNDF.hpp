@@ -10,15 +10,15 @@ namespace RecRoom
 	{
 		std::vector<NDFSample>& samples = *((std::vector<NDFSample>*)(data));
 
-		double intensity = x(0);
-		double sharpness = x(1);
-		double specularIntensity = x(2);
+		double diffuseAlbedo = x(0);
+		double specularAlbedo = x(1);
+		double specularSharpness = x(2);
 
 		double r = 0.0;
 		for (std::vector<NDFSample>::iterator it = samples.begin(); it != samples.end(); ++it)
 		{
-			double nFun = std::exp(sharpness * (it->tanDir.z() - 1.0));
-			double diff = it->intensity - (intensity + specularIntensity * nFun);
+			double nFun = std::exp(specularSharpness * (it->tanDir.z() - 1.0));
+			double diff = it->intensity - (diffuseAlbedo + specularAlbedo * nFun);
 			r += it->weight * diff * diff;
 		}
 		return r;
@@ -28,9 +28,9 @@ namespace RecRoom
 	{
 		std::vector<NDFSample>& samples = *((std::vector<NDFSample>*)(data));
 
-		double intensity = x(0);
-		double sharpness = x(1);
-		double specularIntensity = x(2);
+		double diffuseAlbedo = x(0);
+		double specularAlbedo = x(1);
+		double specularSharpness = x(2);
 
 		g = Eigen::VectorXd(3);
 		g(0) = 0.0;
@@ -38,12 +38,12 @@ namespace RecRoom
 		g(2) = 0.0;
 		for (std::vector<NDFSample>::iterator it = samples.begin(); it != samples.end(); ++it)
 		{
-			double nFun = std::exp(sharpness * (it->tanDir.z() - 1.0));
-			double diff = it->intensity - (intensity + specularIntensity * nFun);
+			double nFun = std::exp(specularSharpness * (it->tanDir.z() - 1.0));
+			double diff = it->intensity - (diffuseAlbedo + specularAlbedo * nFun);
 			double temp = -2.0 * it->weight * diff;
 			g(0) += temp;
-			g(1) += temp * (specularIntensity * nFun * (it->tanDir.z() - 1.0));
-			g(2) += temp * nFun;
+			g(1) += temp * nFun;
+			g(2) += temp * (specularAlbedo * nFun * (it->tanDir.z() - 1.0));
 		}
 	}
 
@@ -84,7 +84,7 @@ namespace RecRoom
 						hitTangent.dot(hafway),
 						hitBitangent.dot(hafway),
 						hitNormal.dot(hafway)),
-					hitPoint.rgb,
+					hitPoint.diffuseAlbedo,
 					intensity, weight));
 				temp.push_back(hitPoint.serialNumber);
 			}
@@ -98,65 +98,39 @@ namespace RecRoom
 			return false;
 
 		const int numInitSharpness = 32;
-		float epsInitSharpness = (maxSharpness - minSharpness) / (float)(numInitSharpness);
+		float epsInitSpecularSharpness = (maxSharpness - minSharpness) / (float)(numInitSharpness);
 		float bestMSE = std::numeric_limits<float>::max();
-		for (int testInitSharpness = 0; testInitSharpness < numInitSharpness; ++testInitSharpness)
+		for (int testInitSpecularSharpness = 0; testInitSpecularSharpness < numInitSharpness; ++testInitSpecularSharpness)
 		{
-			float testSharpness = ((float)testInitSharpness + 0.5f) * epsInitSharpness;
-			float testIntensity;
-			float testSpecularIntensity;
-			float testMSE = Evaluate_Intensity_SpecularIntensity_MSE(samples, testIntensity, testSharpness, testSpecularIntensity);
+			float testDiffuseAlbedo;
+			float testSpecularAlbedo;
+			float testSpecularSharpness = ((float)testInitSpecularSharpness + 0.5f) * epsInitSpecularSharpness;
+			float testMSE = Evaluate_Intensity_SpecularIntensity_MSE(samples, testDiffuseAlbedo, testSpecularAlbedo, testSpecularSharpness);
 
 			if (testMSE < bestMSE)
 			{
-				outPoint.intensity = testIntensity;
-				outPoint.sharpness = testSharpness;
-				outPoint.specularIntensity = testSpecularIntensity;
+				outPoint.diffuseAlbedo = testDiffuseAlbedo;
+				outPoint.specularAlbedo = testSpecularAlbedo;
+				outPoint.specularSharpness = testSpecularSharpness;
 
 				bestMSE = testMSE;
 			}
 		}
 
-		/*const int numInitSharpness = 32;
-		const int numInitSpecularIntensity = 32;
-
-		float epsInitSharpness = (maxSharpness - minSharpness) / (float)(numInitSharpness);
-		float epsInitSpecularIntensity = 1.0 / (float)(numInitSpecularIntensity);
-
-		float bestMSE = std::numeric_limits<float>::max();
-		for (int testInitSharpness = 0; testInitSharpness < numInitSharpness; ++testInitSharpness)
-		{
-			for (int testInitSpecularIntensity = 0; testInitSpecularIntensity < numInitSpecularIntensity; ++testInitSpecularIntensity)
-			{
-				float testSharpness = ((float)testInitSharpness + 0.5f) * epsInitSharpness;
-				float testSpecularIntensity = ((float)testInitSpecularIntensity + 0.5f) * epsInitSpecularIntensity;
-				float testMSE = Evaluate_MSE(samples, center.intensity, testSharpness, testSpecularIntensity);
-
-				if (testMSE < bestMSE)
-				{
-					outPoint.sharpness = testSharpness;
-					outPoint.intensity = center.intensity;
-					outPoint.specularIntensity = testSpecularIntensity;
-
-					bestMSE = testMSE;
-				}
-			}
-		}*/
-
 		Eigen::VectorXd lowerBound(3);
 		Eigen::VectorXd upperBound(3);
-		lowerBound << 0.0, minSharpness, 0.0;
-		upperBound << 512.0, maxSharpness, 512.0;
+		lowerBound << 0.0, 0.0, minSharpness;
+		upperBound << 512.0, 512.0, maxSharpness;
 		LBFGSB solver(lowerBound, upperBound);
 		
 		Eigen::VectorXd optX(3);
-		optX << outPoint.intensity, outPoint.sharpness, outPoint.specularIntensity;
+		optX << outPoint.diffuseAlbedo, outPoint.specularAlbedo, outPoint.specularSharpness;
 
 		solver.Solve(optX, SG_Distribution_ObjValue, SG_Distributio_ObjGradient, (void*)(&samples));
 
-		outPoint.intensity = optX(0);
-		outPoint.sharpness = optX(1);
-		outPoint.specularIntensity = optX(2);
+		outPoint.diffuseAlbedo = optX(0);
+		outPoint.specularAlbedo = optX(2);
+		outPoint.specularSharpness = optX(1);
 
 		if (!OutPointValid(outPoint))
 			return false;

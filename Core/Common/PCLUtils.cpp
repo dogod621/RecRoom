@@ -137,9 +137,9 @@ namespace RecRoom
 		int curvature_index = getFieldIndex(mesh.cloud, "curvature");
 		int rgba_index = getFieldIndex(mesh.cloud, "rgba");
 		int rgb_index = getFieldIndex(mesh.cloud, "rgb");
-		int intensity_index = getFieldIndex(mesh.cloud, "intensity");
-		int sharpness_index = getFieldIndex(mesh.cloud, "sharpness");
-		int specularIntensity_index = getFieldIndex(mesh.cloud, "specularIntensity");
+		int diffuseAlbedo_index = getFieldIndex(mesh.cloud, "diffuseAlbedo");
+		int specularAlbedo_index = getFieldIndex(mesh.cloud, "specularAlbedo");
+		int specularSharpness_index = getFieldIndex(mesh.cloud, "specularSharpness");
 		int label_index = getFieldIndex(mesh.cloud, "label");
 		
 		std::vector<float> x;
@@ -150,9 +150,9 @@ namespace RecRoom
 		std::vector<float> normal_z;
 		std::vector<float> curvature;
 		std::vector<uint32_t> rgba;
-		std::vector<float> intensity;
-		std::vector<float> sharpness;
-		std::vector<float> specularIntensity;
+		std::vector<float> diffuseAlbedo;
+		std::vector<float> specularAlbedo;
+		std::vector<float> specularSharpness;
 		std::vector<uint32_t> label;
 
 		// number of points
@@ -266,27 +266,27 @@ namespace RecRoom
 					return -2;
 			}
 
-			if (intensity_index != -1)
+			if (diffuseAlbedo_index != -1)
 			{
-				file << "\nproperty float intensity";
+				file << "\nproperty float diffuseAlbedo";
 				if (!Copy(numPoints, pointSize, mesh.cloud.data,
-					mesh.cloud.fields[intensity_index], pcl::PCLPointField::FLOAT32, &intensity))
+					mesh.cloud.fields[diffuseAlbedo_index], pcl::PCLPointField::FLOAT32, &diffuseAlbedo))
 					return -2;
 			}
 
-			if (sharpness_index != -1)
+			if (specularAlbedo_index != -1)
 			{
-				file << "\nproperty float sharpness";
+				file << "\nproperty float specularAlbedo";
 				if (!Copy(numPoints, pointSize, mesh.cloud.data,
-					mesh.cloud.fields[sharpness_index], pcl::PCLPointField::FLOAT32, &sharpness))
+					mesh.cloud.fields[specularAlbedo_index], pcl::PCLPointField::FLOAT32, &specularAlbedo))
 					return -2;
 			}
 
-			if (specularIntensity_index != -1)
+			if (specularSharpness_index != -1)
 			{
-				file << "\nproperty float specularIntensity";
+				file << "\nproperty float specularSharpness";
 				if (!Copy(numPoints, pointSize, mesh.cloud.data,
-					mesh.cloud.fields[specularIntensity_index], pcl::PCLPointField::FLOAT32, &specularIntensity))
+					mesh.cloud.fields[specularSharpness_index], pcl::PCLPointField::FLOAT32, &specularSharpness))
 					return -2;
 			}
 
@@ -373,11 +373,11 @@ namespace RecRoom
 						file.write(reinterpret_cast<const char*> (&color.rgba.b), sizeof(uint8_t));
 					}
 
-					if (intensity_index != -1) file.write(reinterpret_cast<const char*> (&intensity[i]), sizeof(float));
+					if (diffuseAlbedo_index != -1) file.write(reinterpret_cast<const char*> (&diffuseAlbedo[i]), sizeof(float));
 
-					if (sharpness_index != -1) file.write(reinterpret_cast<const char*> (&sharpness[i]), sizeof(float));
-					
-					if (specularIntensity_index != -1) file.write(reinterpret_cast<const char*> (&specularIntensity[i]), sizeof(float));
+					if (specularAlbedo_index != -1) file.write(reinterpret_cast<const char*> (&specularAlbedo[i]), sizeof(float));
+
+					if (specularSharpness_index != -1) file.write(reinterpret_cast<const char*> (&specularSharpness[i]), sizeof(float));
 
 					if (label_index != -1) file.write(reinterpret_cast<const char*> (&label[i]), sizeof(float));
 
@@ -438,12 +438,12 @@ namespace RecRoom
 						file << int(color.rgba.r) << " " << int(color.rgba.g) << " " << int(color.rgba.b) << " ";
 					}
 
-					if (intensity_index != -1) file << intensity[i] << " ";
+					if (diffuseAlbedo_index != -1) file << diffuseAlbedo[i] << " ";
 
-					if (sharpness_index != -1) file << sharpness[i] << " ";
-
-					if (specularIntensity_index != -1) file << specularIntensity[i] << " ";
+					if (specularAlbedo_index != -1) file << specularAlbedo[i] << " ";
 					
+					if (specularSharpness_index != -1) file << specularSharpness[i] << " ";
+
 					if (label_index != -1) file << label[i] << " ";
 
 					file << '\n';

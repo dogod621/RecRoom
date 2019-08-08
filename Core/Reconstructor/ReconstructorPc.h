@@ -19,8 +19,8 @@ namespace RecRoom
 		ReconstructStatus_UNKNOWN = 0,
 		POINT_CLOUD = 1 << 1,
 		PC_NORMAL = 1 << 2,
-		PC_ALBEDO = 1 << 3,
-		PC_SHARPNESS = 1 << 4,
+		PC_DIFFUSE = 1 << 3,
+		PC_SPECULAR = 1 << 4,
 		PC_SEGMENT = 1 << 5,
 		SEG_NDF = 1 << 6,
 		SEG_MATERIAL = 1 << 7,
@@ -56,8 +56,8 @@ namespace RecRoom
 	public:
 		void RecPointCloud();
 		void RecPcNormal();
-		void RecPcAlbedo();
-		void RecPcSharpness();
+		void RecPcDiffuse();
+		void RecPcSpecular();
 		void RecPcSegment();
 		void RecSegNDF();
 		void RecSegMaterial();
@@ -73,8 +73,8 @@ namespace RecRoom
 	protected:
 		virtual void ImplementRecPointCloud() = 0;
 		virtual void ImplementRecPcNormal() = 0;
-		virtual void ImplementRecPcAlbedo() = 0;
-		virtual void ImplementRecPcSharpness() = 0;
+		virtual void ImplementRecPcDiffuse() = 0;
+		virtual void ImplementRecPcSpecular() = 0;
 		virtual void ImplementRecPcSegment();
 		virtual void ImplementRecSegNDF() = 0;
 		virtual void ImplementRecSegMaterial();
@@ -97,8 +97,8 @@ namespace RecRoom
 		CONST_PTR(Sampler) getDownSampler() const { return downSampler; }
 		CONST_PTR(Interpolator) getFieldInterpolator() const { return fieldInterpolator; }
 		CONST_PTR(Estimator) getNormalEstimator() const { return normalEstimator; }
-		CONST_PTR(Estimator) getAlbedoEstimator() const { return albedoEstimator; }
-		CONST_PTR(Estimator) getSharpnessEstimator() const { return sharpnessEstimator; }
+		CONST_PTR(Estimator) getDiffuseEstimator() const { return diffuseEstimator; }
+		CONST_PTR(Estimator) getSpecularEstimator() const { return specularEstimator; }
 		CONST_PTR(Segmenter) getSegmenter() const { return segmenter; }
 		CONST_PTR(Mesher) getMesher() const { return mesher; }
 		CONST_PTR(MeshFilter) getMeshOutlierRemover() const { return meshOutlierRemover; }
@@ -129,8 +129,8 @@ namespace RecRoom
 			}
 		}
 		void setNormalEstimator(const CONST_PTR(Estimator)& v) { normalEstimator = v; }
-		void setAlbedoEstimator(const CONST_PTR(Estimator)& v) { albedoEstimator = v; }
-		void setSharpnessEstimator(const CONST_PTR(Estimator)& v) { sharpnessEstimator = v; }
+		void setDiffuseEstimator(const CONST_PTR(Estimator)& v) { diffuseEstimator = v; }
+		void setSpecularEstimator(const CONST_PTR(Estimator)& v) { specularEstimator = v; }
 		void setSegmenter(const CONST_PTR(Segmenter)& v) { segmenter = v; }
 		void setMesher(const CONST_PTR(Mesher)& v) 
 		{ 
@@ -181,8 +181,8 @@ namespace RecRoom
 		CONST_PTR(Sampler) downSampler;
 		CONST_PTR(Interpolator) fieldInterpolator;
 		CONST_PTR(Estimator) normalEstimator;
-		CONST_PTR(Estimator) albedoEstimator;
-		CONST_PTR(Estimator) sharpnessEstimator;
+		CONST_PTR(Estimator) diffuseEstimator;
+		CONST_PTR(Estimator) specularEstimator;
 		CONST_PTR(Segmenter) segmenter;
 		
 		CONST_PTR(Mesher) mesher;
