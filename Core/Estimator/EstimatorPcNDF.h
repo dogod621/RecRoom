@@ -208,7 +208,7 @@ namespace RecRoom
 			name = "EstimatorPcSGNDF";
 
 			minSharpness = 1.0f;
-			maxSharpness = 12.0f;
+			maxSharpness = 25.0f;
 		}
 
 	public:

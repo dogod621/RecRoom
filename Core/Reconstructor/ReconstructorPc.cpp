@@ -876,8 +876,8 @@ namespace RecRoom
 				pcl::PCLImage image;
 				pcl::io::PointCloudImageExtractorFromIntensityField<pcl::PointXYZINormal> pcie;
 				pcie.setPaintNaNsWithBlack(true);
-				pcie.setScalingMethod(pcie.SCALING_FULL_RANGE);
-				//pcie.setScalingFactor(255.0);
+				pcie.setScalingMethod(pcie.SCALING_FIXED_FACTOR);
+				pcie.setScalingFactor(255.0);
 				if (!pcie.extract(pcVis1, image))
 					THROW_EXCEPTION("Failed to extract an image from SpecularAlbedo field .");
 				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);

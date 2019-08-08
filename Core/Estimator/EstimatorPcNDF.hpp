@@ -120,7 +120,7 @@ namespace RecRoom
 		if (std::distance(temp.begin(), std::unique(temp.begin(), temp.end())) < minRequireNumData)
 			return false;
 
-		const int numInitSharpness = 16;
+		const int numInitSharpness = 32;
 		float epsInitSpecularSharpness = (maxSharpness - minSharpness) / (float)(numInitSharpness);
 		float bestMSE = std::numeric_limits<float>::max();
 		for (int testInitSpecularSharpness = 0; testInitSpecularSharpness < numInitSharpness; ++testInitSpecularSharpness)
