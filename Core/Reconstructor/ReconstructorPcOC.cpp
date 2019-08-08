@@ -431,6 +431,76 @@ namespace RecRoom
 		return 0;
 	}
 
+	// Async Reconstruct Attribute - Refine Specular
+	int BStep_RecPcRefineSpecular(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
+	{
+		if (!data.pcRecIdx->empty())
+		{
+			PcMED temp;
+
+			global.ptrReconstructorPcOC()->getFieldInterpolator()->Process(data.pcRecAcc, data.pcRaw, nullptr, temp);
+
+			for (std::size_t px = 0; px < data.pcRaw->size(); ++px)
+			{
+				PointMED& tarP = (*data.pcRaw)[px];
+				PointMED& srcP = temp[px];
+
+				tarP.normal_x = srcP.normal_x;
+				tarP.normal_y = srcP.normal_y;
+				tarP.normal_z = srcP.normal_z;
+				tarP.curvature = srcP.curvature;
+
+				tarP.diffuseAlbedo = srcP.diffuseAlbedo;
+				tarP.specularAlbedo = srcP.specularAlbedo;
+				tarP.specularSharpness = srcP.specularSharpness;
+
+				tarP.label = srcP.label;
+			}
+
+			global.ptrReconstructorPcOC()->getRefineSpecularEstimator()->ProcessInOut(
+				data.pcRawAcc, data.pcRec, data.pcRecIdx);
+
+			// NAN fill
+			if (!data.pcRec->is_dense)
+			{
+				PTR(PcIndex) validFilter(new PcIndex);
+				PTR(PcIndex) inValidFilter(new PcIndex);
+				validFilter->reserve(data.pcRecIdx->size());
+				inValidFilter->reserve(data.pcRecIdx->size());
+				for (PcIndex::const_iterator it = data.pcRecIdx->begin(); it != data.pcRecIdx->end(); ++it)
+				{
+					if (global.ptrReconstructorPcOC()->getSpecularEstimator()->OutPointValid((*data.pcRec)[*it]))
+						validFilter->push_back(*it);
+					else
+						inValidFilter->push_back(*it);
+				}
+
+				if ((validFilter->size() > 0) && (inValidFilter->size() > 0))
+				{
+					PTR(AccMED) validAcc(new KDTreeMED);
+					validAcc->setInputCloud(data.pcRec, validFilter);
+
+					PcMED temp;
+
+					global.ptrReconstructorPcOC()->getFieldInterpolator()->Process(validAcc, data.pcRec, inValidFilter, temp);
+
+					for (std::size_t idx = 0; idx < inValidFilter->size(); ++idx)
+					{
+						PointMED& tarP = (*data.pcRec)[(*inValidFilter)[idx]];
+						PointMED& srcP = temp[idx];
+
+						tarP.intensity = srcP.intensity;
+
+						tarP.diffuseAlbedo = srcP.diffuseAlbedo;
+						tarP.specularAlbedo = srcP.specularAlbedo;
+						tarP.specularSharpness = srcP.specularSharpness;
+					}
+				}
+			}
+		}
+		return 0;
+	}
+	
 	// Async Reconstruct Attribute - NDF
 	int BStep_RecSegNDF(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
 	{
@@ -550,6 +620,20 @@ namespace RecRoom
 		AsyncProcess<AsyncGlobal_Rec, AsyncQuery_Rec, AsyncData_Rec>(
 			global, queries,
 			AStep_RecPcAtt, BStep_RecPcSpecular, CStep_RecPcAtt,
+			asyncSize);
+	}
+
+	void ReconstructorPcOC::ImplementRecPcRefineSpecular()
+	{
+		AsyncGlobal_Rec global(this);
+
+		std::vector<AsyncQuery_Rec> queries(scanner->getContainerPcRAW()->Size());
+		for (std::size_t i = 0; i < queries.size(); ++i)
+			queries[i].index = i;
+
+		AsyncProcess<AsyncGlobal_Rec, AsyncQuery_Rec, AsyncData_Rec>(
+			global, queries,
+			AStep_RecPcAtt, BStep_RecPcRefineSpecular, CStep_RecPcAtt,
 			asyncSize);
 	}
 

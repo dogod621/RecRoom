@@ -36,6 +36,7 @@ namespace RecRoom
 		normalEstimator(nullptr),
 		diffuseEstimator(nullptr),
 		specularEstimator(nullptr),
+		refineSpecularEstimator(nullptr),
 		segmenter(nullptr),
 		mesher(nullptr),
 		meshOutlierRemover(nullptr),
@@ -175,6 +176,44 @@ namespace RecRoom
 		else
 		{
 			PRINT_WARNING("specularEstimator is not set, ignore it");
+		}
+	}
+
+	void ReconstructorPc::RecPcRefineSpecular()
+	{
+		if (status & ReconstructStatus::PC_REFINE_SPECULAR)
+		{
+			PRINT_WARNING("Aready reconstructed, ignore.");
+		}
+		else if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("POINT_CLOUD is not reconstructed yet, ignore.");
+		}
+		else if ((status & ReconstructStatus::PC_NORMAL) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("PC_NORMAL is not reconstructed yet, ignore.");
+		}
+		else if ((status & ReconstructStatus::PC_DIFFUSE) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("PC_DIFFUSE is not reconstructed yet, ignore.");
+		}
+		else if ((status & ReconstructStatus::PC_SPECULAR) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("PC_SPECULAR is not reconstructed yet, ignore.");
+		}
+		else if (pcMED->empty())
+		{
+			PRINT_WARNING("pcMED is empty, ignore.");
+		}
+		else if (refineSpecularEstimator)
+		{
+			ImplementRecPcRefineSpecular();
+			status = (ReconstructStatus)(status | ReconstructStatus::PC_REFINE_SPECULAR);
+			Dump();
+		}
+		else
+		{
+			PRINT_WARNING("refineSpecularEstimator is not set, ignore it");
 		}
 	}
 
