@@ -287,9 +287,9 @@ namespace RecRoom
 		{
 			PRINT_WARNING("Aready reconstructed, ignore.");
 		}
-		else if (containerPcNDF->Size() != 0)
+		else if (containerPcNDF->NumLabel() != 0)
 		{
-			PRINT_WARNING("containerPcLF is already used, ignore");
+			THROW_EXCEPTION("containerPcLF is already used");
 		}
 		else if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 		{
@@ -302,6 +302,14 @@ namespace RecRoom
 		else if ((status & ReconstructStatus::PC_NORMAL) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 		{
 			PRINT_WARNING("PC_NORMAL is not reconstructed yet, ignore.");
+		}
+		else if ((status & ReconstructStatus::PC_DIFFUSE) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("PC_DIFFUSE is not reconstructed yet, ignore.");
+		}
+		else if ((status & ReconstructStatus::PC_SPECULAR) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("PC_SPECULAR is not reconstructed yet, ignore.");
 		}
 		else if (pcMED->empty())
 		{
@@ -320,10 +328,6 @@ namespace RecRoom
 		if (status & ReconstructStatus::SEG_MATERIAL)
 		{
 			PRINT_WARNING("Aready reconstructed, ignore.");
-		}
-		else if (containerPcNDF->Size() != 0)
-		{
-			PRINT_WARNING("containerPcLF is already used, ignore");
 		}
 		else if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 		{
@@ -461,91 +465,182 @@ namespace RecRoom
 
 		std::size_t width = 256;
 		std::size_t height = 256;
-		for (std::size_t segID = 0; segID < containerPcNDF->Size(); ++segID)
+		for (std::size_t segID = 0; segID < containerPcNDF->NumLabel(); ++segID)
 		{
-			PTR(PcNDF) pcNDF = containerPcNDF->GetData(segID);
-
 			{
-				std::stringstream ss;
-				ss << "VisualSegmentNDFs : " << segID << ", pcSize: " << pcNDF->size();
-				PRINT_INFO(ss.str().c_str());
-			}
-
-			Pc<pcl::PointXYZINormal> pcVisNDF;
-			pcVisNDF.width = width;
-			pcVisNDF.height = height;
-			pcVisNDF.is_dense = false;
-			pcVisNDF.resize(width * height);
-			for (Pc<pcl::PointXYZINormal>::iterator it = pcVisNDF.begin(); it != pcVisNDF.end(); ++it)
-			{
-				it->x = 0.0;// use as counter
-				it->y = 0.0;
-				it->z = 0.0;
-				it->normal_x = NAN;
-				it->normal_y = NAN;
-				it->normal_z = NAN;
-				it->intensity = 0.0;
-			}
-
-			for (PcNDF::iterator it = pcNDF->begin(); it != pcNDF->end(); ++it)
-			{
-				Eigen::Vector2d uv = ToUV(ToMapping(UVMode::HEMISPHERE, CoordSys::XYZ_PX_PY_PZ), Eigen::Vector3d(it->normal_x, it->normal_y, it->normal_z));
-				std::size_t col = uv.x() * (width - 1);
-				std::size_t row = (1.0 - uv.y()) * (height - 1);
-				std::size_t index = row * width + col;
-				pcVisNDF[index].x += 1;
-				pcVisNDF[index].intensity += it->intensity;
-			}
-
-			std::size_t index = 0;
-			for (Pc<pcl::PointXYZINormal>::iterator it = pcVisNDF.begin(); it != pcVisNDF.end(); ++it)
-			{
-				if (it->x > 0)
+				PTR(PcNDF) pcNDF = containerPcNDF->GetData(segID);
+				if (pcNDF->size() > 0)
 				{
-					it->intensity /= it->x;
-					it->x = 0.0f;
+					{
+						std::stringstream ss;
+						ss << "VisualSegmentNDFs : " << segID << ", pcSize: " << pcNDF->size();
+						PRINT_INFO(ss.str().c_str());
+					}
 
-					std::size_t col = index % width;
-					std::size_t row = index / width;
-					Eigen::Vector2d uv(
-						(((double)col) + 0.5/ (double)(width - 1)) * 2.0 - 1.0,
-						(1.0 - ((double)row) + 0.5 / (double)(height - 1)) * 2.0 - 1.0);
+					Pc<pcl::PointXYZINormal> pcVisNDF;
+					pcVisNDF.width = width;
+					pcVisNDF.height = height;
+					pcVisNDF.is_dense = false;
+					pcVisNDF.resize(width * height);
+					for (Pc<pcl::PointXYZINormal>::iterator it = pcVisNDF.begin(); it != pcVisNDF.end(); ++it)
+					{
+						it->x = 0.0;// use as counter
+						it->y = 0.0;
+						it->z = 0.0;
+						it->normal_x = NAN;
+						it->normal_y = NAN;
+						it->normal_z = NAN;
+						it->intensity = 0.0;
+					}
 
-					it->normal_x = uv.x();
-					it->normal_y = uv.y();
-					it->normal_z = std::sqrt(1.0 - uv.x()*uv.x() - uv.y()*uv.y());
+					for (PcNDF::iterator it = pcNDF->begin(); it != pcNDF->end(); ++it)
+					{
+						Eigen::Vector2d uv = ToUV(ToMapping(UVMode::HEMISPHERE, CoordSys::XYZ_PX_PY_PZ), Eigen::Vector3d(it->normal_x, it->normal_y, it->normal_z));
+						std::size_t col = uv.x() * (width - 1);
+						std::size_t row = (1.0 - uv.y()) * (height - 1);
+						std::size_t index = row * width + col;
+						pcVisNDF[index].x += 1;
+						pcVisNDF[index].intensity += it->intensity;
+					}
 
+					std::size_t index = 0;
+					for (Pc<pcl::PointXYZINormal>::iterator it = pcVisNDF.begin(); it != pcVisNDF.end(); ++it)
+					{
+						if (it->x > 0)
+						{
+							it->intensity /= it->x;
+							it->x = 0.0f;
+
+							std::size_t col = index % width;
+							std::size_t row = index / width;
+							Eigen::Vector2d uv(
+								(((double)col) + 0.5 / (double)(width - 1)) * 2.0 - 1.0,
+								(1.0 - ((double)row) + 0.5 / (double)(height - 1)) * 2.0 - 1.0);
+
+							it->normal_x = uv.x();
+							it->normal_y = uv.y();
+							it->normal_z = std::sqrt(1.0 - uv.x()*uv.x() - uv.y()*uv.y());
+
+						}
+
+						index++;
+					}
+
+					{
+						std::stringstream fileName;
+						fileName << segID << "_Dir.png";
+
+						pcl::PCLImage image;
+						pcl::io::PointCloudImageExtractorFromNormalField<pcl::PointXYZINormal> pcie;
+						pcie.setPaintNaNsWithBlack(true);
+						if (!pcie.extract(pcVisNDF, image))
+							THROW_EXCEPTION("Failed to extract an image from Normal field .");
+						pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualSegmentNDFs") / boost::filesystem::path(fileName.str())).string(), image);
+					}
+
+					{
+						std::stringstream fileName;
+						fileName << segID << "_Intensity.png";
+
+						pcl::PCLImage image;
+						pcl::io::PointCloudImageExtractorFromIntensityField<pcl::PointXYZINormal> pcie;
+						pcie.setPaintNaNsWithBlack(true);
+						pcie.setScalingMethod(pcie.SCALING_FIXED_FACTOR);
+						pcie.setScalingFactor(255.f);
+						if (!pcie.extract(pcVisNDF, image))
+							THROW_EXCEPTION("Failed to extract an image from Intensity field .");
+						pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualSegmentNDFs") / boost::filesystem::path(fileName.str())).string(), image);
+					}
 				}
-
-				index++;
 			}
 
+			for (std::size_t scanID = 0; scanID < containerPcNDF->NumSerialNumber(); ++scanID)
 			{
-				std::stringstream fileName;
-				fileName << segID << "_Dir.png";
+				PTR(PcNDF) pcNDF = containerPcNDF->GetData(segID, scanID);
+				if (pcNDF->size() > 0)
+				{
+					{
+						std::stringstream ss;
+						ss << "VisualSegmentNDFs : " << segID << "-" << scanID << ", pcSize: " << pcNDF->size();
+						PRINT_INFO(ss.str().c_str());
+					}
 
-				pcl::PCLImage image;
-				pcl::io::PointCloudImageExtractorFromNormalField<pcl::PointXYZINormal> pcie;
-				pcie.setPaintNaNsWithBlack(true);
-				if (!pcie.extract(pcVisNDF, image))
-					THROW_EXCEPTION("Failed to extract an image from Normal field .");
-				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualSegmentNDFs") / boost::filesystem::path(fileName.str())).string(), image);
+					Pc<pcl::PointXYZINormal> pcVisNDF;
+					pcVisNDF.width = width;
+					pcVisNDF.height = height;
+					pcVisNDF.is_dense = false;
+					pcVisNDF.resize(width * height);
+					for (Pc<pcl::PointXYZINormal>::iterator it = pcVisNDF.begin(); it != pcVisNDF.end(); ++it)
+					{
+						it->x = 0.0;// use as counter
+						it->y = 0.0;
+						it->z = 0.0;
+						it->normal_x = NAN;
+						it->normal_y = NAN;
+						it->normal_z = NAN;
+						it->intensity = 0.0;
+					}
+
+					for (PcNDF::iterator it = pcNDF->begin(); it != pcNDF->end(); ++it)
+					{
+						Eigen::Vector2d uv = ToUV(ToMapping(UVMode::HEMISPHERE, CoordSys::XYZ_PX_PY_PZ), Eigen::Vector3d(it->normal_x, it->normal_y, it->normal_z));
+						std::size_t col = uv.x() * (width - 1);
+						std::size_t row = (1.0 - uv.y()) * (height - 1);
+						std::size_t index = row * width + col;
+						pcVisNDF[index].x += 1;
+						pcVisNDF[index].intensity += it->intensity;
+					}
+
+					std::size_t index = 0;
+					for (Pc<pcl::PointXYZINormal>::iterator it = pcVisNDF.begin(); it != pcVisNDF.end(); ++it)
+					{
+						if (it->x > 0)
+						{
+							it->intensity /= it->x;
+							it->x = 0.0f;
+
+							std::size_t col = index % width;
+							std::size_t row = index / width;
+							Eigen::Vector2d uv(
+								(((double)col) + 0.5 / (double)(width - 1)) * 2.0 - 1.0,
+								(1.0 - ((double)row) + 0.5 / (double)(height - 1)) * 2.0 - 1.0);
+
+							it->normal_x = uv.x();
+							it->normal_y = uv.y();
+							it->normal_z = std::sqrt(1.0 - uv.x()*uv.x() - uv.y()*uv.y());
+
+						}
+
+						index++;
+					}
+
+					{
+						std::stringstream fileName;
+						fileName << segID << "_" << scanID << "_Dir.png";
+
+						pcl::PCLImage image;
+						pcl::io::PointCloudImageExtractorFromNormalField<pcl::PointXYZINormal> pcie;
+						pcie.setPaintNaNsWithBlack(true);
+						if (!pcie.extract(pcVisNDF, image))
+							THROW_EXCEPTION("Failed to extract an image from Normal field .");
+						pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualSegmentNDFs") / boost::filesystem::path(fileName.str())).string(), image);
+					}
+
+					{
+						std::stringstream fileName;
+						fileName << segID << "_" << scanID << "_Intensity.png";
+
+						pcl::PCLImage image;
+						pcl::io::PointCloudImageExtractorFromIntensityField<pcl::PointXYZINormal> pcie;
+						pcie.setPaintNaNsWithBlack(true);
+						pcie.setScalingMethod(pcie.SCALING_FIXED_FACTOR);
+						pcie.setScalingFactor(255.f);
+						if (!pcie.extract(pcVisNDF, image))
+							THROW_EXCEPTION("Failed to extract an image from Intensity field .");
+						pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualSegmentNDFs") / boost::filesystem::path(fileName.str())).string(), image);
+					}
+				}
 			}
-
-			{
-				std::stringstream fileName;
-				fileName << segID << "_Intensity.png";
-
-				pcl::PCLImage image;
-				pcl::io::PointCloudImageExtractorFromIntensityField<pcl::PointXYZINormal> pcie;
-				pcie.setPaintNaNsWithBlack(true);
-				pcie.setScalingMethod(pcie.SCALING_FIXED_FACTOR);
-				pcie.setScalingFactor(255.f);
-				if (!pcie.extract(pcVisNDF, image))
-					THROW_EXCEPTION("Failed to extract an image from Intensity field .");
-				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualSegmentNDFs") / boost::filesystem::path(fileName.str())).string(), image);
-			}
-
 		}
 	}
 

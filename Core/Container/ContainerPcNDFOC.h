@@ -11,7 +11,6 @@ namespace RecRoom
 	{
 	public:
 		using OCT = pcl::outofcore::OutofcoreOctreeBase<pcl::outofcore::OutofcoreOctreeDiskContainer<PointNDF>, PointNDF>;
-		using Meta = ContainerPcNDF::Meta;
 		using Data = ContainerPcNDF::Data;
 
 	public:
@@ -19,15 +18,18 @@ namespace RecRoom
 
 	public:
 		virtual void Merge(const CONST_PTR(PcNDF)& v);
-		virtual std::size_t Size() const { return size; }
-		virtual Data GetData(std::size_t i) const;
+		virtual std::size_t NumLabel() const { return numLabel; }
+		virtual std::size_t NumSerialNumber() const { return numSerialNumber; }
+		virtual Data GetData(std::size_t label, std::size_t serialNumber) const;
+		virtual Data GetData(std::size_t label) const;
 
 	public:
 		PTR(OCT) getOCT() const { return oct; }
 
 	protected:
 		PTR(OCT) oct;
-		std::size_t size;
+		std::size_t numLabel;
+		std::size_t numSerialNumber;
 
 		virtual void Load() { DumpAble::Load(); };
 		virtual void Dump() const { DumpAble::Dump(); };

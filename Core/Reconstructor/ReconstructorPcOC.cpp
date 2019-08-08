@@ -526,6 +526,11 @@ namespace RecRoom
 				tarP.normal_y = srcP.normal_y;
 				tarP.normal_z = srcP.normal_z;
 				tarP.curvature = srcP.curvature;
+
+				tarP.diffuseAlbedo = srcP.diffuseAlbedo;
+				tarP.specularAlbedo = srcP.specularAlbedo;
+				tarP.specularSharpness = srcP.specularSharpness;
+
 				tarP.label = srcP.label;
 			}
 
@@ -555,7 +560,11 @@ namespace RecRoom
 										hitTangent.dot(hafway),
 										hitBitangent.dot(hafway),
 										hitNormal.dot(hafway));
-									pcNDF->push_back(PointNDF(tanHafway.x(), tanHafway.y(), tanHafway.z(), pRaw.label, scanLaser.intensity / scanLaser.beamFalloff));
+									float intensity = scanLaser.intensity / scanLaser.beamFalloff;
+									float diffuseValue = tanHafway.z() * pRaw.diffuseAlbedo;
+
+									if(intensity > diffuseValue)
+										pcNDF->push_back(PointNDF(tanHafway.x(), tanHafway.y(), tanHafway.z(), pRaw.label, pRaw.serialNumber, intensity - diffuseValue));
 								}
 							}
 						}
