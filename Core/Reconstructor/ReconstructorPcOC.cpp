@@ -564,7 +564,7 @@ namespace RecRoom
 									float diffuseValue = tanHafway.z() * pRaw.diffuseAlbedo;
 
 									if(intensity > diffuseValue)
-										pcNDF->push_back(PointNDF(tanHafway.x(), tanHafway.y(), tanHafway.z(), pRaw.label, pRaw.serialNumber, intensity - diffuseValue));
+										pcNDF->push_back(PointNDF(tanHafway.x(), tanHafway.y(), tanHafway.z(), pRaw.label, pRaw.serialNumber, (intensity - diffuseValue)));
 								}
 							}
 						}
