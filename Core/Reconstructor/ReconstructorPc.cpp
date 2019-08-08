@@ -545,8 +545,8 @@ namespace RecRoom
 						pcl::PCLImage image;
 						pcl::io::PointCloudImageExtractorFromIntensityField<pcl::PointXYZINormal> pcie;
 						pcie.setPaintNaNsWithBlack(true);
-						//pcie.setScalingMethod(pcie.SCALING_FIXED_FACTOR);
-						//pcie.setScalingFactor(255.f);
+						pcie.setScalingMethod(pcie.SCALING_FIXED_FACTOR);
+						pcie.setScalingFactor(255.f);
 						if (!pcie.extract(pcVisNDF, image))
 							THROW_EXCEPTION("Failed to extract an image from Intensity field .");
 						pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualSegmentNDFs") / boost::filesystem::path(fileName.str())).string(), image);
