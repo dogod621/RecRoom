@@ -140,25 +140,28 @@ namespace RecRoom
 			}
 
 			//
+			for (int iter = 0; iter < 5; iter++)
 			{
-				float temp = 0;
-				for (int i = 0; i < samples.size(); ++i)
-					temp += samples[i].weight * std::max(samples[i].intensity - specularAlbedo * specularValue[i], 0.0f);
-				if (temp > 0.0f)
-					diffuseAlbedo = temp / meanDiffuseValues;
-				else
-					diffuseAlbedo = 0.0f;
-			}
+				{
+					float temp = 0;
+					for (int i = 0; i < samples.size(); ++i)
+						temp += samples[i].weight * std::max(samples[i].intensity - specularAlbedo * specularValue[i], 0.0f);
+					if (temp > 0.0f)
+						diffuseAlbedo = temp / meanDiffuseValues;
+					else
+						diffuseAlbedo = 0.0f;
+				}
 
-			//
-			{
-				float temp = 0;
-				for (int i = 0; i < samples.size(); ++i)
-					temp += samples[i].weight * std::max(samples[i].intensity - diffuseAlbedo * diffuseValue[i], 0.0f);
-				if (temp > 0.0f)
-					specularAlbedo = temp / meanSpecularValues;
-				else
-					specularAlbedo = 0.0f;
+				//
+				{
+					float temp = 0;
+					for (int i = 0; i < samples.size(); ++i)
+						temp += samples[i].weight * std::max(samples[i].intensity - diffuseAlbedo * diffuseValue[i], 0.0f);
+					if (temp > 0.0f)
+						specularAlbedo = std::max(temp / meanSpecularValues, diffuseAlbedo * 0.1f);
+					else
+						specularAlbedo = diffuseAlbedo * 0.1f;
+				}
 			}
 
 			//

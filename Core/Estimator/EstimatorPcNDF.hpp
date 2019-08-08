@@ -140,7 +140,7 @@ namespace RecRoom
 			}
 		}
 
-		Eigen::VectorXd lowerBound(3);
+		/*Eigen::VectorXd lowerBound(3);
 		Eigen::VectorXd upperBound(3);
 		lowerBound << 0.0, 0.0, minSharpness;
 		upperBound << 512.0, 512.0, maxSharpness;
@@ -157,7 +157,7 @@ namespace RecRoom
 		outPoint.specularSharpness = optX(1);
 
 		if (!OutPointValid(outPoint))
-			return false;
+			return false;*/
 
 		/*if( (optX(0) < lowerBound(0)) ||
 			(optX(0) > upperBound(0)) || 

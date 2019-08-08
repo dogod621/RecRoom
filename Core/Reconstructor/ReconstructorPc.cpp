@@ -201,12 +201,50 @@ namespace RecRoom
 		{
 			PRINT_WARNING("PC_SPECULAR is not reconstructed yet, ignore.");
 		}
+		/*else if ((status & ReconstructStatus::PC_SEGMENT) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("PC_SEGMENT is not reconstructed yet, ignore.");
+		}*/
 		else if (pcMED->empty())
 		{
 			PRINT_WARNING("pcMED is empty, ignore.");
 		}
 		else if (refineSpecularEstimator)
 		{
+			/*std::map<uint32_t, Eigen::Vector3f> temp;
+			for (PcMED::const_iterator it = pcMED->begin(); it != pcMED->end(); ++it)
+			{
+				if (it->HasLabel())
+				{
+					std::map<uint32_t, Eigen::Vector3f>::iterator jt = temp.find(it->label);
+					if (jt != temp.end())
+					{
+						jt->second.x() += it->specularAlbedo;
+						jt->second.y() += it->specularSharpness;
+						jt->second.z() += 1;
+					}
+					else
+					{
+						temp[it->label] = Eigen::Vector3f(it->specularAlbedo, it->specularSharpness, 1);
+					}
+				}
+			}
+
+			for (std::map<uint32_t, Eigen::Vector3f>::iterator it = temp.begin(); it != temp.end(); ++it)
+			{
+				it->second.x() /= it->second.z();
+				it->second.y() /= it->second.z();
+			}
+
+			for (PcMED::iterator it = pcMED->begin(); it != pcMED->end(); ++it)
+			{
+				if (it->HasLabel())
+				{
+					it->specularAlbedo = temp[it->label].x();
+					it->specularSharpness = temp[it->label].y();
+				}
+			}*/
+
 			ImplementRecPcRefineSpecular();
 			status = (ReconstructStatus)(status | ReconstructStatus::PC_REFINE_SPECULAR);
 			Dump();
