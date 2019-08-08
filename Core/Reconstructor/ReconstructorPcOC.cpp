@@ -511,7 +511,7 @@ namespace RecRoom
 										hitTangent.dot(hafway),
 										hitBitangent.dot(hafway),
 										hitNormal.dot(hafway));
-									pcNDF->push_back(PointNDF(hafway.x(), hafway.y(), hafway.z(), pRaw.label, scanLaser.intensity / scanLaser.beamFalloff));
+									pcNDF->push_back(PointNDF(tanHafway.x(), tanHafway.y(), tanHafway.z(), pRaw.label, scanLaser.intensity / scanLaser.beamFalloff));
 								}
 							}
 						}
