@@ -8,17 +8,23 @@ namespace RecRoom
 {
 	struct NDFSample
 	{
+		float initDiffuseAlbedo;
+		float initSpecularAlbedo;
+		float initSpecularSharpness;
+
 		Eigen::Vector3f tanDir;
 		Eigen::Vector3d tanDir64;
-		float initDiffuseAlbedo;
 		float intensity;
 		double intensity64;
 		float weight;
 		double weight64;
 
-		NDFSample(const Eigen::Vector3f& tanDir = Eigen::Vector3f(0.0f, 0.0f, 1.0f), float initDiffuseAlbedo = 0.0f, float intensity = 0.0f, float weight = 0.0f)
-			: tanDir(tanDir), tanDir64(tanDir.x(), tanDir.y(), tanDir.z()), 
-			initDiffuseAlbedo(initDiffuseAlbedo), 
+		NDFSample(
+			float initDiffuseAlbedo = 0.0f, float initSpecularAlbedo = 0.0f, float initSpecularSharpness = 0.0f,
+			const Eigen::Vector3f& tanDir = Eigen::Vector3f(0.0f, 0.0f, 1.0f), float intensity = 0.0f, float weight = 0.0f)
+			: 
+			initDiffuseAlbedo(initDiffuseAlbedo), initSpecularAlbedo(initSpecularAlbedo), initSpecularSharpness(initSpecularSharpness),
+			tanDir(tanDir), tanDir64(tanDir.x(), tanDir.y(), tanDir.z()), 
 			intensity(intensity), intensity64(intensity),
 			weight(weight), weight64(weight)
 		{}

@@ -1,4 +1,4 @@
-/*#pragma once
+#pragma once
 
 #include "Common/LBFGSB.h"
 
@@ -6,47 +6,6 @@
 
 namespace RecRoom
 {
-	double SG_Distribution_ObjValue(const Eigen::VectorXd& x, void* data)
-	{
-		std::vector<NDFSample>& samples = *((std::vector<NDFSample>*)(data));
-
-		double diffuseAlbedo = x(0);
-		double specularAlbedo = x(1);
-		double specularSharpness = x(2);
-
-		double r = 0.0;
-		for (std::vector<NDFSample>::iterator it = samples.begin(); it != samples.end(); ++it)
-		{
-			double nFun = std::exp(specularSharpness * (it->tanDir.z() - 1.0));
-			double diff = it->intensity - it->tanDir.z() * (diffuseAlbedo + specularAlbedo * nFun);
-			r += it->weight * diff * diff;
-		}
-		return r;
-	}
-
-	void SG_Distributio_ObjGradient(const Eigen::VectorXd& x, Eigen::VectorXd& g, void* data)
-	{
-		std::vector<NDFSample>& samples = *((std::vector<NDFSample>*)(data));
-
-		double diffuseAlbedo = x(0);
-		double specularAlbedo = x(1);
-		double specularSharpness = x(2);
-
-		g = Eigen::VectorXd(3);
-		g(0) = 0.0;
-		g(1) = 0.0;
-		g(2) = 0.0;
-		for (std::vector<NDFSample>::iterator it = samples.begin(); it != samples.end(); ++it)
-		{
-			double nFun = std::exp(specularSharpness * (it->tanDir.z() - 1.0));
-			double diff = it->intensity - it->tanDir.z() * (diffuseAlbedo + specularAlbedo * nFun);
-			double temp = -2.0 * it->weight * diff * it->tanDir.z();
-			g(0) += temp;
-			g(1) += temp * nFun;
-			g(2) += temp * (specularAlbedo * nFun * (it->tanDir.z() - 1.0));
-		}
-	}
-
 	template<class InPointType, class OutPointType>
 	inline bool EstimatorPcRefineAlbedo<InPointType, OutPointType>::ComputeAttribute(
 		const Pc<InPointType>& cloud, const InPointType& center,
@@ -55,8 +14,6 @@ namespace RecRoom
 		std::vector<NDFSample> samples;
 		samples.reserve(scanDataSet.size());
 		float sumWeight = 0.0;
-		std::vector<uint32_t> temp;
-		temp.reserve(scanDataSet.size());
 		for (std::vector<ScanData>::const_iterator it = scanDataSet.begin(); it != scanDataSet.end(); ++it)
 		{
 			const InPointType& hitPoint = cloud[it->index];
@@ -80,44 +37,32 @@ namespace RecRoom
 				float intensity = it->laser.intensity / it->laser.beamFalloff;
 				sumWeight += weight;
 				samples.push_back(NDFSample(
+					hitPoint.diffuseAlbedo,
+					hitPoint.specularAlbedo,
+					hitPoint.specularSharpness,
 					Eigen::Vector3f(
 						hitTangent.dot(hafway),
 						hitBitangent.dot(hafway),
 						hitNormal.dot(hafway)),
-					hitPoint.diffuseAlbedo,
 					intensity, weight));
-				temp.push_back(hitPoint.serialNumber);
 			}
 		}
 		for (std::vector<NDFSample>::iterator it = samples.begin(); it != samples.end(); ++it)
 		{
 			it->weight /= sumWeight;
 		}
-		std::sort(temp.begin(), temp.end());
-		if (std::distance(temp.begin(), std::unique(temp.begin(), temp.end())) < minRequireNumData)
-			return false;
 
-		const int numInitSharpness = 16;
-		float epsInitSpecularSharpness = (maxSharpness - minSharpness) / (float)(numInitSharpness);
-		float bestMSE = std::numeric_limits<float>::max();
-		for (int testInitSpecularSharpness = 0; testInitSpecularSharpness < numInitSharpness; ++testInitSpecularSharpness)
+		float temp = 0.0f;
+		float meanDiffuseValues = 0.0f;
+		for (std::vector<NDFSample>::const_iterator it = samples.cbegin(); it != samples.cend(); ++it)
 		{
-			float testDiffuseAlbedo;
-			float testSpecularAlbedo;
-			float testSpecularSharpness = ((float)testInitSpecularSharpness + 0.5f) * epsInitSpecularSharpness;
-			float testMSE = Evaluate_Albedo_MSE(samples, testDiffuseAlbedo, testSpecularAlbedo, testSpecularSharpness);
-
-			if (testMSE < bestMSE)
-			{
-				outPoint.diffuseAlbedo = testDiffuseAlbedo;
-				outPoint.specularAlbedo = testSpecularAlbedo;
-				outPoint.specularSharpness = testSpecularSharpness;
-
-				bestMSE = testMSE;
-			}
+			float diffuseValue = it->tanDir.z() * DiffuseDistribution(it->tanDir);
+			float specularValue = it->tanDir.z() * SpecularDistribution(it->tanDir, it->initSpecularSharpness);
+			meanDiffuseValues += it->weight * diffuseValue;
+			temp += it->weight * std::max(it->intensity - it->initSpecularAlbedo * specularValue, 0.0f);
 		}
-
+		outPoint.diffuseAlbedo = temp / meanDiffuseValues;
 
 		return true;
 	}
-}*/
+}

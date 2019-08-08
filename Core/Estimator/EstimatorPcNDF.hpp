@@ -101,11 +101,13 @@ namespace RecRoom
 				float intensity = it->laser.intensity / it->laser.beamFalloff;
 				sumWeight += weight;
 				samples.push_back(NDFSample(
+					hitPoint.diffuseAlbedo,
+					hitPoint.specularAlbedo,
+					hitPoint.specularSharpness,
 					Eigen::Vector3f(
 						hitTangent.dot(hafway),
 						hitBitangent.dot(hafway),
 						hitNormal.dot(hafway)),
-					hitPoint.diffuseAlbedo,
 					intensity, weight));
 				temp.push_back(hitPoint.serialNumber);
 			}
