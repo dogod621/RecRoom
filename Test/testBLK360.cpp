@@ -401,7 +401,7 @@ int main(int argc, char *argv[])
 					ndfEstimator(
 						new RecRoom::EstimatorPcSGNDF<RecRoom::PointMED, RecRoom::PointMED>(
 							scannerPc, searchRadius,
-							1, 0.5, cutFalloff, cutGrazing));
+							1, 0.5, cutFalloff, 0.0));
 				reconstructorPC->setSpecularEstimator(ndfEstimator);
 			}
 

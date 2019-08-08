@@ -9,12 +9,18 @@ namespace RecRoom
 	struct NDFSample
 	{
 		Eigen::Vector3f tanDir;
-		float diffuseAlbedo;
+		Eigen::Vector3d tanDir64;
+		float initDiffuseAlbedo;
 		float intensity;
+		double intensity64;
 		float weight;
+		double weight64;
 
-		NDFSample(const Eigen::Vector3f& tanDir = Eigen::Vector3f(0.0f, 0.0f, 1.0f), float diffuseAlbedo = 0.0f, float intensity = 0.0f, float weight = 0.0f)
-			: tanDir(tanDir), diffuseAlbedo(diffuseAlbedo), intensity(intensity), weight(weight)
+		NDFSample(const Eigen::Vector3f& tanDir = Eigen::Vector3f(0.0f, 0.0f, 1.0f), float initDiffuseAlbedo = 0.0f, float intensity = 0.0f, float weight = 0.0f)
+			: tanDir(tanDir), tanDir64(tanDir.x(), tanDir.y(), tanDir.z()), 
+			initDiffuseAlbedo(initDiffuseAlbedo), 
+			intensity(intensity), intensity64(intensity),
+			weight(weight), weight64(weight)
 		{}
 
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -74,54 +80,96 @@ namespace RecRoom
 				pcl_isfinite(p.specularSharpness);
 		}
 
-	protected:
-		inline virtual float Distribution(const Eigen::Vector3f& tanDir, float diffuseAlbedo, float specularAlbedo, float specularSharpness) const = 0;
+	public:
+		inline virtual float DiffuseDistribution(const Eigen::Vector3f& tanDir) const = 0;
 
+		inline virtual float SpecularDistribution(const Eigen::Vector3f& tanDir, float specularSharpness) const = 0;
+
+		inline virtual float SpecularDistributionGradient(const Eigen::Vector3f& tanDir, float specularSharpness) const = 0;
+
+		inline virtual double DiffuseDistribution(const Eigen::Vector3d& tanDir) const = 0;
+
+		inline virtual double SpecularDistribution(const Eigen::Vector3d& tanDir, double specularSharpness) const = 0;
+
+		inline virtual double SpecularDistributionGradient(const Eigen::Vector3d& tanDir, double specularSharpness) const = 0;
+
+	protected:
 		inline float Evaluate_MSE(const std::vector<NDFSample>& samples, float diffuseAlbedo, float specularAlbedo, float specularSharpness) const
 		{
 			float mse = 0.0f;
-			for (int i = 0; i < samples.size(); ++i)
+
+			for (std::vector<NDFSample>::const_iterator it = samples.cbegin(); it != samples.cend(); ++it)
 			{
-				float diff = samples[i].intensity - Distribution(samples[i].tanDir, diffuseAlbedo, specularAlbedo, specularSharpness);
-				mse += samples[i].weight * diff * diff;
+				double diff = it->intensity - it->tanDir.z() * (
+					diffuseAlbedo * self.DiffuseDistribution(samples[i].tanDir) +
+					specularAlbedo * self.SpecularDistribution(samples[i].tanDir, specularSharpness));
+				mse += it->weight * diff * diff;
 			}
 			return mse;
 		}
 
-		inline float Evaluate_Intensity_SpecularIntensity_MSE(const std::vector<NDFSample>& samples, float& diffuseAlbedo, float& specularAlbedo, float specularSharpness) const
+		inline float Evaluate_Albedo_MSE(const std::vector<NDFSample>& samples, float& diffuseAlbedo, float& specularAlbedo, float specularSharpness) const
 		{
-			float meanSpecularValues = 0;
-			float meanSpecularSamples = 0;
-			for (int i = 0; i < samples.size(); ++i)
-			{
-				float specularValues = Distribution(samples[i].tanDir, 0.0f, 1.0, specularSharpness);
-				float specularSamples = std::max(samples[i].intensity - samples[i].diffuseAlbedo, 0.0f);
-				meanSpecularValues += samples[i].weight * specularValues;
-				meanSpecularSamples += samples[i].weight * specularSamples;
-			}
-			if (meanSpecularSamples > 0.0f)
-				specularAlbedo = meanSpecularSamples / meanSpecularValues;
-			else
-				specularAlbedo = 0.0f;
-
 			float meanDiffuseValues = 0;
-			float meanDiffuseSamples = 0;
+			float meanSpecularValues = 0;
+			std::vector<float> diffuseValue(samples.size());
+			std::vector<float> specularValue(samples.size());
 			for (int i = 0; i < samples.size(); ++i)
 			{
-				float specularValues = Distribution(samples[i].tanDir, 0.0f, specularAlbedo, specularSharpness);
-				float diffuseSamples = std::max(samples[i].intensity - specularValues, 0.0f);
-				meanDiffuseValues += samples[i].weight;
-				meanDiffuseSamples += samples[i].weight * diffuseSamples;
+				diffuseValue[i] = samples[i].tanDir.z() * DiffuseDistribution(samples[i].tanDir);
+				specularValue[i] = samples[i].tanDir.z() * SpecularDistribution(samples[i].tanDir, specularSharpness);
+				meanDiffuseValues += samples[i].weight * diffuseValue[i];
+				meanSpecularValues += samples[i].weight * specularValue[i];
 			}
-			if (meanDiffuseSamples > 0.0f)
-				diffuseAlbedo = meanDiffuseSamples / meanDiffuseValues;
-			else
-				diffuseAlbedo = 0.0f;
+
+			//
+			{
+				float temp = 0;
+				for (int i = 0; i < samples.size(); ++i)
+					temp += samples[i].weight * std::max(samples[i].intensity - samples[i].initDiffuseAlbedo * diffuseValue[i], 0.0f);
+				if (temp > 0.0f)
+					specularAlbedo = temp / meanSpecularValues;
+				else
+					specularAlbedo = 0.0f;
+			}
+
+			//
+			{
+				float temp = 0;
+				for (int i = 0; i < samples.size(); ++i)
+					temp += samples[i].weight * std::max(samples[i].intensity - specularAlbedo * specularValue[i], 0.0f);
+				if (temp > 0.0f)
+					diffuseAlbedo = temp / meanDiffuseValues;
+				else
+					diffuseAlbedo = 0.0f;
+			}
+
+			//
+			{
+				float temp = 0;
+				for (int i = 0; i < samples.size(); ++i)
+					temp += samples[i].weight * std::max(samples[i].intensity - diffuseAlbedo * diffuseValue[i], 0.0f);
+				if (temp > 0.0f)
+					specularAlbedo = temp / meanSpecularValues;
+				else
+					specularAlbedo = 0.0f;
+			}
+
+			//
+			{
+				float temp = 0;
+				for (int i = 0; i < samples.size(); ++i)
+					temp += samples[i].weight * std::max(samples[i].intensity - specularAlbedo * specularValue[i], 0.0f);
+				if (temp > 0.0f)
+					diffuseAlbedo = temp / meanDiffuseValues;
+				else
+					diffuseAlbedo = 0.0f;
+			}
 
 			float mse = 0.0f;
 			for (int i = 0; i < samples.size(); ++i)
 			{
-				float diff = samples[i].intensity - Distribution(samples[i].tanDir, diffuseAlbedo, specularAlbedo, specularSharpness);
+				float diff = samples[i].intensity - (diffuseAlbedo * diffuseValue[i] + specularAlbedo * specularValue[i]);
 				mse += samples[i].weight * diff * diff;
 			}
 			return mse;
@@ -150,14 +198,39 @@ namespace RecRoom
 		{
 			name = "EstimatorPcSGNDF";
 
-			minSharpness = 0.0f;
-			maxSharpness = 10.0f;
+			minSharpness = 1.0f;
+			maxSharpness = 12.0f;
 		}
 
-	protected:
-		inline virtual float Distribution(const Eigen::Vector3f& tanDir, float diffuseAlbedo, float specularAlbedo, float specularSharpness) const
+	public:
+		inline virtual float DiffuseDistribution(const Eigen::Vector3f& tanDir) const
 		{
-			return diffuseAlbedo + specularAlbedo * std::exp(specularSharpness * (tanDir.z() - 1.0f));
+			return 1.0f;
+		}
+
+		inline virtual float SpecularDistribution(const Eigen::Vector3f& tanDir, float specularSharpness) const
+		{
+			return std::exp(specularSharpness * (tanDir.z() - 1.0f));
+		}
+
+		inline virtual float SpecularDistributionGradient(const Eigen::Vector3f& tanDir, float specularSharpness) const
+		{
+			return std::exp(specularSharpness * (tanDir.z() - 1.0f)) * (tanDir.z() - 1.0f);
+		}
+
+		inline virtual double DiffuseDistribution(const Eigen::Vector3d& tanDir) const
+		{
+			return 1.0;
+		}
+
+		inline virtual double SpecularDistribution(const Eigen::Vector3d& tanDir, double specularSharpness) const
+		{
+			return std::exp(specularSharpness * (tanDir.z() - 1.0));
+		}
+
+		inline virtual double SpecularDistributionGradient(const Eigen::Vector3d& tanDir, double specularSharpness) const
+		{
+			return std::exp(specularSharpness * (tanDir.z() - 1.0)) * (tanDir.z() - 1.0);
 		}
 
 	public:
