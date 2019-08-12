@@ -53,7 +53,7 @@ namespace RecRoom
 				p.HasSerialNumber();
 		}
 
-		inline virtual bool OutPointValid(const OutPointType& p) const
+		inline virtual bool OutputPointValid(const OutPointType& p) const
 		{
 			return pcl_isfinite(p.normal_x) &&
 				pcl_isfinite(p.normal_y) &&

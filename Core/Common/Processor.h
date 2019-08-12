@@ -74,7 +74,7 @@ namespace RecRoom
 			Pc<OutputPointType>& output) const;
 
 	public:
-		inline virtual bool OutPointValid(const OutputPointType& p) const
+		inline virtual bool OutputPointValid(const OutputPointType& p) const
 		{
 			return pcl::isFinite(p);
 		}

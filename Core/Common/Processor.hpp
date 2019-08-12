@@ -120,7 +120,7 @@ namespace RecRoom
 		{
 			for (Pc<OutputPointType>::iterator it = output.begin(); it != output.end(); ++it)
 			{
-				if (!OutPointValid(*it))
+				if (!OutputPointValid(*it))
 				{
 					output.is_dense = false;
 					break;
@@ -166,7 +166,7 @@ namespace RecRoom
 		{
 			for (Pc<OutputPointType>::iterator it = output.begin(); it != output.end(); ++it)
 			{
-				if (!OutPointValid(*it))
+				if (!OutputPointValid(*it))
 				{
 					output.is_dense = false;
 					break;
@@ -222,7 +222,7 @@ namespace RecRoom
 			{
 				(*inOut)[(*filter2)[idx]] = temp2[idx];
 
-				if (!OutPointValid(temp2[idx]))
+				if (!OutputPointValid(temp2[idx]))
 					inOut->is_dense = false;
 			}
 		}

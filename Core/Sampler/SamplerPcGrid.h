@@ -106,7 +106,7 @@ namespace RecRoom
 				pcl_isfinite(p.z);
 		}
 
-		inline virtual bool OutPointValid(const PointType& p) const
+		inline virtual bool OutputPointValid(const PointType& p) const
 		{
 			return pcl_isfinite(p.x) &&
 				pcl_isfinite(p.y) &&

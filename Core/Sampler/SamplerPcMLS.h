@@ -52,7 +52,7 @@ namespace RecRoom
 				pcl_isfinite(p.normal_z);
 		}
 
-		inline virtual bool OutPointValid(const PointType& p) const
+		inline virtual bool OutputPointValid(const PointType& p) const
 		{
 			if (computeNormals)
 			{

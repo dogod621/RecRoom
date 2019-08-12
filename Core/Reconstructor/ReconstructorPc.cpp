@@ -1071,7 +1071,7 @@ namespace RecRoom
 			inValidFilter->reserve(pcMED->size());
 			for (int px = 0; px < pcMED->size(); ++px)
 			{
-				if (segmenter->OutPointValid((*pcMED)[px]))
+				if (segmenter->OutputPointValid((*pcMED)[px]))
 					validFilter->push_back(px);
 				else
 					inValidFilter->push_back(px);

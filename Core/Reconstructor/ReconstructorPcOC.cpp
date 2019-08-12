@@ -251,43 +251,6 @@ namespace RecRoom
 		{
 			global.ptrReconstructorPcOC()->getNormalEstimator()->ProcessInOut(
 				data.pcRawAcc, data.pcRec, data.pcRecIdx);
-
-			// NAN fill
-			if (!data.pcRec->is_dense)
-			{
-				PTR(PcIndex) validFilter(new PcIndex);
-				PTR(PcIndex) inValidFilter(new PcIndex);
-				validFilter->reserve(data.pcRecIdx->size());
-				inValidFilter->reserve(data.pcRecIdx->size());
-				for (PcIndex::const_iterator it = data.pcRecIdx->begin(); it != data.pcRecIdx->end(); ++it)
-				{
-					if (global.ptrReconstructorPcOC()->getNormalEstimator()->OutPointValid((*data.pcRec)[*it]))
-						validFilter->push_back(*it);
-					else
-						inValidFilter->push_back(*it);
-				}
-
-				if ((validFilter->size() > 0) && (inValidFilter->size() > 0))
-				{
-					PTR(AccMED) validAcc(new KDTreeMED);
-					validAcc->setInputCloud(data.pcRec, validFilter);
-
-					PcMED temp;
-
-					global.ptrReconstructorPcOC()->getFieldInterpolator()->Process(validAcc, data.pcRec, inValidFilter, temp);
-
-					for (std::size_t idx = 0; idx < inValidFilter->size(); ++idx)
-					{
-						PointMED& tarP = (*data.pcRec)[(*inValidFilter)[idx]];
-						PointMED& srcP = temp[idx];
-
-						tarP.normal_x = srcP.normal_x;
-						tarP.normal_y = srcP.normal_y;
-						tarP.normal_z = srcP.normal_z;
-						tarP.curvature = srcP.curvature;
-					}
-				}
-			}
 		}
 		return 0;
 	}
@@ -316,49 +279,6 @@ namespace RecRoom
 
 			global.ptrReconstructorPcOC()->getDiffuseEstimator()->ProcessInOut(
 				data.pcRawAcc, data.pcRec, data.pcRecIdx);
-
-			// NAN fill
-			if (!data.pcRec->is_dense)
-			{
-				PTR(PcIndex) validFilter(new PcIndex);
-				PTR(PcIndex) inValidFilter(new PcIndex);
-				validFilter->reserve(data.pcRecIdx->size());
-				inValidFilter->reserve(data.pcRecIdx->size());
-				for (PcIndex::const_iterator it = data.pcRecIdx->begin(); it != data.pcRecIdx->end(); ++it)
-				{
-					if (global.ptrReconstructorPcOC()->getDiffuseEstimator()->OutPointValid((*data.pcRec)[*it]))
-						validFilter->push_back(*it);
-					else
-						inValidFilter->push_back(*it);
-				}
-
-				if ((validFilter->size() > 0) && (inValidFilter->size() > 0))
-				{
-					PTR(AccMED) validAcc(new KDTreeMED);
-					validAcc->setInputCloud(data.pcRec, validFilter);
-
-					PcMED temp;
-
-					global.ptrReconstructorPcOC()->getFieldInterpolator()->Process(validAcc, data.pcRec, inValidFilter, temp);
-
-					for (std::size_t idx = 0; idx < inValidFilter->size(); ++idx)
-					{
-						PointMED& tarP = (*data.pcRec)[(*inValidFilter)[idx]];
-						PointMED& srcP = temp[idx];
-
-						tarP.r = srcP.r;
-						tarP.g = srcP.g;
-						tarP.b = srcP.b;
-
-						tarP.normal_x = srcP.normal_x;
-						tarP.normal_y = srcP.normal_y;
-						tarP.normal_z = srcP.normal_z;
-						tarP.curvature = srcP.curvature;
-
-						tarP.diffuseAlbedo = srcP.diffuseAlbedo;
-					}
-				}
-			}
 		}
 		return 0;
 	}
@@ -389,42 +309,6 @@ namespace RecRoom
 
 			global.ptrReconstructorPcOC()->getSpecularEstimator()->ProcessInOut(
 				data.pcRawAcc, data.pcRec, data.pcRecIdx);
-
-			// NAN fill
-			if (!data.pcRec->is_dense)
-			{
-				PTR(PcIndex) validFilter(new PcIndex);
-				PTR(PcIndex) inValidFilter(new PcIndex);
-				validFilter->reserve(data.pcRecIdx->size());
-				inValidFilter->reserve(data.pcRecIdx->size());
-				for (PcIndex::const_iterator it = data.pcRecIdx->begin(); it != data.pcRecIdx->end(); ++it)
-				{
-					if (global.ptrReconstructorPcOC()->getSpecularEstimator()->OutPointValid((*data.pcRec)[*it]))
-						validFilter->push_back(*it);
-					else
-						inValidFilter->push_back(*it);
-				}
-
-				if ((validFilter->size() > 0) && (inValidFilter->size() > 0))
-				{
-					PTR(AccMED) validAcc(new KDTreeMED);
-					validAcc->setInputCloud(data.pcRec, validFilter);
-
-					PcMED temp;
-
-					global.ptrReconstructorPcOC()->getFieldInterpolator()->Process(validAcc, data.pcRec, inValidFilter, temp);
-
-					for (std::size_t idx = 0; idx < inValidFilter->size(); ++idx)
-					{
-						PointMED& tarP = (*data.pcRec)[(*inValidFilter)[idx]];
-						PointMED& srcP = temp[idx];
-
-						tarP.diffuseAlbedo = srcP.diffuseAlbedo;
-						tarP.specularAlbedo = srcP.specularAlbedo;
-						tarP.specularSharpness = srcP.specularSharpness;
-					}
-				}
-			}
 		}
 		return 0;
 	}
@@ -457,46 +341,10 @@ namespace RecRoom
 
 			global.ptrReconstructorPcOC()->getRefineSpecularEstimator()->ProcessInOut(
 				data.pcRawAcc, data.pcRec, data.pcRecIdx);
-
-			// NAN fill
-			if (!data.pcRec->is_dense)
-			{
-				PTR(PcIndex) validFilter(new PcIndex);
-				PTR(PcIndex) inValidFilter(new PcIndex);
-				validFilter->reserve(data.pcRecIdx->size());
-				inValidFilter->reserve(data.pcRecIdx->size());
-				for (PcIndex::const_iterator it = data.pcRecIdx->begin(); it != data.pcRecIdx->end(); ++it)
-				{
-					if (global.ptrReconstructorPcOC()->getSpecularEstimator()->OutPointValid((*data.pcRec)[*it]))
-						validFilter->push_back(*it);
-					else
-						inValidFilter->push_back(*it);
-				}
-
-				if ((validFilter->size() > 0) && (inValidFilter->size() > 0))
-				{
-					PTR(AccMED) validAcc(new KDTreeMED);
-					validAcc->setInputCloud(data.pcRec, validFilter);
-
-					PcMED temp;
-
-					global.ptrReconstructorPcOC()->getFieldInterpolator()->Process(validAcc, data.pcRec, inValidFilter, temp);
-
-					for (std::size_t idx = 0; idx < inValidFilter->size(); ++idx)
-					{
-						PointMED& tarP = (*data.pcRec)[(*inValidFilter)[idx]];
-						PointMED& srcP = temp[idx];
-
-						tarP.diffuseAlbedo = srcP.diffuseAlbedo;
-						tarP.specularAlbedo = srcP.specularAlbedo;
-						tarP.specularSharpness = srcP.specularSharpness;
-					}
-				}
-			}
 		}
 		return 0;
 	}
-	
+
 	// Async Reconstruct Attribute - NDF
 	int BStep_RecSegNDF(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
 	{
@@ -559,7 +407,7 @@ namespace RecRoom
 									float intensity = scanLaser.intensity / scanLaser.beamFalloff;
 									float diffuseValue = tanHafway.z() * pRaw.diffuseAlbedo;
 
-									if(intensity > diffuseValue)
+									if (intensity > diffuseValue)
 										pcNDF->push_back(PointNDF(tanHafway.x(), tanHafway.y(), tanHafway.z(), pRaw.label, pRaw.serialNumber, (intensity - diffuseValue)));
 								}
 							}
@@ -584,6 +432,33 @@ namespace RecRoom
 			global, queries,
 			AStep_RecPointCloud, BStep_RecPointCloud, CStep_RecPointCloud,
 			asyncSize);
+
+		// NAN fill
+		{
+			PTR(PcIndex) validFilter(new PcIndex);
+			PTR(PcIndex) inValidFilter(new PcIndex);
+			validFilter->reserve(pcMED->size());
+			inValidFilter->reserve(pcMED->size());
+			for (int px = 0; px < pcMED->size(); px++)
+			{
+				if (pcl_isfinite((*pcMED)[px].x) && pcl_isfinite((*pcMED)[px].y) && pcl_isfinite((*pcMED)[px].z))
+					validFilter->push_back(px);
+				else
+					inValidFilter->push_back(px);
+			}
+
+			if ((validFilter->size() > 0) && (inValidFilter->size() > 0))
+			{
+				PTR(PcMED) pcMED2(new PcMED);
+				pcMED2->reserve(pcMED->size());
+
+				for (std::size_t idx = 0; idx < validFilter->size(); ++idx)
+				{
+					pcMED2->push_back((*pcMED)[(*validFilter)[idx]]);
+				}
+				pcMED = pcMED2;
+			}
+		}
 	}
 
 	void ReconstructorPcOC::ImplementRecPcNormal()
@@ -598,6 +473,42 @@ namespace RecRoom
 			global, queries,
 			AStep_RecPcAtt, BStep_RecPcNormal, CStep_RecPcAtt,
 			asyncSize);
+
+		// NAN fill
+		{
+			PTR(PcIndex) validFilter(new PcIndex);
+			PTR(PcIndex) inValidFilter(new PcIndex);
+			validFilter->reserve(pcMED->size());
+			inValidFilter->reserve(pcMED->size());
+			for (int px = 0; px < pcMED->size(); px++)
+			{
+				if (normalEstimator->InputPointValid((*pcMED)[px]) && normalEstimator->OutputPointValid((*pcMED)[px]))
+					validFilter->push_back(px);
+				else
+					inValidFilter->push_back(px);
+			}
+
+			if ((validFilter->size() > 0) && (inValidFilter->size() > 0))
+			{
+				PTR(AccMED) validAcc(new KDTreeMED);
+				validAcc->setInputCloud(pcMED, validFilter);
+
+				PcMED temp;
+
+				fieldInterpolator->Process(validAcc, pcMED, inValidFilter, temp);
+
+				for (std::size_t idx = 0; idx < inValidFilter->size(); ++idx)
+				{
+					PointMED& tarP = (*pcMED)[(*inValidFilter)[idx]];
+					PointMED& srcP = temp[idx];
+
+					tarP.normal_x = srcP.normal_x;
+					tarP.normal_y = srcP.normal_y;
+					tarP.normal_z = srcP.normal_z;
+					tarP.curvature = srcP.curvature;
+				}
+			}
+		}
 	}
 
 	void ReconstructorPcOC::ImplementRecPcDiffuse()
@@ -612,6 +523,48 @@ namespace RecRoom
 			global, queries,
 			AStep_RecPcAtt, BStep_RecPcDiffuse, CStep_RecPcAtt,
 			asyncSize);
+
+		// NAN fill
+		{
+			PTR(PcIndex) validFilter(new PcIndex);
+			PTR(PcIndex) inValidFilter(new PcIndex);
+			validFilter->reserve(pcMED->size());
+			inValidFilter->reserve(pcMED->size());
+			for (int px = 0; px < pcMED->size(); px++)
+			{
+				if (diffuseEstimator->InputPointValid((*pcMED)[px]) && diffuseEstimator->OutputPointValid((*pcMED)[px]))
+					validFilter->push_back(px);
+				else
+					inValidFilter->push_back(px);
+			}
+
+			if ((validFilter->size() > 0) && (inValidFilter->size() > 0))
+			{
+				PTR(AccMED) validAcc(new KDTreeMED);
+				validAcc->setInputCloud(pcMED, validFilter);
+
+				PcMED temp;
+
+				fieldInterpolator->Process(validAcc, pcMED, inValidFilter, temp);
+
+				for (std::size_t idx = 0; idx < inValidFilter->size(); ++idx)
+				{
+					PointMED& tarP = (*pcMED)[(*inValidFilter)[idx]];
+					PointMED& srcP = temp[idx];
+
+					tarP.r = srcP.r;
+					tarP.g = srcP.g;
+					tarP.b = srcP.b;
+
+					tarP.normal_x = srcP.normal_x;
+					tarP.normal_y = srcP.normal_y;
+					tarP.normal_z = srcP.normal_z;
+					tarP.curvature = srcP.curvature;
+
+					tarP.diffuseAlbedo = srcP.diffuseAlbedo;
+				}
+			}
+		}
 	}
 
 	void ReconstructorPcOC::ImplementRecPcSpecular()
@@ -626,6 +579,41 @@ namespace RecRoom
 			global, queries,
 			AStep_RecPcAtt, BStep_RecPcSpecular, CStep_RecPcAtt,
 			asyncSize);
+
+		// NAN fill
+		{
+			PTR(PcIndex) validFilter(new PcIndex);
+			PTR(PcIndex) inValidFilter(new PcIndex);
+			validFilter->reserve(pcMED->size());
+			inValidFilter->reserve(pcMED->size());
+			for (int px = 0; px < pcMED->size(); px++)
+			{
+				if (specularEstimator->InputPointValid((*pcMED)[px]) && specularEstimator->OutputPointValid((*pcMED)[px]))
+					validFilter->push_back(px);
+				else
+					inValidFilter->push_back(px);
+			}
+
+			if ((validFilter->size() > 0) && (inValidFilter->size() > 0))
+			{
+				PTR(AccMED) validAcc(new KDTreeMED);
+				validAcc->setInputCloud(pcMED, validFilter);
+
+				PcMED temp;
+
+				fieldInterpolator->Process(validAcc, pcMED, inValidFilter, temp);
+
+				for (std::size_t idx = 0; idx < inValidFilter->size(); ++idx)
+				{
+					PointMED& tarP = (*pcMED)[(*inValidFilter)[idx]];
+					PointMED& srcP = temp[idx];
+
+					tarP.diffuseAlbedo = srcP.diffuseAlbedo;
+					tarP.specularAlbedo = srcP.specularAlbedo;
+					tarP.specularSharpness = srcP.specularSharpness;
+				}
+			}
+		}
 	}
 
 	void ReconstructorPcOC::ImplementRecPcRefineSpecular()
@@ -640,6 +628,41 @@ namespace RecRoom
 			global, queries,
 			AStep_RecPcAtt, BStep_RecPcRefineSpecular, CStep_RecPcAtt,
 			asyncSize);
+
+		// NAN fill
+		{
+			PTR(PcIndex) validFilter(new PcIndex);
+			PTR(PcIndex) inValidFilter(new PcIndex);
+			validFilter->reserve(pcMED->size());
+			inValidFilter->reserve(pcMED->size());
+			for (int px = 0; px < pcMED->size(); px++)
+			{
+				if (refineSpecularEstimator->InputPointValid((*pcMED)[px]) && refineSpecularEstimator->OutputPointValid((*pcMED)[px]))
+					validFilter->push_back(px);
+				else
+					inValidFilter->push_back(px);
+			}
+
+			if ((validFilter->size() > 0) && (inValidFilter->size() > 0))
+			{
+				PTR(AccMED) validAcc(new KDTreeMED);
+				validAcc->setInputCloud(pcMED, validFilter);
+
+				PcMED temp;
+
+				fieldInterpolator->Process(validAcc, pcMED, inValidFilter, temp);
+
+				for (std::size_t idx = 0; idx < inValidFilter->size(); ++idx)
+				{
+					PointMED& tarP = (*pcMED)[(*inValidFilter)[idx]];
+					PointMED& srcP = temp[idx];
+
+					tarP.diffuseAlbedo = srcP.diffuseAlbedo;
+					tarP.specularAlbedo = srcP.specularAlbedo;
+					tarP.specularSharpness = srcP.specularSharpness;
+				}
+			}
+		}
 	}
 
 	void ReconstructorPcOC::ImplementRecSegNDF()

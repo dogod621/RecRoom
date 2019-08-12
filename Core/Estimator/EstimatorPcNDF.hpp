@@ -156,7 +156,7 @@ namespace RecRoom
 		outPoint.specularAlbedo = optX(2);
 		outPoint.specularSharpness = optX(1);
 
-		if (!OutPointValid(outPoint))
+		if (!OutputPointValid(outPoint))
 			return false;*/
 
 		/*if( (optX(0) < lowerBound(0)) ||
