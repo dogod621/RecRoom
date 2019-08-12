@@ -24,15 +24,13 @@ namespace RecRoom
 		const EstimatorPcNDF<InPointType, OutPointType>& self = *temp.self;
 		const std::vector<NDFSample>& samples = *temp.samples;
 
-		double diffuseAlbedo = x(0);
-		double specularAlbedo = x(1);
-		double specularSharpness = x(2);
+		double specularAlbedo = x(0);
+		double specularSharpness = x(1);
 
 		double r = 0.0;
 		for (std::vector<NDFSample>::const_iterator it = samples.cbegin(); it != samples.cend(); ++it)
 		{
 			double diff = it->intensity64 - it->tanDir64.z() * (
-				diffuseAlbedo * self.DiffuseDistribution(it->tanDir64) +
 				specularAlbedo * self.SpecularDistribution(it->tanDir64, specularSharpness));
 			r += it->weight64 * diff * diff;
 		}
@@ -47,22 +45,18 @@ namespace RecRoom
 		const EstimatorPcNDF<InPointType, OutPointType>& self = *temp.self;
 		const std::vector<NDFSample>& samples = *temp.samples;
 
-		double diffuseAlbedo = x(0);
-		double specularAlbedo = x(1);
-		double specularSharpness = x(2);
+		double specularAlbedo = x(0);
+		double specularSharpness = x(1);
 
-		g = Eigen::VectorXd(3);
+		g = Eigen::VectorXd(2);
 		g(0) = 0.0;
 		g(1) = 0.0;
-		g(2) = 0.0;
 		for (std::vector<NDFSample>::const_iterator it = samples.cbegin(); it != samples.cend(); ++it)
 		{
-			double diffuseDistribution = self.DiffuseDistribution(it->tanDir64);
 			double specularDistribution = self.SpecularDistribution(it->tanDir64, specularSharpness);
 			double specularDistributionGradient = self.SpecularDistributionGradient(it->tanDir64, specularSharpness);
-			double diff = it->intensity64 - it->tanDir64.z() * (diffuseAlbedo * diffuseDistribution + specularAlbedo * specularDistribution);
+			double diff = it->intensity64 - it->tanDir64.z() * (specularAlbedo * specularDistribution);
 			double temp = -2.0 * it->weight64 * diff * it->tanDir64.z();
-			g(0) += temp * diffuseDistribution;
 			g(1) += temp * specularDistribution;
 			g(2) += temp * specularAlbedo * specularDistributionGradient;
 		}
@@ -140,32 +134,37 @@ namespace RecRoom
 			}
 		}
 
-		/*Eigen::VectorXd lowerBound(3);
-		Eigen::VectorXd upperBound(3);
-		lowerBound << 0.0, 0.0, minSharpness;
-		upperBound << 512.0, 512.0, maxSharpness;
+		//
+		for (int i = 0; i < samples.size(); ++i)
+		{
+			float diffuseValue = samples[i].tanDir.z() * DiffuseDistribution(samples[i].tanDir);
+			samples[i].intensity = std::max(samples[i].intensity - outPoint.diffuseAlbedo * diffuseValue, 0.0f);
+		}
+
+		//
+		Eigen::VectorXd lowerBound(2);
+		Eigen::VectorXd upperBound(2);
+		lowerBound << (0.1f * outPoint.diffuseAlbedo), minSharpness;
+		upperBound << 512.0, maxSharpness;
 		LBFGSB solver(lowerBound, upperBound);
 		
-		Eigen::VectorXd optX(3);
-		optX << outPoint.diffuseAlbedo, outPoint.specularAlbedo, outPoint.specularSharpness;
+		Eigen::VectorXd optX(2);
+		optX << outPoint.specularAlbedo, outPoint.specularSharpness;
 
 		Temp<InPointType, OutPointType> data(this, &samples);
 		solver.Solve(optX, ObjValue<InPointType, OutPointType>, ObjGradient<InPointType, OutPointType>, (void*)(&data));
 
-		outPoint.diffuseAlbedo = optX(0);
-		outPoint.specularAlbedo = optX(2);
+		outPoint.specularAlbedo = optX(0);
 		outPoint.specularSharpness = optX(1);
 
 		if (!OutputPointValid(outPoint))
-			return false;*/
+			return false;
 
-		/*if( (optX(0) < lowerBound(0)) ||
+		if( (optX(0) < lowerBound(0)) ||
 			(optX(0) > upperBound(0)) || 
 			(optX(1) < lowerBound(1)) ||
-			(optX(1) > upperBound(1)) ||
-			(optX(2) < lowerBound(2)) ||
-			(optX(2) > upperBound(2)))
-			return false;*/
+			(optX(1) > upperBound(1)))
+			return false;
 
 		return true;
 	}
