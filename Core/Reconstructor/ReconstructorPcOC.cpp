@@ -419,8 +419,6 @@ namespace RecRoom
 						PointMED& tarP = (*data.pcRec)[(*inValidFilter)[idx]];
 						PointMED& srcP = temp[idx];
 
-						tarP.intensity = srcP.intensity;
-
 						tarP.diffuseAlbedo = srcP.diffuseAlbedo;
 						tarP.specularAlbedo = srcP.specularAlbedo;
 						tarP.specularSharpness = srcP.specularSharpness;
@@ -488,8 +486,6 @@ namespace RecRoom
 					{
 						PointMED& tarP = (*data.pcRec)[(*inValidFilter)[idx]];
 						PointMED& srcP = temp[idx];
-
-						tarP.intensity = srcP.intensity;
 
 						tarP.diffuseAlbedo = srcP.diffuseAlbedo;
 						tarP.specularAlbedo = srcP.specularAlbedo;
