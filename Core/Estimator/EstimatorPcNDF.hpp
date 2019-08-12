@@ -57,8 +57,8 @@ namespace RecRoom
 			double specularDistributionGradient = self.SpecularDistributionGradient(it->tanDir64, specularSharpness);
 			double diff = it->intensity64 - it->tanDir64.z() * (specularAlbedo * specularDistribution);
 			double temp = -2.0 * it->weight64 * diff * it->tanDir64.z();
-			g(1) += temp * specularDistribution;
-			g(2) += temp * specularAlbedo * specularDistributionGradient;
+			g(0) += temp * specularDistribution;
+			g(1) += temp * specularAlbedo * specularDistributionGradient;
 		}
 	}
 
