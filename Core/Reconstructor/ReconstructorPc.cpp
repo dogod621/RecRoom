@@ -755,8 +755,8 @@ namespace RecRoom
 						pVisRaw.z = uvd.z();
 						pVisRec.z = uvd.z();
 						pVisRaw.serialNumber = pRaw.serialNumber;
-						pVisRec.softLabelStart = pVisRec.softLabelStart;
-						pVisRec.softLabelEnd = pVisRec.softLabelEnd;
+						pVisRec.softLabelStart = pRec.softLabelStart;
+						pVisRec.softLabelEnd = pRec.softLabelEnd;
 					}
 
 					pVisRawRGB.r += (float)pRaw.r;
