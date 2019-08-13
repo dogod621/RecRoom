@@ -965,6 +965,24 @@ namespace RecRoom
 				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
 
+			if(pcSoftLabel->size() > 0)
+			{
+				for (std::size_t px = 0; px < pcVis2.size(); ++px)
+					pcVis2[px].label = (*pcSoftLabel)[pcVisRec[px].softLabelStart].label;
+
+				std::stringstream fileName;
+				fileName << it->serialNumber << "_rec_Segment.png";
+
+				pcl::PCLImage image;
+				//pcl::io::PointCloudImageExtractorFromLabelField<PointVisAtt> pcie;
+				pcl::io::PointCloudImageExtractorFromLabelField<pcl::PointXYZRGBL> pcie;
+				pcie.setColorMode(pcl::io::PointCloudImageExtractorFromLabelField<pcl::PointXYZRGBL>::COLORS_RGB_GLASBEY);
+				pcie.setPaintNaNsWithBlack(true);
+				if (!pcie.extract(pcVis2, image))
+					THROW_EXCEPTION("Failed to extract an image from Segment field .");
+				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
+			}
+
 			{
 				for (std::size_t px = 0; px < pcVis1.size(); ++px)
 					pcVis1[px].intensity = pcVisRec[px].diffuseAlbedo;
