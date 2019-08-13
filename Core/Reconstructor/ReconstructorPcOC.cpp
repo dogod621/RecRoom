@@ -402,12 +402,12 @@ namespace RecRoom
 									float intensity = scanLaser.intensity / scanLaser.beamFalloff;
 									float diffuseValue = tanHafway.z() * pRaw.diffuseAlbedo;
 
-									if (intensity > diffuseValue)
+									if ((intensity > diffuseValue) && (pRaw.diffuseAlbedo > std::numeric_limits<float>::epsilon()))
 									{
 										for (uint32_t sx = pRaw.softLabelStart; sx < pRaw.softLabelEnd; sx++)
 											pcNDF->push_back(PointNDF(tanHafway.x(), tanHafway.y(), tanHafway.z(), 
 												(*global.ptrReconstructorPcOC()->getPcSoftLabel())[sx].label,
-												pRaw.serialNumber, (intensity - diffuseValue),
+												pRaw.serialNumber, (intensity - diffuseValue) / pRaw.diffuseAlbedo,
 												(*global.ptrReconstructorPcOC()->getPcSoftLabel())[sx].weight));
 									}
 								}

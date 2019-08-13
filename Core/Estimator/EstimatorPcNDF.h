@@ -43,7 +43,7 @@ namespace RecRoom
 			const float angleInterParm = 1.0f,
 			const float cutFalloff = 0.33f,
 			const float cutGrazing = 0.26f)
-			: EstimatorPc<InPointType, OutPointType>(scanner, searchRadius, distInterParm, angleInterParm, cutFalloff, cutGrazing, 6),
+			: EstimatorPc<InPointType, OutPointType>(scanner, searchRadius, distInterParm, angleInterParm, cutFalloff, cutGrazing, 4),
 			minSharpness(0.0f), maxSharpness(1.0f), optimization(true)
 		{
 			name = "EstimatorPcNDF";
