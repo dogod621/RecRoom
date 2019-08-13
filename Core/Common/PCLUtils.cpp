@@ -5,13 +5,13 @@
 // 
 namespace RecRoom
 {
-	union LabelUnion
+	/*union LabelUnion
 	{
 		uint32_t uint32;
 		int32_t int32;
 
 		LabelUnion() {}
-	};
+	};*/
 
 	union ColorUnion
 	{
@@ -140,7 +140,7 @@ namespace RecRoom
 		int diffuseAlbedo_index = getFieldIndex(mesh.cloud, "diffuseAlbedo");
 		int specularAlbedo_index = getFieldIndex(mesh.cloud, "specularAlbedo");
 		int specularSharpness_index = getFieldIndex(mesh.cloud, "specularSharpness");
-		int label_index = getFieldIndex(mesh.cloud, "label");
+		//int label_index = getFieldIndex(mesh.cloud, "label");
 		
 		std::vector<float> x;
 		std::vector<float> y;
@@ -153,7 +153,7 @@ namespace RecRoom
 		std::vector<float> diffuseAlbedo;
 		std::vector<float> specularAlbedo;
 		std::vector<float> specularSharpness;
-		std::vector<uint32_t> label;
+		//std::vector<uint32_t> label;
 
 		// number of points
 		std::size_t numPoints = mesh.cloud.width * mesh.cloud.height;
@@ -163,7 +163,7 @@ namespace RecRoom
 		std::size_t numFaces = mesh.polygons.size();
 
 		// number of material
-		std::size_t numMaterials = 0;
+		//std::size_t numMaterials = 0;
 
 		//
 		// Write header
@@ -290,7 +290,7 @@ namespace RecRoom
 					return -2;
 			}
 
-			if (label_index != -1)
+			/*if (label_index != -1)
 			{
 				file << "\nproperty int material_index";
 				label.resize(numPoints);
@@ -311,19 +311,19 @@ namespace RecRoom
 						numMaterials = *it;
 				}
 				numMaterials += 1;
-			}
+			}*/
 
 			// Faces
 			file << "\nelement face " << numFaces;
 			file << "\nproperty list uchar int vertex_indices";
 
 			// Material
-			if (numMaterials > 0)
+			/*if (numMaterials > 0)
 			{
 				file << "\nelement material " << numMaterials;
 				file << "\nproperty float specular_coeff";
 				file << "\nproperty float specular_power";
-			}
+			}*/
 
 			file << "\nend_header\n";
 			file.close();
@@ -379,7 +379,7 @@ namespace RecRoom
 
 					if (specularSharpness_index != -1) file.write(reinterpret_cast<const char*> (&specularSharpness[i]), sizeof(float));
 
-					if (label_index != -1) file.write(reinterpret_cast<const char*> (&label[i]), sizeof(float));
+					//if (label_index != -1) file.write(reinterpret_cast<const char*> (&label[i]), sizeof(float));
 
 					file << '\n';
 				}
@@ -394,12 +394,12 @@ namespace RecRoom
 				}
 
 				// Write down materials
-				for (size_t i = 0; i < numMaterials; i++)
+				/*for (size_t i = 0; i < numMaterials; i++)
 				{
 					float zero = 0;
 					file.write(reinterpret_cast<const char*> (&zero), sizeof(float));
 					file.write(reinterpret_cast<const char*> (&zero), sizeof(float));
-				}
+				}*/
 			}
 			else
 			{
@@ -444,7 +444,7 @@ namespace RecRoom
 					
 					if (specularSharpness_index != -1) file << specularSharpness[i] << " ";
 
-					if (label_index != -1) file << label[i] << " ";
+					//if (label_index != -1) file << label[i] << " ";
 
 					file << '\n';
 				}
@@ -459,10 +459,10 @@ namespace RecRoom
 				}
 
 				// Write down materials
-				for (size_t i = 0; i < numMaterials; i++)
+				/*for (size_t i = 0; i < numMaterials; i++)
 				{
 					file << 0 << " " << 0 << '\n';
-				}
+				}*/
 			}
 
 			file.close();

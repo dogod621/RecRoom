@@ -51,10 +51,10 @@ void PrintHelp(int argc, char **argv)
 		PRINT_HELP("\t", "recPcNormal", "", "Reconstruct point cloud normal.");
 		PRINT_HELP("\t", "recPcDiffuse", "", "Reconstruct point cloud diffuse.");
 		PRINT_HELP("\t", "recPcSpecular", "", "Reconstruct point cloud specular.");
-		PRINT_HELP("\t", "recPcRefineSpecular", "", "Reconstruct point cloud refine specular.");
 		PRINT_HELP("\t", "recPcSegment", "", "Reconstruct point cloud segment.");
 		PRINT_HELP("\t", "recSegNDF", "", "Reconstruct segment NDF.");
 		PRINT_HELP("\t", "recSegMaterial", "", "Reconstruct segment material.");
+		PRINT_HELP("\t", "recPcRefineSpecular", "", "Reconstruct point cloud refine specular.");
 		PRINT_HELP("\t", "recMeshPreprocess", "", "Reconstruct preprocessed mesh.");
 		PRINT_HELP("\t", "recMesh", "", "Reconstruct mesh.");
 		PRINT_HELP("\t", "recMeshPostprocess", "", "Reconstruct postprocessed mesh.");
@@ -407,16 +407,6 @@ int main(int argc, char *argv[])
 				reconstructorPC->setSpecularEstimator(ndfEstimator);
 			}
 
-			std::cout << "Create RefineAlbedoEstimator" << std::endl;
-			{
-				PTR(RecRoom::ReconstructorPcOC::Estimator)
-					refineAlbedoEstimator(
-						new RecRoom::EstimatorPcRefineSGAlbedo<RecRoom::PointMED, RecRoom::PointMED>(
-							scannerPc, searchRadius,
-							3, 1, cutFalloff, cutGrazing));
-				reconstructorPC->setRefineSpecularEstimator(refineAlbedoEstimator);
-			}
-			
 			std::cout << "Create Segmenter" << std::endl;
 			{
 				PTR(RecRoom::ReconstructorPcOC::Segmenter)
@@ -425,6 +415,16 @@ int main(int argc, char *argv[])
 							voxelResolution, seedResolution,
 							xyzImportance, rgbImportance, normalImportance, diffuseAlbedoImportance, specularSharpnessImportance, minSize));
 				reconstructorPC->setSegmenter(segmenter);
+			}
+
+			std::cout << "Create RefineSpecularEstimator" << std::endl;
+			{
+				PTR(RecRoom::ReconstructorPcOC::Estimator)
+					refineSpecularEstimator(
+						new RecRoom::EstimatorPcRefineSGAlbedo<RecRoom::PointMED, RecRoom::PointMED>(
+							scannerPc, searchRadius,
+							3, 1, cutFalloff, cutGrazing));
+				reconstructorPC->setRefineSpecularEstimator(refineSpecularEstimator);
 			}
 
 			std::cout << "Create MeshOutlierRemover" << std::endl;
@@ -527,11 +527,6 @@ int main(int argc, char *argv[])
 				reconstructorPC->RecPcSpecular();
 			}
 
-			if (pcl::console::find_switch(argc, argv, "-recPcRefineSpecular"))
-			{
-				reconstructorPC->RecPcRefineSpecular();
-			}
-			
 			if (pcl::console::find_switch(argc, argv, "-recPcSegment"))
 			{
 				reconstructorPC->RecPcSegment();
@@ -545,6 +540,11 @@ int main(int argc, char *argv[])
 			if (pcl::console::find_switch(argc, argv, "-recSegMaterial"))
 			{
 				reconstructorPC->RecSegMaterial();
+			}
+
+			if (pcl::console::find_switch(argc, argv, "-recPcRefineSpecular"))
+			{
+				reconstructorPC->RecPcRefineSpecular();
 			}
 
 			if (pcl::console::find_switch(argc, argv, "-recMeshPreprocess"))
