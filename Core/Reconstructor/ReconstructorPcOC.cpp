@@ -273,8 +273,6 @@ namespace RecRoom
 				tarP.normal_y = srcP.normal_y;
 				tarP.normal_z = srcP.normal_z;
 				tarP.curvature = srcP.curvature;
-
-				tarP.label = srcP.label;
 			}
 
 			global.ptrReconstructorPcOC()->getDiffuseEstimator()->ProcessInOut(
@@ -303,8 +301,6 @@ namespace RecRoom
 				tarP.curvature = srcP.curvature;
 
 				tarP.diffuseAlbedo = srcP.diffuseAlbedo;
-
-				tarP.label = srcP.label;
 			}
 
 			global.ptrReconstructorPcOC()->getSpecularEstimator()->ProcessInOut(
@@ -335,8 +331,6 @@ namespace RecRoom
 				tarP.diffuseAlbedo = srcP.diffuseAlbedo;
 				tarP.specularAlbedo = srcP.specularAlbedo;
 				tarP.specularSharpness = srcP.specularSharpness;
-
-				tarP.label = srcP.label;
 			}
 
 			global.ptrReconstructorPcOC()->getRefineSpecularEstimator()->ProcessInOut(
@@ -375,7 +369,8 @@ namespace RecRoom
 				tarP.specularAlbedo = srcP.specularAlbedo;
 				tarP.specularSharpness = srcP.specularSharpness;
 
-				tarP.label = srcP.label;
+				tarP.softLabelStart = srcP.softLabelStart;
+				tarP.softLabelEnd = srcP.softLabelEnd;
 			}
 
 			PTR(PcNDF) pcNDF(new PcNDF);
@@ -383,7 +378,7 @@ namespace RecRoom
 			for (PcIndex::const_iterator it = data.pcRawIdx->begin(); it != data.pcRawIdx->end(); ++it)
 			{
 				PointMED& pRaw = (*data.pcRaw)[*it];
-				if (pcl::isFinite(pRaw) && pRaw.HasSerialNumber() && pRaw.HasLabel())
+				if (pcl::isFinite(pRaw) && pRaw.HasSerialNumber())
 				{
 					Eigen::Vector3f hitNormal(pRaw.normal_x, pRaw.normal_y, pRaw.normal_z);
 					Eigen::Vector3f hitTangent;
@@ -408,7 +403,13 @@ namespace RecRoom
 									float diffuseValue = tanHafway.z() * pRaw.diffuseAlbedo;
 
 									if (intensity > diffuseValue)
-										pcNDF->push_back(PointNDF(tanHafway.x(), tanHafway.y(), tanHafway.z(), pRaw.label, pRaw.serialNumber, (intensity - diffuseValue)));
+									{
+										for (uint32_t sx = pRaw.softLabelStart; sx < pRaw.softLabelEnd; sx++)
+											pcNDF->push_back(PointNDF(tanHafway.x(), tanHafway.y(), tanHafway.z(), 
+												(*global.ptrReconstructorPcOC()->getPcSoftLabel())[sx].label,
+												pRaw.serialNumber, (intensity - diffuseValue),
+												(*global.ptrReconstructorPcOC()->getPcSoftLabel())[sx].weight));
+									}
 								}
 							}
 						}

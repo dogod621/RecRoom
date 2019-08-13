@@ -10,9 +10,11 @@ namespace RecRoom
 	public:
 		SegmenterPcSVC(float voxelResolution, float seedResolution, 
 			float xyzImportance = 0.4f, float rgbImportance = 0.4f, float normalImportance = 1.0f, float diffuseAlbedoImportance = 5.0f, float specularSharpnessImportance = 5.0,
+			float weightSmoothParm = 4.0, std::size_t numMaxLabels = 5,
 			std::size_t minSize = 1, std::size_t numIter = 0)
-			: SegmenterPc<PointType>(), voxelResolution(voxelResolution), seedResolution(seedResolution),
+			: SegmenterPc<PointType>(numMaxLabels), voxelResolution(voxelResolution), seedResolution(seedResolution),
 			xyzImportance(xyzImportance), rgbImportance(rgbImportance),  normalImportance(normalImportance), diffuseAlbedoImportance(diffuseAlbedoImportance), specularSharpnessImportance(specularSharpnessImportance),
+			weightSmoothParm(weightSmoothParm),
 			minSize(minSize), numIter(numIter)
 		{
 			name = "SegmenterPc";
@@ -34,7 +36,8 @@ namespace RecRoom
 			const CONST_PTR(Acc<PointType>)& searchSurface,
 			const CONST_PTR(Pc<PointType>)& input,
 			const CONST_PTR(PcIndex)& filter,
-			Pc<PointType>& output) const;
+			Pc<PointType>& output,
+			PcSoftLabel& cache) const;
 
 	public:
 		float getVoxelResolution() const { return voxelResolution; }
@@ -44,6 +47,7 @@ namespace RecRoom
 		float getNormalImportance() const { return normalImportance; }
 		float getDiffuseAlbedoImportance() const { return diffuseAlbedoImportance; }
 		float getSpecularSharpnessImportance() const { return specularSharpnessImportance; }
+		float getWeightSmoothParm() const { return weightSmoothParm; }
 		std::size_t getMinSize() const { return minSize; }
 		std::size_t getNumIter() const { return numIter; }
 
@@ -54,6 +58,7 @@ namespace RecRoom
 		void setNormalImportance(float v) { normalImportance = v; }
 		void setDiffuseAlbedoImportance(float v) { diffuseAlbedoImportance = v; }
 		void setSpecularSharpnessImportance(float v) { specularSharpnessImportance = v; }
+		void setWeightSmoothParm(float v) { weightSmoothParm = v; }
 		void setMinSize(std::size_t v) { minSize = v; }
 		void setNumIter(std::size_t v) { numIter = v; }
 
@@ -66,6 +71,7 @@ namespace RecRoom
 		float normalImportance;
 		float diffuseAlbedoImportance;
 		float specularSharpnessImportance;
+		float weightSmoothParm;
 
 		std::size_t minSize;
 		std::size_t numIter;

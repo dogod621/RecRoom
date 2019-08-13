@@ -11,16 +11,15 @@ namespace RecRoom
 		const CONST_PTR(Acc<PointType>)& searchSurface,
 		const CONST_PTR(Pc<PointType>)& input,
 		const CONST_PTR(PcIndex)& filter,
-		Pc<PointType>& output) const
+		Pc<PointType>& output,
+		PcSoftLabel& cache) const
 	{
 		SupervoxelClustering<PointType> super(
 			voxelResolution, seedResolution,
 			xyzImportance, rgbImportance, normalImportance, diffuseAlbedoImportance, specularSharpnessImportance, minSize, numIter);
 
 		super.setInputCloud(input);
-
 		super.setIndices(filter);
-
-		super.Extract(output);
+		super.Extract(output, cache, weightSmoothParm, numMaxLabels);
 	}
 }

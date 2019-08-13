@@ -1,5 +1,7 @@
 #pragma once
 
+#include <pcl/features/feature.h>
+
 #include "EstimatorPcNormal.h"
 
 namespace RecRoom

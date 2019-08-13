@@ -227,6 +227,7 @@ namespace RecRoom
 		using pcl::PCLBase<PointCINS>::initCompute;
 		using pcl::PCLBase<PointCINS>::deinitCompute;
 		using pcl::PCLBase<PointCINS>::input_;
+		using pcl::PCLBase<PointCINS>::indices_;
 
 	public:
 		SupervoxelClustering(float voxelResolution, float seedResolution,
@@ -245,17 +246,25 @@ namespace RecRoom
 		virtual void setInputCloud(const CONST_PTR(Pc<PointCINS>)& cloud)
 		{
 			input_ = cloud;
-			oat->setInputCloud(cloud);
 		}
 
-		virtual void Extract(Pc<PointCINS>& pcLabel);
+		virtual void Extract(Pc<PointCINS>& cloud, PcSoftLabel& pcSoftLabel, float weightSmoothParm = 4.0, std::size_t numMaxLabels = 5);
 
 	public:
 		virtual bool PrepareForSegmentation()
 		{
-			if (input_->points.size() == 0)
-				return (false);
-			oat->addPointsFromInputCloud();
+			// OAT ignore indices_ for no reason....
+			{
+				PTR(Pc<PointCINS>) temp(new Pc<PointCINS>);
+				temp->reserve(indices_->size());
+				for (PcIndex::const_iterator it = indices_->begin(); it != indices_->end(); ++it)
+				{
+					temp->push_back((*input_)[*it]);
+				}
+
+				oat->setInputCloud(temp);
+				oat->addPointsFromInputCloud();
+			}
 
 			//
 			pcCentroid.reset(new Pc<PointCINS>);

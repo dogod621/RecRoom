@@ -44,7 +44,7 @@ namespace RecRoom
 			const float cutFalloff = 0.33f,
 			const float cutGrazing = 0.26f)
 			: EstimatorPc<InPointType, OutPointType>(scanner, searchRadius, distInterParm, angleInterParm, cutFalloff, cutGrazing, 6),
-			minSharpness(0.0f), maxSharpness(1.0f)
+			minSharpness(0.0f), maxSharpness(1.0f), optimization(true)
 		{
 			name = "EstimatorPcNDF";
 		}
@@ -187,6 +187,7 @@ namespace RecRoom
 	protected:
 		float minSharpness;
 		float maxSharpness;
+		bool optimization;
 
 	public:
 		EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -209,6 +210,7 @@ namespace RecRoom
 
 			minSharpness = 1.0f;
 			maxSharpness = 25.0f;
+			optimization = false;
 		}
 
 	public:

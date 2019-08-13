@@ -44,7 +44,6 @@ namespace RecRoom
 		diffuseAlbedo = 0.0f;
 		specularAlbedo = 0.f;
 		specularSharpness = 0.0f;
-		hasLabel = -1;
 	}
 
 	inline PointREC::PointREC(const PointMED& p)
@@ -55,7 +54,6 @@ namespace RecRoom
 		diffuseAlbedo = p.diffuseAlbedo;
 		specularAlbedo = p.specularAlbedo;
 		specularSharpness = p.specularSharpness;
-		label = p.label;
 	}
 
 	inline PointREC& PointREC::operator = (const PointRAW &p)
@@ -73,7 +71,6 @@ namespace RecRoom
 		diffuseAlbedo = p.diffuseAlbedo;
 		specularAlbedo = p.specularAlbedo;
 		specularSharpness = p.specularSharpness;
-		label = p.label;
 		return *this;
 	}
 
@@ -87,7 +84,8 @@ namespace RecRoom
 		specularAlbedo = 0.f;
 		specularSharpness = 0.0f;
 		serialNumber = p.serialNumber;
-		hasLabel = -1;
+		softLabelStart = 0;
+		softLabelEnd = 0;
 	}
 
 	inline PointMED::PointMED(const PointREC& p)
@@ -100,7 +98,8 @@ namespace RecRoom
 		specularAlbedo = p.specularAlbedo;
 		specularSharpness = p.specularSharpness;
 		hasSerialNumber = -1;
-		label = p.label;
+		softLabelStart = 0;
+		softLabelEnd = 0;
 	}
 
 	inline PointMED& PointMED::operator = (const PointRAW &p)
@@ -120,7 +119,6 @@ namespace RecRoom
 		diffuseAlbedo = p.diffuseAlbedo;
 		specularAlbedo = p.specularAlbedo;
 		specularSharpness = p.specularSharpness;
-		label = p.label;
 		return *this;
 	}
 }

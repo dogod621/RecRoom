@@ -1,5 +1,8 @@
 #pragma once
 
+#include <numeric>      // std::iota
+#include <algorithm>    // std::sort
+
 #include <pcl/features/normal_3d.h>
 #include <pcl/features/impl/normal_3d.hpp>
 
@@ -164,8 +167,22 @@ namespace RecRoom
 		}
 	}
 
+	template <typename T>
+	std::vector<std::size_t> SortIndexes(const std::vector<T> &v)
+	{
+
+		// initialize original index locations
+		std::vector<std::size_t> idx(v.size());
+		std::iota(idx.begin(), idx.end(), 0);
+
+		// sort indexes based on comparing values in v
+		std::sort(idx.begin(), idx.end(), [&v](size_t i1, size_t i2) {return v[i1] < v[i2]; });
+
+		return idx;
+	}
+
 	template<class PointCINS>
-	void SupervoxelClustering<PointCINS>::Extract(Pc<PointCINS>& pcLabel)
+	void SupervoxelClustering<PointCINS>::Extract(Pc<PointCINS>& cloud, PcSoftLabel& pcSoftLabel, float weightSmoothParm, std::size_t numMaxLabels)
 	{
 		if (!initCompute())
 		{
@@ -186,24 +203,64 @@ namespace RecRoom
 			ExpandSupervoxels(numIter);
 		}
 
-		uint32_t counter = 0;
-		std::map<uint32_t, uint32_t> mapLabel;
+		std::size_t counter = 0;
 		for (boost::ptr_list<Supervoxel<PointCINS>>::iterator it = supervoxels.begin(); it != supervoxels.end(); ++it)
 		{
-			mapLabel[it->label] = counter;
 			counter++;
 		}
 
-		for (Pc<PointCINS>::iterator it = pcLabel.begin(); it != pcLabel.end(); ++it)
-		{
-			it->hasLabel = -1;
-			if (pcl::isFinite<PointCINS>(*it))
-			{
+		//
+		std::size_t numMaxLabels2 = std::min(numMaxLabels, counter);
+		std::vector<float> tempLabelDistance(counter);
 
-				Voxel<PointCINS>& voxel = oat->getLeafContainerAtPoint(*it)->getData();
-				if (voxel.parent)
-					it->label = mapLabel[voxel.parent->label];
+		std::map<OATLeaf<PointCINS>*, std::vector<SoftLabel>> vSoftLabels;
+		for (std::vector<OATLeaf<PointCINS>*>::iterator it = oat->begin(); it != oat->end(); ++it)
+		{
+			std::vector<SoftLabel>& vSoftLabel = vSoftLabels[(*it)];
+			vSoftLabel.resize(numMaxLabels2);
+
+			Voxel<PointCINS>& voxel = (*it)->getData();
+
+			counter = 0;
+			for (boost::ptr_list<Supervoxel<PointCINS>>::iterator jt = supervoxels.begin(); jt != supervoxels.end(); ++jt)
+			{
+				tempLabelDistance[counter] = std::max(Distance(jt->centroid, voxel), 1e-4f);
+				counter++;
 			}
+
+			std::vector<std::size_t> tempLabel = SortIndexes<float>(tempLabelDistance);
+
+			// Inverse distance weighting
+			// https://en.wikipedia.org/wiki/Inverse_distance_weighting
+			float sumWeight = 0.0f;
+			for (std::size_t i = 0; i < numMaxLabels2; ++i)
+			{
+				vSoftLabel[i].label = tempLabel[i];
+				float weight = 1.0f / std::pow(tempLabelDistance[i], weightSmoothParm);
+				vSoftLabel[i].weight = weight;
+				sumWeight += weight;
+			}
+
+			for (std::size_t i = 0; i < numMaxLabels2; ++i)
+				vSoftLabel[i].weight /= sumWeight;
+		}
+
+
+		//
+		pcSoftLabel.clear();
+		pcSoftLabel.reserve(cloud.size() * numMaxLabels2);
+		for (int px = 0; px < cloud.size(); ++px)
+		{
+			PointCINS& p = cloud[px];
+			std::vector<SoftLabel>& vSoftLabel = vSoftLabels[oat->getLeafContainerAtPoint(p)];
+			p.softLabelStart = pcSoftLabel.size();
+
+			for (std::size_t i = 0; i < vSoftLabel.size(); ++i)
+			{
+				pcSoftLabel.push_back(vSoftLabel[i]);
+			}
+
+			p.softLabelEnd = pcSoftLabel.size();
 		}
 
 		deinitCompute();

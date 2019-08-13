@@ -93,6 +93,10 @@ namespace RecRoom
 		float getResVNN() const { return resVNN; }
 		ReconstructStatus getStatus() const { return status; }
 		PTR(PcMED) getPcMED() const { return pcMED; }
+		PTR(PcSoftLabel) getPcSoftLabel() const { return pcSoftLabel; }
+		PTR(PcMED) getPcSegMaterial() const { return pcSegMaterial; }
+		PTR(PcREC) getPcREC() const { return pcREC; }
+		PTR(Mesh) getMesh() const { return mesh; }
 
 		CONST_PTR(ScannerPc) getScanner() const { return scanner; }
 		PTR(ContainerPcNDF) getContainerPcNDF() const { return containerPcNDF; }
@@ -177,6 +181,8 @@ namespace RecRoom
 		float resVNN;
 		ReconstructStatus status;
 		PTR(PcMED) pcMED;
+		PTR(PcSoftLabel) pcSoftLabel;
+		PTR(PcMED) pcSegMaterial;
 		PTR(PcREC) pcREC;
 		PTR(Mesh) mesh;
 

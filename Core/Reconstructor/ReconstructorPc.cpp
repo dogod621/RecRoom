@@ -30,7 +30,7 @@ namespace RecRoom
 		bool useVNN,
 		float resVNN)
 		: DumpAble("ReconstructorPc", filePath_), status(ReconstructStatus::ReconstructStatus_UNKNOWN), scanner(scanner), containerPcNDF(containerPcNDF), useVNN(useVNN), resVNN(resVNN),
-		pcMED(new PcMED), pcREC(new PcREC), mesh(new Mesh),
+		pcMED(new PcMED), pcSoftLabel(new PcSoftLabel), pcSegMaterial(new PcMED), pcREC(new PcREC), mesh(new Mesh),
 		downSampler(nullptr),
 		fieldInterpolator(fieldInterpolator),
 		normalEstimator(nullptr),
@@ -61,6 +61,10 @@ namespace RecRoom
 		//
 		if (!pcMED)
 			THROW_EXCEPTION("pcMED is not created?");
+		if (!pcSoftLabel)
+			THROW_EXCEPTION("pcSoftLabel is not created?");
+		if (!pcSegMaterial)
+			THROW_EXCEPTION("pcSegMaterial is not created?");
 		if (!pcREC)
 			THROW_EXCEPTION("pcREC is not created?");
 		if (!mesh)
@@ -179,82 +183,6 @@ namespace RecRoom
 		}
 	}
 
-	void ReconstructorPc::RecPcRefineSpecular()
-	{
-		if (status & ReconstructStatus::PC_REFINE_SPECULAR)
-		{
-			PRINT_WARNING("Aready reconstructed, ignore.");
-		}
-		else if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
-		{
-			PRINT_WARNING("POINT_CLOUD is not reconstructed yet, ignore.");
-		}
-		else if ((status & ReconstructStatus::PC_NORMAL) == ReconstructStatus::ReconstructStatus_UNKNOWN)
-		{
-			PRINT_WARNING("PC_NORMAL is not reconstructed yet, ignore.");
-		}
-		else if ((status & ReconstructStatus::PC_DIFFUSE) == ReconstructStatus::ReconstructStatus_UNKNOWN)
-		{
-			PRINT_WARNING("PC_DIFFUSE is not reconstructed yet, ignore.");
-		}
-		else if ((status & ReconstructStatus::PC_SPECULAR) == ReconstructStatus::ReconstructStatus_UNKNOWN)
-		{
-			PRINT_WARNING("PC_SPECULAR is not reconstructed yet, ignore.");
-		}
-		/*else if ((status & ReconstructStatus::PC_SEGMENT) == ReconstructStatus::ReconstructStatus_UNKNOWN)
-		{
-			PRINT_WARNING("PC_SEGMENT is not reconstructed yet, ignore.");
-		}*/
-		else if (pcMED->empty())
-		{
-			PRINT_WARNING("pcMED is empty, ignore.");
-		}
-		else if (refineSpecularEstimator)
-		{
-			/*std::map<uint32_t, Eigen::Vector3f> temp;
-			for (PcMED::const_iterator it = pcMED->begin(); it != pcMED->end(); ++it)
-			{
-				if (it->HasLabel())
-				{
-					std::map<uint32_t, Eigen::Vector3f>::iterator jt = temp.find(it->label);
-					if (jt != temp.end())
-					{
-						jt->second.x() += it->specularAlbedo;
-						jt->second.y() += it->specularSharpness;
-						jt->second.z() += 1;
-					}
-					else
-					{
-						temp[it->label] = Eigen::Vector3f(it->specularAlbedo, it->specularSharpness, 1);
-					}
-				}
-			}
-
-			for (std::map<uint32_t, Eigen::Vector3f>::iterator it = temp.begin(); it != temp.end(); ++it)
-			{
-				it->second.x() /= it->second.z();
-				it->second.y() /= it->second.z();
-			}
-
-			for (PcMED::iterator it = pcMED->begin(); it != pcMED->end(); ++it)
-			{
-				if (it->HasLabel())
-				{
-					it->specularAlbedo = temp[it->label].x();
-					it->specularSharpness = temp[it->label].y();
-				}
-			}*/
-
-			ImplementRecPcRefineSpecular();
-			status = (ReconstructStatus)(status | ReconstructStatus::PC_REFINE_SPECULAR);
-			Dump();
-		}
-		else
-		{
-			PRINT_WARNING("refineSpecularEstimator is not set, ignore it");
-		}
-	}
-
 	void ReconstructorPc::RecPcSegment()
 	{
 		if (status & ReconstructStatus::PC_SEGMENT)
@@ -271,6 +199,7 @@ namespace RecRoom
 		}
 		else if (segmenter)
 		{
+			pcSoftLabel->clear();
 			ImplementRecPcSegment();
 			status = (ReconstructStatus)(status | ReconstructStatus::PC_SEGMENT);
 			Dump();
@@ -295,13 +224,13 @@ namespace RecRoom
 		{
 			PRINT_WARNING("POINT_CLOUD is not reconstructed yet, ignore.");
 		}
-		else if ((status & ReconstructStatus::PC_SEGMENT) == ReconstructStatus::ReconstructStatus_UNKNOWN)
-		{
-			PRINT_WARNING("PC_SEGMENT is not reconstructed yet, ignore.");
-		}
 		else if ((status & ReconstructStatus::PC_NORMAL) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 		{
 			PRINT_WARNING("PC_NORMAL is not reconstructed yet, ignore.");
+		}
+		else if ((status & ReconstructStatus::PC_SEGMENT) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("PC_SEGMENT is not reconstructed yet, ignore.");
 		}
 		else if ((status & ReconstructStatus::PC_DIFFUSE) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 		{
@@ -314,6 +243,10 @@ namespace RecRoom
 		else if (pcMED->empty())
 		{
 			PRINT_WARNING("pcMED is empty, ignore.");
+		}
+		else if (pcSoftLabel->empty())
+		{
+			PRINT_WARNING("pcSoftLabel is empty, ignore.");
 		}
 		else
 		{
@@ -333,23 +266,94 @@ namespace RecRoom
 		{
 			PRINT_WARNING("POINT_CLOUD is not reconstructed yet, ignore.");
 		}
+		else if ((status & ReconstructStatus::PC_NORMAL) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("PC_NORMAL is not reconstructed yet, ignore.");
+		}
 		else if ((status & ReconstructStatus::PC_SEGMENT) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 		{
 			PRINT_WARNING("PC_SEGMENT is not reconstructed yet, ignore.");
 		}
-		else if ((status & ReconstructStatus::PC_NORMAL) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		else if ((status & ReconstructStatus::PC_DIFFUSE) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 		{
-			PRINT_WARNING("PC_NORMAL is not reconstructed yet, ignore.");
+			PRINT_WARNING("PC_DIFFUSE is not reconstructed yet, ignore.");
+		}
+		else if ((status & ReconstructStatus::PC_SPECULAR) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("PC_SPECULAR is not reconstructed yet, ignore.");
 		}
 		else if ((status & ReconstructStatus::SEG_NDF) == ReconstructStatus::ReconstructStatus_UNKNOWN)
 		{
 			PRINT_WARNING("SEG_NDF is not reconstructed yet, ignore.");
 		}
+		else if (containerPcNDF->NumLabel() == 0)
+		{
+			PRINT_WARNING("containerPcLF is empty, ignore.");
+		}
 		else
 		{
+			pcSegMaterial->clear();
 			ImplementRecSegMaterial();
 			status = (ReconstructStatus)(status | ReconstructStatus::SEG_MATERIAL);
 			Dump();
+		}
+	}
+
+	void ReconstructorPc::RecPcRefineSpecular()
+	{
+		if (status & ReconstructStatus::PC_REFINE_SPECULAR)
+		{
+			PRINT_WARNING("Aready reconstructed, ignore.");
+		}
+		else if ((status & ReconstructStatus::POINT_CLOUD) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("POINT_CLOUD is not reconstructed yet, ignore.");
+		}
+		else if ((status & ReconstructStatus::PC_NORMAL) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("PC_NORMAL is not reconstructed yet, ignore.");
+		}
+		else if ((status & ReconstructStatus::PC_SEGMENT) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("PC_SEGMENT is not reconstructed yet, ignore.");
+		}
+		else if ((status & ReconstructStatus::PC_DIFFUSE) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("PC_DIFFUSE is not reconstructed yet, ignore.");
+		}
+		else if ((status & ReconstructStatus::PC_SPECULAR) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("PC_SPECULAR is not reconstructed yet, ignore.");
+		}
+		else if ((status & ReconstructStatus::SEG_NDF) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("SEG_NDF is not reconstructed yet, ignore.");
+		}
+		else if ((status & ReconstructStatus::SEG_MATERIAL) == ReconstructStatus::ReconstructStatus_UNKNOWN)
+		{
+			PRINT_WARNING("SEG_MATERIAL is not reconstructed yet, ignore.");
+		}
+		else if (pcMED->empty())
+		{
+			PRINT_WARNING("pcMED is empty, ignore.");
+		}
+		else if (pcSoftLabel->empty())
+		{
+			PRINT_WARNING("pcSoftLabel is empty, ignore.");
+		}
+		else if (pcSegMaterial->empty())
+		{
+			PRINT_WARNING("pcSegMaterial is empty, ignore.");
+		}
+		else if (refineSpecularEstimator)
+		{
+			ImplementRecPcRefineSpecular();
+			status = (ReconstructStatus)(status | ReconstructStatus::PC_REFINE_SPECULAR);
+			Dump();
+		}
+		else
+		{
+			PRINT_WARNING("refineSpecularEstimator is not set, ignore it");
 		}
 	}
 
@@ -499,7 +503,7 @@ namespace RecRoom
 						std::size_t col = uv.x() * (width - 1);
 						std::size_t row = (1.0 - uv.y()) * (height - 1);
 						std::size_t index = row * width + col;
-						pcVisNDF[index].x += 1;
+						pcVisNDF[index].x += it->weight;
 						pcVisNDF[index].intensity += it->intensity;
 					}
 
@@ -587,7 +591,7 @@ namespace RecRoom
 						std::size_t col = uv.x() * (width - 1);
 						std::size_t row = (1.0 - uv.y()) * (height - 1);
 						std::size_t index = row * width + col;
-						pcVisNDF[index].x += 1;
+						pcVisNDF[index].x += it->weight;
 						pcVisNDF[index].intensity += it->intensity;
 					}
 
@@ -750,8 +754,9 @@ namespace RecRoom
 					{
 						pVisRaw.z = uvd.z();
 						pVisRec.z = uvd.z();
-						pVisRaw.label = pRaw.serialNumber;
-						pVisRec.label = pRec.label;
+						pVisRaw.serialNumber = pRaw.serialNumber;
+						pVisRec.softLabelStart = pVisRec.softLabelStart;
+						pVisRec.softLabelEnd = pVisRec.softLabelEnd;
 					}
 
 					pVisRawRGB.r += (float)pRaw.r;
@@ -912,7 +917,7 @@ namespace RecRoom
 
 			{
 				for (std::size_t px = 0; px < pcVis2.size(); ++px)
-					pcVis2[px].label = pcVisRaw[px].label;
+					pcVis2[px].label = pcVisRaw[px].serialNumber;
 
 				std::stringstream fileName;
 				fileName << it->serialNumber << "_raw_SerialNumber.png";
@@ -928,10 +933,10 @@ namespace RecRoom
 
 			{
 				for (std::size_t px = 0; px < pcVis2.size(); ++px)
-					pcVis2[px].label = pcVisRec[px].label;
+					pcVis2[px].label = pcVisRec[px].softLabelStart;
 
 				std::stringstream fileName;
-				fileName << it->serialNumber << "_rec_Label.png";
+				fileName << it->serialNumber << "_rec_SoftLabelStart.png";
 
 				pcl::PCLImage image;
 				//pcl::io::PointCloudImageExtractorFromLabelField<PointVisAtt> pcie;
@@ -939,7 +944,24 @@ namespace RecRoom
 				pcie.setColorMode(pcl::io::PointCloudImageExtractorFromLabelField<pcl::PointXYZRGBL>::COLORS_RGB_GLASBEY);
 				pcie.setPaintNaNsWithBlack(true);
 				if (!pcie.extract(pcVis2, image))
-					THROW_EXCEPTION("Failed to extract an image from Label field .");
+					THROW_EXCEPTION("Failed to extract an image from SoftLabelStart field .");
+				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
+			}
+
+			{
+				for (std::size_t px = 0; px < pcVis2.size(); ++px)
+					pcVis2[px].label = pcVisRec[px].softLabelEnd;
+
+				std::stringstream fileName;
+				fileName << it->serialNumber << "_rec_SoftLabelEnd.png";
+
+				pcl::PCLImage image;
+				//pcl::io::PointCloudImageExtractorFromLabelField<PointVisAtt> pcie;
+				pcl::io::PointCloudImageExtractorFromLabelField<pcl::PointXYZRGBL> pcie;
+				pcie.setColorMode(pcl::io::PointCloudImageExtractorFromLabelField<pcl::PointXYZRGBL>::COLORS_RGB_GLASBEY);
+				pcie.setPaintNaNsWithBlack(true);
+				if (!pcie.extract(pcVis2, image))
+					THROW_EXCEPTION("Failed to extract an image from SoftLabelEnd field .");
 				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
 
@@ -1003,6 +1025,10 @@ namespace RecRoom
 		DumpAble::Load();
 		if (boost::filesystem::exists(filePath / boost::filesystem::path("pcMED.pcd")))
 			pcl::io::loadPCDFile((filePath / boost::filesystem::path("pcMED.pcd")).string(), *pcMED);
+		if (boost::filesystem::exists(filePath / boost::filesystem::path("pcSoftLabel.pcd")))
+			pcl::io::loadPCDFile((filePath / boost::filesystem::path("pcSoftLabel.pcd")).string(), *pcSoftLabel);
+		if (boost::filesystem::exists(filePath / boost::filesystem::path("pcSegMaterial.pcd")))
+			pcl::io::loadPCDFile((filePath / boost::filesystem::path("pcSegMaterial.pcd")).string(), *pcSegMaterial);
 		if (boost::filesystem::exists(filePath / boost::filesystem::path("pcREC.pcd")))
 			pcl::io::loadPCDFile((filePath / boost::filesystem::path("pcREC.pcd")).string(), *pcREC);
 		if (boost::filesystem::exists(filePath / boost::filesystem::path("mesh.ply")))
@@ -1018,6 +1044,10 @@ namespace RecRoom
 		DumpAble::Dump();
 		if (pcMED->size() > 0)
 			pcl::io::savePCDFile((filePath / boost::filesystem::path("pcMED.pcd")).string(), *pcMED, true);
+		if (pcSoftLabel->size() > 0)
+			pcl::io::savePCDFile((filePath / boost::filesystem::path("pcSoftLabel.pcd")).string(), *pcSoftLabel, true);
+		if (pcSegMaterial->size() > 0)
+			pcl::io::savePCDFile((filePath / boost::filesystem::path("pcSegMaterial.pcd")).string(), *pcSegMaterial, true);	
 		if (pcREC->size() > 0)
 			pcl::io::savePCDFile((filePath / boost::filesystem::path("pcREC.pcd")).string(), *pcREC, true);
 		if (!mesh->cloud.data.empty())
@@ -1061,7 +1091,7 @@ namespace RecRoom
 	{
 		PTR(AccMED) accMED(new KDTreeMED);
 		accMED->setInputCloud(pcMED);
-		segmenter->ProcessInOut(accMED, pcMED, nullptr);
+		segmenter->ProcessInOut(accMED, pcMED, nullptr, *pcSoftLabel);
 
 		// fill
 		{
@@ -1090,7 +1120,8 @@ namespace RecRoom
 					PointMED& tarP = (*pcMED)[(*inValidFilter)[idx]];
 					PointMED& srcP = temp[idx];
 
-					tarP.label = srcP.label;
+					tarP.softLabelStart = srcP.softLabelStart;
+					tarP.softLabelEnd = srcP.softLabelEnd;
 				}
 			}
 		}
