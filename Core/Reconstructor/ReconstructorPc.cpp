@@ -504,7 +504,7 @@ namespace RecRoom
 						std::size_t row = (1.0 - uv.y()) * (height - 1);
 						std::size_t index = row * width + col;
 						pcVisNDF[index].x += it->weight;
-						pcVisNDF[index].intensity += it->intensity;
+						pcVisNDF[index].intensity += it->weight * it->intensity * 128.0f;
 					}
 
 					std::size_t index = 0;
@@ -592,7 +592,7 @@ namespace RecRoom
 						std::size_t row = (1.0 - uv.y()) * (height - 1);
 						std::size_t index = row * width + col;
 						pcVisNDF[index].x += it->weight;
-						pcVisNDF[index].intensity += it->intensity;
+						pcVisNDF[index].intensity += it->weight * it->intensity * 128.0f;
 					}
 
 					std::size_t index = 0;
