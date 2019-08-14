@@ -248,7 +248,7 @@ namespace RecRoom
 			input_ = cloud;
 		}
 
-		virtual void Extract(Pc<PointCINS>& cloud, PcSoftLabel& pcSoftLabel, float weightSmoothParm = 4.0, std::size_t numMaxLabels = 5);
+		virtual void Extract(Pc<PointCINS>& cloud, PcSoftLabel& pcSoftLabel, float weightSmoothParm = 2.0, std::size_t numMaxLabels = 5);
 
 	public:
 		virtual bool PrepareForSegmentation()

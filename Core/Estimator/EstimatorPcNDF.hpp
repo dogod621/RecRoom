@@ -173,4 +173,76 @@ namespace RecRoom
 
 		return true;
 	}
+
+	template<class InPointType, class OutPointType>
+	inline bool EstimatorPcNDF<InPointType, OutPointType>::SolveSpecular(OutPointType& outPoint, const PcNDF& rawSamples) const
+	{
+		std::vector<NDFSample> samples;
+		samples.reserve(rawSamples.size());
+		float sumWeight = 0.0;
+		for (PcNDF::const_iterator it = rawSamples.begin(); it != rawSamples.end(); ++it)
+		{
+			sumWeight += it->weight;
+			samples.push_back(NDFSample(
+				0.0,
+				0.0,
+				0.0,
+				Eigen::Vector3f(
+					it->normal_x,
+					it->normal_y,
+					it->normal_z),
+				it->intensity, it->weight));
+		}
+
+		for (std::vector<NDFSample>::iterator it = samples.begin(); it != samples.end(); ++it)
+		{
+			it->weight /= sumWeight;
+		}
+
+
+		const int numInitSharpness = 32;
+		float epsInitSpecularSharpness = (maxSharpness - minSharpness) / (float)(numInitSharpness);
+		float bestMSE = std::numeric_limits<float>::max();
+		for (int testInitSpecularSharpness = 0; testInitSpecularSharpness < numInitSharpness; ++testInitSpecularSharpness)
+		{
+			float testSpecularAlbedo;
+			float testSpecularSharpness = ((float)testInitSpecularSharpness + 0.5f) * epsInitSpecularSharpness;
+			float testMSE = Evaluate_Albedo_MSE(samples, testSpecularAlbedo, testSpecularSharpness);
+
+			if (testMSE < bestMSE)
+			{
+				outPoint.specularAlbedo = testSpecularAlbedo;
+				outPoint.specularSharpness = testSpecularSharpness;
+
+				bestMSE = testMSE;
+			}
+		}
+
+
+		Eigen::VectorXd lowerBound(2);
+		Eigen::VectorXd upperBound(2);
+		lowerBound << 0.0, minSharpness;
+		upperBound << 512.0, maxSharpness;
+		LBFGSB solver(lowerBound, upperBound);
+
+		Eigen::VectorXd optX(2);
+		optX << outPoint.specularAlbedo, outPoint.specularSharpness;
+
+		Temp<InPointType, OutPointType> data(this, &samples);
+		solver.Solve(optX, ObjValue<InPointType, OutPointType>, ObjGradient<InPointType, OutPointType>, (void*)(&data));
+
+		outPoint.specularAlbedo = optX(0);
+		outPoint.specularSharpness = optX(1);
+
+		if (!OutputPointValid(outPoint))
+			return false;
+
+		if ((optX(0) < lowerBound(0)) ||
+			(optX(0) > upperBound(0)) ||
+			(optX(1) < lowerBound(1)) ||
+			(optX(1) > upperBound(1)))
+			return false;
+
+		return true;
+	}
 }

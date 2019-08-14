@@ -172,5 +172,9 @@ template <> inline bool pcl::isFinite<RecRoom::PointLF>(const RecRoom::PointLF& 
 		pcl_isfinite(p.intensity);
 }
 
+template <> inline bool pcl::isFinite<RecRoom::SoftLabel>(const RecRoom::SoftLabel& p)
+{
+	return pcl_isfinite(p.weight);
+}
 
 

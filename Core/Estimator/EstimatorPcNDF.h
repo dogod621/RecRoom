@@ -87,6 +87,8 @@ namespace RecRoom
 		}
 
 	public:
+		inline bool SolveSpecular(OutPointType& outPoint, const PcNDF& rawSamples) const;
+
 		inline virtual float DiffuseDistribution(const Eigen::Vector3f& tanDir) const = 0;
 
 		inline virtual float SpecularDistribution(const Eigen::Vector3f& tanDir, float specularSharpness) const = 0;
@@ -107,11 +109,32 @@ namespace RecRoom
 			for (std::vector<NDFSample>::const_iterator it = samples.cbegin(); it != samples.cend(); ++it)
 			{
 				double diff = it->intensity - it->tanDir.z() * (
-					diffuseAlbedo * self.DiffuseDistribution(samples[i].tanDir) +
-					specularAlbedo * self.SpecularDistribution(samples[i].tanDir, specularSharpness));
+					diffuseAlbedo * DiffuseDistribution(it->tanDir) +
+					specularAlbedo * SpecularDistribution(it->tanDir, specularSharpness));
 				mse += it->weight * diff * diff;
 			}
 			return mse;
+		}
+
+		inline float Evaluate_Albedo_MSE(const std::vector<NDFSample>& samples, float& specularAlbedo, float specularSharpness) const
+		{
+			float meanSpecularValues = 0;
+			std::vector<float> specularValue(samples.size());
+			for (int i = 0; i < samples.size(); ++i)
+			{
+				specularValue[i] = samples[i].tanDir.z() * SpecularDistribution(samples[i].tanDir, specularSharpness);
+				meanSpecularValues += samples[i].weight * specularValue[i];
+			}
+
+			float temp = 0;
+			for (int i = 0; i < samples.size(); ++i)
+				temp += samples[i].weight * samples[i].intensity;
+			if (temp > 0.0f)
+				specularAlbedo = temp / meanSpecularValues;
+			else
+				specularAlbedo = 0.0f;
+
+			return Evaluate_MSE(samples, 0.0, specularAlbedo, specularSharpness);
 		}
 
 		inline float Evaluate_Albedo_MSE(const std::vector<NDFSample>& samples, float& diffuseAlbedo, float& specularAlbedo, float specularSharpness) const

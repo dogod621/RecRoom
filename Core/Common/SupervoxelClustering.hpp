@@ -224,7 +224,11 @@ namespace RecRoom
 			counter = 0;
 			for (boost::ptr_list<Supervoxel<PointCINS>>::iterator jt = supervoxels.begin(); jt != supervoxels.end(); ++jt)
 			{
-				tempLabelDistance[counter] = std::max(Distance(jt->centroid, voxel), 1e-4f);
+				tempLabelDistance[counter] = std::min(std::max(Distance(jt->centroid, voxel), 1e-4f), 1e4f);
+				if (!pcl_isfinite(tempLabelDistance[counter]))
+				{
+					THROW_EXCEPTION("tempLabelDistance[counter] is not valid");
+				}
 				counter++;
 			}
 
@@ -236,13 +240,27 @@ namespace RecRoom
 			for (std::size_t i = 0; i < numMaxLabels2; ++i)
 			{
 				vSoftLabel[i].label = tempLabel[i];
-				float weight = 1.0f / std::pow(tempLabelDistance[i], weightSmoothParm);
+				float weight = std::min(std::max(1.0f / std::pow(tempLabelDistance[i], weightSmoothParm), 1e-4f), 1e4f);
 				vSoftLabel[i].weight = weight;
 				sumWeight += weight;
 			}
 
-			for (std::size_t i = 0; i < numMaxLabels2; ++i)
-				vSoftLabel[i].weight /= sumWeight;
+			if (sumWeight > 0.0f)
+			{
+				for (std::size_t i = 0; i < numMaxLabels2; ++i)
+				{
+					vSoftLabel[i].weight /= sumWeight;
+
+					if(!pcl::isFinite(vSoftLabel[i]))
+					{ 
+						THROW_EXCEPTION("vSoftLabel is not valid");
+					}
+				}
+			}
+			else
+			{
+				THROW_EXCEPTION("sumWeight is zero");
+			}
 		}
 
 

@@ -6,11 +6,13 @@
 #include "Scanner/ScannerPc.h"
 
 #include "Estimator/EstimatorPc.h"
+#include "Estimator/EstimatorPcNDF.h"
 #include "Filter/FilterPc.h"
 #include "Interpolator/InterpolatorPcNearest.h"
 #include "Mesher/MesherPc.h"
 #include "Sampler/SamplerPc.h"
 #include "Segmenter/SegmenterPc.h"
+
 
 namespace RecRoom
 {
@@ -34,6 +36,7 @@ namespace RecRoom
 	{
 	public:
 		using Estimator = EstimatorPc<PointMED, PointMED>;
+		using EstimatorNDF = EstimatorPcNDF<PointMED, PointMED>;
 		using Filter = FilterPc<PointMED>;
 		using Interpolator = InterpolatorPc<PointMED, PointMED>;
 		using Sampler = SamplerPc<PointMED>;
@@ -105,7 +108,7 @@ namespace RecRoom
 		CONST_PTR(Interpolator) getFieldInterpolator() const { return fieldInterpolator; }
 		CONST_PTR(Estimator) getNormalEstimator() const { return normalEstimator; }
 		CONST_PTR(Estimator) getDiffuseEstimator() const { return diffuseEstimator; }
-		CONST_PTR(Estimator) getSpecularEstimator() const { return specularEstimator; }
+		CONST_PTR(EstimatorNDF) getSpecularEstimator() const { return specularEstimator; }
 		CONST_PTR(Estimator) getRefineSpecularEstimator() const { return refineSpecularEstimator; }
 		CONST_PTR(Segmenter) getSegmenter() const { return segmenter; }
 		CONST_PTR(Mesher) getMesher() const { return mesher; }
@@ -138,7 +141,7 @@ namespace RecRoom
 		}
 		void setNormalEstimator(const CONST_PTR(Estimator)& v) { normalEstimator = v; }
 		void setDiffuseEstimator(const CONST_PTR(Estimator)& v) { diffuseEstimator = v; }
-		void setSpecularEstimator(const CONST_PTR(Estimator)& v) { specularEstimator = v; }
+		void setSpecularEstimator(const CONST_PTR(EstimatorNDF)& v) { specularEstimator = v; }
 		void setRefineSpecularEstimator(const CONST_PTR(Estimator)& v) { refineSpecularEstimator = v; }
 		void setSegmenter(const CONST_PTR(Segmenter)& v) { segmenter = v; }
 		void setMesher(const CONST_PTR(Mesher)& v) 
@@ -193,7 +196,7 @@ namespace RecRoom
 		CONST_PTR(Interpolator) fieldInterpolator;
 		CONST_PTR(Estimator) normalEstimator;
 		CONST_PTR(Estimator) diffuseEstimator;
-		CONST_PTR(Estimator) specularEstimator;
+		CONST_PTR(EstimatorNDF) specularEstimator;
 		CONST_PTR(Estimator) refineSpecularEstimator;
 		CONST_PTR(Segmenter) segmenter;
 		

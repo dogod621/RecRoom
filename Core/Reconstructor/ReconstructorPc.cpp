@@ -486,7 +486,24 @@ namespace RecRoom
 					pcVisNDF.height = height;
 					pcVisNDF.is_dense = false;
 					pcVisNDF.resize(width * height);
+
+					Pc<pcl::PointXYZINormal> pcVisRecNDF;
+					pcVisRecNDF.width = width;
+					pcVisRecNDF.height = height;
+					pcVisRecNDF.is_dense = false;
+					pcVisRecNDF.resize(width * height);
 					for (Pc<pcl::PointXYZINormal>::iterator it = pcVisNDF.begin(); it != pcVisNDF.end(); ++it)
+					{
+						it->x = 0.0;// use as counter
+						it->y = 0.0;
+						it->z = 0.0;
+						it->normal_x = NAN;
+						it->normal_y = NAN;
+						it->normal_z = NAN;
+						it->intensity = 0.0;
+					}
+
+					for (Pc<pcl::PointXYZINormal>::iterator it = pcVisRecNDF.begin(); it != pcVisRecNDF.end(); ++it)
 					{
 						it->x = 0.0;// use as counter
 						it->y = 0.0;
@@ -505,30 +522,63 @@ namespace RecRoom
 						std::size_t index = row * width + col;
 						pcVisNDF[index].x += it->weight;
 						pcVisNDF[index].intensity += it->weight * it->intensity * 128.0f;
-					}
 
-					std::size_t index = 0;
-					for (Pc<pcl::PointXYZINormal>::iterator it = pcVisNDF.begin(); it != pcVisNDF.end(); ++it)
-					{
-						if (it->x > 0)
+						if ((status & ReconstructStatus::SEG_MATERIAL) != ReconstructStatus::ReconstructStatus_UNKNOWN)
 						{
-							it->intensity /= it->x;
-							it->x = 0.0f;
-
-							std::size_t col = index % width;
-							std::size_t row = index / width;
-							Eigen::Vector2d uv(
-								(((double)col) + 0.5 / (double)(width - 1)) * 2.0 - 1.0,
-								(1.0 - ((double)row) + 0.5 / (double)(height - 1)) * 2.0 - 1.0);
-
-							it->normal_x = uv.x();
-							it->normal_y = uv.y();
-							it->normal_z = std::sqrt(1.0 - uv.x()*uv.x() - uv.y()*uv.y());
-
+							pcVisRecNDF[index].x += it->weight;
+							pcVisRecNDF[index].intensity += it->weight * (*pcSegMaterial)[segID].specularAlbedo * specularEstimator->SpecularDistribution(Eigen::Vector3f(it->normal_x, it->normal_y, it->normal_z), (*pcSegMaterial)[segID].specularSharpness ) * 128.0f;
 						}
-
-						index++;
 					}
+
+					{
+						std::size_t index = 0;
+						for (Pc<pcl::PointXYZINormal>::iterator it = pcVisNDF.begin(); it != pcVisNDF.end(); ++it)
+						{
+							if (it->x > 0)
+							{
+								it->intensity /= it->x;
+								it->x = 0.0f;
+
+								std::size_t col = index % width;
+								std::size_t row = index / width;
+								Eigen::Vector2d uv(
+									(((double)col) + 0.5 / (double)(width - 1)) * 2.0 - 1.0,
+									(1.0 - ((double)row) + 0.5 / (double)(height - 1)) * 2.0 - 1.0);
+
+								it->normal_x = uv.x();
+								it->normal_y = uv.y();
+								it->normal_z = std::sqrt(1.0 - uv.x()*uv.x() - uv.y()*uv.y());
+							}
+
+							index++;
+						}
+					}
+
+					if ((status & ReconstructStatus::SEG_MATERIAL) != ReconstructStatus::ReconstructStatus_UNKNOWN)
+					{
+						std::size_t index = 0;
+						for (Pc<pcl::PointXYZINormal>::iterator it = pcVisRecNDF.begin(); it != pcVisRecNDF.end(); ++it)
+						{
+							if (it->x > 0)
+							{
+								it->intensity /= it->x;
+								it->x = 0.0f;
+
+								std::size_t col = index % width;
+								std::size_t row = index / width;
+								Eigen::Vector2d uv(
+									(((double)col) + 0.5 / (double)(width - 1)) * 2.0 - 1.0,
+									(1.0 - ((double)row) + 0.5 / (double)(height - 1)) * 2.0 - 1.0);
+
+								it->normal_x = uv.x();
+								it->normal_y = uv.y();
+								it->normal_z = std::sqrt(1.0 - uv.x()*uv.x() - uv.y()*uv.y());
+							}
+
+							index++;
+						}
+					}
+
 
 					{
 						std::stringstream fileName;
@@ -552,6 +602,20 @@ namespace RecRoom
 						pcie.setScalingMethod(pcie.SCALING_FIXED_FACTOR);
 						pcie.setScalingFactor(255.f);
 						if (!pcie.extract(pcVisNDF, image))
+							THROW_EXCEPTION("Failed to extract an image from Intensity field .");
+						pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualSegmentNDFs") / boost::filesystem::path(fileName.str())).string(), image);
+					}
+
+					{
+						std::stringstream fileName;
+						fileName << segID << "_RecIntensity.png";
+
+						pcl::PCLImage image;
+						pcl::io::PointCloudImageExtractorFromIntensityField<pcl::PointXYZINormal> pcie;
+						pcie.setPaintNaNsWithBlack(true);
+						pcie.setScalingMethod(pcie.SCALING_FIXED_FACTOR);
+						pcie.setScalingFactor(255.f);
+						if (!pcie.extract(pcVisRecNDF, image))
 							THROW_EXCEPTION("Failed to extract an image from Intensity field .");
 						pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualSegmentNDFs") / boost::filesystem::path(fileName.str())).string(), image);
 					}
@@ -1145,9 +1209,16 @@ namespace RecRoom
 		}
 	}
 
+
 	void ReconstructorPc::ImplementRecSegMaterial()
 	{
-		THROW_EXCEPTION("Not done yet");
+		pcSegMaterial->resize(containerPcNDF->NumLabel());
+
+		for (std::size_t segID = 0; segID < containerPcNDF->NumLabel(); ++segID)
+		{
+			PTR(PcNDF) pcNDF = containerPcNDF->GetData(segID);
+			specularEstimator->SolveSpecular((*pcSegMaterial)[segID], *pcNDF);
+		}
 	}
 
 	void ReconstructorPc::ImplementRecMeshPreprocess()

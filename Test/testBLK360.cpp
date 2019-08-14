@@ -399,7 +399,7 @@ int main(int argc, char *argv[])
 
 			std::cout << "Create NDFEstimator" << std::endl;
 			{
-				PTR(RecRoom::ReconstructorPcOC::Estimator)
+				PTR(RecRoom::ReconstructorPcOC::EstimatorNDF)
 					ndfEstimator(
 						new RecRoom::EstimatorPcSGNDF<RecRoom::PointMED, RecRoom::PointMED>(
 							scannerPc, searchRadius,
