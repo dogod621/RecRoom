@@ -19,7 +19,6 @@
 #include "Estimator/EstimatorPcNormal.h"
 #include "Estimator/EstimatorPcAlbedo.h"
 #include "Estimator/EstimatorPcNDF.h"
-#include "Estimator/EstimatorPcRefineAlbedo.h"
 #include "Filter/FilterPcRemoveOutlier.h"
 #include "Filter/FilterPcRemoveDuplicate.h"
 #include "Mesher/MesherPcMC.h"
@@ -415,16 +414,6 @@ int main(int argc, char *argv[])
 							voxelResolution, seedResolution,
 							xyzImportance, rgbImportance, normalImportance, diffuseAlbedoImportance, specularSharpnessImportance, minSize));
 				reconstructorPC->setSegmenter(segmenter);
-			}
-
-			std::cout << "Create RefineSpecularEstimator" << std::endl;
-			{
-				PTR(RecRoom::ReconstructorPcOC::Estimator)
-					refineSpecularEstimator(
-						new RecRoom::EstimatorPcRefineSGAlbedo<RecRoom::PointMED, RecRoom::PointMED>(
-							scannerPc, searchRadius,
-							3, 1, cutFalloff, cutGrazing));
-				reconstructorPC->setRefineSpecularEstimator(refineSpecularEstimator);
 			}
 
 			std::cout << "Create MeshOutlierRemover" << std::endl;

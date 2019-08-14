@@ -23,10 +23,10 @@ namespace RecRoom
 		PC_NORMAL = 1 << 2,
 		PC_DIFFUSE = 1 << 3,
 		PC_SPECULAR = 1 << 4,
-		PC_REFINE_SPECULAR = 1 << 5,
-		PC_SEGMENT = 1 << 6,
-		SEG_NDF = 1 << 7,
-		SEG_MATERIAL = 1 << 8,
+		PC_SEGMENT = 1 << 5,
+		SEG_NDF = 1 << 6,
+		SEG_MATERIAL = 1 << 7,
+		PC_REFINE_SPECULAR = 1 << 8,
 		MESH_PREPROCESS = 1 << 9,
 		MESH = 1 << 10,
 		MESH_POSTPROCESS = 1 << 11
@@ -62,10 +62,10 @@ namespace RecRoom
 		void RecPcNormal();
 		void RecPcDiffuse();
 		void RecPcSpecular();
-		void RecPcRefineSpecular();
 		void RecPcSegment();
 		void RecSegNDF();
 		void RecSegMaterial();
+		void RecPcRefineSpecular();
 		void RecMeshPreprocess();
 		void RecMesh();
 		void RecMeshPostprocess(float holeSize = -1.0,
@@ -80,10 +80,10 @@ namespace RecRoom
 		virtual void ImplementRecPcNormal() = 0;
 		virtual void ImplementRecPcDiffuse() = 0;
 		virtual void ImplementRecPcSpecular() = 0;
-		virtual void ImplementRecPcRefineSpecular() = 0;
 		virtual void ImplementRecPcSegment();
 		virtual void ImplementRecSegNDF() = 0;
 		virtual void ImplementRecSegMaterial();
+		virtual void ImplementRecPcRefineSpecular();
 		virtual void ImplementRecMeshPreprocess();
 		virtual void ImplementRecMesh();
 		virtual void ImplementRecMeshPostprocess(float holeSize,
@@ -109,7 +109,6 @@ namespace RecRoom
 		CONST_PTR(Estimator) getNormalEstimator() const { return normalEstimator; }
 		CONST_PTR(Estimator) getDiffuseEstimator() const { return diffuseEstimator; }
 		CONST_PTR(EstimatorNDF) getSpecularEstimator() const { return specularEstimator; }
-		CONST_PTR(Estimator) getRefineSpecularEstimator() const { return refineSpecularEstimator; }
 		CONST_PTR(Segmenter) getSegmenter() const { return segmenter; }
 		CONST_PTR(Mesher) getMesher() const { return mesher; }
 		CONST_PTR(MeshFilter) getMeshOutlierRemover() const { return meshOutlierRemover; }
@@ -142,7 +141,6 @@ namespace RecRoom
 		void setNormalEstimator(const CONST_PTR(Estimator)& v) { normalEstimator = v; }
 		void setDiffuseEstimator(const CONST_PTR(Estimator)& v) { diffuseEstimator = v; }
 		void setSpecularEstimator(const CONST_PTR(EstimatorNDF)& v) { specularEstimator = v; }
-		void setRefineSpecularEstimator(const CONST_PTR(Estimator)& v) { refineSpecularEstimator = v; }
 		void setSegmenter(const CONST_PTR(Segmenter)& v) { segmenter = v; }
 		void setMesher(const CONST_PTR(Mesher)& v) 
 		{ 
@@ -197,7 +195,6 @@ namespace RecRoom
 		CONST_PTR(Estimator) normalEstimator;
 		CONST_PTR(Estimator) diffuseEstimator;
 		CONST_PTR(EstimatorNDF) specularEstimator;
-		CONST_PTR(Estimator) refineSpecularEstimator;
 		CONST_PTR(Segmenter) segmenter;
 		
 		CONST_PTR(Mesher) mesher;

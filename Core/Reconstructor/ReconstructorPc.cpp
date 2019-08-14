@@ -36,7 +36,6 @@ namespace RecRoom
 		normalEstimator(nullptr),
 		diffuseEstimator(nullptr),
 		specularEstimator(nullptr),
-		refineSpecularEstimator(nullptr),
 		segmenter(nullptr),
 		mesher(nullptr),
 		meshOutlierRemover(nullptr),
@@ -345,15 +344,11 @@ namespace RecRoom
 		{
 			PRINT_WARNING("pcSegMaterial is empty, ignore.");
 		}
-		else if (refineSpecularEstimator)
+		else
 		{
 			ImplementRecPcRefineSpecular();
 			status = (ReconstructStatus)(status | ReconstructStatus::PC_REFINE_SPECULAR);
 			Dump();
-		}
-		else
-		{
-			PRINT_WARNING("refineSpecularEstimator is not set, ignore it");
 		}
 	}
 
@@ -1231,6 +1226,29 @@ namespace RecRoom
 				ss << "RecSegMaterial - End - seg: " << segID << ", pcSize: " << pcNDF->size();
 				PRINT_INFO(ss.str().c_str());
 			}
+		}
+	}
+
+	void ReconstructorPc::ImplementRecPcRefineSpecular()
+	{
+		for (PcMED::iterator it = pcMED->begin(); it != pcMED->end(); ++it)
+		{
+			it->specularAlbedo = 0.0;
+			it->specularSharpness = 0.0;
+			float sumWeight = 0.0f;
+			for (std::size_t sx = it->softLabelStart; sx < it->softLabelEnd; ++sx)
+			{
+				SoftLabel& softLabel = (*pcSoftLabel)[sx];
+				PointMED& mat = (*pcSegMaterial)[softLabel.label];
+
+				sumWeight += softLabel.weight;
+				it->specularAlbedo += softLabel.weight * mat.specularAlbedo;
+				it->specularSharpness += softLabel.weight * mat.specularSharpness;
+			}
+			it->specularAlbedo /= sumWeight;
+			it->specularSharpness /= sumWeight;
+
+			it->specularAlbedo *= it->diffuseAlbedo;
 		}
 	}
 

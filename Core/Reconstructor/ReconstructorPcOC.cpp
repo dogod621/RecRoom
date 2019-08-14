@@ -309,36 +309,6 @@ namespace RecRoom
 		return 0;
 	}
 
-	// Async Reconstruct Attribute - Refine Specular
-	int BStep_RecPcRefineSpecular(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
-	{
-		if (!data.pcRecIdx->empty())
-		{
-			PcMED temp;
-
-			global.ptrReconstructorPcOC()->getFieldInterpolator()->Process(data.pcRecAcc, data.pcRaw, nullptr, temp);
-
-			for (std::size_t px = 0; px < data.pcRaw->size(); ++px)
-			{
-				PointMED& tarP = (*data.pcRaw)[px];
-				PointMED& srcP = temp[px];
-
-				tarP.normal_x = srcP.normal_x;
-				tarP.normal_y = srcP.normal_y;
-				tarP.normal_z = srcP.normal_z;
-				tarP.curvature = srcP.curvature;
-
-				tarP.diffuseAlbedo = srcP.diffuseAlbedo;
-				tarP.specularAlbedo = srcP.specularAlbedo;
-				tarP.specularSharpness = srcP.specularSharpness;
-			}
-
-			global.ptrReconstructorPcOC()->getRefineSpecularEstimator()->ProcessInOut(
-				data.pcRawAcc, data.pcRec, data.pcRecIdx);
-		}
-		return 0;
-	}
-
 	// Async Reconstruct Attribute - NDF
 	int BStep_RecSegNDF(const AsyncGlobal_Rec& global, const AsyncQuery_Rec& query, AsyncData_Rec& data)
 	{
@@ -590,55 +560,6 @@ namespace RecRoom
 			for (int px = 0; px < pcMED->size(); px++)
 			{
 				if (specularEstimator->InputPointValid((*pcMED)[px]) && specularEstimator->OutputPointValid((*pcMED)[px]))
-					validFilter->push_back(px);
-				else
-					inValidFilter->push_back(px);
-			}
-
-			if ((validFilter->size() > 0) && (inValidFilter->size() > 0))
-			{
-				PTR(AccMED) validAcc(new KDTreeMED);
-				validAcc->setInputCloud(pcMED, validFilter);
-
-				PcMED temp;
-
-				fieldInterpolator->Process(validAcc, pcMED, inValidFilter, temp);
-
-				for (std::size_t idx = 0; idx < inValidFilter->size(); ++idx)
-				{
-					PointMED& tarP = (*pcMED)[(*inValidFilter)[idx]];
-					PointMED& srcP = temp[idx];
-
-					tarP.diffuseAlbedo = srcP.diffuseAlbedo;
-					tarP.specularAlbedo = srcP.specularAlbedo;
-					tarP.specularSharpness = srcP.specularSharpness;
-				}
-			}
-		}
-	}
-
-	void ReconstructorPcOC::ImplementRecPcRefineSpecular()
-	{
-		AsyncGlobal_Rec global(this);
-
-		std::vector<AsyncQuery_Rec> queries(scanner->getContainerPcRAW()->Size());
-		for (std::size_t i = 0; i < queries.size(); ++i)
-			queries[i].index = i;
-
-		AsyncProcess<AsyncGlobal_Rec, AsyncQuery_Rec, AsyncData_Rec>(
-			global, queries,
-			AStep_RecPcAtt, BStep_RecPcRefineSpecular, CStep_RecPcAtt,
-			asyncSize);
-
-		// NAN fill
-		{
-			PTR(PcIndex) validFilter(new PcIndex);
-			PTR(PcIndex) inValidFilter(new PcIndex);
-			validFilter->reserve(pcMED->size());
-			inValidFilter->reserve(pcMED->size());
-			for (int px = 0; px < pcMED->size(); px++)
-			{
-				if (refineSpecularEstimator->InputPointValid((*pcMED)[px]) && refineSpecularEstimator->OutputPointValid((*pcMED)[px]))
 					validFilter->push_back(px);
 				else
 					inValidFilter->push_back(px);
