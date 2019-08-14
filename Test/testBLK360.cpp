@@ -96,7 +96,7 @@ void PrintHelp(int argc, char **argv)
 		PRINT_HELP("\t", "rgbImportance", "float 0.4", "Distance importance of RGB.");
 		PRINT_HELP("\t", "normalImportance", "float 1.0", "Distance importance of normal.");
 		PRINT_HELP("\t", "diffuseAlbedoImportance", "float 5.0", "Distance importance of diffuseAlbedoImportance.");
-		PRINT_HELP("\t", "specularSharpnessImportance", "float 5.0", "Distance importance of specularSharpnessImportance.");
+		PRINT_HELP("\t", "specularSharpnessImportance", "float 0.0", "Distance importance of specularSharpnessImportance.");
 		PRINT_HELP("\t", "minSize", "int 2500", "Minimum segment size.");
 	}
 
@@ -234,7 +234,7 @@ int main(int argc, char *argv[])
 		float rgbImportance = 0.4f;
 		float normalImportance = 1.0f;
 		float diffuseAlbedoImportance = 5.0f;
-		float specularSharpnessImportance = 5.0f;
+		float specularSharpnessImportance = 0.0f;
 		int minSize = 2500;
 		pcl::console::parse_argument(argc, argv, "-voxelResolution", voxelResolution);
 		pcl::console::parse_argument(argc, argv, "-seedResolution", seedResolution);

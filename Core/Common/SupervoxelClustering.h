@@ -231,7 +231,7 @@ namespace RecRoom
 
 	public:
 		SupervoxelClustering(float voxelResolution, float seedResolution,
-			float xyzImportance = 0.4f, float rgbImportance = 0.4f, float normalImportance = 1.0f, float diffuseAlbedoImportance = 5.0f, float specularSharpnessImportance = 5.0f,
+			float xyzImportance = 0.4f, float rgbImportance = 0.4f, float normalImportance = 1.0f, float diffuseAlbedoImportance = 5.0f, float specularSharpnessImportance = 0.0f,
 			std::size_t minSize = 1, std::size_t numIter = 0)
 			: voxelResolution(voxelResolution), seedResolution(seedResolution),
 			xyzImportance(xyzImportance), rgbImportance(rgbImportance), normalImportance(normalImportance), diffuseAlbedoImportance(diffuseAlbedoImportance), specularSharpnessImportance(specularSharpnessImportance), minSize(minSize), numIter(numIter),

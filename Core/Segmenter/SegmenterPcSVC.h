@@ -9,7 +9,7 @@ namespace RecRoom
 	{
 	public:
 		SegmenterPcSVC(float voxelResolution, float seedResolution, 
-			float xyzImportance = 0.4f, float rgbImportance = 0.4f, float normalImportance = 1.0f, float diffuseAlbedoImportance = 5.0f, float specularSharpnessImportance = 5.0,
+			float xyzImportance = 0.4f, float rgbImportance = 0.4f, float normalImportance = 1.0f, float diffuseAlbedoImportance = 5.0f, float specularSharpnessImportance = 0.0,
 			float weightSmoothParm = 2.0, std::size_t numMaxLabels = 5,
 			std::size_t minSize = 1, std::size_t numIter = 0)
 			: SegmenterPc<PointType>(numMaxLabels), voxelResolution(voxelResolution), seedResolution(seedResolution),
