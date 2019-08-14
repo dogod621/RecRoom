@@ -1217,7 +1217,20 @@ namespace RecRoom
 		for (std::size_t segID = 0; segID < containerPcNDF->NumLabel(); ++segID)
 		{
 			PTR(PcNDF) pcNDF = containerPcNDF->GetData(segID);
+
+			{
+				std::stringstream ss;
+				ss << "RecSegMaterial - Start - seg: " << segID << ", pcSize: " << pcNDF->size();
+				PRINT_INFO(ss.str().c_str());
+			}
+
 			specularEstimator->SolveSpecular((*pcSegMaterial)[segID], *pcNDF);
+
+			{
+				std::stringstream ss;
+				ss << "RecSegMaterial - End - seg: " << segID << ", pcSize: " << pcNDF->size();
+				PRINT_INFO(ss.str().c_str());
+			}
 		}
 	}
 
