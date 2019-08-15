@@ -1188,8 +1188,8 @@ namespace RecRoom
 				int col = uvd.x() * (width - 1);
 				int row = (1.0 - uvd.y()) * (height - 1);
 
-				if (it->serialNumber == serialNumber)
-					uvd.z() -= 0.1f;
+				//if (it->serialNumber == serialNumber)
+				//	uvd.z() -= 0.1f;
 
 				for (std::vector<WeightKernel>::const_iterator kt = gaussianKernel.begin(); kt != gaussianKernel.end(); ++kt)
 				{
@@ -1242,8 +1242,8 @@ namespace RecRoom
 				int col = uvd.x() * (width - 1);
 				int row = (1.0 - uvd.y()) * (height - 1);
 
-				if (it->serialNumber == serialNumber)
-					uvd.z() -= 0.1f;
+				//if (it->serialNumber == serialNumber)
+				//	uvd.z() -= 0.1f;
 
 				for (std::vector<WeightKernel>::const_iterator kt = gaussianKernel.begin(); kt != gaussianKernel.end(); ++kt)
 				{
