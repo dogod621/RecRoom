@@ -1155,7 +1155,7 @@ namespace RecRoom
 			for (PcMED::iterator jt = pcVisRaw.begin(); jt != pcVisRaw.end(); ++jt)
 			{
 				jt->x = 0.0; // use as counter
-				jt->y = 0.0; // use as depth
+				jt->y = NAN; // use as depth
 				jt->z = std::numeric_limits<float>::max(); // use as depth buffer
 			}
 		}
@@ -1263,6 +1263,8 @@ namespace RecRoom
 						if (uvd.z() < (pVisRaw.z + eps))
 						{
 							pVisRaw.x += kt->weight;
+							if (!pcl_isfinite(pVisRaw.y))
+								pVisRaw.y = 0.0f;
 							pVisRaw.y += kt->weight * uvd.z();
 							pVisRawRGB.r += kt->weight * (float)pRaw.r;
 							pVisRawRGB.g += kt->weight * (float)pRaw.g;
@@ -1281,7 +1283,8 @@ namespace RecRoom
 
 			if (pVisRaw.x > 0)
 			{
-				pVisRaw.y /= pVisRaw.x;
+				if (pcl_isfinite(pVisRaw.y))
+					pVisRaw.y /= pVisRaw.x;
 				pVisRaw.r = std::max(std::min(pVisRawRGB.r / pVisRaw.x, 255.0f), 0.0f);
 				pVisRaw.g = std::max(std::min(pVisRawRGB.g / pVisRaw.x, 255.0f), 0.0f);
 				pVisRaw.b = std::max(std::min(pVisRawRGB.b / pVisRaw.x, 255.0f), 0.0f);
@@ -1334,6 +1337,40 @@ namespace RecRoom
 			pcie.setScalingFactor(255.f);
 			if (!pcie.extract(pcVis1, image))
 				THROW_EXCEPTION("Failed to extract an image from Intensity field .");
+			pcl::io::savePNGFile((filePath / boost::filesystem::path("FusionScanData") / boost::filesystem::path(fileName.str())).string(), image);
+		}
+
+		{
+			for (std::size_t px = 0; px < pcVis2.size(); ++px)
+			{
+				if (pcl_isfinite(pcVisRaw[px].y))
+				{
+					int d = (int)(pcVisRaw[px].y * 1000.0f); // use MM as unit
+					int d1 = ((d / (256 * 256 * 256)) % 256);
+					int d2 = ((d / (256 * 256)) % 256);
+					int d3 = ((d / 256) % 256);
+					int d4 = ((d) % 256);
+
+					pcVis2[px].r = d2;
+					pcVis2[px].g = d3;
+					pcVis2[px].b = d4;
+				}
+				else
+				{
+					pcVis2[px].r = 255;
+					pcVis2[px].g = 255;
+					pcVis2[px].b = 255;
+				}
+			}
+
+			std::stringstream fileName;
+			fileName << serialNumber << "_recScan_HashDepth.png";
+
+			pcl::PCLImage image;
+			pcl::io::PointCloudImageExtractorFromRGBField<pcl::PointXYZRGBL> pcie;
+			pcie.setPaintNaNsWithBlack(true);
+			if (!pcie.extract(pcVis2, image))
+				THROW_EXCEPTION("Failed to extract an image from RGB field .");
 			pcl::io::savePNGFile((filePath / boost::filesystem::path("FusionScanData") / boost::filesystem::path(fileName.str())).string(), image);
 		}
 	}
