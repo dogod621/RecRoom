@@ -74,6 +74,7 @@ namespace RecRoom
 			bool laplacianSmoothBoundary = true, float laplacianEdgeAngle = 15.f);
 		void VisualSegNDFs();
 		void VisualRecAtts();
+		void FusionScanData(uint32_t serialNumber);
 
 	protected:
 		virtual void ImplementRecPointCloud() = 0;

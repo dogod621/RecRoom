@@ -59,6 +59,7 @@ void PrintHelp(int argc, char **argv)
 		PRINT_HELP("\t", "recMeshPostprocess", "", "Reconstruct postprocessed mesh.");
 		PRINT_HELP("\t", "visSegNDFs", "", "Plot segment NDFs after reconstruction.");
 		PRINT_HELP("\t", "visRecAtts", "", "Plot reconstruction result after reconstruction.");
+		PRINT_HELP("\t", "fusionScanData", "int -1", "Fusion full scan data for the serial number (default -1 to disable it).");
 	}
 
 	std::cout << "ContainerPcRAWOC Parmameters:=============================================================================================================================" << std::endl << std::endl;
@@ -564,6 +565,13 @@ int main(int argc, char *argv[])
 			{
 				std::cout << "reconstructorPC->VisualRecAtts()" << std::endl;
 				reconstructorPC->VisualRecAtts();
+			}
+
+			int fusionScanID = -1;
+			pcl::console::parse_argument(argc, argv, "-fusionScanData", fusionScanID);
+			if (fusionScanID >= 0)
+			{
+				reconstructorPC->FusionScanData(fusionScanID);
 			}
 		}
 		catch (const RecRoom::exception& ex)

@@ -706,7 +706,7 @@ namespace RecRoom
 			}*/
 		}
 	}
-
+	
 	void ReconstructorPc::VisualRecAtts()
 	{
 		if (!boost::filesystem::exists(filePath / boost::filesystem::path("VisualRecAtts")))
@@ -807,7 +807,7 @@ namespace RecRoom
 					bool cloest = false;
 					if (!std::isfinite(pVisRaw.z))
 						cloest = true;
-					else if (pVisRaw.z < uvd.z())
+					else if (pVisRaw.z > uvd.z())
 						cloest = true;
 					if (cloest)
 					{
@@ -1077,6 +1077,7 @@ namespace RecRoom
 				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
 
+
 			{
 				for (std::size_t px = 0; px < pcVis1.size(); ++px)
 					pcVis1[px].intensity = pcVisRec[px].specularSharpness;
@@ -1094,6 +1095,246 @@ namespace RecRoom
 					THROW_EXCEPTION("Failed to extract an image from SpecularSharpness field .");
 				pcl::io::savePNGFile((filePath / boost::filesystem::path("VisualRecAtts") / boost::filesystem::path(fileName.str())).string(), image);
 			}
+		}
+	}
+
+	struct WeightKernel
+	{
+		int shiftRow;
+		int shiftCol;
+		float weight;
+
+		WeightKernel(int shiftRow = 0, int shiftCol = 0, float weight = 1.0f) : shiftRow(shiftRow), shiftCol(shiftCol), weight(weight) {}
+	};
+
+	void ReconstructorPc::FusionScanData(uint32_t serialNumber)
+	{
+		if (!boost::filesystem::exists(filePath / boost::filesystem::path("FusionScanData")))
+		{
+			boost::filesystem::create_directory(filePath / boost::filesystem::path("FusionScanData"));
+			PRINT_INFO("Create directory: " + (filePath / boost::filesystem::path("FusionScanData")).string());
+		}
+
+		const ScanMeta& scanMeta = scanner->getScanMeta(serialNumber);
+		Eigen::Matrix4d wordTocan = scanMeta.transform.inverse();
+		float eps = 0.01f;
+		std::size_t width = scanner->ScanImageWidth() / 4;
+		std::size_t height = scanner->ScanImageHeight() / 4;
+
+		std::vector<WeightKernel> gaussianKernel(9);
+		gaussianKernel[0] = WeightKernel(-1, -1, 1.0f / 16.0f);
+		gaussianKernel[1] = WeightKernel(-1, 0, 2.0f / 16.0f);
+		gaussianKernel[2] = WeightKernel(-1, 1, 1.0f / 16.0f);
+		gaussianKernel[3] = WeightKernel(0, -1, 2.0f / 16.0f);
+		gaussianKernel[4] = WeightKernel(0, 0, 4.0f / 16.0f);
+		gaussianKernel[5] = WeightKernel(0, 1, 2.0f / 16.0f);
+		gaussianKernel[6] = WeightKernel(1, -1, 1.0f / 16.0f);
+		gaussianKernel[7] = WeightKernel(1, 0, 2.0f / 16.0f);
+		gaussianKernel[8] = WeightKernel(1, 1, 1.0f / 16.0f);
+
+		PcMED pcVisRaw;
+		std::vector<ColorHDR> pcVisRawRGB;
+		Pc<pcl::PointXYZINormal> pcVis1;
+		Pc<pcl::PointXYZRGBL> pcVis2;
+		{
+			pcVis1.width = width;
+			pcVis1.height = height;
+			pcVis1.is_dense = false;
+			pcVis1.resize(width*height);
+
+			pcVis2.width = width;
+			pcVis2.height = height;
+			pcVis2.is_dense = false;
+			pcVis2.resize(width*height);
+
+			pcVisRaw.width = width;
+			pcVisRaw.height = height;
+			pcVisRaw.is_dense = false;
+			pcVisRaw.resize(width*height);
+			pcVisRawRGB.resize(width*height);
+			for (PcMED::iterator jt = pcVisRaw.begin(); jt != pcVisRaw.end(); ++jt)
+			{
+				jt->x = 0.0; // use as counter
+				jt->y = 0.0; // use as depth
+				jt->z = std::numeric_limits<float>::max(); // use as depth buffer
+			}
+		}
+
+		for (std::vector<ScanMeta>::const_iterator it = scanner->getScanMetaSet()->begin(); it != scanner->getScanMetaSet()->end(); ++it)
+		{
+			{
+				std::stringstream ss;
+				ss << "FusionScanData - SetCloestDepth: " << it->serialNumber << " to " << serialNumber;
+				PRINT_INFO(ss.str().c_str());
+			}
+
+			//
+			PTR(PcMED) pcRaw(new PcMED);
+			{
+				PcRAW pcRaw_;
+				scanner->LoadPcRAW(it->serialNumber, pcRaw_, false);
+				pcRaw->resize(pcRaw_.size());
+				for (std::size_t px = 0; px < pcRaw_.size(); ++px)
+					(*pcRaw)[px] = pcRaw_[px];
+			}
+
+			//
+			for (std::size_t px = 0; px < pcRaw->size(); ++px)
+			{
+				PointMED& pRaw = (*pcRaw)[px];
+
+				Eigen::Vector4d xyz = wordTocan * Eigen::Vector4d(pRaw.x, pRaw.y, pRaw.z, 1.0);
+				Eigen::Vector3d uvd = scanner->ToScanImageUVDepth(Eigen::Vector3d(xyz.x(), xyz.y(), xyz.z()));
+				int col = uvd.x() * (width - 1);
+				int row = (1.0 - uvd.y()) * (height - 1);
+
+				if (it->serialNumber == serialNumber)
+					uvd.z() -= 0.1f;
+
+				for (std::vector<WeightKernel>::const_iterator kt = gaussianKernel.begin(); kt != gaussianKernel.end(); ++kt)
+				{
+					int col2 = col + kt->shiftCol;
+					int row2 = row + kt->shiftRow;
+
+					if ((col2 >= 0) &&
+						(col2 < width) &&
+						(row2 >= 0) &&
+						(row2 < height))
+					{
+						std::size_t index = row2 * width + col2;
+
+						PointMED& pVisRaw = pcVisRaw[index];
+						ColorHDR& pVisRawRGB = pcVisRawRGB[index];
+						{
+							if (pVisRaw.z > uvd.z())
+								pVisRaw.z = uvd.z();
+						}
+					}
+				}
+			}
+		}
+
+		for (std::vector<ScanMeta>::const_iterator it = scanner->getScanMetaSet()->begin(); it != scanner->getScanMetaSet()->end(); ++it)
+		{
+			{
+				std::stringstream ss;
+				ss << "FusionScanData - Fusion: " << it->serialNumber << " to " << serialNumber;
+				PRINT_INFO(ss.str().c_str());
+			}
+
+			//
+			PTR(PcMED) pcRaw(new PcMED);
+			{
+				PcRAW pcRaw_;
+				scanner->LoadPcRAW(it->serialNumber, pcRaw_, false);
+				pcRaw->resize(pcRaw_.size());
+				for (std::size_t px = 0; px < pcRaw_.size(); ++px)
+					(*pcRaw)[px] = pcRaw_[px];
+			}
+
+			//
+			for (std::size_t px = 0; px < pcRaw->size(); ++px)
+			{
+				PointMED& pRaw = (*pcRaw)[px];
+
+				Eigen::Vector4d xyz = wordTocan * Eigen::Vector4d(pRaw.x, pRaw.y, pRaw.z, 1.0);
+				Eigen::Vector3d uvd = scanner->ToScanImageUVDepth(Eigen::Vector3d(xyz.x(), xyz.y(), xyz.z()));
+				int col = uvd.x() * (width - 1);
+				int row = (1.0 - uvd.y()) * (height - 1);
+
+				if (it->serialNumber == serialNumber)
+					uvd.z() -= 0.1f;
+
+				for (std::vector<WeightKernel>::const_iterator kt = gaussianKernel.begin(); kt != gaussianKernel.end(); ++kt)
+				{
+					int col2 = col + kt->shiftCol;
+					int row2 = row + kt->shiftRow;
+
+					if ((col2 >= 0) &&
+						(col2 < width) &&
+						(row2 >= 0) &&
+						(row2 < height))
+					{
+
+						std::size_t index = row2 * width + col2;
+
+						PointMED& pVisRaw = pcVisRaw[index];
+						ColorHDR& pVisRawRGB = pcVisRawRGB[index];
+						if (uvd.z() < (pVisRaw.z + eps))
+						{
+							pVisRaw.x += kt->weight;
+							pVisRaw.y += kt->weight * uvd.z();
+							pVisRawRGB.r += kt->weight * (float)pRaw.r;
+							pVisRawRGB.g += kt->weight * (float)pRaw.g;
+							pVisRawRGB.b += kt->weight * (float)pRaw.b;
+							pVisRaw.intensity += kt->weight * pRaw.intensity;
+						}
+					}
+				}
+			}
+		}
+
+		for (std::size_t px = 0; px < pcVisRaw.size(); ++px)
+		{
+			PointMED& pVisRaw = pcVisRaw[px];
+			ColorHDR& pVisRawRGB = pcVisRawRGB[px];
+
+			if (pVisRaw.x > 0)
+			{
+				pVisRaw.y /= pVisRaw.x;
+				pVisRaw.r = std::max(std::min(pVisRawRGB.r / pVisRaw.x, 255.0f), 0.0f);
+				pVisRaw.g = std::max(std::min(pVisRawRGB.g / pVisRaw.x, 255.0f), 0.0f);
+				pVisRaw.b = std::max(std::min(pVisRawRGB.b / pVisRaw.x, 255.0f), 0.0f);
+				pVisRaw.intensity /= pVisRaw.x;
+			}
+		}
+
+		{
+			for (std::size_t px = 0; px < pcVis1.size(); ++px)
+				pcVis1[px].z = pcVisRaw[px].y;
+
+			std::stringstream fileName;
+			fileName << serialNumber << "_recScan_Depth.png";
+
+			pcl::PCLImage image;
+			pcl::io::PointCloudImageExtractorFromZField<pcl::PointXYZINormal> pcie;
+			pcie.setPaintNaNsWithBlack(true);
+			pcie.setScalingMethod(pcie.SCALING_FULL_RANGE);
+			if (!pcie.extract(pcVis1, image))
+				THROW_EXCEPTION("Failed to extract an image from Depth field .");
+			pcl::io::savePNGFile((filePath / boost::filesystem::path("FusionScanData") / boost::filesystem::path(fileName.str())).string(), image);
+		}
+
+		{
+			for (std::size_t px = 0; px < pcVis2.size(); ++px)
+				pcVis2[px].rgba = pcVisRaw[px].rgba;
+			
+			std::stringstream fileName;
+			fileName << serialNumber << "_recScan_RGB.png";
+
+			pcl::PCLImage image;
+			pcl::io::PointCloudImageExtractorFromRGBField<pcl::PointXYZRGBL> pcie;
+			pcie.setPaintNaNsWithBlack(true);
+			if (!pcie.extract(pcVis2, image))
+				THROW_EXCEPTION("Failed to extract an image from RGB field .");
+			pcl::io::savePNGFile((filePath / boost::filesystem::path("FusionScanData") / boost::filesystem::path(fileName.str())).string(), image);
+		}
+
+		{
+			for (std::size_t px = 0; px < pcVis1.size(); ++px)
+				pcVis1[px].intensity = pcVisRaw[px].intensity;
+
+			std::stringstream fileName;
+			fileName << serialNumber << "_recScan_Intensity.png";
+
+			pcl::PCLImage image;
+			pcl::io::PointCloudImageExtractorFromIntensityField<pcl::PointXYZINormal> pcie;
+			pcie.setPaintNaNsWithBlack(true);
+			pcie.setScalingMethod(pcie.SCALING_FIXED_FACTOR);
+			pcie.setScalingFactor(255.f);
+			if (!pcie.extract(pcVis1, image))
+				THROW_EXCEPTION("Failed to extract an image from Intensity field .");
+			pcl::io::savePNGFile((filePath / boost::filesystem::path("FusionScanData") / boost::filesystem::path(fileName.str())).string(), image);
 		}
 	}
 
