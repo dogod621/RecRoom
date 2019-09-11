@@ -98,6 +98,8 @@ void PrintHelp(int argc, char **argv)
 		PRINT_HELP("\t", "normalImportance", "float 1.0", "Distance importance of normal.");
 		PRINT_HELP("\t", "diffuseAlbedoImportance", "float 5.0", "Distance importance of diffuseAlbedoImportance.");
 		PRINT_HELP("\t", "specularSharpnessImportance", "float 0.0", "Distance importance of specularSharpnessImportance.");
+		PRINT_HELP("\t", "weightSmoothParm", "float 2.0", "");
+		PRINT_HELP("\t", "numMaxLabels", "int 5", "");
 		PRINT_HELP("\t", "minSize", "int 2500", "Minimum segment size.");
 	}
 
@@ -236,6 +238,8 @@ int main(int argc, char *argv[])
 		float normalImportance = 1.0f;
 		float diffuseAlbedoImportance = 5.0f;
 		float specularSharpnessImportance = 0.0f;
+		float weightSmoothParm = 2.0f;
+		int numMaxLabels = 5;
 		int minSize = 2500;
 		pcl::console::parse_argument(argc, argv, "-voxelResolution", voxelResolution);
 		pcl::console::parse_argument(argc, argv, "-seedResolution", seedResolution);
@@ -244,6 +248,8 @@ int main(int argc, char *argv[])
 		pcl::console::parse_argument(argc, argv, "-normalImportance", normalImportance);
 		pcl::console::parse_argument(argc, argv, "-diffuseAlbedoImportance", diffuseAlbedoImportance);
 		pcl::console::parse_argument(argc, argv, "-specularSharpnessImportance", specularSharpnessImportance);
+		pcl::console::parse_argument(argc, argv, "-weightSmoothParm", weightSmoothParm);
+		pcl::console::parse_argument(argc, argv, "-numMaxLabels", numMaxLabels);
 		pcl::console::parse_argument(argc, argv, "-minSize", minSize);
 		std::cout << "SegmenterPcSVC -voxelResolution: " << voxelResolution << std::endl;
 		std::cout << "SegmenterPcSVC -seedResolution: " << seedResolution << std::endl;
@@ -252,6 +258,8 @@ int main(int argc, char *argv[])
 		std::cout << "SegmenterPcSVC -normalImportance: " << normalImportance << std::endl;
 		std::cout << "SegmenterPcSVC -diffuseAlbedoImportance: " << diffuseAlbedoImportance << std::endl;
 		std::cout << "SegmenterPcSVC -specularSharpnessImportance: " << specularSharpnessImportance << std::endl;
+		std::cout << "SegmenterPcSVC -weightSmoothParm: " << weightSmoothParm << std::endl;
+		std::cout << "SegmenterPcSVC -numMaxLabels: " << numMaxLabels << std::endl;
 		std::cout << "SegmenterPcSVC -minSize: " << minSize << std::endl;
 
 		// Parse MesherPcMCHoppe Parmameters
@@ -413,7 +421,7 @@ int main(int argc, char *argv[])
 					segmenter(
 						new RecRoom::SegmenterPcSVC<RecRoom::PointMED>(
 							voxelResolution, seedResolution,
-							xyzImportance, rgbImportance, normalImportance, diffuseAlbedoImportance, specularSharpnessImportance, minSize));
+							xyzImportance, rgbImportance, normalImportance, diffuseAlbedoImportance, specularSharpnessImportance, weightSmoothParm, numMaxLabels, minSize));
 				reconstructorPC->setSegmenter(segmenter);
 			}
 
