@@ -214,22 +214,12 @@ namespace RecRoom
 
 		switch (Mapping_UVMode(mapping))
 		{
-		case UVMode::PANORAMA:
+		case UVMode::PANORAMA_EQUIRECTANGULAR:
 			switch (Mapping_RAE_ElevationMode(mapping))
 			{
 			case ElevationMode::PE: uv.y() = 0.5 * (1.0 + rae.z() / M_PI_2); break;
 			case ElevationMode::NP: uv.y() = (1.0 - rae.z() * M_1_PI); break;
 			case ElevationMode::SP: uv.y() = rae.z() * M_1_PI; break;
-			default: THROW_EXCEPTION("ElevationMode is not support"); break;
-			}
-			break;
-
-		case UVMode::PANORAMA_EQUIRECTANGULAR:
-			switch (Mapping_RAE_ElevationMode(mapping))
-			{
-			case ElevationMode::PE: uv.y() = 0.5 * (1.0 + std::sin(rae.z())); break;
-			case ElevationMode::NP: uv.y() = std::cos(rae.z()); break;
-			case ElevationMode::SP: uv.y() = 1.0 - std::cos(rae.z()); break;
 			default: THROW_EXCEPTION("ElevationMode is not support"); break;
 			}
 			break;
@@ -284,8 +274,7 @@ namespace RecRoom
 	template<>
 	inline UVMode Convert<UVMode, std::string>(const std::string& v)
 	{
-		if (v == "PANORAMA") return UVMode::PANORAMA;
-		else if (v == "PANORAMA_EQUIRECTANGULAR") return UVMode::PANORAMA_EQUIRECTANGULAR;
+		if (v == "PANORAMA_EQUIRECTANGULAR") return UVMode::PANORAMA_EQUIRECTANGULAR;
 		else if (v == "HEMISPHERE") return UVMode::HEMISPHERE;
 		else return UVMode::UVMode_UNKNOWN;
 	}
@@ -295,7 +284,6 @@ namespace RecRoom
 	{
 		switch (v)
 		{
-		case UVMode::PANORAMA: return std::string("PANORAMA"); break;
 		case UVMode::PANORAMA_EQUIRECTANGULAR: return std::string("PANORAMA_EQUIRECTANGULAR"); break;
 		case UVMode::HEMISPHERE: return std::string("HEMISPHERE"); break;
 		default: return std::string("UNKNOWN"); break;
